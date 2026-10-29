@@ -943,6 +943,45 @@ input.gc-name.big { font-family: var(--display); font-size: 1.1rem; }
   body.gc-printing #gc-print { display: block !important; }
   @page { margin: 12mm; }
 }
+/* ---------- textbook map and computation drills for any subject ---------- */
+.bk-no { color: var(--muted); font-weight: 700; margin-right: .45em; font-variant-numeric: tabular-nums; }
+.bk-foot { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; margin-top: .7rem; }
+.bk-box { border: 1px solid var(--line); border-radius: var(--r-md); padding: .55rem .85rem; margin: .3rem 0 .75rem; background: var(--surface); }
+.bk-box > summary { cursor: pointer; font-weight: 700; padding: .2rem 0; }
+.bk-box-body { display: flex; flex-direction: column; gap: .5rem; padding-top: .5rem; }
+.bk-box-body textarea { width: 100%; }
+.bk-note { color: var(--ok); font-weight: 700; margin: .2rem 0; }
+.bk-head { margin: .6rem 0 .4rem; }
+.bk-head h3 { margin: 0; }
+.bk-rows { display: flex; flex-direction: column; gap: .4rem; }
+.bk-row { display: grid; grid-template-columns: 4.2rem minmax(0, 1fr) 5rem minmax(0, 13rem) 2.2rem; gap: .4rem; align-items: center; }
+.bk-row input, .bk-row select { width: 100%; min-width: 0; }
+.dr-panel-foot { margin-top: .75rem; }
+.calc-answer .peso + input { flex: 1; }
+.calc-answer .dr-suffix { font-weight: 700; color: var(--muted); white-space: nowrap; }
+.dr-prompt-row { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+.dr-prompt-row select { flex: 1; min-width: 12rem; }
+.dr-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .45rem; }
+.dr-list > li { border: 1px solid var(--line); border-radius: var(--r-md); padding: .6rem .8rem; background: var(--surface); }
+.dr-list > li.open { border-color: var(--accent); }
+.dr-row { display: flex; gap: .6rem; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.dr-main { display: flex; flex-direction: column; gap: .15rem; min-width: 0; flex: 1 1 14rem; }
+.dr-acts { display: flex; gap: .25rem; align-items: center; }
+.dr-acts .btn { padding: .4rem .7rem; }
+.dr-sample { display: flex; flex-direction: column; gap: .5rem; margin-top: .7rem; }
+.dr-sample p { margin: 0; }
+.dr-bad { margin: 0 0 .5rem; padding-left: 1.2rem; }
+.dr-form textarea { width: 100%; }
+.dr-mono, .dr-form textarea.code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: .88rem; }
+.dr-fmt { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 1rem; }
+.dr-preview { border: 1px dashed var(--line); border-radius: var(--r-md); padding: .8rem 1rem; }
+.dr-preview .panel-row { margin-bottom: 0; }
+@media (max-width: 560px) {
+  .bk-row { grid-template-columns: 3.4rem minmax(0, 1fr) 2.2rem; grid-template-areas: "no name del" "page topic topic"; padding-bottom: .5rem; border-bottom: 1px solid var(--line); }
+  .bk-in-no { grid-area: no; } .bk-in-name { grid-area: name; } .bk-in-page { grid-area: page; } .bk-in-topic { grid-area: topic; } .bk-row .icon-btn { grid-area: del; }
+  .dr-fmt { grid-template-columns: 1fr 1fr; }
+  .dr-acts { width: 100%; justify-content: flex-end; }
+}
 </style>
 </head>
 <body>
@@ -1471,11 +1510,12 @@ input.gc-name.big { font-family: var(--display); font-size: 1.1rem; }
     if (obj && !Array.isArray(obj) && Array.isArray(obj.subjects) && obj.subjects.every((s) => Array.isArray(s.topics))) {
       return { kind: "backup", data: obj };
     }
-    let topics = [], cards = [], mistakes = [], quizzes = [], subject = "", grading = null;
+    let topics = [], cards = [], mistakes = [], quizzes = [], subject = "", grading = null, book = null, drillRaw = [];
     if (Array.isArray(obj)) {
       for (const x of obj) {
         if (!x || typeof x !== "object") continue;
-        if (first(x, ["myAnswer", "wrongAnswer", "myWrongAnswer", "wrong", "yourAnswer"])) mistakes.push(x);
+        if (drLooksLike(x)) drillRaw.push(x);
+        else if (first(x, ["myAnswer", "wrongAnswer", "myWrongAnswer", "wrong", "yourAnswer"])) mistakes.push(x);
         else if (first(x, ["question", "front", "q", "term"]) && first(x, ["answer", "back", "a", "definition"])) cards.push(x);
         else if (x.score !== void 0 && (x.items !== void 0 || x.total !== void 0)) quizzes.push(x);
         else if (first(x, ["title", "topic", "chapter", "name"])) topics.push(x);
@@ -1487,7 +1527,10 @@ input.gc-name.big { font-family: var(--display); font-size: 1.1rem; }
       mistakes = pick(obj, ["mistakes", "errors", "mistakeLog"]);
       quizzes = pick(obj, ["quizzes", "scores", "quizScores"]);
       if (obj.grading || obj.gradingSystem || obj.grading_system) grading = gcFromJSON(obj);
+      book = bkFromJSON(obj);
+      drillRaw = pick(obj, ["drills", "computationDrills", "computations", "drillTemplates", "computationProblems"]);
     }
+    const drillsIn = drillRaw.length ? drFromJSON(drillRaw) : { ok: [], bad: [] };
     const res = {
       kind: "partial",
       subject,
@@ -1495,10 +1538,14 @@ input.gc-name.big { font-family: var(--display); font-size: 1.1rem; }
       cards: cards.map(normCard).filter(Boolean),
       mistakes: mistakes.map(normMistake).filter(Boolean),
       quizzes: quizzes.map(normQuiz).filter(Boolean),
-      grading
+      grading,
+      book,
+      drills: drillsIn.ok,
+      drillBad: drillsIn.bad
     };
-    if (!res.topics.length && !res.cards.length && !res.mistakes.length && !res.quizzes.length && !res.grading) {
-      throw new Error("The JSON was read, but no topics, flashcards, mistakes, quiz scores or grading system were recognised. Compare it with the template on the right.");
+    if (!res.topics.length && !res.cards.length && !res.mistakes.length && !res.quizzes.length && !res.grading && !res.book && !res.drills.length) {
+      if (res.drillBad.length) throw new Error(`None of the computation drills could be used. ${res.drillBad[0]}`);
+      throw new Error("The JSON was read, but no topics, flashcards, mistakes, quiz scores, grading system, textbook map or computation drills were recognised. Compare it with the template on the right.");
     }
     return res;
   }
@@ -1515,6 +1562,17 @@ input.gc-name.big { font-family: var(--display); font-size: 1.1rem; }
         s.topics.push(t);
         addedTopics++;
       }
+    }
+    let addedBook = false, addedDrills = 0;
+    if (p.book) {
+      const r = bkMerge(s, bkOf(s), p.book);
+      s.book = r.book;
+      addedBook = r.added + r.updated > 0;
+    }
+    if (p.drills && p.drills.length) {
+      const r = drApply(s, p.drills);
+      addedDrills = r.added;
+      skipped += r.skipped;
     }
     for (const c of p.cards) {
       if (s.cards.some((x) => norm(x.q) === norm(c.q))) {
@@ -1537,7 +1595,7 @@ input.gc-name.big { font-family: var(--display); font-size: 1.1rem; }
       s.grading = gcMergeStructure(s.grading, p.grading);
       addedGrading = true;
     }
-    return { addedTopics, addedCards, addedMistakes: p.mistakes.length, addedQuizzes: p.quizzes.length, addedGrading, skipped };
+    return { addedTopics, addedCards, addedMistakes: p.mistakes.length, addedQuizzes: p.quizzes.length, addedGrading, addedBook, addedDrills, skipped };
   }
   function previewPartial(subject, p) {
     const unmatched = p.cards.filter((c) => !matchTopic(subject, c.topicText) && !p.topics.some((t) => norm(t.title) === norm(c.topicText))).length;
@@ -2482,6 +2540,8 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       if (summary.addedMistakes) parts.push(`${summary.addedMistakes} mistakes`);
       if (summary.addedQuizzes) parts.push(`${summary.addedQuizzes} quiz scores`);
       if (summary.addedGrading) parts.push("the grading system");
+      if (summary.addedBook) parts.push("the textbook map");
+      if (summary.addedDrills) parts.push(`${summary.addedDrills} computation drill${summary.addedDrills === 1 ? "" : "s"}`);
       toast(`Imported ${parts.join(", ") || "nothing new"}${summary.skipped ? ` (${summary.skipped} duplicates skipped)` : ""}`);
       onClose();
     };
@@ -2544,7 +2604,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
           setErr("");
         }
       }
-    ), err && /* @__PURE__ */ React.createElement("p", { className: "error", role: "alert" }, err), !parsed && /* @__PURE__ */ React.createElement("div", { className: "row-end" }, /* @__PURE__ */ React.createElement("button", { className: "btn primary", disabled: !raw.trim(), onClick: check }, "Check data")), (parsed == null ? void 0 : parsed.kind) === "backup" && /* @__PURE__ */ React.createElement("div", { className: "preview" }, /* @__PURE__ */ React.createElement("p", null, /* @__PURE__ */ React.createElement("strong", null, "Full backup found:"), " ", parsed.data.subjects.length, " subject", parsed.data.subjects.length === 1 ? "" : "s", " (", parsed.data.subjects.map((s) => s.name).join(", "), ")."), /* @__PURE__ */ React.createElement("div", { className: "row-end" }, /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: () => backup("add") }, "Add alongside my subjects"), /* @__PURE__ */ React.createElement("button", { className: "btn danger", onClick: () => backup("replace") }, "Replace everything"))), preview && /* @__PURE__ */ React.createElement("div", { className: "preview" }, /* @__PURE__ */ React.createElement("p", null, /* @__PURE__ */ React.createElement("strong", null, "Ready to import:"), " ", preview.topics.length, " topics, ", preview.cards.length, " flashcards, ", preview.mistakes.length, " mistakes, ", preview.quizzes.length, " quiz scores", preview.grading ? ", and a grading system for the Grades calculator (your scores are kept)" : "", "."), preview.unmatched > 0 && /* @__PURE__ */ React.createElement("p", { className: "muted" }, preview.unmatched, " flashcards don’t match a roadmap topic and will go to “Unsorted”. You can reassign them by editing each card."), /* @__PURE__ */ React.createElement("div", { className: "grid-2" }, /* @__PURE__ */ React.createElement(Field, { label: "Add to" }, /* @__PURE__ */ React.createElement("select", { value: target, onChange: (e) => setTarget(e.target.value) }, data.subjects.map((s) => /* @__PURE__ */ React.createElement("option", { key: s.id, value: s.id }, s.name, s.code ? ` (${s.code})` : "")), /* @__PURE__ */ React.createElement("option", { value: "__new" }, "New subject…"))), target === "__new" && /* @__PURE__ */ React.createElement(Field, { label: "New subject name" }, /* @__PURE__ */ React.createElement("input", { value: newName, onChange: (e) => setNewName(e.target.value) }))), /* @__PURE__ */ React.createElement("div", { className: "row-end" }, /* @__PURE__ */ React.createElement("button", { className: "btn ghost", onClick: () => setParsed(null) }, "Back"), /* @__PURE__ */ React.createElement("button", { className: "btn primary", onClick: doImport }, "Import")))), tab === "github" && React.createElement(GitHubPanel, { data, toast }), tab === "export" && /* @__PURE__ */ React.createElement("div", { className: "export" }, /* @__PURE__ */ React.createElement("div", { className: "grid-2" }, /* @__PURE__ */ React.createElement(Field, { label: "What to export" }, /* @__PURE__ */ React.createElement("select", { value: scope, onChange: (e) => setScope(e.target.value) }, /* @__PURE__ */ React.createElement("option", { value: "all" }, "All subjects (", data.subjects.length, ")"), /* @__PURE__ */ React.createElement("option", { value: "one" }, "Only ", active.name)))), /* @__PURE__ */ React.createElement("textarea", { className: "code", rows: 10, readOnly: true, value: exportText, onFocus: (e) => e.target.select() }), /* @__PURE__ */ React.createElement("div", { className: "row-end" }, /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: async () => toast(await copyText(exportText) ? "JSON copied" : "Select the text and copy it manually") }, "Copy JSON"), /* @__PURE__ */ React.createElement("button", { className: "btn primary", onClick: save }, "Download ", fileName)), /* @__PURE__ */ React.createElement("p", { className: "muted" }, "To restore, paste this JSON into the Import tab. Keep a copy in Google Drive before big changes.")), tab === "prompt" && h(NotebookLMPrompts, { subject: active, toast, onImport: () => setTab("import") }));
+    ), err && /* @__PURE__ */ React.createElement("p", { className: "error", role: "alert" }, err), !parsed && /* @__PURE__ */ React.createElement("div", { className: "row-end" }, /* @__PURE__ */ React.createElement("button", { className: "btn primary", disabled: !raw.trim(), onClick: check }, "Check data")), (parsed == null ? void 0 : parsed.kind) === "backup" && /* @__PURE__ */ React.createElement("div", { className: "preview" }, /* @__PURE__ */ React.createElement("p", null, /* @__PURE__ */ React.createElement("strong", null, "Full backup found:"), " ", parsed.data.subjects.length, " subject", parsed.data.subjects.length === 1 ? "" : "s", " (", parsed.data.subjects.map((s) => s.name).join(", "), ")."), /* @__PURE__ */ React.createElement("div", { className: "row-end" }, /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: () => backup("add") }, "Add alongside my subjects"), /* @__PURE__ */ React.createElement("button", { className: "btn danger", onClick: () => backup("replace") }, "Replace everything"))), preview && /* @__PURE__ */ React.createElement("div", { className: "preview" }, /* @__PURE__ */ React.createElement("p", null, /* @__PURE__ */ React.createElement("strong", null, "Ready to import:"), " ", preview.topics.length, " topics, ", preview.cards.length, " flashcards, ", preview.mistakes.length, " mistakes, ", preview.quizzes.length, " quiz scores", preview.book ? `, a textbook map (${preview.book.chapters.length} chapters)` : "", preview.drills && preview.drills.length ? `, ${preview.drills.length} computation drill${preview.drills.length === 1 ? "" : "s"}` : "", preview.grading ? ", and a grading system for the Grades calculator (your scores are kept)" : "", "."), preview.drillBad && preview.drillBad.length > 0 && h("p", { className: "muted" }, `${preview.drillBad.length} computation drill${preview.drillBad.length === 1 ? " was" : "s were"} left out because a formula didn’t work. First one: ${preview.drillBad[0]}`), preview.unmatched > 0 && /* @__PURE__ */ React.createElement("p", { className: "muted" }, preview.unmatched, " flashcards don’t match a roadmap topic and will go to “Unsorted”. You can reassign them by editing each card."), /* @__PURE__ */ React.createElement("div", { className: "grid-2" }, /* @__PURE__ */ React.createElement(Field, { label: "Add to" }, /* @__PURE__ */ React.createElement("select", { value: target, onChange: (e) => setTarget(e.target.value) }, data.subjects.map((s) => /* @__PURE__ */ React.createElement("option", { key: s.id, value: s.id }, s.name, s.code ? ` (${s.code})` : "")), /* @__PURE__ */ React.createElement("option", { value: "__new" }, "New subject…"))), target === "__new" && /* @__PURE__ */ React.createElement(Field, { label: "New subject name" }, /* @__PURE__ */ React.createElement("input", { value: newName, onChange: (e) => setNewName(e.target.value) }))), /* @__PURE__ */ React.createElement("div", { className: "row-end" }, /* @__PURE__ */ React.createElement("button", { className: "btn ghost", onClick: () => setParsed(null) }, "Back"), /* @__PURE__ */ React.createElement("button", { className: "btn primary", onClick: doImport }, "Import")))), tab === "github" && React.createElement(GitHubPanel, { data, toast }), tab === "export" && /* @__PURE__ */ React.createElement("div", { className: "export" }, /* @__PURE__ */ React.createElement("div", { className: "grid-2" }, /* @__PURE__ */ React.createElement(Field, { label: "What to export" }, /* @__PURE__ */ React.createElement("select", { value: scope, onChange: (e) => setScope(e.target.value) }, /* @__PURE__ */ React.createElement("option", { value: "all" }, "All subjects (", data.subjects.length, ")"), /* @__PURE__ */ React.createElement("option", { value: "one" }, "Only ", active.name)))), /* @__PURE__ */ React.createElement("textarea", { className: "code", rows: 10, readOnly: true, value: exportText, onFocus: (e) => e.target.select() }), /* @__PURE__ */ React.createElement("div", { className: "row-end" }, /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: async () => toast(await copyText(exportText) ? "JSON copied" : "Select the text and copy it manually") }, "Copy JSON"), /* @__PURE__ */ React.createElement("button", { className: "btn primary", onClick: save }, "Download ", fileName)), /* @__PURE__ */ React.createElement("p", { className: "muted" }, "To restore, paste this JSON into the Import tab. Keep a copy in Google Drive before big changes.")), tab === "prompt" && h(NotebookLMPrompts, { subject: active, toast, onImport: () => setTab("import") }));
   }
   /* ---------- dates, due dates and the study calendar ---------- */
   const h = React.createElement;
@@ -2903,6 +2963,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const [open, setOpen] = useState(() => new Set(init.open ? [init.open] : []));
     const [editing, setEditing] = useState(init.add ? "new" : null);
     const [showBook, setShowBook] = useState(false);
+    const [bkEdit, setBkEdit] = useState(false);
     const [filter, setFilter] = useState("all");
     const topics = studyTopics(subject);
     const counts = TOPIC_STATUS.map((s) => topics.filter((t) => t.status === s).length);
@@ -2971,7 +3032,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
           })
         }
       )), /* @__PURE__ */ React.createElement("div", { className: "detail-actions" }, /* @__PURE__ */ React.createElement("button", { className: "btn primary", disabled: !nCards, onClick: () => go("vault", { topic: t.id, drill: true }) }, "Drill ", nCards, " cards"), h("button", { className: "btn", onClick: () => openEditor("session", null, { topicId: t.id }) }, h(Icon, { name: "calendar", size: 16 }), " Plan a session"), nMist > 0 && /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: () => go("mistakes", { topic: t.id }) }, nMist, " open mistake", nMist === 1 ? "" : "s"), /* @__PURE__ */ React.createElement("span", { className: "spacer" }), /* @__PURE__ */ React.createElement("button", { className: "btn ghost", onClick: () => setEditing(t) }, "Edit topic"))));
-    }), shown.length === 0 && /* @__PURE__ */ React.createElement("p", { className: "muted center" }, "No topics are ", filter.toLowerCase(), ".")), subject.textbook && /* @__PURE__ */ React.createElement("div", { className: "book panel" }, /* @__PURE__ */ React.createElement("button", { className: "disclosure", onClick: () => setShowBook((v) => !v), "aria-expanded": showBook }, /* @__PURE__ */ React.createElement(Icon, { name: "book", size: 18 }), " Textbook map ", /* @__PURE__ */ React.createElement("span", { className: "muted" }, TEXTBOOK.length, " chapters, ", TEXTBOOK.filter((c) => c[2]).length, " in your scope"), /* @__PURE__ */ React.createElement("span", { className: `chev-i${showBook ? " up" : ""}` }, /* @__PURE__ */ React.createElement(Icon, { name: "chevron", size: 16 }))), showBook && /* @__PURE__ */ React.createElement("ol", { className: "book-list" }, TEXTBOOK.map(([name, page, tid]) => /* @__PURE__ */ React.createElement("li", { key: name, className: tid ? "in" : "" }, /* @__PURE__ */ React.createElement("span", null, name), /* @__PURE__ */ React.createElement("span", { className: "page" }, "p. ", page, tid ? `, ${topicName(subject, tid).split(" ")[0]}` : ""))))), editing && /* @__PURE__ */ React.createElement(
+    }), shown.length === 0 && /* @__PURE__ */ React.createElement("p", { className: "muted center" }, "No topics are ", filter.toLowerCase(), ".")), h(BkPanel, { subject, show: showBook, setShow: setShowBook, onEdit: () => setBkEdit(true) }), bkEdit && h(BkEditor, { subject, update, toast, onClose: () => setBkEdit(false) }), editing && /* @__PURE__ */ React.createElement(
       TopicEditor,
       {
         subject,
@@ -3485,12 +3546,8 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     return s === "" || isNaN(Number(s)) ? null : Number(s);
   };
   function ComputeSet({ subject, update, toast, set, onExit }) {
-    const pool = PROBLEMS.filter((p) => set === "all" || p.topic === set);
-    const [probs] = useState(() => {
-      let order = [];
-      while (order.length < 5) order = order.concat(shuffle(pool));
-      return order.slice(0, 5).map((p) => ({ ...p.make(), name: p.name, topic: p.topic }));
-    });
+    const pool = drPool(subject).filter((p) => set === "all" || p.topic === set);
+    const [probs] = useState(() => drPickSet(pool, 5));
     const [i, setI] = useState(0);
     const [val, setVal] = useState("");
     const [res, setRes] = useState(null);
@@ -3498,9 +3555,10 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const logged = useRef(false);
     const p = probs[i];
     const check = () => {
-      const n = parseAmount(val);
+      const n = drParse(val);
       if (n === null) return;
-      const ok = Math.abs(n - p.ans) <= Math.max(1, Math.abs(p.ans) * 5e-4);
+      const tol = p.tol != null ? p.tol : Math.max(1, Math.abs(p.ans) * 5e-4);
+      const ok = Math.abs(n - p.ans) <= tol || p.pct && Math.abs(n * 100 - p.ans) <= tol;
       setRes(ok ? "ok" : "bad");
       if (ok) setScore((x) => x + 1);
     };
@@ -3510,7 +3568,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       setI((x) => x + 1);
     };
     useEffect(() => {
-      if (i >= probs.length && !logged.current) {
+      if (i >= probs.length && probs.length && !logged.current) {
         logged.current = true;
         const topicId = set === "all" ? null : set;
         update((s) => {
@@ -3520,29 +3578,33 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         if (toast) toast(`Logged ${score}/${probs.length} to your quiz scores`);
       }
     }, [i]);
+    if (!probs.length) {
+      return h("div", { className: "drill done" }, h("span", { className: "muted" }, "Computation drill"), h("p", null, "There are no drills here yet. Add some in Practice → Computation drills → Set up drills."), h("button", { className: "btn primary", onClick: onExit }, "Back"));
+    }
     if (i >= probs.length) {
       return h("div", { className: "drill done" }, h("span", { className: "muted" }, "Computation drill"), h("p", { className: "big-num" }, `${score} / ${probs.length}`), h("p", null, "Saved to your quiz scores, so it counts toward exam readiness."), h("button", { className: "btn primary", onClick: onExit }, "Done"));
     }
     return h(
       "div",
       { className: "drill compute" },
-      h("div", { className: "drill-meta" }, h("span", null, `Problem ${i + 1} of ${probs.length}`, h("span", { className: "drill-badge" }, p.name)), h("span", null, topicName(subject, p.topic))),
+      h("div", { className: "drill-meta" }, h("span", null, `Problem ${i + 1} of ${probs.length}`, h("span", { className: "drill-badge" }, p.name)), h("span", null, p.topic ? topicName(subject, p.topic) : p.topicText || "")),
       h("div", { className: "progress" }, h("span", { style: { width: `${i / probs.length * 100}%` } })),
-      h("div", { className: "table-wrap" }, h("table", { className: "calc-table" }, h("tbody", null, p.lines.map(([k, v, kind]) => h("tr", { key: k }, h("td", null, k), h("td", { className: "num" }, kind === "count" ? v.toLocaleString() : peso(v))))))),
+      p.lines.length > 0 && h("div", { className: "table-wrap" }, h("table", { className: "calc-table" }, h("tbody", null, p.lines.map(([k, v, kind], r) => h("tr", { key: `${r}-${k}` }, h("td", null, k), h("td", { className: "num" }, kind === "text" ? v : kind === "count" ? v.toLocaleString() : peso(v))))))),
       h("p", { className: "drill-q small-q" }, p.q),
       h(
         "div",
         { className: "calc-answer" },
-        h("span", { className: "peso" }, "₱"),
+        (p.prefix == null ? "₱" : p.prefix) && h("span", { className: "peso" }, p.prefix == null ? "₱" : p.prefix),
         h("input", { inputMode: "decimal", value: val, disabled: !!res, placeholder: "Your answer", onChange: (e) => setVal(e.target.value), onKeyDown: (e) => {
           if (e.key === "Enter") res ? nextP() : check();
-        }, autoFocus: true }),
-        !res && h("button", { className: "btn primary", disabled: parseAmount(val) === null, onClick: check }, "Check")
+        }, autoFocus: true, "aria-label": "Your answer" }),
+        p.suffix && h("span", { className: "dr-suffix" }, p.suffix),
+        !res && h("button", { className: "btn primary", disabled: drParse(val) === null, onClick: check }, "Check")
       ),
       res && h(
         "div",
         { className: `calc-result ${res}` },
-        h("strong", null, res === "ok" ? "Correct" : `Not quite. The answer is ${peso(p.ans)}`),
+        h("strong", null, res === "ok" ? "Correct" : `Not quite. The answer is ${p.ansText || peso(p.ans)}`),
         h("ol", { className: "calc-steps" }, p.steps.map((s, k) => h("li", { key: k }, s))),
         h("div", { className: "row-end" }, h("button", { className: "btn primary", onClick: nextP, autoFocus: true }, i + 1 < probs.length ? "Next problem" : "See score"))
       ),
@@ -3667,6 +3729,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const [timerTopic, setTimerTopic] = useState(() => defaultTopic(subject) || "");
     const [timerMins, setTimerMins] = useState(() => localPref("timerMins", 25));
     const timer = useTimer();
+    const [drMgr, setDrMgr] = useState(false);
     const startReview = () => {
       const items = interleave([...rv.due, ...shuffle(rv.fresh)], rv.mist);
       setMode({ kind: "study", title: "Daily review", items });
@@ -3709,13 +3772,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
           ready.parts.map((p) => h("div", { key: p.k, className: "ready-part", title: p.hint }, h("span", { className: "small" }, p.k), h("div", { className: "bar-sm" }, h("span", { style: { width: `${Math.round(p.v * 100)}%` } })), h("span", { className: "small muted num" }, `${Math.round(p.v * 100)}%`))),
           h("div", { className: "step-actions" }, h("button", { className: "btn primary", onClick: () => setMode({ kind: "study", title: `${exam.title} mix`, items: examMix(subject, exam).map((c) => ({ kind: "card", id: c.id })) }) }, "Start exam mix"), h("span", { className: "muted small" }, "20 of your weakest cards, mixed across topics"))
         ),
-        h(
-          "div",
-          { className: "panel" },
-          h("span", { className: "panel-kicker" }, h(Icon, { name: "chart", size: 16 }), " Computation drills"),
-          h("p", { className: "muted" }, "Five problems with new numbers every time. Your score is saved as a quiz."),
-          h("div", { className: "compute-sets" }, [["all", "Mixed"], ["t5", "Cash flows (T5)"], ["t6", "Provisions & errors (T6)"]].map(([k, l]) => h("button", { key: k, className: "btn", onClick: () => setMode({ kind: "compute", set: k }) }, l)))
-        ),
+        h(DrPanel, { subject, onStart: (k) => setMode({ kind: "compute", set: k }), onManage: () => setDrMgr(true) }),
         h(
           "div",
           { className: "panel" },
@@ -3747,7 +3804,11 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
             h("tbody", null, strength.map((x) => h("tr", { key: x.t.id }, h("td", null, h("button", { className: "link-btn", onClick: () => go("vault", { topic: x.t.id }) }, x.t.code || x.t.title)), h("td", null, h("div", { className: "bar-sm" }, h("span", { style: { width: `${x.s}%` } }))), h("td", { className: "num" }, x.due), h("td", { className: "num" }, x.lapses))))
           )) : h("p", { className: "muted" }, "Add flashcards to see how well each topic is sticking.")
         )
-      )
+      ),
+      drMgr && h(DrManager, { subject, update, toast, onClose: () => setDrMgr(false), onRun: (k) => {
+        setDrMgr(false);
+        setMode({ kind: "compute", set: k });
+      } })
     );
   }
 
@@ -4523,7 +4584,8 @@ THE PART I'M STUCK ON:
       examLine: exam ? `an upcoming ${exam.title}` : "an upcoming exam",
       examScope,
       examDate: exam && exam.due ? fmtDay(exam.due, "long") : "",
-      today: today()
+      today: today(),
+      topicTitles: topics.map((x) => x.title)
     };
   }
   function NotebookLMPrompts({ subject, toast, onImport }) {
@@ -5502,6 +5564,973 @@ Rules: the numbers above are only an example of the format; use the real ones fr
       ret && h("span", { className: `small gc-need-v ${gcStateCls(ret.state)}` }, `Retention ${ret.want}: ${GC_RET_TXT[ret.state].toLowerCase()}${ret.L && ret.state !== "secured" && ret.state !== "lost" ? `, need ${ret.view.t}` : ""}`)
     );
   }
+  /* ===================== Textbook map and computation drills for any subject (October 2026) =====================
+     Two optional subject fields. Like `grading`, each syncs as part of the subject (last writer wins):
+       subject.book   = { title, author, chapters: [{ id, no, name, page, topicId }] }
+       subject.drills = [{ id, topicId, topicText, name, q, vars, given, ans, fmt, dp, unit, cur, steps, req, tol }]
+     CFAS keeps its built-in TEXTBOOK and PROBLEMS (subject.textbook === true). Editing or importing a map
+     into CFAS copies the built-in chapters into subject.book first; imported drills sit beside the built-ins. */
+
+  /* ----- a small, safe formula engine: + - * / ^ %, comparisons, && ||, functions. No eval. ----- */
+  const drRound = (x, d = 0) => {
+    const f = Math.pow(10, d);
+    return Math.sign(x) * Math.round(Math.abs(x) * f * (1 + 1e-12)) / f;
+  };
+  const drPva = (r, n, p = 1) => r ? p * (1 - Math.pow(1 + r, -n)) / r : p * n;
+  const drFva = (r, n, p = 1) => r ? p * (Math.pow(1 + r, n) - 1) / r : p * n;
+  const DR_FN = {
+    round: drRound,
+    floor: (x, d = 0) => Math.floor(x * Math.pow(10, d) + 1e-9) / Math.pow(10, d),
+    ceil: (x, d = 0) => Math.ceil(x * Math.pow(10, d) - 1e-9) / Math.pow(10, d),
+    abs: Math.abs, sqrt: Math.sqrt, pow: Math.pow, exp: Math.exp, ln: Math.log, log10: Math.log10,
+    log: (x, b) => b ? Math.log(x) / Math.log(b) : Math.log10(x),
+    min: (...a) => Math.min(...a), max: (...a) => Math.max(...a),
+    sum: (...a) => a.reduce((x, y) => x + y, 0), avg: (...a) => a.length ? a.reduce((x, y) => x + y, 0) / a.length : NaN,
+    pvf: (r, n) => Math.pow(1 + r, -n), fvf: (r, n) => Math.pow(1 + r, n),
+    pva: drPva, pvad: (r, n, p = 1) => drPva(r, n, p) * (1 + r),
+    fva: drFva, fvad: (r, n, p = 1) => drFva(r, n, p) * (1 + r),
+    pmt: (r, n, pv) => r ? pv * r / (1 - Math.pow(1 + r, -n)) : pv / n
+  };
+  const DR_CONST = { pi: Math.PI };
+  const DR_NAME = /^[A-Za-z_][A-Za-z0-9_]*$/;
+  function drLex(src) {
+    const s = String(src).replace(/[−–—]/g, "-").replace(/[×·]/g, "*").replace(/÷/g, "/").replace(/≤/g, "<=").replace(/≥/g, ">=").replace(/≠/g, "!=");
+    const out = [];
+    let i = 0;
+    while (i < s.length) {
+      const rest = s.slice(i);
+      if (/^\s/.test(rest)) { i++; continue; }
+      let m = rest.match(/^(\d+\.?\d*|\.\d+)(e[+-]?\d+)?(?![A-Za-z_])/i) || rest.match(/^(\d+\.?\d*|\.\d+)/);
+      if (m) { out.push({ t: "n", v: parseFloat(m[0]) }); i += m[0].length; continue; }
+      m = rest.match(/^[A-Za-z_][A-Za-z0-9_]*/);
+      if (m) { out.push({ t: "id", v: m[0] }); i += m[0].length; continue; }
+      m = rest.match(/^(\*\*|<=|>=|==|!=|&&|\|\||[-+*/^%(),<>!=])/);
+      if (m) { out.push({ t: "op", v: m[0] === "**" ? "^" : m[0] === "=" ? "==" : m[0] }); i += m[0].length; continue; }
+      throw new Error(`“${rest[0]}” can’t be used in a formula`);
+    }
+    return out;
+  }
+  const drCache = new Map();
+  // Compiles a formula into a function of a scope object. The function's .deps lists the names it reads.
+  function drCompile(src) {
+    const key = String(src == null ? "" : src).trim();
+    if (drCache.has(key)) return drCache.get(key);
+    if (!key) throw new Error("A formula is empty");
+    const tk = drLex(key), deps = new Set();
+    let i = 0;
+    const isOp = (v) => tk[i] && tk[i].t === "op" && tk[i].v === v;
+    const startsOperand = (t) => t && (t.t === "n" || t.t === "id" || t.t === "op" && t.v === "(");
+    const bool = (x) => x ? 1 : 0;
+    function or() { let a = and(); while (isOp("||")) { i++; const l = a, r = and(); a = (s) => bool(l(s) || r(s)); } return a; }
+    function and() { let a = cmp(); while (isOp("&&")) { i++; const l = a, r = cmp(); a = (s) => bool(l(s) && r(s)); } return a; }
+    function cmp() {
+      let a = add();
+      while (tk[i] && tk[i].t === "op" && ["<", ">", "<=", ">=", "==", "!="].includes(tk[i].v)) {
+        const op = tk[i++].v, l = a, r = add();
+        a = (s) => {
+          const x = l(s), y = r(s), eq = Math.abs(x - y) <= 1e-9 * Math.max(1, Math.abs(x), Math.abs(y));
+          return bool(op === "<" ? x < y && !eq : op === ">" ? x > y && !eq : op === "<=" ? x < y || eq : op === ">=" ? x > y || eq : op === "==" ? eq : !eq);
+        };
+      }
+      return a;
+    }
+    function add() {
+      let a = mul();
+      while (isOp("+") || isOp("-")) { const op = tk[i++].v, l = a, r = mul(); a = op === "+" ? (s) => l(s) + r(s) : (s) => l(s) - r(s); }
+      return a;
+    }
+    function mul() {
+      let a = unary();
+      for (;;) {
+        if (isOp("*") || isOp("/") || isOp("%")) {
+          const op = tk[i++].v, l = a, r = unary();
+          a = op === "*" ? (s) => l(s) * r(s) : op === "/" ? (s) => l(s) / r(s) : (s) => l(s) % r(s);
+        } else if (startsOperand(tk[i])) {
+          const l = a, r = unary();
+          a = (s) => l(s) * r(s); // 2(a+b) or 2x
+        } else return a;
+      }
+    }
+    function unary() {
+      if (isOp("-")) { i++; const x = unary(); return (s) => -x(s); }
+      if (isOp("+")) { i++; return unary(); }
+      if (isOp("!")) { i++; const x = unary(); return (s) => bool(!x(s)); }
+      return power();
+    }
+    function power() {
+      const b = postfix();
+      if (isOp("^")) { i++; const e = unary(); return (s) => Math.pow(b(s), e(s)); }
+      return b;
+    }
+    function postfix() {
+      let a = primary();
+      // "12%" means 0.12, but "a % b" is a remainder
+      while (isOp("%") && !startsOperand(tk[i + 1])) { i++; const x = a; a = (s) => x(s) / 100; }
+      return a;
+    }
+    function primary() {
+      const t = tk[i++];
+      if (!t) throw new Error("A formula ends too early");
+      if (t.t === "n") { const v = t.v; return () => v; }
+      if (t.t === "op" && t.v === "(") { const x = or(); if (!isOp(")")) throw new Error("A “(” is never closed"); i++; return x; }
+      if (t.t === "id") {
+        if (isOp("(")) {
+          i++;
+          const name = t.v.toLowerCase(), args = [];
+          if (!isOp(")")) for (;;) { args.push(or()); if (isOp(",")) { i++; continue; } break; }
+          if (!isOp(")")) throw new Error(`${t.v}( is never closed`);
+          i++;
+          if (name === "if") {
+            if (args.length !== 3) throw new Error("if() needs three parts: if(condition, value if true, value if false)");
+            const [c, x, y] = args;
+            return (s) => c(s) ? x(s) : y(s);
+          }
+          const fn = DR_FN[name];
+          if (!fn) throw new Error(`There’s no function called ${t.v}()`);
+          return (s) => fn(...args.map((f) => f(s)));
+        }
+        const name = t.v;
+        deps.add(name);
+        return (s) => {
+          if (Object.prototype.hasOwnProperty.call(s, name)) return s[name];
+          if (Object.prototype.hasOwnProperty.call(DR_CONST, name)) return DR_CONST[name];
+          throw new Error(`“${name}” isn’t defined`);
+        };
+      }
+      throw new Error(`“${t.v}” is in the wrong place`);
+    }
+    const fn = or();
+    if (i < tk.length) throw new Error(`“${tk[i].v}” is in the wrong place in ${key}`);
+    fn.deps = [...deps];
+    if (drCache.size > 800) drCache.clear();
+    drCache.set(key, fn);
+    return fn;
+  }
+  const drEval = (src, scope) => drCompile(src)(scope || {});
+
+  /* ----- drill templates: read anything NotebookLM sends, store one clean shape ----- */
+  const DR_FMT = { money: "money", peso: "money", pesos: "money", php: "money", currency: "money", "₱": "money", count: "count", integer: "count", int: "count", units: "count", whole: "count", percent: "percent", percentage: "percent", pct: "percent", "%": "percent", number: "number", decimal: "number", plain: "number", numeric: "number" };
+  const drFmtOf = (v, dflt) => DR_FMT[norm(v).replace(/ /g, "")] || DR_FMT[String(v || "").trim()] || dflt;
+  const drDecimals = (x) => { const m = String(x).match(/\.(\d+)$/); return m ? m[1].length : 0; };
+  function drNiceStep(lo, hi) {
+    const big = Math.max(Math.abs(lo), Math.abs(hi));
+    if (!big) return 1;
+    const st = Math.pow(10, Math.floor(Math.log10(big)) - 2);
+    return Number.isInteger(lo) && Number.isInteger(hi) ? Math.max(1, st) : st;
+  }
+  function drVar(n, v) {
+    if (!DR_NAME.test(n)) return null;
+    const num = (x) => x !== null && x !== "" && x !== void 0 && Number.isFinite(Number(x)) ? Number(x) : null;
+    const range = (a, b, st) => {
+      let lo = Math.min(a, b), hi = Math.max(a, b), step = num(st);
+      if (!(step > 0)) step = drNiceStep(lo, hi);
+      return { n, min: lo, max: hi, step };
+    };
+    if (typeof v === "number") return Number.isFinite(v) ? { n, fixed: v } : null;
+    if (typeof v === "string") {
+      const t = v.trim();
+      if (!t) return null;
+      if (/^-?[\d,]*\.?\d+$/.test(t)) return { n, fixed: Number(t.replace(/,/g, "")) };
+      return { n, expr: t };
+    }
+    if (Array.isArray(v)) {
+      const xs = v.map(num);
+      if (!xs.length || xs.some((x) => x === null)) return null;
+      if (xs.length === 1) return { n, fixed: xs[0] };
+      if (xs.length === 2) return range(xs[0], xs[1]);
+      // [min, max, step] when the third number fits as a step; otherwise a list to pick from
+      if (xs.length === 3 && xs[2] > 0 && xs[1] > xs[0] && xs[2] <= xs[1] - xs[0]) return range(xs[0], xs[1], xs[2]);
+      return { n, pick: xs };
+    }
+    if (v && typeof v === "object") {
+      const list = pick(v, ["choices", "pick", "values", "oneOf", "options", "list"]);
+      if (list.length) { const xs = list.map(num).filter((x) => x !== null); return xs.length ? { n, pick: xs } : null; }
+      if (num(v.fixed) !== null) return { n, fixed: num(v.fixed) };
+      if (num(v.value) !== null) return { n, fixed: num(v.value) };
+      const ex = first(v, ["expr", "formula", "calc"]);
+      if (ex) return { n, expr: ex };
+      const a = num(v.min != null ? v.min : v.from != null ? v.from : v.low != null ? v.low : v.lo);
+      const b = num(v.max != null ? v.max : v.to != null ? v.to : v.high != null ? v.high : v.hi);
+      if (a !== null && b !== null) return range(a, b, v.step != null ? v.step : v.by != null ? v.by : v.round);
+    }
+    return null;
+  }
+  function drGivenRow(g) {
+    if (Array.isArray(g)) g = { label: g[0], expr: g[1], fmt: g[2] };
+    if (!g || typeof g !== "object") return null;
+    const label = first(g, ["label", "name", "item", "title", "description"]);
+    const raw = g.expr != null ? g.expr : g.value != null ? g.value : g.formula != null ? g.formula : g.var != null ? g.var : g.amount;
+    if (!label || raw === void 0 || raw === null || String(raw).trim() === "") return null;
+    return { label: label.slice(0, 160), expr: String(raw).trim(), fmt: drFmtOf(first(g, ["fmt", "format", "type"]), "") };
+  }
+  function drStep(x) {
+    if (typeof x === "string") return x.trim() ? x.trim() : null;
+    if (!x || typeof x !== "object") return null;
+    const text = first(x, ["text", "step", "t", "say", "explanation"]);
+    if (!text) return null;
+    const cond = first(x, ["if", "when", "condition", "only"]);
+    return cond ? { text, if: cond } : text;
+  }
+  // One template in the stored shape, or null when it has no question or answer.
+  function drNorm(x) {
+    if (!x || typeof x !== "object") return null;
+    const q = first(x, ["q", "question", "problem", "prompt", "task"]);
+    const ansRaw = x.ans != null ? x.ans : x.answer != null ? x.answer : x.answerFormula != null ? x.answerFormula : x.formula != null ? x.formula : x.result != null ? x.result : x.finalAnswer;
+    const ans = ansRaw === void 0 || ansRaw === null || typeof ansRaw === "object" ? "" : String(ansRaw).trim();
+    if (!q || !ans) return null;
+    const vRaw = x.vars !== void 0 ? x.vars : x.variables !== void 0 ? x.variables : x.inputs !== void 0 ? x.inputs : x.randomize;
+    let vars = [];
+    if (Array.isArray(vRaw)) vars = vRaw.map((v) => {
+      if (!v || typeof v !== "object" || Array.isArray(v)) return null;
+      const { n, name, var: _v, id, ...rest } = v;
+      return drVar(first(v, ["n", "name", "var", "id"]), rest);
+    });
+    else if (vRaw && typeof vRaw === "object") vars = Object.entries(vRaw).map(([n, v]) => drVar(n, v));
+    vars = vars.filter(Boolean).filter((v, k, a) => a.findIndex((y) => y.n === v.n) === k);
+    const gRaw = x.given !== void 0 ? x.given : x.data !== void 0 ? x.data : x.table !== void 0 ? x.table : x.givens !== void 0 ? x.givens : x.lines;
+    let given = [];
+    if (Array.isArray(gRaw)) given = gRaw.map(drGivenRow).filter(Boolean);
+    else if (gRaw && typeof gRaw === "object") given = Object.entries(gRaw).map(([label, v]) => drGivenRow(v && typeof v === "object" && !Array.isArray(v) ? { label, ...v } : { label, expr: v })).filter(Boolean);
+    const sRaw = Array.isArray(x.steps) ? x.steps : Array.isArray(x.solutionSteps) ? x.solutionSteps : Array.isArray(x.solution) ? x.solution : Array.isArray(x.explanation) ? x.explanation : [];
+    let req = x.req != null ? x.req : x.require != null ? x.require : x.requires != null ? x.requires : x.constraint != null ? x.constraint : x.constraints != null ? x.constraints : x.condition;
+    if (Array.isArray(req)) req = req.filter((r) => typeof r === "string" && r.trim()).map((r) => `(${r})`).join(" && ");
+    const unit = first(x, ["unit", "units", "answerUnit"]).slice(0, 16);
+    const fmtRaw = first(x, ["fmt", "format", "answerFormat", "type"]);
+    let fmt = drFmtOf(fmtRaw, "");
+    if (!fmt) fmt = /₱|php|peso/i.test(unit) ? "money" : unit === "%" ? "percent" : "number";
+    const dpRaw = [x.dp, x.decimals, x.decimalPlaces, x.places, x.roundTo].find((v) => v !== void 0 && v !== null && String(v).trim() !== "");
+    const dpN = dpRaw === void 0 ? NaN : Number(dpRaw);
+    const tolN = Number(x.tol != null ? x.tol : x.tolerance);
+    return {
+      id: typeof x.id === "string" && /^dr/.test(x.id) ? x.id : uid("dr"),
+      topicId: typeof x.topicId === "string" && x.topicId ? x.topicId : null,
+      topicText: first(x, ["topicText", "topic", "chapter", "standard", "module"]),
+      name: (first(x, ["name", "title", "skill", "problemType"]) || q.slice(0, 48)).slice(0, 90),
+      q, vars, given, ans,
+      fmt,
+      dp: Number.isInteger(dpN) && dpN >= 0 && dpN <= 8 ? dpN : null,
+      unit: fmt === "money" || fmt === "percent" ? "" : unit.replace(/^%$/, ""),
+      cur: fmt === "money" ? (first(x, ["cur", "currency", "symbol"]).slice(0, 4) || "₱").replace(/^php$/i, "₱") : "",
+      steps: sRaw.map(drStep).filter(Boolean),
+      req: typeof req === "string" ? req.trim() : "",
+      tol: Number.isFinite(tolN) && tolN > 0 ? tolN : null
+    };
+  }
+  const drList = (subject) => (Array.isArray(subject && subject.drills) ? subject.drills : []).map(drNorm).filter(Boolean);
+  const drIsRandom = (t) => t.vars.some((v) => v.pick ? new Set(v.pick).size > 1 : v.min != null && v.max > v.min);
+  const DR_PH = /\{([^{}]+)\}/g;
+  const drSplitPh = (inner) => {
+    const m = inner.match(/^(.*?)\s*\|\s*(money|peso|number|count|int|percent|%|\d)\s*$/i);
+    return m ? [m[1].trim(), m[2].toLowerCase()] : [inner.trim(), ""];
+  };
+  // Throws a plain-language error if any formula in the template is broken or uses a name that isn't defined.
+  function drCheck(t) {
+    const names = new Set();
+    const need = (src, where, extra) => {
+      let f;
+      try {
+        f = drCompile(src);
+      } catch (e) {
+        throw new Error(`${where}: ${e.message}`);
+      }
+      for (const d of f.deps) if (!names.has(d) && !(extra && extra.has(d)) && !Object.prototype.hasOwnProperty.call(DR_CONST, d)) throw new Error(`${where}: “${d}” isn’t one of the variables`);
+    };
+    for (const v of t.vars) {
+      if (v.expr) need(v.expr, `Variable ${v.n}`);
+      names.add(v.n);
+    }
+    need(t.ans, "Answer");
+    if (t.req) need(t.req, "Require");
+    t.given.forEach((g) => need(g.expr, `Given “${g.label}”`));
+    const withAns = new Set(["answer"]);
+    const holes = (text, where) => {
+      for (const m of String(text).matchAll(DR_PH)) need(drSplitPh(m[1])[0], where, withAns);
+    };
+    holes(t.q, "Question");
+    t.steps.forEach((s, k) => {
+      if (typeof s === "object") { need(s.if, `Step ${k + 1} condition`, withAns); holes(s.text, `Step ${k + 1}`); } else holes(s, `Step ${k + 1}`);
+    });
+    return true;
+  }
+  function drFmt(v, fmt, dp, t, withUnit) {
+    if (!Number.isFinite(v)) return "?";
+    const opt = dp != null ? { minimumFractionDigits: dp, maximumFractionDigits: dp } : { maximumFractionDigits: fmt === "count" ? 0 : fmt === "number" ? 4 : 2 };
+    const abs = Math.abs(v).toLocaleString("en-PH", opt), neg = v < 0 && /[1-9]/.test(abs) ? "−" : "";
+    if (fmt === "money") return `${neg}${t && t.cur || "₱"}${abs}`;
+    if (fmt === "percent") return `${neg}${abs}%`;
+    return `${neg}${abs}${withUnit && t && t.unit ? ` ${t.unit}` : ""}`;
+  }
+  const DR_PH_FMT = { money: "money", peso: "money", number: "number", count: "count", int: "count", percent: "percent", "%": "percent" };
+  const drGivenFmt = (t) => t.fmt === "percent" ? "number" : t.fmt;
+  function drFill(text, sc, t, fmtOf) {
+    return String(text).replace(DR_PH, (all, inner) => {
+      const [ex, f] = drSplitPh(inner);
+      let v;
+      try {
+        v = drEval(ex, sc);
+      } catch {
+        return all;
+      }
+      if (/^\d$/.test(f)) return drFmt(v, "number", Number(f), t);
+      if (f) return drFmt(v, DR_PH_FMT[f], null, t);
+      if (ex === "answer") return drFmt(v, t.fmt, t.dp, t, true);
+      return drFmt(v, fmtOf[ex] || drGivenFmt(t), null, t);
+    });
+  }
+  function drDraw(v, sc) {
+    if (v.fixed != null) return v.fixed;
+    if (v.pick) return v.pick[Math.floor(Math.random() * v.pick.length)];
+    if (v.expr) return drEval(v.expr, sc);
+    const k = Math.floor((v.max - v.min) / v.step + 1e-9);
+    const x = v.min + Math.floor(Math.random() * (k + 1)) * v.step;
+    return Number(x.toFixed(Math.min(10, Math.max(drDecimals(v.step), drDecimals(v.min)))));
+  }
+  // One problem with fresh numbers, in the shape ComputeSet shows.
+  function drMake(t) {
+    drCheck(t);
+    let why = "";
+    for (let tries = 0; tries < 120; tries++) {
+      const sc = {};
+      let bad = false;
+      for (const v of t.vars) {
+        const x = drDraw(v, sc);
+        if (!Number.isFinite(x)) { bad = true; why = `${v.n} didn’t come out as a number`; break; }
+        sc[v.n] = x;
+      }
+      if (bad) continue;
+      if (t.req && !drEval(t.req, sc)) { why = "the numbers never met the “require” condition"; continue; }
+      let ans = drEval(t.ans, sc);
+      if (!Number.isFinite(ans)) { why = "the answer didn’t come out as a number (dividing by zero?)"; continue; }
+      if (t.dp != null) ans = drRound(ans, t.dp);
+      if (t.fmt === "count" && t.dp == null) ans = Math.round(ans);
+      sc.answer = ans;
+      const fmtOf = {};
+      for (const g of t.given) if (DR_NAME.test(g.expr) && g.fmt) fmtOf[g.expr] = g.fmt;
+      const lines = t.given.map((g) => [g.label, drFmt(drEval(g.expr, sc), g.fmt || drGivenFmt(t), null, t), "text"]);
+      const steps = t.steps.filter((s) => typeof s !== "object" || drEval(s.if, sc)).map((s) => drFill(typeof s === "object" ? s.text : s, sc, t, fmtOf));
+      const tol = t.tol != null ? t.tol : t.fmt === "money" ? Math.max(t.dp ? 0.5 * Math.pow(10, -t.dp) : 1, Math.abs(ans) * 5e-4) : t.fmt === "count" ? 0.5 : t.dp != null ? Math.max(0.5 * Math.pow(10, -t.dp), Math.abs(ans) * 5e-4) : Math.max(1e-9, Math.abs(ans) * 5e-3);
+      return {
+        lines, q: drFill(t.q, sc, t, fmtOf), ans, steps,
+        ansText: drFmt(ans, t.fmt, t.dp, t, true),
+        prefix: t.fmt === "money" ? t.cur || "₱" : "",
+        suffix: t.fmt === "percent" ? "%" : t.unit || "",
+        tol, pct: t.fmt === "percent"
+      };
+    }
+    throw new Error(`Couldn’t make this problem: ${why}`);
+  }
+  // Reads the user's answer: "₱1,234", "(500)", "12.5%", "PHP 900", "9.8 m/s".
+  const drParse = (v) => {
+    let s = String(v || "").trim().replace(/[−–—]/g, "-").replace(/[₱$€£¥,\s]/g, "").replace(/^(php|usd)\.?/i, "").replace(/%$/, "");
+    s = s.replace(/[A-Za-z°µ/²³]+\.?$/, "").replace(/^\((.*)\)$/, "-$1");
+    return s === "" || isNaN(Number(s)) ? null : Number(s);
+  };
+  // Every drill this subject can run: CFAS built-ins first, then imported or hand-made templates.
+  function drPool(subject) {
+    const out = [];
+    if (subject.textbook === true) for (const p of PROBLEMS) out.push({ key: `b_${p.id}`, name: p.name, topic: p.topic, builtin: true, make: () => p.make() });
+    for (const t of drList(subject)) {
+      try {
+        drCheck(t);
+      } catch {
+        continue;
+      }
+      out.push({ key: t.id, name: t.name, topic: t.topicId && subject.topics.some((x) => x.id === t.topicId) ? t.topicId : null, topicText: t.topicText, fixed: !drIsRandom(t), make: () => drMake(t) });
+    }
+    return out;
+  }
+  // Up to n problems; a template with fixed numbers is used once, a random one can repeat with new numbers.
+  function drPickSet(pool, n) {
+    const out = [], once = new Set(), broken = new Set();
+    for (let round = 0; out.length < n && round < 12; round++) {
+      let progress = false;
+      for (const p of shuffle(pool)) {
+        if (out.length >= n) break;
+        if (broken.has(p.key) || p.fixed && once.has(p.key)) continue;
+        try {
+          out.push({ ...p.make(), name: p.name, topic: p.topic, topicText: p.topicText });
+          if (p.fixed) once.add(p.key);
+          progress = true;
+        } catch {
+          broken.add(p.key);
+        }
+      }
+      if (!progress) break;
+    }
+    return out;
+  }
+  const DR_BUILTIN_SETS = { t5: "Cash flows (T5)", t6: "Provisions & errors (T6)" };
+  const drShort = (s, n) => s.length > n ? s.slice(0, n - 1).trimEnd() + "…" : s;
+  function drSets(subject, pool) {
+    const ids = new Set(pool.map((p) => p.topic).filter(Boolean));
+    const sets = [["all", "Mixed"]];
+    for (const t of subject.topics) {
+      if (!ids.has(t.id)) continue;
+      const onlyBuiltin = pool.filter((p) => p.topic === t.id).every((p) => p.builtin);
+      sets.push([t.id, subject.textbook === true && onlyBuiltin && DR_BUILTIN_SETS[t.id] || `${drShort(t.title, 30)}${t.code ? ` (${t.code})` : ""}`]);
+    }
+    return sets;
+  }
+  // Pulls drill templates out of any JSON NotebookLM sends: { drills: [...] }, a bare list, or one template.
+  function drFromJSON(obj) {
+    let raw = [];
+    if (Array.isArray(obj)) raw = obj;
+    else if (obj && typeof obj === "object") {
+      raw = pick(obj, ["drills", "computationDrills", "computations", "drillTemplates", "computationProblems"]);
+      if (!raw.length && (obj.question || obj.q || obj.problem) && (obj.answer != null || obj.ans != null || obj.formula != null)) raw = [obj];
+    }
+    const ok = [], bad = [];
+    for (const x of raw) {
+      const t = drNorm(x);
+      if (!t) { bad.push("a problem with no question or answer"); continue; }
+      try {
+        drMake(t);
+        ok.push(t);
+      } catch (e) {
+        bad.push(`“${t.name}”: ${e.message}`);
+      }
+    }
+    return { ok, bad };
+  }
+  const drLooksLike = (x) => x && typeof x === "object" && (x.vars || x.variables || x.given || x.answerFormula || x.givens);
+  function drApply(s, list) {
+    s.drills = Array.isArray(s.drills) ? s.drills : [];
+    let added = 0, skipped = 0;
+    for (const d of list) {
+      if (s.drills.some((x) => x && norm(x.name) === norm(d.name) && norm(x.q) === norm(d.q))) { skipped++; continue; }
+      const { id, ...rest } = d;
+      s.drills.push({ ...clone(rest), id: uid("dr"), topicId: d.topicId && s.topics.some((x) => x.id === d.topicId) ? d.topicId : matchTopic(s, d.topicText) });
+      added++;
+    }
+    return { added, skipped };
+  }
+
+  /* ----- textbook maps ----- */
+  function bkChapter(c) {
+    if (typeof c === "string") c = { name: c };
+    else if (Array.isArray(c)) c = { name: c[0], page: c[1], topic: c[2] };
+    if (!c || typeof c !== "object") return null;
+    let name = first(c, ["name", "title", "chapterTitle", "heading"]);
+    let no = first(c, ["no", "number", "chapterNumber", "num", "chapter"]);
+    if (!name && no && !/^(chapter|ch\.?|unit|module|part)?\s*[\dIVXivx]+[a-z]?$/i.test(no)) { name = no; no = ""; }
+    if (!name) return null;
+    if (no.length > 14 || norm(name).startsWith(norm(no))) no = "";
+    const pg = [c.page, c.startPage, c.p, c.pages, c.start].find((x) => x !== void 0 && x !== null && String(x).trim() !== "");
+    let page = null;
+    if (pg !== void 0) {
+      const m = String(pg).match(/^\s*(?:pp?\.?\s*)?(\d+)/i);
+      page = m ? Number(m[1]) : String(pg).trim().slice(0, 12) || null;
+    }
+    const tKey = ["topic", "roadmapTopic", "topicTitle", "inScope"].find((k) => c[k] !== void 0);
+    return {
+      id: typeof c.id === "string" && /^bk/.test(c.id) ? c.id : uid("bk"),
+      no, name: name.slice(0, 200), page,
+      topicId: typeof c.topicId === "string" && c.topicId ? c.topicId : null,
+      topicText: tKey ? (c[tKey] === null || c[tKey] === false ? "" : String(c[tKey]).trim()) : void 0
+    };
+  }
+  function bkNorm(b) {
+    if (Array.isArray(b)) b = { chapters: b };
+    if (!b || typeof b !== "object") return null;
+    const chapters = pick(b, ["chapters", "contents", "toc", "tableOfContents", "items", "sections"]).map(bkChapter).filter(Boolean);
+    return {
+      title: first(b, ["title", "name", "bookTitle", "book"]).slice(0, 200),
+      author: [first(b, ["author", "authors", "by"]), first(b, ["edition", "year"])].filter(Boolean).join(", ").slice(0, 200),
+      chapters
+    };
+  }
+  // The map to show: the subject's own, else the CFAS built-in, else null.
+  function bkOf(subject) {
+    if (subject.book && typeof subject.book === "object") {
+      const b = bkNorm(subject.book);
+      return b && b.chapters.length ? b : null;
+    }
+    if (subject.textbook === true) return { builtin: true, title: "", author: "", chapters: TEXTBOOK.map(([name, page, tid], i) => ({ id: `bk_cfas_${i}`, no: "", name, page, topicId: tid || null })) };
+    return null;
+  }
+  const bkIsPages = (cs) => cs.length > 1 && cs.every((c) => typeof c.page === "number");
+  // Adds or updates chapters by name. Links a chapter to a roadmap topic from its "topic" field,
+  // or from its own name when NotebookLM didn't send a "topic" field at all.
+  function bkMerge(subject, base, inc) {
+    const out = { title: inc.title || base && base.title || "", author: inc.author || base && base.author || "", chapters: (base ? base.chapters : []).map(({ topicText, ...c }) => ({ ...c, id: /^bk_cfas_/.test(c.id) ? uid("bk") : c.id })) };
+    let added = 0, updated = 0;
+    for (const c of inc.chapters) {
+      const tid = c.topicId && subject.topics.some((x) => x.id === c.topicId) ? c.topicId : c.topicText !== void 0 ? c.topicText ? matchTopic(subject, c.topicText) : null : matchTopic(subject, c.name);
+      const hit = out.chapters.find((x) => norm(x.name) === norm(c.name));
+      if (hit) {
+        if (c.page != null) hit.page = c.page;
+        if (c.no) hit.no = c.no;
+        if (tid) hit.topicId = tid;
+        updated++;
+      } else {
+        out.chapters.push({ id: uid("bk"), no: c.no || "", name: c.name, page: c.page, topicId: tid || null });
+        added++;
+      }
+    }
+    if (bkIsPages(out.chapters)) out.chapters.sort((a, b) => a.page - b.page);
+    return { book: out, added, updated };
+  }
+  const bkInScope = (subject, c) => !!(c.topicId && subject.topics.some((t) => t.id === c.topicId));
+  const bkTopicLabel = (subject, id) => {
+    const t = subject.topics.find((x) => x.id === id);
+    return t ? t.code || drShort(t.title, 22) : "";
+  };
+  const bkParseJSON = (raw) => {
+    const text = String(raw || "").trim().replace(/^```[a-z]*\s*/i, "").replace(/```\s*$/, "");
+    try {
+      return JSON.parse(text);
+    } catch {
+      const m = text.match(/[{[][\s\S]*[}\]]/);
+      try {
+        return m ? JSON.parse(m[0]) : null;
+      } catch {
+        return null;
+      }
+    }
+  };
+  // The textbook part of an import: { textbook: {...} }, { book: {...} }, or the textbook object itself.
+  // `loose` also accepts a bare { chapters: [...] } or a bare list (used by the map editor, not by Import data,
+  // where "chapters" already means roadmap topics).
+  function bkFromJSON(obj, loose) {
+    if (!obj || typeof obj !== "object") return null;
+    const v = !Array.isArray(obj) && (obj.textbook || obj.textbookMap || obj.textbook_map || obj.book);
+    const b = bkNorm(v && typeof v === "object" ? v : loose ? obj : null);
+    return b && b.chapters.length ? b : null;
+  }
+
+  /* ----- NotebookLM prompts for both features (they also appear in Import & export → NotebookLM prompts) ----- */
+  const DR_EXAMPLES = {
+    money: `{
+      "topic": "TOPIC",
+      "name": "Cash collected from customers",
+      "vars": { "sales": [800000, 2500000, 10000], "arBeg": [80000, 300000, 5000], "arEnd": [80000, 300000, 5000] },
+      "require": "arEnd < sales",
+      "given": [["Net credit sales", "sales"], ["Accounts receivable, beginning", "arBeg"], ["Accounts receivable, end", "arEnd"]],
+      "question": "How much cash was collected from customers?",
+      "answer": "sales + arBeg - arEnd",
+      "format": "money",
+      "decimals": 0,
+      "steps": [
+        "Start with net credit sales: {sales}",
+        { "if": "arEnd > arBeg", "text": "Receivables went up by {arEnd - arBeg}: sold but not yet collected, so subtract it" },
+        { "if": "arEnd <= arBeg", "text": "Receivables went down by {arBeg - arEnd}: collected from last year's sales, so add it" },
+        "Cash collected = {answer}"
+      ]
+    }`,
+    stats: `{
+      "topic": "TOPIC",
+      "name": "z-score of a value",
+      "vars": { "mean": [50, 80, 1], "sd": [4, 12, 0.5], "x": [40, 100, 1] },
+      "require": "x != mean",
+      "given": [["Mean", "mean", "number"], ["Standard deviation", "sd", "number"], ["Observed value", "x", "number"]],
+      "question": "What is the z-score of the observed value?",
+      "answer": "(x - mean) / sd",
+      "format": "number",
+      "decimals": 2,
+      "steps": ["z = (x − mean) ÷ standard deviation", "({x} − {mean}) ÷ {sd} = {answer}"]
+    }`,
+    science: `{
+      "topic": "TOPIC",
+      "name": "Current from Ohm's law",
+      "vars": { "v": [6, 240, 6], "r": [2, 120, 2] },
+      "given": [["Voltage (V)", "v", "number"], ["Resistance (Ω)", "r", "number"]],
+      "question": "What current flows through the resistor?",
+      "answer": "v / r",
+      "format": "number",
+      "unit": "A",
+      "decimals": 2,
+      "steps": ["Ohm's law: I = V ÷ R", "{v} ÷ {r} = {answer}"]
+    }`,
+    health: `{
+      "topic": "TOPIC",
+      "name": "Weight-based dose",
+      "vars": { "kg": [8, 40, 0.5], "mgPerKg": { "choices": [10, 15] }, "mgPerMl": { "choices": [100, 250] } },
+      "given": [["Child's weight (kg)", "kg", "number"], ["Ordered dose (mg/kg)", "mgPerKg", "number"], ["Stock (mg per 5 mL)", "mgPerMl", "number"]],
+      "question": "How many mL do you give?",
+      "answer": "kg * mgPerKg / mgPerMl * 5",
+      "format": "number",
+      "unit": "mL",
+      "decimals": 1,
+      "steps": ["Dose in mg = weight × mg/kg = {kg * mgPerKg|number}", "Volume = mg needed ÷ mg in stock × 5 mL = {answer}"]
+    }`
+  };
+  function drExampleFor(c) {
+    const n = norm(c.subject);
+    if (c.kind === "health") return DR_EXAMPLES.health;
+    if (c.kind === "science" || c.kind === "eng") return DR_EXAMPLES.science;
+    if (c.kind === "research" || c.kind === "code") return DR_EXAMPLES.stats;
+    if (c.kind === "calc" && /math|calc|stat|algebra|trig|quant|geometr/.test(n) && !/account|financ|audit|tax|cost/.test(n)) return DR_EXAMPLES.stats;
+    return DR_EXAMPLES.money;
+  }
+  const bkTopicLine = (c) => c.topicTitles && c.topicTitles.length ? `For "topic", use the exact title of the topic in my study roadmap that covers the chapter, chosen from: ${c.topicTitles.map((x) => `"${x}"`).join(", ")}. Use "" when the chapter isn't part of my course.` : `Leave "topic" as "" (my roadmap has no topics yet).`;
+  NLM_PROMPTS.push(
+    { id: "book", group: "setup", json: true, title: "Textbook → textbook map", desc: "Turns the table of contents into a chapter list with start pages, linked to your roadmap topics.", make: (c) => `Find the textbook (or main reference book) for ${c.subject} in my sources and turn its table of contents into a textbook map.
+${NLM_JSON}
+
+{
+  "subject": "${c.subject}",
+  "textbook": {
+    "title": "Full book title",
+    "author": "Author or authors",
+    "edition": "Edition and year",
+    "chapters": [
+      { "chapter": "1", "title": "Chapter title exactly as printed", "page": 1, "topic": "${c.topicTitles && c.topicTitles.length ? c.topicExample : ""}" },
+      { "chapter": "2", "title": "Next chapter title", "page": 37, "topic": "" }
+    ]
+  }
+}
+
+Rules: list every chapter in book order with the page it starts on, as a number. Use null for "page" if you can't see it. ${bkTopicLine(c)} If there is no textbook in my sources but the syllabus lists required readings, map those readings instead.` },
+    { id: "drills", group: "make", json: true, title: "Computation drills (new numbers)", desc: "Problem templates the app re-numbers every time you practice. Shows up in Practice → Computation drills.", make: (c) => `Using my uploaded sources, write 6 to 10 computation drills for ${c.focus} in ${c.subject}. My study app fills in new random numbers every time I practice, so write each drill as a template: variables with sensible ranges, plus the formula for the answer. Base every drill on the methods, formulas and rounding rules my sources teach, with ranges like the numbers in my sources' examples.
+${NLM_JSON}
+
+{
+  "subject": "${c.subject}",
+  "drills": [
+    ${drExampleFor(c).replace("TOPIC", c.topicExample.replace(/"/g, "'"))}
+  ]
+}
+
+How to fill it in:
+- "vars": each variable is [min, max, step] for a random number, a fixed number like 0.12, {"choices": [0.08, 0.10, 0.12]} to pick one, or a formula that uses earlier variables, like "lo + 200000". Names use only letters, numbers and _.
+- Formulas may use + - * / ^ ( ) and round(x, decimals), floor, ceil, abs, min, max, sqrt, pow, exp, ln, log10, if(condition, a, b), and the time-value factors pvf(rate, n), fvf(rate, n), pva(rate, n, payment), pvad(rate, n, payment), fva(rate, n, payment) and pmt(rate, n, presentValue). Write rates as decimals: 0.12, not 12%.
+- "given": the data table, one row per figure, as ["Label", "variable or formula", "format"]. The format is optional; add it only when the row differs from the answer: "money", "number", "count" (units, people, items) or "percent".
+- "format" of the answer: "money" (pesos), "number", "count" or "percent". For "percent", the formula must give the percent number (12.5 for 12.5%). Put units like "km/h" or "mg" in "unit".
+- "decimals": the decimal places the final answer is rounded to, the way my sources round it.
+- "require" (optional): a condition the random numbers must meet so the problem always makes sense, like "cost < price".
+- In "question" and "steps", put any value in curly braces to show it: {sales}, {arBeg - arEnd} or {answer}. Add |count, |number, |percent or |money to change how it shows, like {units|count}.
+- Every step must stay true for ANY numbers the variables can take. If a step depends on the numbers, write it as {"if": "condition", "text": "…"} so it only shows when the condition holds.
+- Each drill has one numeric final answer. Skip ideas that can't be checked with a single number.
+- ${c.topicRule}
+${c.kindHint}` }
+  );
+  const nlmPromptFor = (subject, id, topicId) => {
+    const p = NLM_PROMPTS.find((x) => x.id === id);
+    return p ? p.make(nlmContext(subject, topicId || "", localPref(`nlmKind_${subject.id}`, nlmGuessKind(subject)))) : "";
+  };
+
+  /* ----- Roadmap: textbook map panel and editor ----- */
+  const bkHasPage = (c) => c.page !== null && c.page !== void 0 && c.page !== "";
+  function BkPanel({ subject, show, setShow, onEdit }) {
+    const book = bkOf(subject);
+    if (!book) {
+      return h("div", { className: "book panel" }, h("button", { className: "disclosure", onClick: onEdit }, h(Icon, { name: "book", size: 18 }), " Textbook map ", h("span", { className: "muted" }, "Not set up yet. Add the chapters, or import them from NotebookLM."), h("span", { className: "chev-i" }, h(Icon, { name: "plus", size: 16 }))));
+    }
+    const inScope = book.chapters.filter((c) => bkInScope(subject, c)).length;
+    return h(
+      "div",
+      { className: "book panel" },
+      h("button", { className: "disclosure", onClick: () => setShow((v) => !v), "aria-expanded": show }, h(Icon, { name: "book", size: 18 }), " Textbook map ", h("span", { className: "muted" }, book.title ? `${book.title}: ` : "", book.chapters.length, " chapters, ", inScope, " in your scope"), h("span", { className: `chev-i${show ? " up" : ""}` }, h(Icon, { name: "chevron", size: 16 }))),
+      show && h("ol", { className: "book-list" }, book.chapters.map((c) => {
+        const tid = bkInScope(subject, c) ? c.topicId : null;
+        return h("li", { key: c.id, className: tid ? "in" : "" }, h("span", null, c.no && h("span", { className: "bk-no" }, c.no), c.name), h("span", { className: "page" }, bkHasPage(c) ? `p. ${c.page}` : "", tid ? `${bkHasPage(c) ? ", " : ""}${bkTopicLabel(subject, tid)}` : ""));
+      })),
+      show && h("div", { className: "bk-foot" }, book.author && h("span", { className: "muted small" }, book.author), h("span", { className: "spacer" }), h("button", { className: "btn ghost", onClick: onEdit }, "Edit map"))
+    );
+  }
+  const bkPageIn = (v) => {
+    const s = String(v == null ? "" : v).trim();
+    return !s ? null : /^\d+$/.test(s) ? Number(s) : s.slice(0, 12);
+  };
+  function BkEditor({ subject, update, toast, onClose }) {
+    const start = bkOf(subject);
+    const [f, setF] = useState(() => start ? { title: start.title, author: start.author, chapters: start.chapters.map((c) => ({ ...c })) } : { title: "", author: "", chapters: [] });
+    const [bulk, setBulk] = useState("");
+    const [raw, setRaw] = useState("");
+    const [msg, setMsg] = useState({ err: "", note: "" });
+    const topics = studyTopics(subject);
+    const setCh = (id, k, v) => setF((x) => ({ ...x, chapters: x.chapters.map((c) => c.id === id ? { ...c, [k]: v } : c) }));
+    const merge = (inc, what) => {
+      const r = bkMerge(subject, f, inc);
+      setF(r.book);
+      setMsg({ err: "", note: `${what}: ${plural(r.added, "new chapter")}${r.updated ? `, ${r.updated} updated` : ""}. Check the list, then save.` });
+    };
+    const addBulk = () => {
+      const rows = bulk.split(/\r?\n/).map((l) => l.trim()).filter(Boolean).map((l) => {
+        const [n, p, t] = l.split("|").map((x) => x.trim());
+        return bkChapter(t !== void 0 ? { name: n, page: p, topic: t } : { name: n, page: p });
+      }).filter(Boolean);
+      if (!rows.length) return;
+      merge({ title: "", author: "", chapters: rows }, "Added from your list");
+      setBulk("");
+    };
+    const applyJSON = () => {
+      const inc = bkFromJSON(bkParseJSON(raw), true);
+      if (!inc) {
+        setMsg({ err: "That doesn’t look like a textbook map. Copy only the JSON part of NotebookLM’s reply.", note: "" });
+        return;
+      }
+      merge(inc, "From NotebookLM");
+      setRaw("");
+    };
+    const save = () => {
+      const chapters = f.chapters.map((c) => ({ id: c.id && !/^bk_cfas_/.test(c.id) ? c.id : uid("bk"), no: String(c.no || "").trim(), name: String(c.name || "").trim(), page: bkPageIn(c.page), topicId: c.topicId || null })).filter((c) => c.name);
+      update((s) => {
+        if (!chapters.length && s.textbook !== true) delete s.book;
+        else s.book = { title: f.title.trim(), author: f.author.trim(), chapters };
+      });
+      toast(chapters.length ? "Textbook map saved" : "Textbook map removed");
+      onClose();
+    };
+    const remove = () => {
+      if (!window.confirm("Remove the textbook map for this subject?")) return;
+      update((s) => {
+        if (s.textbook === true) s.book = { title: "", author: "", chapters: [] };
+        else delete s.book;
+      });
+      toast("Textbook map removed");
+      onClose();
+    };
+    const restore = () => {
+      update((s) => {
+        delete s.book;
+      });
+      toast("Back to the built-in CFAS textbook map");
+      onClose();
+    };
+    return h(
+      Modal,
+      {
+        title: "Textbook map",
+        onClose,
+        wide: true,
+        footer: h(React.Fragment, null, start && h("button", { className: "btn danger ghost", onClick: remove }, "Remove map"), subject.textbook === true && subject.book && h("button", { className: "btn ghost", onClick: restore }, "Use built-in map"), h("span", { className: "spacer" }), h("button", { className: "btn ghost", onClick: onClose }, "Cancel"), h("button", { className: "btn primary", onClick: save }, "Save map"))
+      },
+      h("p", { className: "muted small" }, "List the chapters of your textbook with the page each one starts on. Link a chapter to a roadmap topic and it counts as “in your scope”."),
+      h("div", { className: "grid-2" }, h(Field, { label: "Book title" }, h("input", { value: f.title, placeholder: "e.g. Conceptual Framework and Accounting Standards", onChange: (e) => setF((x) => ({ ...x, title: e.target.value })) })), h(Field, { label: "Author and edition", hint: "Optional" }, h("input", { value: f.author, placeholder: "e.g. Valix, 2024 edition", onChange: (e) => setF((x) => ({ ...x, author: e.target.value })) }))),
+      h("details", { className: "bk-box", open: !f.chapters.length }, h("summary", null, "Import from NotebookLM"), h(
+        "div",
+        { className: "bk-box-body" },
+        h("p", { className: "muted small" }, "1. Copy the prompt and send it to NotebookLM with your textbook or syllabus loaded. 2. Paste the JSON it returns here. Chapters with the same title are updated, not doubled."),
+        h("div", { className: "row-end", style: { justifyContent: "flex-start" } }, h("button", { className: "btn", onClick: async () => toast(await copyText(nlmPromptFor(subject, "book")) ? "Prompt copied. Paste it in NotebookLM." : "Couldn’t copy. Try Import & export → NotebookLM prompts.") }, "Copy NotebookLM prompt")),
+        h("textarea", { className: "code", rows: 5, value: raw, spellCheck: false, placeholder: '{ "textbook": { "title": "…", "chapters": [ … ] } }', onChange: (e) => setRaw(e.target.value) }),
+        h("div", { className: "row-end" }, h("button", { className: "btn primary", disabled: !raw.trim(), onClick: applyJSON }, "Add chapters"))
+      )),
+      h("details", { className: "bk-box" }, h("summary", null, "Paste a list of chapters"), h(
+        "div",
+        { className: "bk-box-body" },
+        h("p", { className: "muted small" }, "One chapter per line. Add the start page after a bar, like: Statement of Cash Flows | 170"),
+        h("textarea", { rows: 4, value: bulk, onChange: (e) => setBulk(e.target.value), placeholder: "Overview of Accounting | 1\nConceptual Framework | 37" }),
+        h("div", { className: "row-end" }, h("button", { className: "btn", disabled: !bulk.trim(), onClick: addBulk }, "Add these chapters"))
+      )),
+      msg.err && h("p", { className: "error", role: "alert" }, msg.err),
+      msg.note && h("p", { className: "bk-note", role: "status" }, msg.note),
+      h("div", { className: "panel-row bk-head" }, h("h3", null, "Chapters ", h("span", { className: "muted" }, f.chapters.length)), h("span", { className: "spacer" }), bkIsPages(f.chapters.map((c) => ({ page: bkPageIn(c.page) }))) && h("button", { className: "btn ghost", onClick: () => setF((x) => ({ ...x, chapters: x.chapters.slice().sort((a, b) => bkPageIn(a.page) - bkPageIn(b.page)) })) }, "Sort by page")),
+      f.chapters.length ? h("div", { className: "bk-rows" }, f.chapters.map((c, k) => h(
+        "div",
+        { key: c.id, className: "bk-row" },
+        h("input", { className: "bk-in-no", value: c.no || "", placeholder: "No.", "aria-label": `Chapter ${k + 1} number`, onChange: (e) => setCh(c.id, "no", e.target.value) }),
+        h("input", { className: "bk-in-name", value: c.name, placeholder: "Chapter title", "aria-label": `Chapter ${k + 1} title`, onChange: (e) => setCh(c.id, "name", e.target.value) }),
+        h("input", { className: "bk-in-page", value: c.page == null ? "" : c.page, inputMode: "numeric", placeholder: "Page", "aria-label": `Chapter ${k + 1} start page`, onChange: (e) => setCh(c.id, "page", e.target.value) }),
+        h("select", { className: "bk-in-topic", value: c.topicId && topics.some((t) => t.id === c.topicId) ? c.topicId : "", "aria-label": `Chapter ${k + 1} roadmap topic`, onChange: (e) => setCh(c.id, "topicId", e.target.value || null) }, h("option", { value: "" }, "Not in my course"), topics.map((t) => h("option", { key: t.id, value: t.id }, `${t.code ? t.code + " " : ""}${drShort(t.title, 44)}`))),
+        h("button", { className: "icon-btn", "aria-label": `Remove ${c.name || "chapter"}`, title: "Remove", onClick: () => setF((x) => ({ ...x, chapters: x.chapters.filter((y) => y.id !== c.id) })) }, "✕")
+      ))) : h("p", { className: "muted" }, "No chapters yet."),
+      h("div", { className: "row-end", style: { justifyContent: "flex-start" } }, h("button", { className: "btn", onClick: () => setF((x) => ({ ...x, chapters: [...x.chapters, { id: uid("bk"), no: "", name: "", page: "", topicId: null }] })) }, h(Icon, { name: "plus", size: 16 }), " Add chapter"))
+    );
+  }
+
+  /* ----- Practice: computation drills for any subject ----- */
+  function DrPanel({ subject, onStart, onManage }) {
+    const pool = drPool(subject);
+    const sets = drSets(subject, pool);
+    const anyRandom = pool.some((p) => p.builtin || !p.fixed);
+    return h(
+      "div",
+      { className: "panel" },
+      h("span", { className: "panel-kicker" }, h(Icon, { name: "chart", size: 16 }), " Computation drills"),
+      pool.length ? h("p", { className: "muted" }, anyRandom ? "Five problems with new numbers every time. Your score is saved as a quiz." : "Up to five problems from your list. Your score is saved as a quiz.") : h("p", { className: "muted" }, "No drills for this subject yet. Get problem templates from NotebookLM, or write your own."),
+      pool.length > 0 && h("div", { className: "compute-sets" }, sets.map(([k, l]) => h("button", { key: k, className: "btn", onClick: () => onStart(k) }, l))),
+      h("div", { className: "dr-panel-foot" }, h("button", { className: pool.length ? "link-btn" : "btn primary", onClick: onManage }, pool.length ? `Manage drills${drList(subject).length ? ` (${drList(subject).length})` : ""}` : "Set up drills"))
+    );
+  }
+  const drNum = (s) => {
+    const t = String(s).replace(/,/g, "").trim();
+    return /^-?\d*\.?\d+(e-?\d+)?$/i.test(t) ? Number(t) : null;
+  };
+  function drToForm(t, subject) {
+    const show = (x) => String(x);
+    return {
+      id: t ? t.id : null,
+      name: t ? t.name : "",
+      topicId: t && t.topicId && subject.topics.some((x) => x.id === t.topicId) ? t.topicId : "",
+      topicText: t ? t.topicText : "",
+      q: t ? t.q : "",
+      ans: t ? t.ans : "",
+      fmt: t ? t.fmt : nlmGuessKind(subject) === "calc" && /account|cfas|audit|tax|financ|cost|busin/.test(norm(subject.name)) ? "money" : "number",
+      dp: t && t.dp != null ? String(t.dp) : "",
+      unit: t ? t.unit : "",
+      req: t ? t.req : "",
+      vars: t ? t.vars.map((v) => `${v.n} = ${v.fixed != null ? show(v.fixed) : v.pick ? v.pick.join(" | ") : v.expr ? v.expr : `${v.min} .. ${v.max} step ${v.step}`}`).join("\n") : "",
+      given: t ? t.given.map((g) => [g.label, g.expr, g.fmt].filter((x, i) => i < 2 || x).join(" | ")).join("\n") : "",
+      steps: t ? t.steps.map((s) => typeof s === "object" ? `[${s.if}] ${s.text}` : s).join("\n") : ""
+    };
+  }
+  function drFromForm(f, subject) {
+    const lines = (s) => String(s || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    const vars = lines(f.vars).map((l) => {
+      const m = l.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*[=:]\s*(.+)$/);
+      if (!m) throw new Error(`Variable line “${l}” needs the form name = value`);
+      const rhs = m[2].trim();
+      const r = rhs.match(/^(-?[\d.,]+)\s*(?:\.\.|to)\s*(-?[\d.,]+)(?:\s*(?:step|by)\s*([\d.,]+))?$/i);
+      if (r && drNum(r[1]) !== null && drNum(r[2]) !== null) return { name: m[1], min: drNum(r[1]), max: drNum(r[2]), step: r[3] ? drNum(r[3]) : void 0 };
+      if (rhs.includes("|") && rhs.split("|").every((x) => drNum(x) !== null)) return { name: m[1], choices: rhs.split("|").map(drNum) };
+      if (drNum(rhs) !== null) return { name: m[1], fixed: drNum(rhs) };
+      return { name: m[1], expr: rhs };
+    });
+    const given = lines(f.given).map((l) => {
+      const [label, expr, fmt] = l.split("|").map((x) => x.trim());
+      if (!label || !expr) throw new Error(`Given line “${l}” needs the form Label | value or formula`);
+      return { label, expr, format: fmt || "" };
+    });
+    const steps = lines(f.steps).map((l) => {
+      const m = l.match(/^\[(.+?)\]\s*(.+)$/);
+      return m ? { if: m[1], text: m[2] } : l;
+    });
+    const topic = f.topicId && subject.topics.find((t) => t.id === f.topicId);
+    return drNorm({ id: f.id || void 0, topicId: f.topicId || null, topic: topic ? topic.title : f.topicText || "", name: f.name.trim() || f.q.trim().slice(0, 48), question: f.q, answer: f.ans, vars, given, steps, format: f.fmt, decimals: f.dp, unit: f.unit, require: f.req });
+  }
+  function DrSample({ p }) {
+    return h(
+      "div",
+      { className: "dr-sample" },
+      p.lines.length > 0 && h("div", { className: "table-wrap" }, h("table", { className: "calc-table" }, h("tbody", null, p.lines.map(([k, v], i) => h("tr", { key: i }, h("td", null, k), h("td", { className: "num" }, v)))))),
+      h("p", null, h("strong", null, p.q)),
+      h("p", null, "Answer: ", h("strong", null, p.ansText)),
+      p.steps.length > 0 && h("ol", { className: "calc-steps" }, p.steps.map((s, k) => h("li", { key: k }, s)))
+    );
+  }
+  function DrForm({ subject, f, setF, sample, sampleErr, reroll }) {
+    const set = (k) => (e) => setF((x) => ({ ...x, [k]: e.target.value }));
+    return h(
+      "div",
+      { className: "dr-form" },
+      h("div", { className: "grid-2" }, h(Field, { label: "Name" }, h("input", { value: f.name, onChange: set("name"), placeholder: "e.g. Cash paid to suppliers" })), h(Field, { label: "Topic" }, h("select", { value: f.topicId, onChange: set("topicId") }, h("option", { value: "" }, "Unsorted (Mixed only)"), studyTopics(subject).map((t) => h("option", { key: t.id, value: t.id }, `${t.code ? t.code + " " : ""}${drShort(t.title, 44)}`))))),
+      h(Field, { label: "Variables", hint: "One per line. Random: sales = 800000 .. 2500000 step 10000. Pick one: rate = 0.08 | 0.1 | 0.12. Fixed: n = 5. From others: hi = lo + 200000" }, h("textarea", { className: "code", rows: 4, value: f.vars, spellCheck: false, onChange: set("vars") })),
+      h(Field, { label: "Given (the data table)", hint: "One per line: Label | variable or formula | format (optional: money, number, count, percent)" }, h("textarea", { className: "code", rows: 4, value: f.given, spellCheck: false, onChange: set("given") })),
+      h(Field, { label: "Question", hint: "Show a value with braces: {sales}, {units|count}" }, h("textarea", { rows: 2, value: f.q, onChange: set("q") })),
+      h("div", { className: "grid-2" }, h(Field, { label: "Answer formula", hint: "e.g. sales + arBeg - arEnd. Functions: round, min, max, abs, sqrt, if, pvf, pva, pmt…" }, h("input", { className: "dr-mono", value: f.ans, spellCheck: false, onChange: set("ans") })), h(Field, { label: "Only use numbers where", hint: "Optional, e.g. cost < price" }, h("input", { className: "dr-mono", value: f.req, spellCheck: false, onChange: set("req") }))),
+      h("div", { className: "dr-fmt" }, h(Field, { label: "Answer format" }, h("select", { value: f.fmt, onChange: set("fmt") }, [["money", "Money (₱)"], ["number", "Number"], ["count", "Whole count"], ["percent", "Percent"]].map(([k, l]) => h("option", { key: k, value: k }, l)))), h(Field, { label: "Decimals" }, h("input", { value: f.dp, inputMode: "numeric", placeholder: "Auto", onChange: set("dp") })), f.fmt === "number" || f.fmt === "count" ? h(Field, { label: "Unit" }, h("input", { value: f.unit, placeholder: "e.g. km/h", onChange: set("unit") })) : h("span", null)),
+      h(Field, { label: "Solution steps", hint: "One per line, with braces for values: Cash collected = {answer}. Start a line with [condition] to show it only when that's true: [arEnd > arBeg] Receivables went up…" }, h("textarea", { rows: 4, value: f.steps, onChange: set("steps") })),
+      h("div", { className: "dr-preview" }, h("div", { className: "panel-row" }, h("strong", null, "Preview with random numbers"), sample && h("button", { className: "btn ghost", onClick: reroll }, "New numbers")), sampleErr ? h("p", { className: "error" }, sampleErr) : sample ? h(DrSample, { p: sample }) : null)
+    );
+  }
+  function DrManager({ subject, update, toast, onClose, onRun }) {
+    const [edit, setEdit] = useState(null);
+    const [f, setF] = useState(null);
+    const [roll, setRoll] = useState(0);
+    const [raw, setRaw] = useState("");
+    const [topicId, setTopicId] = useState("");
+    const [msg, setMsg] = useState({ err: "", note: "", bad: [] });
+    const [tryId, setTryId] = useState(null);
+    const list = drList(subject);
+    const builtins = subject.textbook === true ? PROBLEMS.length : 0;
+    const formState = useMemo(() => {
+      if (!f) return {};
+      try {
+        const t = drFromForm(f, subject);
+        if (!t) return { err: "Add a question and an answer formula." };
+        return { t, sample: drMake(t) };
+      } catch (e) {
+        return { err: e.message };
+      }
+    }, [f, roll]);
+    const trySample = useMemo(() => {
+      const t = tryId && list.find((x) => x.id === tryId);
+      if (!t) return null;
+      try {
+        return drMake(t);
+      } catch (e) {
+        return { error: e.message };
+      }
+    }, [tryId, roll, subject]);
+    const openEdit = (t) => {
+      setEdit(t ? t.id : "new");
+      setF(drToForm(t, subject));
+    };
+    const closeEdit = () => {
+      setEdit(null);
+      setF(null);
+    };
+    const saveEdit = () => {
+      const t = formState.t;
+      if (!t) return;
+      update((s) => {
+        s.drills = Array.isArray(s.drills) ? s.drills : [];
+        const i = s.drills.findIndex((x) => x && x.id === t.id);
+        if (i >= 0) s.drills[i] = clone(t);
+        else s.drills.push(clone(t));
+      });
+      toast(edit === "new" ? "Drill added" : "Drill saved");
+      closeEdit();
+    };
+    const del = (t) => {
+      if (!window.confirm(`Delete the drill “${t.name}”?`)) return;
+      update((s) => {
+        s.drills = (s.drills || []).filter((x) => x && x.id !== t.id);
+      });
+      if (edit) closeEdit();
+      toast("Drill deleted");
+    };
+    const importJSON = () => {
+      const obj = bkParseJSON(raw);
+      const r = obj ? drFromJSON(obj) : { ok: [], bad: [] };
+      if (!r.ok.length) {
+        setMsg({ err: r.bad.length ? `None of the drills could be used. ${r.bad[0]}` : "That doesn’t look like drills. Copy only the JSON part of NotebookLM’s reply.", note: "", bad: r.bad.slice(1, 6) });
+        return;
+      }
+      const res = drApply(clone({ topics: subject.topics, drills: subject.drills || [] }), r.ok);
+      update((s) => {
+        drApply(s, r.ok);
+      });
+      setMsg({ err: "", note: `Added ${plural(res.added, "drill")}${res.skipped ? ` (${res.skipped} already here)` : ""}${r.bad.length ? `. ${r.bad.length} skipped because a formula didn’t work:` : "."}`, bad: r.bad.slice(0, 5) });
+      setRaw("");
+    };
+    if (edit) {
+      const cur = edit !== "new" && list.find((x) => x.id === edit);
+      return h(Modal, {
+        title: edit === "new" ? "Add a computation drill" : "Edit drill",
+        onClose,
+        wide: true,
+        footer: h(React.Fragment, null, cur && h("button", { className: "btn danger ghost", onClick: () => del(cur) }, "Delete"), h("span", { className: "spacer" }), h("button", { className: "btn ghost", onClick: closeEdit }, "Back to drills"), h("button", { className: "btn primary", disabled: !formState.t, onClick: saveEdit }, edit === "new" ? "Add drill" : "Save drill"))
+      }, h(DrForm, { subject, f, setF, sample: formState.sample, sampleErr: formState.err, reroll: () => setRoll((x) => x + 1) }));
+    }
+    const order = new Map(subject.topics.map((t, i) => [t.id, i]));
+    const sorted = list.slice().sort((a, b) => (order.has(a.topicId) ? order.get(a.topicId) : 1e4) - (order.has(b.topicId) ? order.get(b.topicId) : 1e4));
+    return h(
+      Modal,
+      {
+        title: "Computation drills",
+        onClose,
+        wide: true,
+        footer: h(React.Fragment, null, h("button", { className: "btn", onClick: () => openEdit(null) }, h(Icon, { name: "plus", size: 16 }), " Add a drill"), h("span", { className: "spacer" }), h("button", { className: "btn ghost", onClick: onClose }, "Close"), (list.length > 0 || builtins > 0) && h("button", { className: "btn primary", onClick: () => onRun("all") }, "Start a mixed drill"))
+      },
+      h("p", { className: "muted small" }, "Each drill is a template: the app picks new numbers every time, checks your answer and shows the steps. Your score is saved as a quiz."),
+      h("details", { className: "bk-box", open: !list.length }, h("summary", null, "Get drills from NotebookLM"), h(
+        "div",
+        { className: "bk-box-body" },
+        h("p", { className: "muted small" }, "1. Pick a topic and copy the prompt. 2. Send it to NotebookLM with your sources loaded. 3. Paste the JSON it returns here. Broken problems are skipped and listed, so nothing bad gets in."),
+        h("div", { className: "dr-prompt-row" }, h("select", { value: topicId, "aria-label": "Topic for the prompt", onChange: (e) => setTopicId(e.target.value) }, h("option", { value: "" }, `Whole subject (${subject.name})`), studyTopics(subject).map((t) => h("option", { key: t.id, value: t.id }, `${t.code ? t.code + " " : ""}${drShort(t.title, 44)}`))), h("button", { className: "btn", onClick: async () => toast(await copyText(nlmPromptFor(subject, "drills", topicId)) ? "Prompt copied. Paste it in NotebookLM." : "Couldn’t copy. Try Import & export → NotebookLM prompts.") }, "Copy NotebookLM prompt")),
+        h("textarea", { className: "code", rows: 5, value: raw, spellCheck: false, placeholder: '{ "drills": [ { "name": "…", "vars": { … }, "answer": "…" } ] }', onChange: (e) => setRaw(e.target.value) }),
+        h("div", { className: "row-end" }, h("button", { className: "btn primary", disabled: !raw.trim(), onClick: importJSON }, "Add drills"))
+      )),
+      msg.err && h("p", { className: "error", role: "alert" }, msg.err),
+      msg.note && h("p", { className: "bk-note", role: "status" }, msg.note),
+      msg.bad.length > 0 && h("ul", { className: "dr-bad muted small" }, msg.bad.map((b, i) => h("li", { key: i }, b))),
+      h("div", { className: "panel-row bk-head" }, h("h3", null, "Your drills ", h("span", { className: "muted" }, list.length))),
+      builtins > 0 && h("p", { className: "muted small" }, `Plus ${builtins} built-in CFAS problems on cash flows, provisions and errors. Those are part of the app and can’t be edited here.`),
+      list.length ? h("ul", { className: "dr-list" }, sorted.map((t) => {
+        const tp = t.topicId && subject.topics.find((x) => x.id === t.topicId);
+        const open = tryId === t.id;
+        return h(
+          "li",
+          { key: t.id, className: open ? "open" : "" },
+          h("div", { className: "dr-row" }, h("div", { className: "dr-main" }, h("strong", null, t.name), h("span", { className: "muted small" }, tp ? `${tp.code ? tp.code + " " : ""}${drShort(tp.title, 40)}` : t.topicText ? `${drShort(t.topicText, 40)} (not on your roadmap)` : "Unsorted", " · ", drIsRandom(t) ? "new numbers each time" : "fixed numbers")), h("div", { className: "dr-acts" }, h("button", { className: "btn ghost", "aria-expanded": open, onClick: () => { setTryId(open ? null : t.id); setRoll((x) => x + 1); } }, open ? "Hide" : "Try"), h("button", { className: "btn ghost", onClick: () => openEdit(t) }, "Edit"), h("button", { className: "icon-btn", "aria-label": `Delete ${t.name}`, title: "Delete", onClick: () => del(t) }, "✕"))),
+          open && trySample && (trySample.error ? h("p", { className: "error" }, trySample.error) : h(React.Fragment, null, h(DrSample, { p: trySample }), h("div", { className: "row-end" }, h("button", { className: "btn ghost", onClick: () => setRoll((x) => x + 1) }, "New numbers"))))
+        );
+      })) : h("p", { className: "muted" }, builtins ? "You haven’t added any of your own yet." : "No drills yet. Import them from NotebookLM above, or add one by hand.")
+    );
+  }
+
   function App() {
     const [data, setData] = useState(() => loadLocal() || buildDefault());
     const [nav, setNav] = useState({ tab: "home", opts: {}, key: 0 });
