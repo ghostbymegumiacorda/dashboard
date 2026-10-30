@@ -2,7 +2,7 @@
    Keeps a copy of the app on each device so it opens without internet.
    Your study data is NOT stored here; it lives in the browser's storage and in your GitHub data repo.
    If you change this file later, bump VERSION so every device picks up the new copy. */
-const VERSION = "study-desk-v4";
+const VERSION = "study-desk-v5";
 const SCOPE = self.registration.scope;               // e.g. https://you.github.io/bsa-dashboard/
 const SHELL = ["index.html", "manifest.json", "icon-192.png", "icon-512.png", "icon-maskable-512.png", "apple-touch-icon.png", "favicon.png"];
 const CDN = [

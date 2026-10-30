@@ -982,6 +982,56 @@ input.gc-name.big { font-family: var(--display); font-size: 1.1rem; }
   .dr-fmt { grid-template-columns: 1fr 1fr; }
   .dr-acts { width: 100%; justify-content: flex-end; }
 }
+
+/* ---------- grades: term grade / final grade view (Oct 30, 2026) ---------- */
+.gc-now-head { display: flex; align-items: center; justify-content: space-between; gap: .4rem .7rem; flex-wrap: wrap; margin-bottom: .2rem; }
+.gc-now-head .panel-kicker { margin-bottom: 0; }
+.seg-filter.gc-view { padding: .2rem; }
+.seg-filter.gc-view button { padding: .34rem .7rem; font-size: .84rem; }
+button.gc-tchip { border: 1.5px solid transparent; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+button.gc-tchip:hover { border-color: var(--line); }
+button.gc-tchip.on { border-color: var(--accent); background: var(--accent-soft); }
+.gc-fin-of { display: flex; flex-direction: column; line-height: 1.25; }
+.gc-fin-of strong { font-size: .95rem; }
+.gc-fbar { position: relative; display: flex; margin: 1.35rem 0 .2rem; }
+.gc-fseg { min-width: 0; }
+.gc-fseg-bar { display: flex; height: 22px; overflow: hidden; background: var(--surface-2); }
+.gc-fseg:first-child .gc-fseg-bar { border-radius: 7px 0 0 7px; }
+.gc-fseg:last-child .gc-fseg-bar { border-radius: 0 7px 7px 0; }
+.gc-fseg + .gc-fseg .gc-fseg-bar { box-shadow: inset 3px 0 0 var(--surface); }
+.gc-fseg-bar span { display: block; height: 100%; }
+.gc-fseg-bar .e, .gc-flegend i.e { background: var(--accent); }
+.gc-fseg-bar .l, .gc-flegend i.l { background: color-mix(in srgb, var(--bad) 55%, var(--surface-2)); }
+.gc-fseg-bar .o, .gc-flegend i.o { background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--accent) 22%, var(--surface-2)) 0 5px, var(--surface-2) 5px 10px); }
+.gc-fseg-l { display: block; padding: .3rem .35rem 0; font-size: .78rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+.gc-fseg-l strong { color: var(--text); }
+.gc-ftick { position: absolute; top: -.95rem; height: calc(22px + .95rem + 3px); width: 0; border-left: 2px dashed var(--text); pointer-events: none; }
+.gc-ftick b { position: absolute; top: -.2rem; left: 3px; font-size: .7rem; line-height: 1; font-family: var(--display); }
+.gc-flegend { display: flex; flex-wrap: wrap; gap: .3rem 1rem; margin: .45rem 0 .2rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.gc-flegend span { display: inline-flex; align-items: center; gap: .35rem; }
+.gc-flegend strong { color: var(--text); }
+.gc-flegend i { display: inline-block; width: .8rem; height: .8rem; border-radius: 3px; }
+.gc-ftable { width: 100%; border-collapse: collapse; margin: .7rem 0 .4rem; font-size: .9rem; }
+.gc-ftable th { background: none; padding: .3rem .35rem; font-size: .78rem; text-align: left; }
+.gc-ftable td { padding: .4rem .35rem; border-bottom: 1px solid var(--line); vertical-align: middle; font-variant-numeric: tabular-nums; }
+.gc-ftable td:first-child { font-weight: 700; }
+.gc-ftable .gc-w .gc-num { width: 3.6rem !important; padding: .32rem .45rem !important; }
+.gc-fgrade { display: inline-flex; align-items: center; gap: .3rem; flex-wrap: nowrap; white-space: nowrap; }
+.gc-fproj { display: flex; align-items: center; flex-wrap: wrap; gap: .35rem; }
+.gc-frange { margin: .4rem 0 0; }
+.gc-fmath { margin: .35rem 0 0 !important; font-variant-numeric: tabular-nums; }
+.gc-mini-fin { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+.gc-ftable-wrap { overflow-x: auto; max-width: 100%; }
+.gc-ftable th.num { text-align: right; }
+.gc-ftable td.num .gc-fgrade { justify-content: flex-end; }
+@media (max-width: 560px) {
+  .gc-ftable { font-size: .84rem; }
+  .gc-ftable .gc-fof { display: block; font-size: .78rem; }
+  .gc-fgrade { flex-wrap: wrap; white-space: normal; }
+  .gc-ftable th { white-space: normal; line-height: 1.2; }
+  .gc-ftable th, .gc-ftable td { padding-left: .2rem; padding-right: .2rem; }
+  .gc-ftable .gc-w .gc-num { width: 3.1rem !important; }
+}
 </style>
 </head>
 <body>
@@ -4160,6 +4210,67 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     if (r > 1) return { kind: "reach", r };
     return { kind: "need", r: Math.max(0, r) };
   }
+  // Final-grade view (Oct 30, 2026): what each term adds to the final grade, and the grade
+  // still needed in the terms that have no scores yet. Terms that have scores are kept at their
+  // current grade. Returns null for a subject with fewer than two weighted terms.
+  function gcFinal(g, sum) {
+    if (!g || !sum) return null;
+    const live = g.terms.filter((t) => t.weight > 0);
+    const W = gcSumWeights(live);
+    if (live.length < 2 || !(W > 0)) return null;
+    const lo = gcCompute(g, "proj", 0), hi = gcCompute(g, "proj", 1);
+    const rows = [];
+    g.terms.forEach((t, i) => {
+      if (!(t.weight > 0)) return;
+      const share = t.weight / W;
+      const pct = sum.actual.terms[i].pct;
+      const l = lo.terms[i].pct, u = hi.terms[i].pct;
+      const state = pct === null ? "pending" : l !== null && u !== null && u - l < 1e-9 ? "done" : "partial";
+      // Inside this term's slice of the bar: locked in, still open, lost for good.
+      const L = state === "pending" || l === null ? 0 : l, U = state === "pending" || u === null ? 1 : u;
+      rows.push({ t, i, share, pct, state, adds: pct === null ? null : pct * share, inE: L, inO: Math.max(0, U - L), inL: Math.max(0, 1 - U) });
+    });
+    const pending = rows.filter((x) => x.state === "pending");
+    const counted = rows.filter((x) => x.state !== "pending");
+    const pShare = pending.reduce((a, x) => a + x.share, 0);
+    const cShare = counted.reduce((a, x) => a + x.share, 0);
+    const banked = counted.reduce((a, x) => a + x.adds, 0);
+    const floor = g.trans > 0 ? g.trans / 100 : 0;
+    const names = (list) => list.map((x) => x.t.name).join(list.length === 2 ? " & " : ", ").replace(/, ([^,]*)$/, " & $1");
+    return {
+      rows,
+      pending,
+      counted,
+      pShare,
+      cShare,
+      banked,
+      done: rows.every((x) => x.state === "done"),
+      pendLabel: names(pending),
+      countLabel: names(counted),
+      earned: rows.reduce((a, x) => a + x.inE * x.share, 0),
+      open: rows.reduce((a, x) => a + x.inO * x.share, 0),
+      lost: rows.reduce((a, x) => a + x.inL * x.share, 0),
+      graded: rows.reduce((a, x) => a + (x.inE + x.inL) * x.share, 0),
+      // Final grade if the terms with no scores end at grade x (a fraction).
+      at: (x) => banked + x * pShare,
+      // Grade needed in the terms with no scores to reach a cutoff. Accounts for rounding.
+      need: (min) => {
+        if (!(pShare > 0)) return null;
+        const d = gcDec(g);
+        const goal = (min - (d === null ? 0 : 0.5 / 10 ** d)) / 100 - 1e-12;
+        const x = (goal - banked) / pShare;
+        if (x <= floor + 1e-12) return { kind: "any" };
+        if (x > 1 + 1e-12) return { kind: "reach", x };
+        return { kind: "need", x };
+      }
+    };
+  }
+  function gcFinalNeedView(nd) {
+    if (!nd) return { t: "—", c: "" };
+    if (nd.kind === "any") return { t: "Any grade", c: "ok" };
+    if (nd.kind === "reach") return { t: `Out of reach (needs ${Math.ceil(nd.x * 100)}%)`, c: "bad" };
+    return { t: `${(Math.ceil(nd.x * 1e3) / 10).toFixed(1)}%`, c: nd.x > 0.9 ? "warn" : "" };
+  }
   const gcFmt = (v, dec = 2) => v === null || v === void 0 || !Number.isFinite(v) ? "—" : `${Number(v.toFixed(dec))}%`;
   const gcPctTxt = (g, p) => p === null || p === void 0 ? "—" : `${gcRoundPct(g, p).toFixed(gcDec(g) === null ? 2 : gcDec(g))}%`;
   const gcQpiTxt = (q) => q === null || q === void 0 ? "—" : Number(q).toFixed(2);
@@ -4761,54 +4872,154 @@ Rules: the numbers above are only an example of the format; use the real ones fr
     });
   }
   // Big numbers, the range bar, and "what you need" for each letter.
+  // Two views when the subject has two or more terms: one term's grade, or the final grade
+  // (what each term adds, and what the terms with no scores yet still need).
   function GcOverview({ g, sum, change, sandbox, goals }) {
     const ret = gcRetention(g, sum, goals || GC_GOALS);
     const [r, setR] = useState(() => localPref("gcSlider", 85));
+    const [rf, setRf] = useState(() => localPref("gcSliderF", 85));
+    const [viewPref, setViewPref] = useState(() => localPref("gcView", "term"));
+    const [focus, setFocus] = useState(null);
+    const F = gcFinal(g, sum);
+    const view = F ? viewPref : "term";
+    const setView = (v) => {
+      setViewPref(v);
+      setLocalPref("gcView", v);
+    };
+    // Which term the term view shows: the one you picked, else the latest term that has scores.
+    const liveIdx = g.terms.map((t, i) => i).filter((i) => g.terms[i].weight > 0);
+    const autoIdx = liveIdx.filter((i) => sum.actual.terms[i].pct !== null).pop();
+    const fi = g.terms.findIndex((t) => t.id === focus);
+    const ti = fi >= 0 ? fi : autoIdx !== void 0 ? autoIdx : liveIdx.length ? liveIdx[0] : 0;
+    const fTerm = g.terms[ti];
+    const multi = !!F;
+    const termPct = multi && fTerm ? sum.actual.terms[ti].pct : sum.now;
+    const termL = gcLetter(g, termPct);
+    const termBtn = fTerm ? /^final/i.test(fTerm.name.trim()) ? `${fTerm.name} term` : `${fTerm.name} grade` : "Term grade";
+    const fin = view === "final" && F;
+    const byTerm = fin && F.pShare > 0;   // the "need" table and slider talk about the terms with no scores yet
     const rows = gcSorted(g).filter((x) => x.min > 0);
     const left = sum.remaining;
     const proj = sum.at(r / 100);
     const projL = gcLetter(g, proj);
+    const projF = byTerm ? F.at(rf / 100) : null;
+    const projFL = byTerm ? gcLetter(g, projF) : null;
+    const needOf = (min) => byTerm ? gcFinalNeedView(F.need(min)) : gcNeedView(gcNeed(g, sum, min));
     const target = g.target && g.scale.find((x) => x.letter === g.target);
-    const tNeed = target ? gcNeedView(gcNeed(g, sum, target.min)) : null;
+    const tNeed = target ? needOf(target.min) : null;
+    const retView = ret && ret.L ? needOf(ret.L.min) : null;
     const warns = gcWarnings(g);
     const pos = (p) => p === null ? 0 : Math.max(0, Math.min(100, p * 100));
+    const pts = (x) => gcFmt(x * 100, 2);   // weights: 35%
+    const pts2 = (x) => `${(x * 100).toFixed(2)}%`;   // points: 30.50%
+    const toggle = multi && h(
+      "div",
+      { className: "seg-filter gc-view", role: "group", "aria-label": "Show grade as" },
+      h("button", { "aria-pressed": view === "term", className: view === "term" ? "on" : "", onClick: () => setView("term") }, termBtn),
+      h("button", { "aria-pressed": view === "final", className: view === "final" ? "on" : "", onClick: () => setView("final") }, "Final grade")
+    );
+    const head = h("div", { className: "gc-now-head" }, h("span", { className: "panel-kicker" }, h(Icon, { name: "grade", size: 16 }), sandbox ? " What-if grade so far" : " Grade so far"), toggle);
+    const warnBox = warns.length > 0 && h("div", { className: "gc-warn" }, warns.map((w) => h("p", { key: w, className: "small" }, "⚠ ", w)), h("p", { className: "muted small" }, "Weights that don’t add to 100 are scaled so they do. Fix them in Setup if that’s not what your syllabus says."));
+    // ---- term view (the original screen; with several terms it shows one term's grade) ----
+    const termPanel = () => h(
+      "div",
+      { className: "panel gc-now" },
+      head,
+      h("div", { className: "gc-now-row" }, h("p", { className: "big-num" }, gcPctTxt(g, termPct)), h(GcLetter, { g, L: termL, big: true }), h("div", { className: "gc-qpi" }, h("span", { className: "muted small" }, "QPI"), h("strong", null, gcQpiTxt(termL && termL.qpi)))),
+      sum.now === null ? h("p", { className: "muted small" }, "Enter your first score below and your grade appears here.") : multi ? h("p", { className: "muted small" }, termPct === null ? `No ${fTerm.name} scores yet. Tap another term below, or switch to Final grade.` : `Your ${fTerm.name} grade. Counts only work that already has a score.`) : h("p", { className: "muted small" }, "Counts only work that already has a score."),
+      h("div", { className: "gc-terms" }, g.terms.map((t, i) => {
+        const p = sum.actual.terms[i].pct;
+        const inner = [h("span", { key: "a", className: "muted small" }, `${t.name} (${t.weight}%)`), h("strong", { key: "b" }, gcPctTxt(g, p), " ", h(GcLetter, { g, L: gcLetter(g, p) }))];
+        return multi ? h("button", { key: t.id, className: `gc-tchip${i === ti ? " on" : ""}`, "aria-pressed": i === ti, onClick: () => setFocus(t.id) }, inner) : h("div", { key: t.id, className: "gc-tchip" }, inner);
+      })),
+      sum.lo !== null && h(
+        "div",
+        { className: "gc-range" },
+        h("div", { className: "gc-rangebar", "aria-hidden": "true" }, h("span", { className: "gc-span", style: { left: `${pos(sum.lo)}%`, width: `${Math.max(0.8, pos(sum.hi) - pos(sum.lo))}%` } }), sum.now !== null && h("i", { style: { left: `${pos(sum.now)}%` } })),
+        h("p", { className: "small" }, h("span", { className: "muted" }, multi ? "Final grade: worst case " : "Worst case "), h("strong", null, gcPctTxt(g, sum.lo), " ", sum.loLetter ? sum.loLetter.letter : ""), h("span", { className: "muted" }, " · Best case "), h("strong", null, gcPctTxt(g, sum.hi), " ", sum.hiLetter ? sum.hiLetter.letter : "")),
+        h("p", { className: "muted small" }, sum.share > 0 ? `${Math.round(sum.share * 100)}% of your final grade is still ungraded.` : "Everything is graded. This is your final grade.")
+      ),
+      warnBox
+    );
+    // ---- final view: each term's share of the final grade ----
+    const finalPanel = () => {
+      const label = `Final grade: ${pts2(F.earned)} earned, ${pts2(F.lost)} lost, ${pts(F.open)} still open, out of 100.`;
+      return h(
+        "div",
+        { className: "panel gc-now gc-fin" },
+        head,
+        h("div", { className: "gc-now-row" }, h("p", { className: "big-num" }, pts2(F.earned)), h("div", { className: "gc-fin-of" }, h("strong", null, F.done ? "your final grade" : "earned toward your final grade"), h("span", { className: "muted small" }, F.done ? "Every term is graded." : F.graded > 1e-9 ? `out of the ${pts(F.graded)} graded so far` : "Nothing graded yet"))),
+        h(
+          "div",
+          { className: "gc-fbar", role: "img", "aria-label": label },
+          F.rows.map((x) => h(
+            "div",
+            { key: x.t.id, className: `gc-fseg ${x.state}`, style: { flexGrow: x.share, flexBasis: 0 } },
+            h("div", { className: "gc-fseg-bar" }, x.inE > 0 && h("span", { className: "e", style: { width: `${x.inE * 100}%` } }), x.inO > 0 && h("span", { className: "o", style: { width: `${x.inO * 100}%` } }), x.inL > 0 && h("span", { className: "l", style: { width: `${x.inL * 100}%` } })),
+            h("span", { className: "gc-fseg-l" }, h("strong", null, x.t.name), " ", pts(x.share))
+          )),
+          target && h("i", { className: "gc-ftick", style: { left: `${Math.min(100, target.min)}%` }, title: `${target.letter} starts at ${target.min}%` }, h("b", null, target.letter))
+        ),
+        h("p", { className: "gc-flegend small", "aria-hidden": "true" }, h("span", null, h("i", { className: "e" }), "Earned ", h("strong", null, pts2(F.earned))), h("span", null, h("i", { className: "l" }), "Lost ", h("strong", null, pts2(F.lost))), F.open > 1e-9 && h("span", null, h("i", { className: "o" }), "Still open ", h("strong", null, pts(F.open)))),
+        h(
+          "div",
+          { className: "gc-ftable-wrap" },
+          h(
+          "table",
+          { className: "gc-ftable" },
+          h("thead", null, h("tr", null, h("th", null, "Term"), h("th", null, "Counts for"), h("th", { className: "num" }, "Term grade"), h("th", { className: "num" }, "Adds to final"))),
+          h("tbody", null, F.rows.map((x) => h(
+            "tr",
+            { key: x.t.id, className: x.state },
+            h("td", null, x.t.name),
+            h("td", null, h("label", { className: "gc-w" }, h(NumInput, { value: x.t.weight, label: `${x.t.name} weight in the final grade`, onChange: (v) => change((n) => {
+              const t = n.terms.find((y) => y.id === x.t.id);
+              if (t) t.weight = v === null ? 0 : v;
+            }) }), h("span", null, "%"))),
+            h("td", { className: "num" }, x.pct === null ? h("span", { className: "muted" }, "not yet") : h("span", { className: "gc-fgrade" }, gcPctTxt(g, x.pct), " ", h(GcLetter, { g, L: gcLetter(g, x.pct) }))),
+            h("td", { className: "num" }, x.pct === null ? h(React.Fragment, null, h("span", { className: "muted" }, "—"), h("span", { className: "muted gc-fof" }, ` of ${pts(x.share)}`)) : h(React.Fragment, null, h("strong", null, pts2(x.inE * x.share)), h("span", { className: "muted gc-fof" }, ` of ${pts(x.share)}${x.state === "partial" ? " so far" : ""}`)))
+          )))
+        )),
+        F.pending.length > 0 && F.counted.length > 0 && h("p", { className: "muted small" }, `Every 10% you get in ${F.pendLabel} adds ${Number((F.pShare * 10).toFixed(2))} points to your final grade.`),
+        sum.now !== null && h(
+          "p",
+          { className: "gc-goal-line gc-fproj" },
+          F.done ? h(React.Fragment, null, "Final grade ", h("strong", null, gcPctTxt(g, sum.now)), " ", h(GcLetter, { g, L: sum.letter }), ` QPI ${gcQpiTxt(sum.letter && sum.letter.qpi)}`) : h(React.Fragment, null, F.pending.length ? `Keep ${gcPctTxt(g, sum.now)} in ${F.pendLabel} and you finish with ` : "Keep this pace on what’s left and you finish with ", h("strong", null, gcPctTxt(g, sum.now)), " ", h(GcLetter, { g, L: sum.letter }), h("span", { className: "muted" }, ` QPI ${gcQpiTxt(sum.letter && sum.letter.qpi)}`))
+        ),
+        !F.done && sum.lo !== null && h("p", { className: "small gc-frange" }, h("span", { className: "muted" }, "Lowest possible "), h("strong", null, gcPctTxt(g, sum.lo), " ", sum.loLetter ? sum.loLetter.letter : ""), h("span", { className: "muted" }, " · Highest possible "), h("strong", null, gcPctTxt(g, sum.hi), " ", sum.hiLetter ? sum.hiLetter.letter : "")),
+        warnBox
+      );
+    };
+    const needIntro = byTerm ? h("p", { className: "muted small" }, F.counted.length ? `${F.pending.length > 1 ? "Average grade" : "Grade"} you need in ${F.pendLabel} for each final letter, if your ${F.countLabel} grade${F.counted.length > 1 ? "s stay" : " stays"} as it is now.` : `${F.pending.length > 1 ? "Average term grade" : "Term grade"} you need for each final letter.`) : left.length ? h("p", { className: "muted small" }, `Average you need on the ${plural(left.length, "thing")} still ungraded`, left.length <= 4 ? `: ${left.map((x) => x.label).join(", ")}.` : ` (${left.slice(0, 3).map((x) => x.label).join(", ")} and ${left.length - 3} more).`) : h("p", { className: "muted small" }, "Nothing left to grade.");
     return h(
       "div",
       { className: "gc-overview" },
-      h(
-        "div",
-        { className: "panel gc-now" },
-        h("span", { className: "panel-kicker" }, h(Icon, { name: "grade", size: 16 }), sandbox ? " What-if grade so far" : " Grade so far"),
-        h("div", { className: "gc-now-row" }, h("p", { className: "big-num" }, gcPctTxt(g, sum.now)), h(GcLetter, { g, L: sum.letter, big: true }), h("div", { className: "gc-qpi" }, h("span", { className: "muted small" }, "QPI"), h("strong", null, gcQpiTxt(sum.letter && sum.letter.qpi)))),
-        sum.now === null ? h("p", { className: "muted small" }, "Enter your first score below and your grade appears here.") : h("p", { className: "muted small" }, "Counts only work that already has a score."),
-        h("div", { className: "gc-terms" }, g.terms.map((t, i) => {
-          const p = sum.actual.terms[i].pct;
-          return h("div", { key: t.id, className: "gc-tchip" }, h("span", { className: "muted small" }, `${t.name} (${t.weight}%)`), h("strong", null, gcPctTxt(g, p), " ", h(GcLetter, { g, L: gcLetter(g, p) })));
-        })),
-        sum.lo !== null && h(
-          "div",
-          { className: "gc-range" },
-          h("div", { className: "gc-rangebar", "aria-hidden": "true" }, h("span", { className: "gc-span", style: { left: `${pos(sum.lo)}%`, width: `${Math.max(0.8, pos(sum.hi) - pos(sum.lo))}%` } }), sum.now !== null && h("i", { style: { left: `${pos(sum.now)}%` } })),
-          h("p", { className: "small" }, h("span", { className: "muted" }, "Worst case "), h("strong", null, gcPctTxt(g, sum.lo), " ", sum.loLetter ? sum.loLetter.letter : ""), h("span", { className: "muted" }, " · Best case "), h("strong", null, gcPctTxt(g, sum.hi), " ", sum.hiLetter ? sum.hiLetter.letter : "")),
-          h("p", { className: "muted small" }, sum.share > 0 ? `${Math.round(sum.share * 100)}% of your final grade is still ungraded.` : "Everything is graded. This is your final grade.")
-        ),
-        warns.length > 0 && h("div", { className: "gc-warn" }, warns.map((w) => h("p", { key: w, className: "small" }, "⚠ ", w)), h("p", { className: "muted small" }, "Weights that don’t add to 100 are scaled so they do. Fix them in Setup if that’s not what your syllabus says."))
-      ),
+      fin ? finalPanel() : termPanel(),
       h(
         "div",
         { className: "panel gc-plan" },
-        h("div", { className: "panel-row" }, h("h2", null, "What you need"), h("label", { className: "inline-field gc-goal" }, h("span", null, "My goal"), h("select", { value: g.target || "", onChange: (e) => change((n) => {
+        h("div", { className: "panel-row" }, h("h2", null, byTerm ? `What you need in ${F.pendLabel}` : "What you need"), h("label", { className: "inline-field gc-goal" }, h("span", null, "My goal"), h("select", { value: g.target || "", onChange: (e) => change((n) => {
           n.target = e.target.value;
         }) }, h("option", { value: "" }, "None"), rows.map((x) => h("option", { key: x.id, value: x.letter }, x.letter))))),
-        left.length ? h("p", { className: "muted small" }, `Average you need on the ${plural(left.length, "thing")} still ungraded`, left.length <= 4 ? `: ${left.map((x) => x.label).join(", ")}.` : ` (${left.slice(0, 3).map((x) => x.label).join(", ")} and ${left.length - 3} more).`) : h("p", { className: "muted small" }, "Nothing left to grade."),
-        ret && h("p", { className: `gc-goal-line gc-ret ${gcStateCls(ret.state)}` }, h("strong", null, `Retention (${ret.want}): `), GC_RET_TXT[ret.state], ret.L && ret.state !== "secured" && ret.state !== "lost" ? ` · need ${ret.view.t} on what’s left` : ""),
-        tNeed && h("p", { className: `gc-goal-line ${tNeed.c}` }, h("strong", null, `For ${g.target}: `), tNeed.t),
-        h("table", { className: "gc-need" }, h("thead", null, h("tr", null, h("th", null, "Letter"), h("th", null, "From"), h("th", null, "QPI"), h("th", null, "You need"))), h("tbody", null, rows.map((x) => {
-          const v = gcNeedView(gcNeed(g, sum, x.min));
+        needIntro,
+        ret && h("p", { className: `gc-goal-line gc-ret ${gcStateCls(ret.state)}` }, h("strong", null, `Retention (${ret.want}): `), GC_RET_TXT[ret.state], ret.L && ret.state !== "secured" && ret.state !== "lost" ? ` · ${byTerm ? retView.c === "ok" ? `any ${F.pendLabel} grade keeps it` : `need ${retView.t}${retView.c === "bad" ? "" : ` in ${F.pendLabel}`}` : `need ${ret.view.t} on what’s left`}` : ""),
+        tNeed && h("p", { className: `gc-goal-line ${tNeed.c}` }, h("strong", null, `For ${g.target}: `), tNeed.t, byTerm && tNeed.c !== "ok" && tNeed.c !== "bad" ? ` in ${F.pendLabel}` : ""),
+        h("table", { className: "gc-need" }, h("thead", null, h("tr", null, h("th", null, "Letter"), h("th", null, "From"), h("th", null, "QPI"), h("th", null, byTerm ? F.pending.length > 1 ? "Avg. needed" : `${F.pendLabel} grade` : "You need"))), h("tbody", null, rows.map((x) => {
+          const v = needOf(x.min);
           return h("tr", { key: x.id, className: x.letter === g.target ? "on" : "" }, h("td", null, h(GcLetter, { g, L: x }), ret && ret.L && ret.L.id === x.id && h("span", { className: "gc-tag" }, "retention")), h("td", { className: "num" }, `${x.min}%`), h("td", { className: "num" }, gcQpiTxt(x.qpi)), h("td", { className: `gc-need-v ${v.c}` }, v.t));
         }))),
-        g.trans > 0 && h("p", { className: "muted small" }, `These are raw scores, before transmutation (base ${g.trans}).`),
-        left.length > 0 && h(
+        !byTerm && g.trans > 0 && h("p", { className: "muted small" }, `These are raw scores, before transmutation (base ${g.trans}).`),
+        byTerm ? h(
+          "div",
+          { className: "gc-slider" },
+          h("label", { htmlFor: `gcsf-${sandbox ? "w" : "r"}` }, F.pending.length > 1 ? "If I average " : "If I get ", h("strong", null, `${rf}%`), ` in ${F.pendLabel}`),
+          h("input", { id: `gcsf-${sandbox ? "w" : "r"}`, type: "range", min: 0, max: 100, step: 1, value: rf, onChange: (e) => {
+            setRf(Number(e.target.value));
+            setLocalPref("gcSliderF", Number(e.target.value));
+          } }),
+          h("p", null, "My final grade is ", h("strong", null, gcPctTxt(g, projF)), " ", h(GcLetter, { g, L: projFL }), h("span", { className: "muted" }, ` QPI ${gcQpiTxt(projFL && projFL.qpi)}`)),
+          F.counted.length > 0 && h("p", { className: "muted small gc-fmath" }, `${pts2(F.banked)} from ${F.countLabel} + ${pts2(F.pShare * rf / 100)} from ${F.pendLabel} (${pts(F.pShare)} × ${rf}%)`)
+        ) : left.length > 0 && h(
           "div",
           { className: "gc-slider" },
           h("label", { htmlFor: `gcs-${sandbox ? "w" : "r"}` }, "If I average ", h("strong", null, `${r}%`), " on what’s left"),
@@ -5551,6 +5762,7 @@ Rules: the numbers above are only an example of the format; use the real ones fr
     const g = useMemo(() => subject.grading ? gcNorm(subject.grading) : null, [subject.grading]);
     if (!g) return null;
     const sum = gcSummary(g);
+    const F = gcFinal(g, sum);
     const t = g.target && g.scale.find((x) => x.letter === g.target);
     const nd = t ? gcNeedView(gcNeed(g, sum, t.min)) : null;
     const ret = gcRetention(g, sum, gcGoals(settings));
@@ -5560,6 +5772,7 @@ Rules: the numbers above are only an example of the format; use the real ones fr
       { className: `panel gc-mini${risk ? " risk" : ""}`, onClick: () => go("grades") },
       h("span", { className: "panel-kicker" }, h(Icon, { name: "grade", size: 16 }), " Grade so far"),
       h("span", { className: "gc-now-row" }, h("span", { className: "mini-num" }, gcPctTxt(g, sum.now)), h(GcLetter, { g, L: sum.letter })),
+      F && !F.done && F.graded > 1e-9 && h("span", { className: "small gc-mini-fin" }, `Final grade: ${(F.earned * 100).toFixed(2)}% earned of ${gcFmt(F.graded * 100, 2)} graded so far`),
       h("span", { className: "muted small" }, nd ? `For ${t.letter}: ${nd.t.toLowerCase()}${nd.c === "" ? " on what’s left" : ""}` : sum.now === null ? "Tap to enter your scores" : "Set a goal to see what you need"),
       ret && h("span", { className: `small gc-need-v ${gcStateCls(ret.state)}` }, `Retention ${ret.want}: ${GC_RET_TXT[ret.state].toLowerCase()}${ret.L && ret.state !== "secured" && ret.state !== "lost" ? `, need ${ret.view.t}` : ""}`)
     );
