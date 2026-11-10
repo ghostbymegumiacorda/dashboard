@@ -1151,6 +1151,19 @@ input.gc-name.big { font-family: var(--display); font-size: 1.1rem; }
   .tk-row > .tk-when { grid-area: when; text-align: left; }
   .tk-row > .icon-btn { grid-area: del; }
 }
+
+/* ---------- AI Chat Modal Styling ---------- */
+.ai-chat-container { display: flex; flex-direction: column; gap: .8rem; max-height: 70vh; }
+.ai-messages-list { display: flex; flex-direction: column; gap: .7rem; overflow-y: auto; max-height: 420px; padding: .6rem; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface); }
+.ai-msg { padding: .7rem .9rem; border-radius: var(--r-md); font-size: .95rem; line-height: 1.45; }
+.ai-msg.user { background: var(--surface-2); align-self: flex-end; max-width: 85%; border-bottom-right-radius: 2px; }
+.ai-msg.model { background: mixHex(var(--surface), var(--accent), 0.12); border: 1px solid mixHex(var(--line), var(--accent), 0.3); align-self: flex-start; max-width: 90%; border-bottom-left-radius: 2px; }
+.ai-msg.error { background: rgba(255, 107, 122, 0.15); border: 1px solid var(--bad); color: var(--bad); }
+.ai-role { display: block; font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; margin-bottom: .25rem; opacity: .8; font-weight: 700; }
+.ai-input-row { display: flex; gap: .5rem; align-items: flex-end; }
+.ai-input-row textarea { flex: 1; resize: none; border-radius: var(--r-md); background: var(--surface); color: var(--text); border: 1px solid var(--line); padding: .5rem .7rem; }
+.ai-welcome { text-align: center; padding: 1.5rem 1rem; }
+.ai-presets { display: flex; flex-wrap: wrap; gap: .4rem; justify-content: center; margin-top: .8rem; }
 </style>
 </head>
 <body>
@@ -1503,7 +1516,7 @@ input.gc-name.big { font-family: var(--display); font-size: 1.1rem; }
     { id: "sky", name: "Sky", sub: "Airy light blue", dots: ["#edf5fb", "#0369a1", "#a1470a"] },
     { id: "custom", name: "Custom", sub: "Pick your own colors", dots: ["#101828", "#7c9cff", "#ffb547"] }
   ];
-  const DEFAULT_SETTINGS = { skin: "slate", fontScale: 1, contrast: false, comfort: false, calm: false, newPerDay: 10, maxPerDay: 120, speakRate: 1, pomoOn: false, pomoWork: 25, pomoBreak: 5, pomoLong: 15, remindAt: "", geminiKey: "" };
+  const DEFAULT_SETTINGS = { skin: "slate", fontScale: 1, contrast: false, comfort: false, calm: false, newPerDay: 10, maxPerDay: 120, speakRate: 1, pomoOn: false, pomoWork: 25, pomoBreak: 5, pomoLong: 15, remindAt: "", geminiKey: "", geminiModel: "gemini-3.8-flash" };
   function buildCfas() {
     return {
       id: "cfas",
@@ -3575,7 +3588,8 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     return /* @__PURE__ */ React.createElement(Modal, { title: "Quick add", onClose }, /* @__PURE__ */ React.createElement("div", { className: "big-options" }, items.map(([k, ic, l, d]) => /* @__PURE__ */ React.createElement("button", { key: k, className: "big-option", onClick: () => onPick(k) }, /* @__PURE__ */ React.createElement(Icon, { name: ic, size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, l), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, d))))));
   }
   function MoreSheet({ onPick, onClose, settings, setSettings, go }) {
-    return /* @__PURE__ */ React.createElement(Modal, { title: "More", onClose }, /* @__PURE__ */ React.createElement("div", { className: "big-options" }, h("button", { className: "big-option", onClick: () => onPick("aiChat") }, h(Icon, { name: "bolt", size: 22 }), h("span", null, h("strong", null, "AI Tutor Chat"), h("br", null), h("span", { className: "muted" }, "Chat live with your built-in AI study assistant"))), h("button", { className: "big-option", onClick: () => go("lectures") }, h(Icon, { name: "lecture", size: 22 }), h("span", null, h("strong", null, "Lectures"), h("br", null), h("span", { className: "muted" }, "Rules, treatments and traps for each topic"))), h("button", { className: "big-option", onClick: () => go("psets") }, h(Icon, { name: "pset", size: 22 }), h("span", null, h("strong", null, "Problem sets"), h("br", null), h("span", { className: "muted" }, "Problems by subtopic, with how to solve each one"))), h("button", { className: "big-option", onClick: () => go("class") }, h(Icon, { name: "subjects", size: 22 }), h("span", null, h("strong", null, "Class"), h("br", null), h("span", { className: "muted" }, "Timetable, attendance and what is due"))), h("button", { className: "big-option", onClick: () => go("grades") }, h(Icon, { name: "grade", size: 22 }), h("span", null, h("strong", null, "Grades"), h("br", null), h("span", { className: "muted" }, "Grade calculator, what-if, QPI summary and export"))), h("button", { className: "big-option", onClick: () => go("vault") }, h(Icon, { name: "cards", size: 22 }), h("span", null, h("strong", null, "Concept vault"), h("br", null), h("span", { className: "muted" }, "Browse, search and edit your flashcards"))), /* @__PURE__ */ React.createElement("button", { className: "big-option", onClick: () => onPick("subjects") }, /* @__PURE__ */ React.createElement(Icon, { name: "subjects", size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, "Subjects"), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "Add, rename or delete a subject"))), /* @__PURE__ */ React.createElement("button", { className: "big-option", onClick: () => onPick("data") }, /* @__PURE__ */ React.createElement(Icon, { name: "data", size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, "Import & export"), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "NotebookLM JSON, backups"))), /* @__PURE__ */ React.createElement("button", { className: "big-option", onClick: () => onPick("look") }, /* @__PURE__ */ React.createElement(Icon, { name: "look", size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, "Appearance"), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "Themes, text size, contrast")))), /* @__PURE__ */ React.createElement("p", { className: "field-label", style: { marginTop: "1rem" } }, "Quick theme"), /* @__PURE__ */ React.createElement(ThemeDots, { settings, setSettings }));
+    return /* @__PURE__ */ React.createElement(Modal, { title: "More", onClose }, /* @__PURE__ */ React.createElement("div", { className: "big-options" }, h("button", { className: "big-option", onClick: () => go("lectures") }, h(Icon, { name: "lecture", size: 22 }), h("span", null, h("strong", null, "Lectures"), h("br", null), h("span", { className: "muted" }, "Rules, treatments and traps for each topic"))), h("button", { className: "big-option", onClick: () => go("psets") }, h(Icon, { name: "pset", size: 22 }), h("span", null, h("strong", null, "Problem sets"), h("br", null), h("span", { className: "muted" }, "Problems by subtopic, with how to solve each one"))), h("button", { className: "big-option", onClick: () => go("class") }, h(Icon, { name: "subjects", size: 22 }), h("span", null, h("strong", null, "Class"), h("br", null), h("span", { className: "muted" }, "Timetable, attendance and what is due"))), h("button", { className: "big-option", onClick: () => go("grades") }, h(Icon, { name: "grade", size: 22 }), h("span", null, h("strong", null, "Grades"), h("br", null), h("span", { className: "muted" }, "Grade calculator, what-if, QPI summary and export"))), h("button", { className: "big-option", onClick: () => go("vault") }, h(Icon, { name: "cards", size: 22 }), h("span", null, h("strong", null, "Concept vault"), h("br", null), h("span", { className: "muted" }, "Browse, search and edit your flashcards"))),
+        h("button", { className: "big-option", onClick: () => onPick("aichat") }, h(Icon, { name: "sparkles", size: 22 }), h("span", null, h("strong", null, "AI Tutor Chat"), h("br", null), h("span", { className: "muted" }, "Chat live with Gemini AI for study help and problem breakdowns"))), /* @__PURE__ */ React.createElement("button", { className: "big-option", onClick: () => onPick("subjects") }, /* @__PURE__ */ React.createElement(Icon, { name: "subjects", size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, "Subjects"), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "Add, rename or delete a subject"))), /* @__PURE__ */ React.createElement("button", { className: "big-option", onClick: () => onPick("data") }, /* @__PURE__ */ React.createElement(Icon, { name: "data", size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, "Import & export"), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "NotebookLM JSON, backups"))), /* @__PURE__ */ React.createElement("button", { className: "big-option", onClick: () => onPick("look") }, /* @__PURE__ */ React.createElement(Icon, { name: "look", size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, "Appearance"), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "Themes, text size, contrast")))), /* @__PURE__ */ React.createElement("p", { className: "field-label", style: { marginTop: "1rem" } }, "Quick theme"), /* @__PURE__ */ React.createElement(ThemeDots, { settings, setSettings }));
   }
   /* =====================================================================
      Study features: spaced repetition, mistake retests, exam readiness,
@@ -4005,7 +4019,8 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         "div",
         { className: "drill-a" },
         typed.trim() && h("div", { className: "your-answer" }, h("span", { className: "muted small" }, "Your answer"), h("p", null, typed)),
-        card && h(React.Fragment, null, h("span", { className: "muted small" }, "Answer"), h("p", { className: "drill-ans" }, card.a), card.tip && h("p", { className: "flash-tip" }, card.tip), h("button", { type: "button", className: "btn ghost small", style: { marginTop: ".4rem" }, onClick: () => setModal({ aiChat: { initialPrompt: "Explain this question: \"" + card.q + "\". The correct answer is: \"" + card.a + "\". Why is this answer correct, and what key concepts should I remember?" } }) }, "🤖 Ask AI Tutor")),
+        card && h(React.Fragment, null, h("span", { className: "muted small" }, "Answer"), h("p", { className: "drill-ans" }, card.a), card.tip && h("p", { className: "flash-tip" }, card.tip)),
+        onAiChat && h("div", { style: { marginTop: ".4rem" } }, h("button", { type: "button", className: "btn ghost small", onClick: () => onAiChat(`Please explain this card step-by-step:\nQuestion: ${card.q}\nAnswer: ${card.a}`) }, "🤖 Ask AI Tutor")),
         mistake && h(React.Fragment, null, h("span", { className: "muted small" }, "Correct answer"), h("p", { className: "drill-ans" }, mistake.correct || "(not recorded)"), mistake.wrong && h("p", { className: "muted small" }, "You first answered: ", mistake.wrong), mistake.trap && h("p", { className: "flash-tip" }, mistake.trap)),
         card ? h(
           "div",
@@ -4933,6 +4948,160 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       (textC < 4.5 || accC < 3) && h("p", { className: "error small" }, textC < 4.5 ? "Text may be hard to read on this background. Try a lighter or darker text color." : "The main accent is hard to see on your card color. Try a stronger accent.")
     );
   }
+  
+  /* ---------- Built-in Gemini AI Assistant ---------- */
+  async function callGemini(prompt, apiKey, modelName) {
+    if (!apiKey) throw new Error("Gemini API key is required. Please set your key in Settings.");
+    const models = Array.from(new Set([
+      modelName || "gemini-3.8-flash",
+      "gemini-3.8-flash",
+      "gemini-3.5-flash",
+      "gemini-2.5-flash",
+      "gemini-1.5-flash-latest"
+    ]));
+    let lastErr = null;
+    for (const m of models) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${apiKey}`;
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          const msg = (data.error && data.error.message) || res.statusText;
+          if (msg.includes("not found") || msg.includes("not available") || res.status === 404) {
+            lastErr = new Error(msg);
+            continue;
+          }
+          throw new Error(msg);
+        }
+        const textOut = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
+        if (!textOut) throw new Error("Empty response from Gemini AI.");
+        return textOut;
+      } catch (e) {
+        lastErr = e;
+        if (e.message && (e.message.includes("not found") || e.message.includes("not available"))) continue;
+        throw e;
+      }
+    }
+    throw lastErr || new Error("Failed to connect to Gemini API.");
+  }
+
+  function AiChatModal({ subject, settings, setSettings, onClose, toast, initialPrompt }) {
+    const [messages, setMessages] = useState([]);
+    const [input, setInput] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [keyInput, setKeyInput] = useState(settings ? (settings.geminiKey || "") : "");
+    const chatEndRef = useRef(null);
+
+    useEffect(() => {
+      if (initialPrompt && !messages.length) {
+        handleSend(initialPrompt);
+      }
+    }, [initialPrompt]);
+
+    useEffect(() => {
+      if (chatEndRef.current) chatEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }, [messages, loading]);
+
+    const saveKey = () => {
+      if (setSettings) setSettings({ ...settings, geminiKey: keyInput.trim() });
+      if (toast) toast("Gemini API key saved!");
+    };
+
+    const handleSend = async (userText) => {
+      const q = (userText || input).trim();
+      if (!q) return;
+      const keyToUse = (settings && settings.geminiKey ? settings.geminiKey : keyInput).trim();
+      if (!keyToUse) {
+        if (toast) toast("Please enter your Gemini API key first");
+        return;
+      }
+      if (!userText) setInput("");
+      const newMsgs = [...messages, { role: "user", text: q }];
+      setMessages(newMsgs);
+      setLoading(true);
+
+      const systemContext = `You are an expert AI study tutor for ${subject ? subject.name : "BSA Study Desk"}. Answer clearly, concisely, and helpfully. Keep math or accounting steps explicit and easy to follow.`;
+      const fullPrompt = `${systemContext}\n\nUser Question: ${q}`;
+
+      try {
+        const reply = await callGemini(fullPrompt, keyToUse, settings && settings.geminiModel || "gemini-3.8-flash");
+        setMessages([...newMsgs, { role: "model", text: reply }]);
+      } catch (e) {
+        setMessages([...newMsgs, { role: "error", text: `⚠️ Error: ${e.message}` }]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const presets = [
+      "Explain the main concepts in this subject simply",
+      "Give me a challenging practice question with step-by-step solution",
+      "What are common mistakes students make in this subject?",
+      "Give me a memory mnemonic for remembering these rules"
+    ];
+
+    return h(
+      Modal,
+      { title: `🤖 AI Study Tutor — ${subject ? subject.name : "Study Desk"}`, onClose, wide: true },
+      h(
+        "div",
+        { className: "ai-chat-container" },
+        !(settings && settings.geminiKey) && h(
+          "div",
+          { className: "note small", style: { marginBottom: "1rem" } },
+          h("strong", null, "🔑 Gemini API Key Needed: "),
+          "Get your free key from ",
+          h("a", { href: "https://aistudio.google.com/app/apikey", target: "_blank", rel: "noreferrer" }, "Google AI Studio"),
+          " and save it below:",
+          h(
+            "div",
+            { style: { display: "flex", gap: ".5rem", marginTop: ".4rem" } },
+            h("input", { type: "password", placeholder: "Enter key...", value: keyInput, onChange: (e) => setKeyInput(e.target.value), className: "code", style: { flex: 1 } }),
+            h("button", { className: "btn primary", onClick: saveKey }, "Save Key")
+          )
+        ),
+        h(
+          "div",
+          { className: "ai-messages-list" },
+          messages.length === 0 && h(
+            "div",
+            { className: "ai-welcome" },
+            h("p", { className: "muted" }, "Ask your AI Tutor anything about your subject, request step-by-step breakdowns, or practice exam questions!"),
+            h(
+              "div",
+              { className: "ai-presets" },
+              presets.map((p, idx) => h("button", { key: idx, className: "chip", onClick: () => handleSend(p) }, p))
+            )
+          ),
+          messages.map((m, idx) => h(
+            "div",
+            { key: idx, className: `ai-msg ${m.role}` },
+            h("strong", { className: "ai-role" }, m.role === "user" ? "You" : m.role === "model" ? "🤖 AI Tutor" : "Error"),
+            h("div", { className: "ai-body", style: { whiteSpace: "pre-wrap" } }, m.text)
+          )),
+          loading && h("div", { className: "ai-msg model loading" }, h("span", { className: "muted" }, "🤖 Thinking…")),
+          h("div", { ref: chatEndRef })
+        ),
+        h(
+          "form",
+          { className: "ai-input-row", onSubmit: (e) => { e.preventDefault(); handleSend(); } },
+          h("textarea", {
+            rows: 2,
+            placeholder: "Type a question or topic...",
+            value: input,
+            onChange: (e) => setInput(e.target.value),
+            onKeyDown: (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }
+          }),
+          h("button", { type: "submit", className: "btn primary", disabled: loading || !input.trim() }, "Send")
+        )
+      )
+    );
+  }
+
   function AppearanceModal({ settings, setSettings, onClose }) {
     const set = (k, v) => setSettings({ ...settings, [k]: v });
     const tile = (s) => {
@@ -4961,8 +5130,18 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         { className: "toggles" },
         [["contrast", "High contrast", "Brighter secondary text and stronger borders"], ["comfort", "Comfortable reading", "More line spacing for long sessions"], ["calm", "Calm mode", "Turns off card flips, glows and background texture"]].map(([k, t, d]) => h("label", { key: k, className: "check" }, h("input", { type: "checkbox", checked: !!settings[k], onChange: (e) => set(k, e.target.checked) }), h("span", null, h("strong", null, t), h("br", null), h("span", { className: "muted" }, d))))
       ),
+      
       h("hr", null),
-      h("hr", null), h("h3", null, "AI Assistant"), h(Field, { label: "Gemini API Key", hint: "Powers built-in AI tutor chat. Get a free key from Google AI Studio." }, h("input", { type: "password", placeholder: "Paste key...", value: settings.geminiKey || "", onChange: (e) => set("geminiKey", e.target.value) })), h("hr", null), h("h3", null, "Studying"),
+      h("h3", null, "AI Assistant (Gemini)"),
+      h(Field, { label: "Gemini API Key", hint: "Saved locally in your browser. Used for built-in AI tutor chat." }, h("input", { type: "password", placeholder: "Enter key...", value: settings.geminiKey || "", onChange: (e) => set("geminiKey", e.target.value.trim()) })),
+      h(Field, { label: "Gemini Model", hint: "Gemini 3.8 Flash is recommended for latest features." }, h("select", { value: settings.geminiModel || "gemini-3.8-flash", onChange: (e) => set("geminiModel", e.target.value) }, [
+        ["gemini-3.8-flash", "Gemini 3.8 Flash (Recommended)"],
+        ["gemini-3.5-flash", "Gemini 3.5 Flash"],
+        ["gemini-2.5-flash", "Gemini 2.5 Flash"],
+        ["gemini-1.5-flash-latest", "Gemini 1.5 Flash (Legacy)"]
+      ].map(([m, l]) => h("option", { key: m, value: m }, l)))),
+      h("hr", null),
+      h("h3", null, "Studying"),
       sayOK() && h(Field, { label: `Reading speed: ${Math.round((settings.speakRate || 1) * 100)}%`, hint: "Used by Read aloud during a review." }, h("input", { type: "range", min: "0.6", max: "1.6", step: "0.1", value: settings.speakRate || 1, onChange: (e) => set("speakRate", Number(e.target.value)) })),
       h(Field, { label: "Daily review reminder", hint: "A notification on this device when something is due. Leave empty for none." }, h("div", { className: "remind-row" }, h("input", { type: "time", value: settings.remindAt || "", onChange: async (e) => {
         const v = e.target.value;
@@ -8327,120 +8506,11 @@ ${c.kindHint}` }
   ];
   NLM_PROMPTS.push(...PS_NEW_PROMPTS);
   NLM_GROUPS.splice(2, 0, ["lp", "Lectures & problem sets", "JSON replies go to Import, then show in the Lectures and Problem sets tabs"]);
-  
-  /* ---------- Built-in AI Tutor Chat Modal ---------- */
-  function AiChatModal({ subject, settings, setSettings, onClose, initialPrompt }) {
-    const [apiKey, setApiKey] = useState(() => (settings && settings.geminiKey) || "");
-    const [inputKey, setInputKey] = useState("");
-    const [messages, setMessages] = useState(() => [
-      {
-        role: "ai",
-        text: "Hello! I am your AI Study Tutor. Ask me anything about your topics, flashcards, or exam prep!",
-        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-      }
-    ]);
-    const [input, setInput] = useState("");
-    const [loading, setLoading] = useState(false);
-    const msgEndRef = useRef(null);
-
-    const saveKey = (keyVal) => {
-      const k = keyVal.trim();
-      setApiKey(k);
-      setSettings({ ...settings, geminiKey: k });
-    };
-
-    const sendMessage = async (txtToSend) => {
-      const query = (txtToSend || input).trim();
-      if (!query || loading) return;
-
-      const userMsg = { role: "user", text: query, time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) };
-      setMessages((m) => [...m, userMsg]);
-      if (!txtToSend) setInput("");
-
-      if (!apiKey) return;
-      setLoading(true);
-
-      const systemPrompt = "You are a friendly Socratic AI Study Tutor for " + (subject ? subject.name : "Study Desk") + ". Give clear, concise explanations. Highlight key terms in bold.";
-
-      const contents = [
-        { role: "user", parts: [{ text: systemPrompt + "\n\nStudent question: " + query }] }
-      ];
-
-      try {
-        const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ contents })
-        });
-        const data = await res.json();
-        if (data.error) throw new Error(data.error.message || "Gemini API error");
-        const replyText = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] ? data.candidates[0].content.parts[0].text : "Sorry, I couldn't generate a response. Please try again.";
-        setMessages((m) => [...m, { role: "ai", text: replyText, time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) }]);
-      } catch (err) {
-        setMessages((m) => [...m, { role: "ai", text: "⚠️ Error: " + (err.message || "Could not connect to Gemini AI. Check your API key."), time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) }]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    useEffect(() => {
-      if (msgEndRef.current) msgEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }, [messages, loading]);
-
-    useEffect(() => {
-      if (initialPrompt && apiKey) sendMessage(initialPrompt);
-    }, []);
-
-    const presets = [
-      "Explain the key concepts for this subject",
-      "Give me a practice problem to solve",
-      "How can I prepare for my next exam?"
-    ];
-
-    return h(
-      Modal,
-      { title: "🤖 AI Tutor Chat — " + (subject ? subject.name : "Study Desk"), onClose, wide: true },
-      !apiKey ? h(
-        "div",
-        { className: "ai-key-setup panel" },
-        h("h3", null, "🔑 Enter your Gemini API Key to activate AI Chat"),
-        h("p", { className: "muted small" }, "Built-in AI uses Google Gemini API to answer questions and explain flashcards. Get a free API key from Google AI Studio."),
-        h("div", { className: "row", style: { gap: ".5rem", marginTop: ".8rem" } },
-          h("input", { type: "password", placeholder: "Paste key here", value: inputKey, onChange: (e) => setInputKey(e.target.value), className: "input-field", style: { flex: 1 } }),
-          h("button", { className: "btn primary", onClick: () => saveKey(inputKey) }, "Save Key")
-        )
-      ) : h(
-        "div",
-        { className: "ai-chat-container" },
-        h(
-          "div",
-          { className: "ai-messages-list", style: { maxHeight: "380px", overflowY: "auto", padding: ".5rem", display: "flex", flexDirection: "column", gap: ".75rem" } },
-          messages.map((m, idx) => h(
-            "div",
-            { key: idx, className: "ai-msg " + (m.role === "user" ? "user-msg" : "bot-msg"), style: { alignSelf: m.role === "user" ? "flex-end" : "flex-start", maxWidth: "85%", background: m.role === "user" ? "var(--accent)" : "var(--surface-2)", color: m.role === "user" ? "var(--accent-ink, #000)" : "var(--text)", padding: ".65rem .85rem", borderRadius: "12px", border: "1px solid var(--line)" } },
-            h("div", { className: "ai-msg-header", style: { fontSize: ".75rem", opacity: 0.75, marginBottom: ".2rem" } }, (m.role === "user" ? "You" : "🤖 AI Tutor") + " · " + m.time),
-            h("div", { className: "ai-msg-body", style: { whiteSpace: "pre-wrap", lineHeight: "1.45" } }, m.text)
-          )),
-          loading && h("div", { className: "ai-msg bot-msg muted small", style: { alignSelf: "flex-start" } }, "🤖 Thinking..."),
-          h("div", { ref: msgEndRef })
-        ),
-        h("div", { className: "ai-presets", style: { display: "flex", flexWrap: "wrap", gap: ".35rem", margin: ".75rem 0 .5rem" } },
-          presets.map((p, idx) => h("button", { key: idx, className: "chip small", onClick: () => sendMessage(p) }, p))
-        ),
-        h(
-          "form",
-          { onSubmit: (e) => { e.preventDefault(); sendMessage(); }, style: { display: "flex", gap: ".5rem" } },
-          h("input", { type: "text", placeholder: "Ask your AI tutor a question...", value: input, onChange: (e) => setInput(e.target.value), style: { flex: 1, padding: ".6rem .85rem", borderRadius: "8px", border: "1px solid var(--line)", background: "var(--surface)", color: "var(--text)" } }),
-          h("button", { type: "submit", className: "btn primary", disabled: loading || !input.trim() }, "Send")
-        )
-      )
-    );
-  }
-
-function App() {
+  function App() {
     const [data, setData] = useState(() => loadLocal() || buildDefault());
     const [nav, setNav] = useState({ tab: "home", opts: {}, key: 0 });
     const [modal, setModal] = useState(null);
+    const [aiChat, setAiChat] = useState(null);
     const [editor, setEditor] = useState(null);
     const [msg, setMsg] = useState("");
     const [downloads, setDownloads] = useState(null);
@@ -8616,9 +8686,10 @@ function App() {
       setData((d) => ({ ...d, activeId: id }));
       go("grades", { gtab: t });
     };
-    const viewProps = { key: `${subject.id}-${nav.key}`, subject, update, toast, go, openEditor, init: nav.opts, settings: data.settings, setSettings };
+    const viewProps = { key: `${subject.id}-${nav.key}`, subject, update, toast, go, openEditor, init: nav.opts, settings: data.settings, setSettings, onAiChat: (prompt) => setAiChat({ initialPrompt: prompt }) };
     const subjectPicker = (id) => /* @__PURE__ */ React.createElement("select", { id, className: "subject-select", value: data.activeId, onChange: (e) => switchSubject(e.target.value), "aria-label": "Active subject" }, data.subjects.map((s) => /* @__PURE__ */ React.createElement("option", { key: s.id, value: s.id }, s.name, s.code ? ` (${s.code})` : "")));
-    return /* @__PURE__ */ React.createElement("div", { className: "shell" }, /* @__PURE__ */ React.createElement("aside", { className: "rail", "aria-label": "Main" }, /* @__PURE__ */ React.createElement("div", { className: "brand" }, /* @__PURE__ */ React.createElement("span", { className: "brand-mark", "aria-hidden": "true" }, "Σ"), /* @__PURE__ */ React.createElement("span", null, "BSA Study Desk")), /* @__PURE__ */ React.createElement("div", { className: "rail-subject" }, /* @__PURE__ */ React.createElement("span", { className: "rail-label" }, "Subject"), subjectPicker("subj"), /* @__PURE__ */ React.createElement("button", { className: "link-btn", onClick: () => setModal("subjects") }, "+ Add new subject")), /* @__PURE__ */ React.createElement("nav", { className: "rail-nav" }, tabs.map(([k, l, ic, n]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), /* @__PURE__ */ React.createElement("span", null, l), n ? /* @__PURE__ */ React.createElement("span", { className: "n" }, n) : null))), /* @__PURE__ */ React.createElement("button", { className: "btn primary quick-btn", onClick: () => setModal("quick") }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 18 }), " Quick add"), /* @__PURE__ */ React.createElement("div", { className: "rail-tools" }, /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("aiChat") }, /* @__PURE__ */ React.createElement(Icon, { name: "bolt", size: 18 }), " AI Tutor Chat"), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("data") }, /* @__PURE__ */ React.createElement(Icon, { name: "data", size: 18 }), " Import & export"), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("look") }, /* @__PURE__ */ React.createElement(Icon, { name: "look", size: 18 }), " Appearance"), /* @__PURE__ */ React.createElement(ThemeDots, { settings: data.settings, setSettings })), React.createElement(SyncBadge, { onOpen: openSync })), /* @__PURE__ */ React.createElement("header", { className: "mobilebar" }, /* @__PURE__ */ React.createElement("span", { className: "brand-mark", "aria-hidden": "true" }, "Σ"), subjectPicker("subj-m"), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal(syncAlert ? "sync" : "data"), "aria-label": syncAlert ? "Import, export and sync (needs attention)" : "Import and export", "data-sync": syncAlert }, /* @__PURE__ */ React.createElement(Icon, { name: "data" })), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal("look"), "aria-label": "Appearance" }, /* @__PURE__ */ React.createElement(Icon, { name: "look" }))), /* @__PURE__ */ React.createElement("main", { className: "content" }, nav.tab === "home" && /* @__PURE__ */ React.createElement(HomeView, { ...viewProps }), nav.tab === "practice" && h(PracticeView, { ...viewProps }), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(CalendarView, { ...viewProps }), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(PsView, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })), /* @__PURE__ */ React.createElement("nav", { className: "bottom-nav", "aria-label": "Sections" }, tabs.slice(0, 3).map(([k, l, ic]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), /* @__PURE__ */ React.createElement("span", null, l))), /* @__PURE__ */ React.createElement("button", { className: "fab", onClick: () => setModal("quick"), "aria-label": "Quick add" }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 24 })), [tabs[3], tabs[5]].map(([k, l, ic, n]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement("span", { className: "ico-wrap" }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), k === "mistakes" && n ? /* @__PURE__ */ React.createElement("span", { className: "badge" }, n) : null), /* @__PURE__ */ React.createElement("span", null, k === "calendar" ? "Calendar" : "Mistakes"))), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("more") }, /* @__PURE__ */ React.createElement(Icon, { name: "more" }), /* @__PURE__ */ React.createElement("span", null, "More"))), /* @__PURE__ */ React.createElement("div", { className: `toast${msg ? " show" : ""}`, role: "status", "aria-live": "polite" }, msg), h(FocusBar, { data, update, toast }), modal === "quick" && /* @__PURE__ */ React.createElement(QuickAdd, { onClose: () => setModal(null), onPick: (k) => {
+    return /* @__PURE__ */ React.createElement("div", { className: "shell" }, /* @__PURE__ */ React.createElement("aside", { className: "rail", "aria-label": "Main" }, /* @__PURE__ */ React.createElement("div", { className: "brand" }, /* @__PURE__ */ React.createElement("span", { className: "brand-mark", "aria-hidden": "true" }, "Σ"), /* @__PURE__ */ React.createElement("span", null, "BSA Study Desk")), /* @__PURE__ */ React.createElement("div", { className: "rail-subject" }, /* @__PURE__ */ React.createElement("span", { className: "rail-label" }, "Subject"), subjectPicker("subj"), /* @__PURE__ */ React.createElement("button", { className: "link-btn", onClick: () => setModal("subjects") }, "+ Add new subject")), /* @__PURE__ */ React.createElement("nav", { className: "rail-nav" }, tabs.map(([k, l, ic, n]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), /* @__PURE__ */ React.createElement("span", null, l), n ? /* @__PURE__ */ React.createElement("span", { className: "n" }, n) : null))), /* @__PURE__ */ React.createElement("button", { className: "btn primary quick-btn", onClick: () => setModal("quick") }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 18 }), " Quick add"), /* @__PURE__ */ React.createElement("div", { className: "rail-tools" }, /* @__PURE__ */ React.createElement("button", { onClick: () => setAiChat({}) }, /* @__PURE__ */ React.createElement(Icon, { name: "sparkles", size: 18 }), " AI Tutor Chat"),
+        /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("data") }, /* @__PURE__ */ React.createElement(Icon, { name: "data", size: 18 }), " Import & export"), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("look") }, /* @__PURE__ */ React.createElement(Icon, { name: "look", size: 18 }), " Appearance"), /* @__PURE__ */ React.createElement(ThemeDots, { settings: data.settings, setSettings })), React.createElement(SyncBadge, { onOpen: openSync })), /* @__PURE__ */ React.createElement("header", { className: "mobilebar" }, /* @__PURE__ */ React.createElement("span", { className: "brand-mark", "aria-hidden": "true" }, "Σ"), subjectPicker("subj-m"), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal(syncAlert ? "sync" : "data"), "aria-label": syncAlert ? "Import, export and sync (needs attention)" : "Import and export", "data-sync": syncAlert }, /* @__PURE__ */ React.createElement(Icon, { name: "data" })), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal("look"), "aria-label": "Appearance" }, /* @__PURE__ */ React.createElement(Icon, { name: "look" }))), /* @__PURE__ */ React.createElement("main", { className: "content" }, nav.tab === "home" && /* @__PURE__ */ React.createElement(HomeView, { ...viewProps }), nav.tab === "practice" && h(PracticeView, { ...viewProps }), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(CalendarView, { ...viewProps }), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(PsView, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })), /* @__PURE__ */ React.createElement("nav", { className: "bottom-nav", "aria-label": "Sections" }, tabs.slice(0, 3).map(([k, l, ic]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), /* @__PURE__ */ React.createElement("span", null, l))), /* @__PURE__ */ React.createElement("button", { className: "fab", onClick: () => setModal("quick"), "aria-label": "Quick add" }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 24 })), [tabs[3], tabs[5]].map(([k, l, ic, n]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement("span", { className: "ico-wrap" }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), k === "mistakes" && n ? /* @__PURE__ */ React.createElement("span", { className: "badge" }, n) : null), /* @__PURE__ */ React.createElement("span", null, k === "calendar" ? "Calendar" : "Mistakes"))), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("more") }, /* @__PURE__ */ React.createElement(Icon, { name: "more" }), /* @__PURE__ */ React.createElement("span", null, "More"))), /* @__PURE__ */ React.createElement("div", { className: `toast${msg ? " show" : ""}`, role: "status", "aria-live": "polite" }, msg), h(FocusBar, { data, update, toast }), modal === "quick" && /* @__PURE__ */ React.createElement(QuickAdd, { onClose: () => setModal(null), onPick: (k) => {
       if (k === "grade") {
         setModal(null);
         go("grades", { gtab: "scores" });
@@ -8626,7 +8697,8 @@ function App() {
     } }), modal === "more" && /* @__PURE__ */ React.createElement(MoreSheet, { onClose: () => setModal(null), onPick: (k) => setModal(k), settings: data.settings, setSettings, go: (t) => {
       setModal(null);
       go(t);
-    } }), modal && modal.nlm && h(Modal, { title: "NotebookLM prompts", wide: true, onClose: () => setModal(null) }, h(NotebookLMPrompts, { subject, toast, initPid: modal.nlm.pid, initTopic: modal.nlm.topicId, onImport: () => setModal("data") })), (modal === "aiChat" || (modal && modal.aiChat)) && h(AiChatModal, { subject, settings: data.settings, setSettings: (st) => setData((d) => ({ ...d, settings: st })), onClose: () => setModal(null), initialPrompt: modal && modal.aiChat ? modal.aiChat.initialPrompt : "" }), modal === "look" && /* @__PURE__ */ React.createElement(AppearanceModal, { settings: data.settings, setSettings, onClose: () => setModal(null) }), modal === "subjects" && /* @__PURE__ */ React.createElement(SubjectModal, { data, update, onClose: () => setModal(null), toast }), (modal === "data" || modal === "sync" || modal && modal.data) && /* @__PURE__ */ React.createElement(DataModal, { data, update, replaceAll, onClose: () => setModal(null), toast, downloads, initTab: modal && modal.data ? modal.data : modal === "sync" ? "github" : "import" }), (editor == null ? void 0 : editor.type) === "card" && /* @__PURE__ */ React.createElement(
+    } }), modal && modal.nlm && h(Modal, { title: "NotebookLM prompts", wide: true, onClose: () => setModal(null) }, h(NotebookLMPrompts, { subject, toast, initPid: modal.nlm.pid, initTopic: modal.nlm.topicId, onImport: () => setModal("data") })), (modal === "aichat" || aiChat) && h(AiChatModal, { subject, settings: data.settings, setSettings, onClose: () => { setModal(null); setAiChat(null); }, toast, initialPrompt: aiChat && aiChat.initialPrompt }),
+      modal === "look" && /* @__PURE__ */ React.createElement(AppearanceModal, { settings: data.settings, setSettings, onClose: () => setModal(null) }), modal === "subjects" && /* @__PURE__ */ React.createElement(SubjectModal, { data, update, onClose: () => setModal(null), toast }), (modal === "data" || modal === "sync" || modal && modal.data) && /* @__PURE__ */ React.createElement(DataModal, { data, update, replaceAll, onClose: () => setModal(null), toast, downloads, initTab: modal && modal.data ? modal.data : modal === "sync" ? "github" : "import" }), (editor == null ? void 0 : editor.type) === "card" && /* @__PURE__ */ React.createElement(
       CardEditor,
       {
         subject,
