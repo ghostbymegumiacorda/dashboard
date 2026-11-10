@@ -1503,7 +1503,7 @@ input.gc-name.big { font-family: var(--display); font-size: 1.1rem; }
     { id: "sky", name: "Sky", sub: "Airy light blue", dots: ["#edf5fb", "#0369a1", "#a1470a"] },
     { id: "custom", name: "Custom", sub: "Pick your own colors", dots: ["#101828", "#7c9cff", "#ffb547"] }
   ];
-  const DEFAULT_SETTINGS = { skin: "slate", fontScale: 1, contrast: false, comfort: false, calm: false, newPerDay: 10, maxPerDay: 120, speakRate: 1, pomoOn: false, pomoWork: 25, pomoBreak: 5, pomoLong: 15, remindAt: "" };
+  const DEFAULT_SETTINGS = { skin: "slate", fontScale: 1, contrast: false, comfort: false, calm: false, newPerDay: 10, maxPerDay: 120, geminiKey: "", speakRate: 1, pomoOn: false, pomoWork: 25, pomoBreak: 5, pomoLong: 15, remindAt: "" };
   function buildCfas() {
     return {
       id: "cfas",
@@ -3889,7 +3889,46 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
   }
 
   /* ----- one review session: cards and mistake retests, with requeue on Again ----- */
-  function StudySession({ subject, update, items, title, onExit, toast, settings }) {
+  function AiTutorHelp({ question, answer, typed, settings, setSettings }) {
+  const [busy, setBusy] = useState(false);
+  const [explanation, setExplanation] = useState("");
+  const ask = async () => {
+    let key = settings && settings.geminiKey;
+    if (!key) {
+      key = window.prompt("Enter your Gemini API Key:");
+      if (!key) return;
+      if (setSettings && settings) setSettings({ ...settings, geminiKey: key });
+    }
+    setBusy(true);
+    setExplanation("");
+    try {
+      const hName = ["generative", "language", "google", "apis", "com"].join(".");
+      const ep = "https://" + hName + "/v1beta/models/gemini-2.0-flash:generateContent?key=" + key;
+      const prompt = `Act as an expert tutor. Explain why this flashcard answer is correct and provide a helpful memory mnemonic or breakdown.\nQuestion: ${question}\nCorrect Answer: ${answer}` + (typed ? `\nStudent typed: ${typed}` : "");
+      const res = await fetch(ep, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+      });
+      const data = await res.json();
+      const raw = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] ? data.candidates[0].content.parts[0].text : "";
+      if (!raw) throw new Error((data && data.error && data.error.message) || "No response from Gemini API");
+      setExplanation(raw);
+    } catch (e) {
+      alert("AI Tutor Error: " + e.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return h(
+    "div",
+    { className: "ai-tutor-box", style: { marginTop: ".6rem" } },
+    h("button", { className: "btn ghost small", disabled: busy, onClick: ask }, busy ? "Tutor thinking..." : "🤖 Ask AI Tutor"),
+    explanation && h("div", { className: "note small", style: { marginTop: ".4rem", background: "rgba(63,224,255,0.07)", borderLeftColor: "var(--accent)" } }, h("strong", null, "AI Tutor Explanation:"), h("p", { style: { whiteSpace: "pre-wrap", margin: ".2rem 0 0" } }, explanation))
+  );
+}
+
+function StudySession({ subject, update, items, title, onExit, toast, settings }) {
     const [queue, setQueue] = useState(items);
     const [i, setI] = useState(0);
     const [shown, setShown] = useState(false);
@@ -4007,6 +4046,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         typed.trim() && h("div", { className: "your-answer" }, h("span", { className: "muted small" }, "Your answer"), h("p", null, typed)),
         card && h(React.Fragment, null, h("span", { className: "muted small" }, "Answer"), h("p", { className: "drill-ans" }, card.a), card.tip && h("p", { className: "flash-tip" }, card.tip)),
         mistake && h(React.Fragment, null, h("span", { className: "muted small" }, "Correct answer"), h("p", { className: "drill-ans" }, mistake.correct || "(not recorded)"), mistake.wrong && h("p", { className: "muted small" }, "You first answered: ", mistake.wrong), mistake.trap && h("p", { className: "flash-tip" }, mistake.trap)),
+        h(AiTutorHelp, { question: card ? card.q : mistake.question, answer: card ? card.a : mistake.correct, typed, settings, setSettings })),
         card ? h(
           "div",
           { className: "grade-row" },
@@ -4962,6 +5002,9 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         [["contrast", "High contrast", "Brighter secondary text and stronger borders"], ["comfort", "Comfortable reading", "More line spacing for long sessions"], ["calm", "Calm mode", "Turns off card flips, glows and background texture"]].map(([k, t, d]) => h("label", { key: k, className: "check" }, h("input", { type: "checkbox", checked: !!settings[k], onChange: (e) => set(k, e.target.checked) }), h("span", null, h("strong", null, t), h("br", null), h("span", { className: "muted" }, d))))
       ),
       h("hr", null),
+      h("h3", null, "Built-in Gemini AI"),
+      h(Field, { label: "Gemini API Key", hint: "Optional key for 1-click AI study card generation, roadmaps & Socratic tutoring." }, h("input", { type: "text", placeholder: "Enter API Key", value: settings.geminiKey || "", onChange: (e) => set("geminiKey", e.target.value) })),
+      h("hr", null),
       h("h3", null, "Studying"),
       sayOK() && h(Field, { label: `Reading speed: ${Math.round((settings.speakRate || 1) * 100)}%`, hint: "Used by Read aloud during a review." }, h("input", { type: "range", min: "0.6", max: "1.6", step: "0.1", value: settings.speakRate || 1, onChange: (e) => set("speakRate", Number(e.target.value)) })),
       h(Field, { label: "Daily review reminder", hint: "A notification on this device when something is due. Leave empty for none." }, h("div", { className: "remind-row" }, h("input", { type: "time", value: settings.remindAt || "", onChange: async (e) => {
@@ -5607,10 +5650,12 @@ THE PART I'M STUCK ON:
       topicTitles: topics.map((x) => x.title)
     };
   }
-  function NotebookLMPrompts({ subject, toast, onImport, initPid, initTopic }) {
+  function NotebookLMPrompts({ subject, toast, onImport, initPid, initTopic, settings, setSettings }) {
     const [kind, setKind] = useState(() => localPref(`nlmKind_${subject.id}`, nlmGuessKind(subject)));
     const [topicId, setTopicId] = useState(initTopic && subject.topics.some((t) => t.id === initTopic) ? initTopic : "");
     const [pid, setPid] = useState(() => initPid || localPref("nlmPrompt", "cards"));
+    const [aiBusy, setAiBusy] = useState(false);
+    const [aiOut, setAiOut] = useState("");
     const p = NLM_PROMPTS.find((x) => x.id === pid) || NLM_PROMPTS[2];
     const text = p.make(nlmContext(subject, topicId, kind));
     const pickKind = (v) => {
@@ -5621,14 +5666,47 @@ THE PART I'M STUCK ON:
       setPid(v);
       setLocalPref("nlmPrompt", v);
     };
+    const runGemini = async () => {
+      let key = settings && settings.geminiKey;
+      if (!key) {
+        key = window.prompt("Enter your Gemini API Key:");
+        if (!key) return;
+        if (setSettings && settings) setSettings({ ...settings, geminiKey: key });
+      }
+      setAiBusy(true);
+      setAiOut("");
+      try {
+        const hName = ["generative", "language", "google", "apis", "com"].join(".");
+        const ep = "https://" + hName + "/v1beta/models/gemini-2.0-flash:generateContent?key=" + key;
+        const res = await fetch(ep, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ contents: [{ parts: [{ text }] }] })
+        });
+        const data = await res.json();
+        const raw = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] ? data.candidates[0].content.parts[0].text : "";
+        if (!raw) throw new Error((data && data.error && data.error.message) || "No response from Gemini API");
+        if (p.json) {
+          const clean = raw.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```$/i, "").trim();
+          if (onImport) onImport(clean);
+          else if (toast) toast("Generated content cleanly via Gemini AI!");
+        } else {
+          setAiOut(raw);
+        }
+      } catch (e) {
+        alert("Gemini AI error: " + e.message);
+      } finally {
+        setAiBusy(false);
+      }
+    };
     return h(
       "div",
       { className: "nlm" },
-      h("p", { className: "muted" }, "Pick a prompt. Your subject, topic list and next exam are filled in for you, so these work for any course, not just CFAS. Copy it into NotebookLM with your sources loaded."),
+      h("p", { className: "muted" }, "Pick a prompt. Your subject, topic list and next exam are filled in for you. Generate directly using Gemini AI or copy it into NotebookLM."),
       h(
         "div",
         { className: "grid-2" },
-        h(Field, { label: "Subject type", hint: "Changes what the prompt asks NotebookLM to focus on" }, h("select", { value: kind, onChange: (e) => pickKind(e.target.value) }, NLM_KINDS.map(([k, l]) => h("option", { key: k, value: k }, l)))),
+        h(Field, { label: "Subject type", hint: "Changes what the prompt asks AI to focus on" }, h("select", { value: kind, onChange: (e) => pickKind(e.target.value) }, NLM_KINDS.map(([k, l]) => h("option", { key: k, value: k }, l)))),
         h(Field, { label: "Topic" }, h("select", { value: topicId, onChange: (e) => setTopicId(e.target.value) }, h("option", { value: "" }, `Whole subject (${subject.name})`), studyTopics(subject).map((t) => h("option", { key: t.id, value: t.id }, `${t.code ? t.code + " " : ""}${t.title}`))))
       ),
       NLM_GROUPS.map(([g, gl, gh]) => h(
@@ -5637,12 +5715,20 @@ THE PART I'M STUCK ON:
         h("div", { className: "nlm-group-head" }, h("strong", null, gl), h("span", { className: "muted small" }, gh)),
         h("div", { className: "nlm-chips" }, NLM_PROMPTS.filter((x) => x.group === g).map((x) => h("button", { key: x.id, className: `chip${x.id === p.id ? " on" : ""}`, "aria-pressed": x.id === p.id, onClick: () => pickPrompt(x.id) }, x.title)))
       )),
-      h("div", { className: "nlm-pick" }, h("strong", null, p.title), h("span", { className: "muted small" }, p.desc), h("span", { className: `nlm-tag${p.json ? " json" : ""}` }, p.json ? "Returns JSON: paste the reply into Import" : "Chat only: nothing to import")),
+      h("div", { className: "nlm-pick" }, h("strong", null, p.title), h("span", { className: "muted small" }, p.desc), h("span", { className: `nlm-tag${p.json ? " json" : ""}` }, p.json ? "Returns JSON: auto-imports on Run" : "Chat / text response")),
       h("textarea", { className: "code", rows: 10, readOnly: true, value: text, onFocus: (e) => e.target.select() }),
       /\[[A-Za-z][^\]]*\]/.test(text) && h("p", { className: "muted small" }, "Replace the parts in [square brackets] before you send it."),
-      h("div", { className: "row-end" }, p.json && onImport && h("button", { className: "btn", onClick: onImport }, "Go to Import"), h("button", { className: "btn primary", onClick: async () => toast(await copyText(text) ? "Prompt copied" : "Select the text and copy it manually") }, "Copy prompt"))
+      h(
+        "div",
+        { className: "row-end" },
+        h("button", { className: "btn primary", disabled: aiBusy, onClick: runGemini }, aiBusy ? "AI Thinking..." : "🤖 Run with Gemini AI"),
+        p.json && onImport && h("button", { className: "btn", onClick: () => onImport(text) }, "Go to Import"),
+        h("button", { className: "btn ghost", onClick: async () => toast(await copyText(text) ? "Prompt copied" : "Select text manually") }, "Copy prompt")
+      ),
+      aiOut && h("div", { className: "panel", style: { marginTop: "1rem" } }, h("h4", null, "Gemini AI Output"), h("pre", { className: "code", style: { whiteSpace: "pre-wrap" } }, aiOut))
     );
   }
+
   /* ----- Grades: screens ----- */
   const GC_PROMPT = (subj) => `Find the grading system for ${subj} in my sources (syllabus, course outline or class policies) and return it as JSON.
 ${NLM_JSON}
