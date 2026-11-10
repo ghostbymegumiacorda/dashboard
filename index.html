@@ -1072,6 +1072,85 @@ input.gc-name.big { font-family: var(--display); font-size: 1.1rem; }
   .ps-sol { animation: ps-in .18s ease-out; }
   @keyframes ps-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 }
+/* ---------- leeches: cards that keep beating you ---------- */
+.leech-panel { border-color: color-mix(in srgb, var(--bad) 45%, var(--line)); }
+.leech-panel .panel-kicker .ico { color: var(--bad); }
+.leech-list { list-style: none; margin: .7rem 0 0; padding: 0; display: flex; flex-direction: column; gap: .5rem; }
+.leech-list > li { display: flex; gap: .6rem; align-items: center; justify-content: space-between; flex-wrap: wrap; border: 1px solid var(--line); border-left: 4px solid var(--bad); border-radius: var(--r-md); padding: .6rem .8rem; background: var(--surface); }
+.leech-main { display: flex; flex-direction: column; gap: .15rem; min-width: 0; flex: 1 1 14rem; }
+.leech-main strong { line-height: 1.3; }
+.backlog-note { margin-top: .35rem; }
+@media (max-width: 560px) { .leech-list > li .dr-acts { width: 100%; justify-content: flex-end; } }
+/* ---------- starter packs ---------- */
+.packs .pack-list { display: flex; flex-direction: column; gap: .55rem; margin: .8rem 0; }
+.pack { display: flex; gap: .7rem; align-items: center; justify-content: space-between; flex-wrap: wrap; border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: var(--r-md); padding: .7rem .9rem; background: var(--surface); }
+.pack-main { display: flex; flex-direction: column; gap: .1rem; min-width: 0; flex: 1 1 15rem; }
+.pack-main strong { line-height: 1.3; }
+.file-btn { position: relative; overflow: hidden; }
+.file-btn input[type="file"] { position: absolute; inset: 0; opacity: 0; width: 100%; cursor: pointer; }
+.store-meter { margin: .9rem 0 .2rem; }
+.store-meter .panel-row { margin-bottom: .3rem; }
+@media (max-width: 560px) { .pack .dr-acts { width: 100%; justify-content: flex-end; } }
+/* ---------- mock exam ---------- */
+.mx-setup h2 { font-size: 1.4rem; margin: .1rem 0 .3rem; }
+.mx-clock { font-variant-numeric: tabular-nums; font-size: 1.15rem; font-family: var(--display); }
+.mx-clock.low { color: var(--bad); }
+.mx-q { font-size: 1.05rem; }
+.mx-choices { list-style: none; margin: .3rem 0 0; padding: 0; display: flex; flex-direction: column; gap: .4rem; }
+.mx-choice { display: flex; gap: .6rem; align-items: flex-start; border: 1px solid var(--line); border-radius: var(--r-md); padding: .6rem .8rem; cursor: pointer; background: var(--surface-2); line-height: 1.4; }
+.mx-choice:hover { border-color: var(--accent); }
+.mx-choice.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); background: var(--surface); }
+.mx-nav { display: flex; gap: .45rem; align-items: center; flex-wrap: wrap; border-top: 1px solid var(--line); padding-top: .8rem; margin-top: .3rem; }
+.mx-nav .btn.on { border-color: var(--warn); color: var(--warn); }
+.mx-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(2.6rem, 1fr)); gap: .4rem; margin: .6rem 0; }
+.mx-cell { border: 1px solid var(--line); background: var(--surface-2); color: var(--muted); border-radius: var(--r-sm); padding: .5rem 0; font: inherit; font-weight: 700; font-variant-numeric: tabular-nums; cursor: pointer; }
+.mx-cell.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.mx-cell.flag { border-color: var(--warn); border-width: 2px; }
+.mx-cell.cur { box-shadow: 0 0 0 2px var(--text); }
+.mx-report { gap: .8rem; }
+.mx-report .big-num { margin: .1rem 0; }
+.mx-todo { color: var(--warn); font-weight: 700; }
+.mx-item .ps-choices li { padding: .15rem 0; }
+.mx-item .mx-key { color: var(--ok); font-weight: 700; }
+.mx-item .mx-yours { color: var(--bad); }
+.mx-item .grade.on { box-shadow: 0 0 0 2px var(--text); }
+/* ---------- time budget, pomodoro, reminders ---------- */
+.budget-panel .budget-row { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: .6rem; }
+.budget-panel .budget-row .btn { flex: 1 1 4.5rem; justify-content: center; }
+.pomo-check { margin-top: .7rem; }
+.remind-row { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
+.remind-row input[type="time"] { width: auto; }
+.focus-bar .focus-text .muted { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 13rem; }
+/* ---------- class life ---------- */
+.cl-rows, .tk-rows { display: flex; flex-direction: column; gap: .45rem; margin: .7rem 0; }
+.cl-row { display: grid; grid-template-columns: minmax(0, 1.3fr) 7rem 7rem minmax(0, 1fr) 2.2rem; gap: .4rem; align-items: center; }
+.cl-row input, .cl-row select { width: 100%; min-width: 0; }
+.att-list { list-style: none; margin: .6rem 0 0; padding: 0; display: flex; flex-direction: column; gap: .45rem; }
+.att-list > li { display: flex; gap: .6rem; align-items: center; justify-content: space-between; flex-wrap: wrap; border: 1px solid var(--line); border-radius: var(--r-md); padding: .55rem .8rem; background: var(--surface); }
+.att-main { display: flex; flex-direction: column; gap: .1rem; min-width: 0; flex: 1 1 11rem; }
+.att-btns { display: flex; gap: .3rem; flex-wrap: wrap; }
+.tk-row { display: grid; grid-template-columns: 1.3rem minmax(0, 1fr) 8rem 10.5rem 5.5rem 2.2rem; gap: .4rem; align-items: center; }
+.tk-row input, .tk-row select { width: 100%; min-width: 0; }
+.tk-row.done .tk-title { text-decoration: line-through; color: var(--muted); }
+.tk-when { font-size: .8rem; font-weight: 700; color: var(--muted); text-align: right; white-space: nowrap; }
+.tk-when.soon { color: var(--warn); }
+.tk-when.over { color: var(--bad); }
+.roi-flag { border-left: 3px solid var(--warn); padding: .5rem .8rem; background: color-mix(in srgb, var(--warn) 10%, transparent); border-radius: 0 var(--r-sm) var(--r-sm) 0; margin: 0 0 .6rem; }
+@media (max-width: 760px) {
+  .cl-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 2.2rem; grid-template-areas: "dow dow del" "start end ." "room room ."; }
+  .cl-row > select { grid-area: dow; }
+  .cl-row > input[type="time"]:nth-of-type(1) { grid-area: start; }
+  .cl-row > input[type="time"]:nth-of-type(2) { grid-area: end; }
+  .cl-row > input:not([type="time"]) { grid-area: room; }
+  .cl-row > .icon-btn { grid-area: del; }
+  .tk-row { grid-template-columns: 1.3rem minmax(0, 1fr) 2.2rem; grid-template-areas: "ck title del" ". kind kind" ". due when"; }
+  .tk-row > input[type="checkbox"] { grid-area: ck; }
+  .tk-row > .tk-title { grid-area: title; }
+  .tk-row > select { grid-area: kind; }
+  .tk-row > input[type="date"] { grid-area: due; }
+  .tk-row > .tk-when { grid-area: when; text-align: left; }
+  .tk-row > .icon-btn { grid-area: del; }
+}
 </style>
 </head>
 <body>
@@ -1424,7 +1503,7 @@ input.gc-name.big { font-family: var(--display); font-size: 1.1rem; }
     { id: "sky", name: "Sky", sub: "Airy light blue", dots: ["#edf5fb", "#0369a1", "#a1470a"] },
     { id: "custom", name: "Custom", sub: "Pick your own colors", dots: ["#101828", "#7c9cff", "#ffb547"] }
   ];
-  const DEFAULT_SETTINGS = { skin: "slate", fontScale: 1, contrast: false, comfort: false, calm: false, newPerDay: 10 };
+  const DEFAULT_SETTINGS = { skin: "slate", fontScale: 1, contrast: false, comfort: false, calm: false, newPerDay: 10, maxPerDay: 120, speakRate: 1, pomoOn: false, pomoWork: 25, pomoBreak: 5, pomoLong: 15, remindAt: "" };
   function buildCfas() {
     return {
       id: "cfas",
@@ -1922,7 +2001,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         d.subjects.push({ id, name: name.trim(), code: code.trim(), school: active.school || "", topics, cards: [], mistakes: [], quizzes: [], sessions: [] });
         d.activeId = id;
       });
-      toast(`${name.trim()} added`);
+      toast(`${name.trim()} added. Open Import & export \u2192 Starter packs to fill it in.`);
       onClose();
     };
     const remove = () => {
@@ -1954,7 +2033,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
      - Offline edits are counted and kept; they upload as soon as a connection is back. */
   const GH_KEYS = { user: "bsa_gh_user", repo: "bsa_gh_repo", token: "bsa_gh_key", path: "bsa_gh_path" };
   const SYNC_META_KEY = "bsa_sync_meta";
-  const COLLS = ["topics", "cards", "mistakes", "quizzes", "sessions", "days", "lectures", "psets"];
+  const COLLS = ["topics", "cards", "mistakes", "quizzes", "sessions", "days", "lectures", "psets", "classes", "attend", "tasks"];
   const TOMB_DAYS = 120;
   const POLL_MS = 3e4;
   const lsGet = (k) => {
@@ -2589,6 +2668,213 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     );
   }
 
+  /* ---------- starter packs: a subject you can start studying in one tap ----------
+     Each pack is the same JSON the Import tab already understands, so it goes through
+     parseImport and applyPartial like any other import. Nothing special-cased. */
+  const STD_GRADING = {
+    units: 3, rounding: "2",
+    terms: [
+      { name: "Midterms", weight: 50, components: [
+        { name: "Prelim exam", weight: 30 },
+        { name: "Class standing", weight: 40, parts: [{ name: "Quizzes", weight: 40 }, { name: "Seatwork & assignments", weight: 20 }, { name: "Recitation", weight: 20 }, { name: "Attendance", weight: 20 }] },
+        { name: "Midterm exam", weight: 30 }] },
+      { name: "Finals", weight: 50, components: [
+        { name: "Semi-final exam", weight: 30 },
+        { name: "Class standing", weight: 40, parts: [{ name: "Quizzes", weight: 40 }, { name: "Seatwork & assignments", weight: 20 }, { name: "Recitation", weight: 20 }, { name: "Attendance", weight: 20 }] },
+        { name: "Final exam", weight: 30 }] }
+    ],
+    scale: [{ letter: "A", min: 92, qpi: 4 }, { letter: "A-", min: 86, qpi: 3.5 }, { letter: "B", min: 80, qpi: 3 }, { letter: "B-", min: 74, qpi: 2.5 }, { letter: "C", min: 70, qpi: 2 }, { letter: "F", min: 0, qpi: 0 }]
+  };
+  // topics: [title, reference, [subtopics]]   cards: [topic, question, answer, tip]
+  const PACKS = [
+    { id: "oblicon", name: "Law on Obligations and Contracts", code: "", kind: "theory",
+      blurb: "Civil Code Arts. 1156–1422. Obligations, then contracts.",
+      topics: [
+        ["General provisions on obligations", "Arts. 1156–1162", ["Definition of obligation", "Elements of an obligation", "Sources of obligations", "Law, contracts, quasi-contracts", "Delicts and quasi-delicts"]],
+        ["Nature and effect of obligations", "Arts. 1163–1178", ["Duties of a debtor to deliver", "Fruits and accessories", "Delay (mora)", "Fraud, negligence, contravention", "Fortuitous events", "Remedies of creditors"]],
+        ["Kinds of obligations", "Arts. 1179–1230", ["Pure and conditional", "With a period", "Alternative and facultative", "Joint and solidary", "Divisible and indivisible", "With a penal clause"]],
+        ["Extinguishment of obligations", "Arts. 1231–1304", ["Payment or performance", "Loss of the thing due", "Condonation or remission", "Confusion or merger", "Compensation", "Novation"]],
+        ["Contracts: general provisions", "Arts. 1305–1317", ["Definition and elements", "Freedom to stipulate", "Obligatory force", "Mutuality and relativity", "Stipulation pour autrui"]],
+        ["Essential requisites of contracts", "Arts. 1318–1355", ["Consent", "Vices of consent", "Object of contracts", "Cause of contracts", "Capacity to give consent"]],
+        ["Defective contracts", "Arts. 1380–1422", ["Rescissible contracts", "Voidable contracts", "Unenforceable contracts", "Void or inexistent contracts"]]
+      ],
+      cards: [
+        ["Arts. 1156–1162", "What is an obligation under Art. 1156?", "A juridical necessity to give, to do or not to do.", "Memorize the exact phrase: juridical necessity."],
+        ["Arts. 1156–1162", "What are the four elements of an obligation?", "Active subject (creditor), passive subject (debtor), object or prestation, and the juridical or legal tie (vinculum).", "Mnemonic: creditor, debtor, prestation, tie."],
+        ["Arts. 1156–1162", "What are the five sources of obligations?", "Law, contracts, quasi-contracts, acts or omissions punished by law (delicts), and quasi-delicts.", "Art. 1157. Exam favourite."],
+        ["Arts. 1163–1178", "When does delay (mora) begin?", "From the time the creditor judicially or extrajudicially demands performance, unless demand is not needed: when the law or obligation expressly says so, when time is of the essence, when demand would be useless, or in reciprocal obligations once one party performs.", "No demand, no delay, with four exceptions."],
+        ["Arts. 1163–1178", "What are the three kinds of delay?", "Mora solvendi (debtor delays), mora accipiendi (creditor refuses to accept), and compensatio morae (both parties delay in reciprocal obligations).", ""],
+        ["Arts. 1179–1230", "Solidary vs joint obligation: which is presumed?", "Joint is presumed. Solidarity exists only when the obligation expressly states it, or the law or the nature of the obligation requires it.", "Classic trap: the default is joint, not solidary."],
+        ["Arts. 1231–1304", "Name the six modes of extinguishing an obligation under Art. 1231.", "Payment or performance, loss of the thing due, condonation or remission, confusion or merger, compensation, and novation.", "Also: annulment, rescission, fulfilment of a resolutory condition, prescription."],
+        ["Arts. 1231–1304", "What are the requisites of legal compensation?", "Both parties are principal creditors and debtors of each other; both debts consist of money or consumable things of the same kind and quality; both are due; both are liquidated and demandable; and no retention or controversy commenced by a third person.", "Five requisites, Art. 1279."],
+        ["Arts. 1318–1355", "What are the three essential requisites of a contract?", "Consent of the contracting parties, object certain which is the subject matter, and cause of the obligation.", "Consent, object, cause: COC."],
+        ["Arts. 1318–1355", "Name the vices of consent.", "Mistake, violence, intimidation, undue influence and fraud. A contract with a vice of consent is voidable, not void.", "Mnemonic: MVIUF."],
+        ["Arts. 1380–1422", "Rescissible vs voidable vs unenforceable vs void: which can be ratified?", "Voidable and unenforceable contracts can be ratified. Rescissible contracts are valid until rescinded. Void contracts can never be ratified and produce no effect.", "Only void is beyond saving."],
+        ["Arts. 1380–1422", "Which contracts must be in writing under the Statute of Frauds?", "Agreements not to be performed within a year, a special promise to answer for another's debt, agreements in consideration of marriage, sale of goods over P500, lease for more than a year, sale of real property, and a representation as to the credit of a third person.", "Unwritten ones are unenforceable, not void."]
+      ] },
+    { id: "mmw", name: "Mathematics in the Modern World", code: "", kind: "calc",
+      blurb: "GE math: patterns, logic, statistics, maths of finance.",
+      topics: [
+        ["The nature of mathematics", "", ["Patterns and numbers in nature", "The Fibonacci sequence", "The golden ratio", "Mathematics as a language"]],
+        ["Mathematical language and symbols", "", ["Sets and set operations", "Relations and functions", "Binary operations", "Elementary logic", "Propositions and truth tables"]],
+        ["Problem solving and reasoning", "", ["Inductive reasoning", "Deductive reasoning", "Polya's four steps", "Problem-solving strategies"]],
+        ["Data management", "", ["Measures of central tendency", "Measures of dispersion", "Measures of relative position", "Normal distribution", "Linear regression and correlation"]],
+        ["Mathematics of finance", "", ["Simple interest", "Compound interest", "Simple and general annuities", "Stocks, bonds and mutual funds", "Loans and amortization"]],
+        ["Apportionment and voting", "", ["Apportionment methods", "Voting systems", "Weighted voting"]]
+      ],
+      cards: [
+        ["The nature of mathematics", "What is the Fibonacci sequence?", "A sequence where each term is the sum of the two before it: 1, 1, 2, 3, 5, 8, 13, 21. The ratio of consecutive terms approaches the golden ratio.", "F(n) = F(n-1) + F(n-2)"],
+        ["The nature of mathematics", "What is the golden ratio, and its value?", "Phi, about 1.618, the limit of the ratio of consecutive Fibonacci numbers. Exactly (1 + square root of 5) divided by 2.", ""],
+        ["Mathematical language and symbols", "When is a conditional statement false?", "Only when the antecedent is true and the consequent is false. Every other combination is true.", "T then F is the only F."],
+        ["Mathematical language and symbols", "Give the converse, inverse and contrapositive of 'If p then q'.", "Converse: if q then p. Inverse: if not p then not q. Contrapositive: if not q then not p. Only the contrapositive is logically equivalent to the original.", "Contrapositive is the only equivalent one."],
+        ["Problem solving and reasoning", "Inductive vs deductive reasoning?", "Inductive goes from specific observations to a general conclusion and is probable. Deductive goes from general premises to a specific conclusion and is certain if the premises are true.", "Induction: patterns. Deduction: proof."],
+        ["Data management", "Mean, median, mode: which is best for skewed data?", "The median, because it is not pulled by extreme values. The mean is best for symmetric data; the mode is for categorical data.", "Outliers drag the mean."],
+        ["Data management", "What does the empirical rule say about a normal distribution?", "About 68% of values fall within one standard deviation of the mean, 95% within two, and 99.7% within three.", "68-95-99.7"],
+        ["Mathematics of finance", "Simple vs compound interest formulas?", "Simple: I = Prt, so F = P(1 + rt). Compound: F = P(1 + i) raised to n, where i is the rate per period and n is the number of periods.", "Compound earns interest on interest."],
+        ["Mathematics of finance", "What is the present value of an ordinary annuity?", "P = R multiplied by [1 - (1 + i) to the power of negative n] divided by i, where R is the regular payment.", "Ordinary annuity: payments at period end."],
+        ["Apportionment and voting", "What is the quota rule?", "An apportionment method satisfies the quota rule if every group receives either the lower quota or the upper quota, never more and never less.", ""]
+      ] },
+    { id: "purcom", name: "Purposive Communication", code: "", kind: "language",
+      blurb: "GE communication: models, culture, media literacy, workplace writing.",
+      topics: [
+        ["Communication processes and principles", "", ["Elements of communication", "Models of communication", "Principles of effective communication", "Barriers to communication", "Ethical communication"]],
+        ["Communication and globalization", "", ["Global communication", "Cultural and intercultural awareness", "World Englishes", "Varieties and registers"]],
+        ["Local and global communication in multicultural settings", "", ["Cultural dimensions", "High and low context cultures", "Avoiding stereotypes and bias"]],
+        ["Evaluating messages and images", "", ["Media literacy", "Evaluating sources", "Propaganda and fallacies", "Visual communication"]],
+        ["Communication for various purposes", "", ["Informative communication", "Persuasive communication", "Argumentative communication", "Public speaking"]],
+        ["Communication for work purposes", "", ["Resume and application letter", "Business correspondence", "Minutes of meetings", "Incident and project reports"]]
+      ],
+      cards: [
+        ["Communication processes and principles", "What are the elements of the communication process?", "Sender, message, encoding, channel, receiver, decoding, feedback, and context or noise.", ""],
+        ["Communication processes and principles", "Name the three models of communication.", "Linear (one way, Shannon-Weaver), interactive (adds feedback, Schramm), and transactional (simultaneous sending and receiving).", "Transactional is the most realistic."],
+        ["Communication processes and principles", "What are the seven Cs of effective communication?", "Clear, concise, concrete, correct, coherent, complete and courteous.", ""],
+        ["Communication and globalization", "What are World Englishes?", "The localized varieties of English that develop where it is used, each with its own valid features. Kachru groups them into inner, outer and expanding circles.", "Philippine English sits in the outer circle."],
+        ["Communication and globalization", "Register vs dialect?", "Register is the level of formality and word choice suited to a situation. Dialect is a variety tied to a region or social group.", ""],
+        ["Local and global communication", "High context vs low context culture?", "High context relies on shared understanding, non-verbal cues and relationships, as in the Philippines and Japan. Low context relies on explicit words, as in Germany and the US.", ""],
+        ["Evaluating messages and images", "What is the CRAAP test for evaluating sources?", "Currency, Relevance, Authority, Accuracy and Purpose.", ""],
+        ["Evaluating messages and images", "Name three common logical fallacies.", "Ad hominem attacks the person rather than the argument; bandwagon claims something is right because it is popular; false dilemma presents only two options when more exist.", ""],
+        ["Communication for various purposes", "What are the parts of a persuasive appeal according to Aristotle?", "Ethos (credibility of the speaker), pathos (emotion of the audience) and logos (logic of the argument).", ""],
+        ["Communication for work purposes", "What goes in minutes of a meeting?", "Date, time and place, attendees and absentees, approval of previous minutes, agenda items with discussion and decisions, action items with owners, and adjournment time.", ""]
+      ] },
+    { id: "uts", name: "Understanding the Self", code: "", kind: "philo",
+      blurb: "GE: philosophical, sociological and psychological views of the self.",
+      topics: [
+        ["Philosophical perspectives of the self", "", ["Socrates and Plato", "St. Augustine and Aquinas", "Descartes", "Locke and Hume", "Kant", "Ryle and Merleau-Ponty"]],
+        ["Sociological and anthropological self", "", ["Mead's social self", "Cooley's looking-glass self", "Goffman's self-presentation", "Culture and identity"]],
+        ["Psychological perspectives", "", ["Freud's structure of the mind", "Erikson's stages", "Rogers' real and ideal self", "William James: I and Me"]],
+        ["The self in various settings", "", ["The physical and sexual self", "The material and economic self", "The spiritual self", "The political and digital self"]],
+        ["Managing and caring for the self", "", ["Learning to be a better learner", "Setting goals for success", "Taking charge of one's health", "Stress and coping"]]
+      ],
+      cards: [
+        ["Philosophical perspectives of the self", "What did Socrates mean by 'Know thyself'?", "That the unexamined life is not worth living, and that the self is the soul, which is immortal and distinct from the body.", ""],
+        ["Philosophical perspectives of the self", "What is Descartes' view of the self?", "The self is a thinking thing. 'Cogito ergo sum': I think, therefore I am. Mind and body are separate substances, which is dualism.", ""],
+        ["Philosophical perspectives of the self", "How does Hume differ from Locke on the self?", "Locke says the self is continuity of consciousness and memory. Hume says there is no permanent self at all, only a bundle of impressions and ideas in constant flux.", "Hume: the bundle theory."],
+        ["Philosophical perspectives of the self", "What is Ryle's criticism of dualism?", "He called it 'the ghost in the machine'. For Ryle the self is simply the way a person behaves: 'I act, therefore I am.'", ""],
+        ["Sociological and anthropological self", "What is Cooley's looking-glass self?", "We form our self-image by imagining how we appear to others, imagining their judgment, and then feeling pride or shame about it.", "Three steps: appear, judge, feel."],
+        ["Sociological and anthropological self", "Distinguish Mead's 'I' from the 'Me'.", "The 'I' is the spontaneous, unsocialized response of the individual. The 'Me' is the organized set of attitudes of others that the person has internalized.", "James used the same pair differently."],
+        ["Psychological perspectives", "What are the three parts of Freud's structure of the mind?", "The id works on the pleasure principle, the ego on the reality principle, and the superego on morality and the ideal self.", ""],
+        ["Psychological perspectives", "What is Rogers' real self versus ideal self?", "The real self is who you actually are; the ideal self is who you want to be. A large gap between the two causes incongruence and anxiety.", ""],
+        ["The self in various settings", "What is the material self according to William James?", "The parts of identity drawn from what we own and are attached to: body, clothes, family, home and possessions.", ""],
+        ["Managing and caring for the self", "What is metacognition?", "Thinking about your own thinking: knowing how you learn, planning your approach, monitoring your understanding, and adjusting your strategy.", ""]
+      ] },
+    { id: "rph", name: "Readings in Philippine History", code: "", kind: "history",
+      blurb: "GE history: primary sources, content and contextual analysis.",
+      topics: [
+        ["Meaning and relevance of history", "", ["History and historiography", "Primary and secondary sources", "External and internal criticism", "Repositories of sources"]],
+        ["Content and contextual analysis of sources", "", ["Pigafetta's First Voyage Around the World", "Chirino's Relacion de las Islas Filipinas", "Customs of the Tagalogs by Plasencia"]],
+        ["Nineteenth century sources", "", ["Jaena's Fray Botod", "Rizal's annotation of Morga", "The Kartilya of the Katipunan", "Declaration of Philippine Independence"]],
+        ["Twentieth century sources", "", ["Political caricatures of the American era", "Speeches of presidents", "Martial law documents", "The 1987 Constitution preamble"]],
+        ["Controversies and conflicting views", "", ["Site of the first Mass", "Cavite Mutiny: Filipino vs Spanish accounts", "Retraction of Rizal", "Cry of Balintawak or Pugad Lawin"]],
+        ["Critical issues in Philippine history", "", ["Agrarian reform policies", "The Philippine Constitution", "Taxation", "Local and oral history"]]
+      ],
+      cards: [
+        ["Meaning and relevance of history", "Primary vs secondary source?", "A primary source was produced at the time by someone present at the event. A secondary source interprets or analyses primary sources afterwards.", "Ask: was the writer there?"],
+        ["Meaning and relevance of history", "External vs internal criticism?", "External criticism tests the authenticity of a source: is it genuine, and when and by whom was it made? Internal criticism tests its credibility: is the content truthful and free of bias?", "External: is it real. Internal: is it true."],
+        ["Content and contextual analysis", "Who was Antonio Pigafetta?", "The Italian chronicler of Magellan's expedition. His account is the main primary source for the 1521 arrival, the first Mass, and the Battle of Mactan.", ""],
+        ["Content and contextual analysis", "What does Customs of the Tagalogs describe?", "Juan de Plasencia's 1589 account of pre-colonial Tagalog social structure, the barangay, the datu, the classes of maharlika, aliping namamahay and aliping saguiguilid, and religious practices.", "Written by a friar, so read for colonial bias."],
+        ["Nineteenth century sources", "What is the Kartilya of the Katipunan?", "Emilio Jacinto's code of conduct setting out the moral teachings expected of Katipunan members, more a guide to character than a political programme.", ""],
+        ["Nineteenth century sources", "Why did Rizal annotate Morga's Sucesos?", "To show that Filipinos had a developed civilization before Spanish colonization, and that colonial rule caused decline rather than progress.", ""],
+        ["Controversies and conflicting views", "What are the two sides of the first Mass controversy?", "Butuan was the traditional claim; Limasawa in Southern Leyte is supported by Pigafetta's account and has been affirmed by government panels.", ""],
+        ["Controversies and conflicting views", "How do Filipino and Spanish accounts of the 1872 Cavite Mutiny differ?", "Spanish accounts, such as Montero's, call it a full separatist rebellion justifying repression. Filipino accounts, such as Tavera's, call it a local mutiny over lost privileges that was exaggerated to justify executing Gomburza.", ""],
+        ["Twentieth century sources", "What do American-era political caricatures reveal?", "Filipino views of American rule, colonial policies, corruption and emerging social classes, often through satire that bypassed censorship.", ""],
+        ["Critical issues in Philippine history", "Name the major agrarian reform laws.", "RA 1199 (Agricultural Tenancy Act, 1954), RA 3844 (Agricultural Land Reform Code, 1963), PD 27 (1972) and RA 6657 (Comprehensive Agrarian Reform Law, 1988), later extended by RA 9700.", ""]
+      ] },
+    { id: "mathinv", name: "Mathematics of Investment", code: "", kind: "calc",
+      blurb: "Simple and compound interest, annuities, amortization, bonds.",
+      topics: [
+        ["Simple interest and simple discount", "", ["Simple interest", "Ordinary and exact interest", "Approximate and actual time", "Present value at simple interest", "Simple discount", "Promissory notes"]],
+        ["Compound interest", "", ["Compound amount and present value", "Nominal and effective rates", "Equivalent rates", "Continuous compounding", "Equations of value"]],
+        ["Simple annuities", "", ["Ordinary annuity", "Annuity due", "Deferred annuity", "Finding the term and the rate"]],
+        ["General and perpetual annuities", "", ["General ordinary annuity", "Equivalent payments", "Perpetuity"]],
+        ["Amortization and sinking funds", "", ["Amortization schedules", "Outstanding balance", "Sinking fund schedules", "Comparing the two methods"]],
+        ["Bonds and depreciation", "", ["Bond valuation", "Premium and discount amortization", "Straight line depreciation", "Declining balance", "Sum of the years digits"]]
+      ],
+      cards: [
+        ["Simple interest and simple discount", "Write the simple interest formulas.", "I = Prt and F = P(1 + rt), where P is principal, r the annual rate and t time in years.", ""],
+        ["Simple interest and simple discount", "Ordinary vs exact simple interest?", "Ordinary uses a 360-day year; exact uses 365. Combined with approximate or actual time this gives four ways to count, and the Banker's Rule is ordinary interest with actual time.", "Banker's Rule: actual time over 360."],
+        ["Simple interest and simple discount", "Simple interest vs simple discount?", "Interest is computed on the present value and added at the end. Discount is computed on the maturity value and deducted in advance: P = F(1 - dt).", "Discount is deducted up front."],
+        ["Compound interest", "Write the compound interest formula.", "F = P(1 + i) raised to n, where i is the rate per conversion period and n is the total number of periods. Present value is P = F(1 + i) to the power of negative n.", "i = nominal rate divided by frequency."],
+        ["Compound interest", "Nominal vs effective rate?", "The nominal rate is the stated annual rate before compounding. The effective rate is the rate actually earned in a year: (1 + i) to the power of m, minus 1.", "Use effective rates to compare offers."],
+        ["Simple annuities", "Present value of an ordinary annuity?", "A = R multiplied by [1 - (1 + i) to the power of negative n] divided by i.", "Notation: a-angle-n at i."],
+        ["Simple annuities", "Ordinary annuity vs annuity due?", "Ordinary pays at the end of each period; annuity due pays at the beginning. Multiply the ordinary value by (1 + i) to get the annuity due.", "Due is worth one period more."],
+        ["General and perpetual annuities", "What is a perpetuity, and its present value?", "An annuity with payments forever. Its present value is A = R divided by i.", ""],
+        ["Amortization and sinking funds", "Amortization vs sinking fund?", "In amortization the borrower repays principal and interest in instalments, so the balance falls. In a sinking fund the borrower pays interest only and accumulates a separate fund to repay the whole principal at the end.", ""],
+        ["Bonds and depreciation", "How is a bond valued?", "Present value of the periodic coupon payments as an annuity, plus the present value of the redemption value, both discounted at the yield rate.", "Price above par: premium. Below: discount."],
+        ["Bonds and depreciation", "Write the three depreciation methods.", "Straight line: (cost minus salvage) divided by life. Declining balance: a fixed rate applied to the carrying amount. Sum of the years digits: (cost minus salvage) times remaining life over the sum of the digits.", ""]
+      ] }
+  ];
+  function packJSON(p) {
+    return {
+      subject: p.name,
+      topics: p.topics.map((t, i) => ({ week: String(i + 1), code: `T${i + 1}`, title: t[0], standard: t[1] || "", scope: "", subtopics: t[2] || [] })),
+      flashcards: (p.cards || []).map((c) => ({ topic: c[0], question: c[1], answer: c[2], tip: c[3] || "" })),
+      grading: STD_GRADING
+    };
+  }
+  function StarterPacks({ data, update, toast, onClose }) {
+    const [busy, setBusy] = useState("");
+    const [err, setErr] = useState("");
+    const active = data.subjects.find((s) => s.id === data.activeId);
+    const add = (p, where) => {
+      setErr("");
+      let parsed;
+      try {
+        parsed = parseImport(JSON.stringify(packJSON(p)));
+      } catch (e) {
+        setErr(e.message);
+        return;
+      }
+      setBusy(p.id);
+      let summary;
+      update(null, (d) => {
+        let s;
+        if (where === "new") {
+          s = { id: uid("subj"), name: p.name, code: p.code || "", school: active ? active.school || "" : "", topics: [], cards: [], mistakes: [], quizzes: [], sessions: [] };
+          d.subjects.push(s);
+          d.activeId = s.id;
+        } else {
+          s = d.subjects.find((x) => x.id === d.activeId);
+        }
+        summary = applyPartial(s, clone(parsed));
+      });
+      setBusy("");
+      toast(`${p.name}: ${plural(summary.addedTopics, "topic")}, ${plural(summary.addedCards, "flashcard")} and a grading template added`);
+      onClose();
+    };
+    return h(
+      "div",
+      { className: "packs" },
+      h("p", { className: "muted" }, "Each pack sets up the topic roadmap, a set of starter flashcards and the standard grading weights. Everything is editable afterwards, and nothing here is locked to accounting: check the weights against your own syllabus."),
+      err && h("p", { className: "error", role: "alert" }, err),
+      h("div", { className: "pack-list" }, PACKS.map((p) => h(
+        "div",
+        { key: p.id, className: "pack" },
+        h("div", { className: "pack-main" }, h("strong", null, p.name), h("span", { className: "muted small" }, p.blurb), h("span", { className: "muted small" }, `${plural(p.topics.length, "topic")} · ${plural(p.cards.length, "flashcard")}`)),
+        h("div", { className: "dr-acts" }, h("button", { className: "btn primary", disabled: !!busy, onClick: () => add(p, "new") }, "Add as new subject"), h("button", { className: "btn ghost", disabled: !!busy, onClick: () => add(p, "current") }, `Into ${drShort(active ? active.name : "this", 16)}`))
+      ))),
+      h("p", { className: "muted small" }, "Want a subject that isn't here? Open the NotebookLM prompts tab, use \u201cSyllabus \u2192 roadmap\u201d with your course outline loaded, and paste the reply into Import.")
+    );
+  }
   function DataModal({ data, update, replaceAll, onClose, toast, downloads, initTab }) {
     const [tab, setTab] = useState(initTab || "import");
     const [raw, setRaw] = useState("");
@@ -2622,7 +2908,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       update(null, (d) => {
         let s;
         if (target === "__new") {
-          s = { id: uid("subj"), name: newName.trim() || "New subject", code: "", school: "", topics: [], cards: [], mistakes: [], quizzes: [], sessions: [] };
+          s = { id: uid("subj"), name: newName.trim() || "New subject", code: "", school: "", topics: [], cards: [], mistakes: [], quizzes: [], sessions: [], classes: [], attend: [], tasks: [] };
           d.subjects.push(s);
           d.activeId = s.id;
         } else {
@@ -2691,7 +2977,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       }
     };
     const preview = parsed && parsed.kind === "partial" ? previewPartial(target === "__new" ? { topics: parsed.topics } : data.subjects.find((s) => s.id === target) || active, parsed) : null;
-    return /* @__PURE__ */ React.createElement(Modal, { title: "Import & export data", onClose, wide: true }, /* @__PURE__ */ React.createElement("div", { className: "tabs small", role: "tablist" }, [["import", "Import"], ["github", "GitHub sync"], ["export", "Export backup"], ["prompt", "NotebookLM prompts"]].map(([k, l]) => /* @__PURE__ */ React.createElement("button", { key: k, role: "tab", "aria-selected": tab === k, className: tab === k ? "on" : "", onClick: () => setTab(k) }, l))), tab === "import" && /* @__PURE__ */ React.createElement("div", { className: "import" }, /* @__PURE__ */ React.createElement("p", { className: "muted" }, "Paste JSON from NotebookLM (or any AI tutor), a backup file’s contents, or plain text with lines starting “Q:” and “A:”."), /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React.createElement(Modal, { title: "Import & export data", onClose, wide: true }, /* @__PURE__ */ React.createElement("div", { className: "tabs small", role: "tablist" }, [["import", "Import"], ["packs", "Starter packs"], ["github", "GitHub sync"], ["export", "Export backup"], ["prompt", "NotebookLM prompts"]].map(([k, l]) => /* @__PURE__ */ React.createElement("button", { key: k, role: "tab", "aria-selected": tab === k, className: tab === k ? "on" : "", onClick: () => setTab(k) }, l))), tab === "import" && /* @__PURE__ */ React.createElement("div", { className: "import" }, /* @__PURE__ */ React.createElement("p", { className: "muted" }, "Paste JSON from NotebookLM (or any AI tutor), a backup file’s contents, or plain text with lines starting “Q:” and “A:”."), /* @__PURE__ */ React.createElement(
       "textarea",
       {
         className: "code",
@@ -2705,7 +2991,24 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
           setErr("");
         }
       }
-    ), err && /* @__PURE__ */ React.createElement("p", { className: "error", role: "alert" }, err), !parsed && /* @__PURE__ */ React.createElement("div", { className: "row-end" }, /* @__PURE__ */ React.createElement("button", { className: "btn primary", disabled: !raw.trim(), onClick: check }, "Check data")), (parsed == null ? void 0 : parsed.kind) === "backup" && /* @__PURE__ */ React.createElement("div", { className: "preview" }, /* @__PURE__ */ React.createElement("p", null, /* @__PURE__ */ React.createElement("strong", null, "Full backup found:"), " ", parsed.data.subjects.length, " subject", parsed.data.subjects.length === 1 ? "" : "s", " (", parsed.data.subjects.map((s) => s.name).join(", "), ")."), /* @__PURE__ */ React.createElement("div", { className: "row-end" }, /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: () => backup("add") }, "Add alongside my subjects"), /* @__PURE__ */ React.createElement("button", { className: "btn danger", onClick: () => backup("replace") }, "Replace everything"))), preview && /* @__PURE__ */ React.createElement("div", { className: "preview" }, /* @__PURE__ */ React.createElement("p", null, /* @__PURE__ */ React.createElement("strong", null, "Ready to import:"), " ", preview.topics.length, " topics, ", preview.cards.length, " flashcards, ", preview.mistakes.length, " mistakes, ", preview.quizzes.length, " quiz scores", preview.book ? `, a textbook map (${preview.book.chapters.length} chapters)` : "", preview.drills && preview.drills.length ? `, ${preview.drills.length} computation drill${preview.drills.length === 1 ? "" : "s"}` : "", preview.lectures && preview.lectures.length ? `, ${preview.lectures.length} lecture${preview.lectures.length === 1 ? "" : "s"}` : "", preview.psets && preview.psets.length ? `, ${preview.psets.length} problem set${preview.psets.length === 1 ? "" : "s"} (${preview.psets.reduce((a, x) => a + x.problems.length, 0)} problems)` : "", preview.grading ? ", and a grading system for the Grades calculator (your scores are kept)" : "", "."), preview.drillBad && preview.drillBad.length > 0 && h("p", { className: "muted" }, `${preview.drillBad.length} computation drill${preview.drillBad.length === 1 ? " was" : "s were"} left out because a formula didn’t work. First one: ${preview.drillBad[0]}`), preview.unmatched > 0 && /* @__PURE__ */ React.createElement("p", { className: "muted" }, preview.unmatched, " flashcards don’t match a roadmap topic and will go to “Unsorted”. You can reassign them by editing each card."), /* @__PURE__ */ React.createElement("div", { className: "grid-2" }, /* @__PURE__ */ React.createElement(Field, { label: "Add to" }, /* @__PURE__ */ React.createElement("select", { value: target, onChange: (e) => setTarget(e.target.value) }, data.subjects.map((s) => /* @__PURE__ */ React.createElement("option", { key: s.id, value: s.id }, s.name, s.code ? ` (${s.code})` : "")), /* @__PURE__ */ React.createElement("option", { value: "__new" }, "New subject…"))), target === "__new" && /* @__PURE__ */ React.createElement(Field, { label: "New subject name" }, /* @__PURE__ */ React.createElement("input", { value: newName, onChange: (e) => setNewName(e.target.value) }))), /* @__PURE__ */ React.createElement("div", { className: "row-end" }, /* @__PURE__ */ React.createElement("button", { className: "btn ghost", onClick: () => setParsed(null) }, "Back"), /* @__PURE__ */ React.createElement("button", { className: "btn primary", onClick: doImport }, "Import")))), tab === "github" && React.createElement(GitHubPanel, { data, toast }), tab === "export" && /* @__PURE__ */ React.createElement("div", { className: "export" }, /* @__PURE__ */ React.createElement("div", { className: "grid-2" }, /* @__PURE__ */ React.createElement(Field, { label: "What to export" }, /* @__PURE__ */ React.createElement("select", { value: scope, onChange: (e) => setScope(e.target.value) }, /* @__PURE__ */ React.createElement("option", { value: "all" }, "All subjects (", data.subjects.length, ")"), /* @__PURE__ */ React.createElement("option", { value: "one" }, "Only ", active.name)))), /* @__PURE__ */ React.createElement("textarea", { className: "code", rows: 10, readOnly: true, value: exportText, onFocus: (e) => e.target.select() }), /* @__PURE__ */ React.createElement("div", { className: "row-end" }, /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: async () => toast(await copyText(exportText) ? "JSON copied" : "Select the text and copy it manually") }, "Copy JSON"), /* @__PURE__ */ React.createElement("button", { className: "btn primary", onClick: save }, "Download ", fileName)), /* @__PURE__ */ React.createElement("p", { className: "muted" }, "To restore, paste this JSON into the Import tab. Keep a copy in Google Drive before big changes.")), tab === "prompt" && h(NotebookLMPrompts, { subject: active, toast, onImport: () => setTab("import") }));
+    ), err && /* @__PURE__ */ React.createElement("p", { className: "error", role: "alert" }, err), !parsed && /* @__PURE__ */ React.createElement("div", { className: "row-end" }, h("label", { className: "btn file-btn" }, "Load a file\u2026", h("input", { type: "file", accept: ".json,.txt,.md,application/json,text/plain", onChange: (e) => {
+      const f = e.target.files && e.target.files[0];
+      e.target.value = "";
+      if (!f) return;
+      const rd = new FileReader();
+      rd.onload = () => {
+        setRaw(String(rd.result || ""));
+        setParsed(null);
+        setErr("");
+      };
+      rd.onerror = () => setErr("Couldn\u2019t read that file. Open it and paste the text instead.");
+      rd.readAsText(f);
+    } })), /* @__PURE__ */ React.createElement("button", { className: "btn primary", disabled: !raw.trim(), onClick: check }, "Check data")), (parsed == null ? void 0 : parsed.kind) === "backup" && /* @__PURE__ */ React.createElement("div", { className: "preview" }, /* @__PURE__ */ React.createElement("p", null, /* @__PURE__ */ React.createElement("strong", null, "Full backup found:"), " ", parsed.data.subjects.length, " subject", parsed.data.subjects.length === 1 ? "" : "s", " (", parsed.data.subjects.map((s) => s.name).join(", "), ")."), /* @__PURE__ */ React.createElement("div", { className: "row-end" }, /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: () => backup("add") }, "Add alongside my subjects"), /* @__PURE__ */ React.createElement("button", { className: "btn danger", onClick: () => backup("replace") }, "Replace everything"))), preview && /* @__PURE__ */ React.createElement("div", { className: "preview" }, /* @__PURE__ */ React.createElement("p", null, /* @__PURE__ */ React.createElement("strong", null, "Ready to import:"), " ", preview.topics.length, " topics, ", preview.cards.length, " flashcards, ", preview.mistakes.length, " mistakes, ", preview.quizzes.length, " quiz scores", preview.book ? `, a textbook map (${preview.book.chapters.length} chapters)` : "", preview.drills && preview.drills.length ? `, ${preview.drills.length} computation drill${preview.drills.length === 1 ? "" : "s"}` : "", preview.lectures && preview.lectures.length ? `, ${preview.lectures.length} lecture${preview.lectures.length === 1 ? "" : "s"}` : "", preview.psets && preview.psets.length ? `, ${preview.psets.length} problem set${preview.psets.length === 1 ? "" : "s"} (${preview.psets.reduce((a, x) => a + x.problems.length, 0)} problems)` : "", preview.grading ? ", and a grading system for the Grades calculator (your scores are kept)" : "", "."), preview.drillBad && preview.drillBad.length > 0 && h("p", { className: "muted" }, `${preview.drillBad.length} computation drill${preview.drillBad.length === 1 ? " was" : "s were"} left out because a formula didn’t work. First one: ${preview.drillBad[0]}`), preview.unmatched > 0 && /* @__PURE__ */ React.createElement("p", { className: "muted" }, preview.unmatched, " flashcards don’t match a roadmap topic and will go to “Unsorted”. You can reassign them by editing each card."), /* @__PURE__ */ React.createElement("div", { className: "grid-2" }, /* @__PURE__ */ React.createElement(Field, { label: "Add to" }, /* @__PURE__ */ React.createElement("select", { value: target, onChange: (e) => setTarget(e.target.value) }, data.subjects.map((s) => /* @__PURE__ */ React.createElement("option", { key: s.id, value: s.id }, s.name, s.code ? ` (${s.code})` : "")), /* @__PURE__ */ React.createElement("option", { value: "__new" }, "New subject…"))), target === "__new" && /* @__PURE__ */ React.createElement(Field, { label: "New subject name" }, /* @__PURE__ */ React.createElement("input", { value: newName, onChange: (e) => setNewName(e.target.value) }))), /* @__PURE__ */ React.createElement("div", { className: "row-end" }, /* @__PURE__ */ React.createElement("button", { className: "btn ghost", onClick: () => setParsed(null) }, "Back"), /* @__PURE__ */ React.createElement("button", { className: "btn primary", onClick: doImport }, "Import")))), tab === "packs" && h(StarterPacks, { data, update, toast, onClose }), tab === "github" && React.createElement(GitHubPanel, { data, toast }), tab === "export" && /* @__PURE__ */ React.createElement("div", { className: "export" }, /* @__PURE__ */ React.createElement("div", { className: "grid-2" }, /* @__PURE__ */ React.createElement(Field, { label: "What to export" }, /* @__PURE__ */ React.createElement("select", { value: scope, onChange: (e) => setScope(e.target.value) }, /* @__PURE__ */ React.createElement("option", { value: "all" }, "All subjects (", data.subjects.length, ")"), /* @__PURE__ */ React.createElement("option", { value: "one" }, "Only ", active.name)))), /* @__PURE__ */ React.createElement("textarea", { className: "code", rows: 10, readOnly: true, value: exportText, onFocus: (e) => e.target.select() }), /* @__PURE__ */ React.createElement("div", { className: "row-end" }, /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: async () => toast(await copyText(exportText) ? "JSON copied" : "Select the text and copy it manually") }, "Copy JSON"), /* @__PURE__ */ React.createElement("button", { className: "btn primary", onClick: save }, "Download ", fileName)), (() => {
+      const bytes = new Blob([JSON.stringify(data)]).size;
+      const kb = Math.round(bytes / 1024);
+      const pct = Math.min(100, Math.round(bytes / 5242880 * 100));
+      return h("div", { className: "store-meter" }, h("div", { className: "panel-row" }, h("span", { className: "small" }, "Space used on this device"), h("strong", { className: "small" }, `${kb.toLocaleString()} KB of about 5,000 KB`)), h("div", { className: "bar-sm" }, h("span", { style: { width: `${Math.max(2, pct)}%`, background: pct > 85 ? "var(--bad)" : pct > 60 ? "var(--warn)" : "var(--accent)" } })), pct > 60 && h("p", { className: "muted small" }, "Browsers stop saving at about 5 MB. Lectures and problem sets are the big items: delete ones you have finished, or keep them in separate subjects."));
+    })(), /* @__PURE__ */ React.createElement("p", { className: "muted" }, "To restore, paste this JSON into the Import tab. Keep a copy in Google Drive before big changes.")), tab === "prompt" && h(NotebookLMPrompts, { subject: active, toast, onImport: () => setTab("import") }));
   }
   /* ---------- dates, due dates and the study calendar ---------- */
   const h = React.createElement;
@@ -3007,7 +3310,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const rated = subject.cards.filter((c) => c.conf).length;
     const recall = rated ? Math.round(subject.cards.filter((c) => c.conf === "known").length / rated * 100) : null;
     if (!topics.length) {
-      return /* @__PURE__ */ React.createElement("section", { className: "view" }, /* @__PURE__ */ React.createElement("div", { className: "hero" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h1", null, subject.name), subject.code && /* @__PURE__ */ React.createElement("p", { className: "muted" }, subject.code))), /* @__PURE__ */ React.createElement("div", { className: "empty big" }, /* @__PURE__ */ React.createElement(Icon, { name: "roadmap", size: 32 }), /* @__PURE__ */ React.createElement("h2", null, "Set up ", subject.name), /* @__PURE__ */ React.createElement("p", { className: "muted" }, "Add your syllabus topics one by one, or paste them as JSON from NotebookLM. Today’s plan appears once you have topics."), /* @__PURE__ */ React.createElement("div", { className: "row-center" }, /* @__PURE__ */ React.createElement("button", { className: "btn primary", onClick: () => go("roadmap", { add: true }) }, "Add a topic"), /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: () => go("data") }, "Import data"))));
+      return /* @__PURE__ */ React.createElement("section", { className: "view" }, /* @__PURE__ */ React.createElement("div", { className: "hero" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h1", null, subject.name), subject.code && /* @__PURE__ */ React.createElement("p", { className: "muted" }, subject.code))), /* @__PURE__ */ React.createElement("div", { className: "empty big" }, /* @__PURE__ */ React.createElement(Icon, { name: "roadmap", size: 32 }), /* @__PURE__ */ React.createElement("h2", null, "Set up ", subject.name), /* @__PURE__ */ React.createElement("p", { className: "muted" }, "Add your syllabus topics one by one, or paste them as JSON from NotebookLM. Today’s plan appears once you have topics."), /* @__PURE__ */ React.createElement("div", { className: "row-center" }, /* @__PURE__ */ React.createElement("button", { className: "btn primary", onClick: () => go("roadmap", { add: true }) }, "Add a topic"), h("button", { className: "btn", onClick: () => go("data", { tab: "packs" }) }, "Browse starter packs"), /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: () => go("data") }, "Import data"))));
     }
     const done = current ? current.sub.filter((s) => s.done).length : 0;
     const planned = (subject.sessions || []).filter((s) => s.date === today() && !s.done).sort(byTime);
@@ -3031,7 +3334,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         actions: [{ label: "Open topic", primary: true, run: () => go("roadmap", { open: current.id }) }, { label: "Plan a session", run: () => openEditor("session", null, { topicId: current.id }) }]
       },
       (() => {
-        const rv = buildReview(subject, settings && settings.newPerDay || 10);
+        const rv = buildReview(subject, settings && settings.newPerDay || 10, settings && settings.maxPerDay || 0);
         const n = rv.due.length + rv.fresh.length + rv.mist.length;
         return {
           icon: "cards",
@@ -3039,6 +3342,29 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
           title: n ? `${plural(n, "item")} ready to review` : "Reviews done for today",
           detail: n ? `${[rv.due.length && `${rv.due.length} due`, rv.fresh.length && `${rv.fresh.length} new`, rv.mist.length && `${plural(rv.mist.length, "mistake")} to retest`].filter(Boolean).join(", ")}. About ${Math.max(1, Math.round(n * 0.3))} min.` : "Nice work. Try an exam mix or a computation drill in Practice.",
           actions: n ? [{ label: "Start review", primary: true, run: () => go("practice", { start: "review" }) }] : [{ label: "Open Practice", run: () => go("practice") }]
+        };
+      })(),
+      (() => {
+        const mine = classOn(subject, today());
+        if (!mine.length) return null;
+        const open = mine.filter((c) => !attendOn(subject, today(), c.id));
+        return {
+          icon: "calendar",
+          label: "Class today",
+          title: mine.map((c) => [fmtTime(c.start), c.room].filter(Boolean).join(" \u00b7 ")).join("; ") || "You have class",
+          detail: open.length ? "Not marked yet. Tap through to record it." : "Attendance recorded.",
+          actions: [{ label: open.length ? "Mark attendance" : "Open class", primary: !!open.length, run: () => go("class") }]
+        };
+      })(),
+      (() => {
+        const due = (subject.tasks || []).filter((t) => !t.done && t.due && daysUntil(t.due) <= 3).sort((a, b) => a.due < b.due ? -1 : 1);
+        if (!due.length) return null;
+        return {
+          icon: "pset",
+          label: "Due soon",
+          title: due.length === 1 ? due[0].title || "Something to hand in" : `${plural(due.length, "thing")} due`,
+          detail: due.slice(0, 3).map((t) => `${t.title || "Untitled"} (${dueRel({ due: t.due, kind: "task", status: "" }) || fmtDay(t.due, "short")})`).join(", "),
+          actions: [{ label: "Open the list", primary: daysUntil(due[0].due) <= 1, run: () => go("class") }]
         };
       })(),
       {
@@ -3094,7 +3420,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       if (t) fn(t, s);
     });
     const shown = subject.topics.filter((t) => filter === "all" || t.kind !== "exam" && t.status === filter);
-    return /* @__PURE__ */ React.createElement("section", { className: "view" }, /* @__PURE__ */ React.createElement("div", { className: "page-head" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h1", { className: "page-title" }, "Roadmap"), /* @__PURE__ */ React.createElement("p", { className: "muted" }, subject.name, subject.code ? ` ${subject.code}` : "", ": tap a topic to see its subtopics and pages.")), /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: () => setEditing("new") }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 16 }), " Add topic")), /* @__PURE__ */ React.createElement(Track, { subject, onJump: jump }), subject.topics.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "seg-filter", role: "group", "aria-label": "Show topics" }, /* @__PURE__ */ React.createElement("button", { className: filter === "all" ? "on" : "", "aria-pressed": filter === "all", onClick: () => setFilter("all") }, "All"), TOPIC_STATUS.map((s, i) => /* @__PURE__ */ React.createElement("button", { key: s, className: filter === s ? "on" : "", "aria-pressed": filter === s, "data-status": s, onClick: () => setFilter(s) }, /* @__PURE__ */ React.createElement("span", { className: "dot" }), s, " ", /* @__PURE__ */ React.createElement("span", { className: "n" }, counts[i])))), subject.topics.length === 0 ? /* @__PURE__ */ React.createElement("div", { className: "empty big" }, /* @__PURE__ */ React.createElement(Icon, { name: "roadmap", size: 32 }), /* @__PURE__ */ React.createElement("h2", null, "No topics yet"), /* @__PURE__ */ React.createElement("p", { className: "muted" }, "Add rows one by one, or paste your syllabus as JSON from Import data."), /* @__PURE__ */ React.createElement("button", { className: "btn primary", onClick: () => setEditing("new") }, "Add the first topic")) : /* @__PURE__ */ React.createElement("div", { className: "topic-list" }, shown.map((t) => {
+    return /* @__PURE__ */ React.createElement("section", { className: "view" }, /* @__PURE__ */ React.createElement("div", { className: "page-head" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h1", { className: "page-title" }, "Roadmap"), /* @__PURE__ */ React.createElement("p", { className: "muted" }, subject.name, subject.code ? ` ${subject.code}` : "", ": tap a topic to see its subtopics and pages.")), /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: () => setEditing("new") }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 16 }), " Add topic")), /* @__PURE__ */ React.createElement(Track, { subject, onJump: jump }), subject.topics.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "seg-filter", role: "group", "aria-label": "Show topics" }, /* @__PURE__ */ React.createElement("button", { className: filter === "all" ? "on" : "", "aria-pressed": filter === "all", onClick: () => setFilter("all") }, "All"), TOPIC_STATUS.map((s, i) => /* @__PURE__ */ React.createElement("button", { key: s, className: filter === s ? "on" : "", "aria-pressed": filter === s, "data-status": s, onClick: () => setFilter(s) }, /* @__PURE__ */ React.createElement("span", { className: "dot" }), s, " ", /* @__PURE__ */ React.createElement("span", { className: "n" }, counts[i])))), subject.topics.length === 0 ? /* @__PURE__ */ React.createElement("div", { className: "empty big" }, /* @__PURE__ */ React.createElement(Icon, { name: "roadmap", size: 32 }), /* @__PURE__ */ React.createElement("h2", null, "No topics yet"), /* @__PURE__ */ React.createElement("p", { className: "muted" }, "Add rows one by one, or paste your syllabus as JSON from Import data."), /* @__PURE__ */ React.createElement("button", { className: "btn primary", onClick: () => setEditing("new") }, "Add the first topic"), h("button", { className: "btn", onClick: () => go("data", { tab: "packs" }) }, "Browse starter packs")) : /* @__PURE__ */ React.createElement("div", { className: "topic-list" }, shown.map((t) => {
       if (t.kind === "exam") {
         const r = readiness(subject, t);
         return /* @__PURE__ */ React.createElement("article", { key: t.id, id: `row-${t.id}`, className: "exam-card" }, /* @__PURE__ */ React.createElement("div", { className: "wk-col" }, /* @__PURE__ */ React.createElement("span", { className: "wk-small" }, "Week"), /* @__PURE__ */ React.createElement("span", { className: "wk-num" }, t.week)), /* @__PURE__ */ React.createElement("div", { className: "topic-main" }, /* @__PURE__ */ React.createElement("h3", null, t.title), t.due && h(DueChip, { t }), /* @__PURE__ */ React.createElement("p", { className: "muted" }, [t.scope, t.note].filter(Boolean).join(". "))), /* @__PURE__ */ React.createElement("div", { className: "exam-ready" }, r.total ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "bar-lg" }, /* @__PURE__ */ React.createElement("span", { style: { width: `${r.done / r.total * 100}%` } })), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, r.done, "/", r.total), " ready")) : /* @__PURE__ */ React.createElement("span", { className: "muted" }, "Pick topics in Edit")), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setEditing(t), "aria-label": `Edit ${t.title}` }, "✎"));
@@ -3189,7 +3515,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const fresh = subject.cards.length - known - again;
     const topicCounts = studyTopics(subject).map((t) => ({ t, n: subject.cards.filter((c) => c.topicId === t.id).length })).filter((x) => x.n);
     const unsorted = subject.cards.filter((c) => !c.topicId).length;
-    if (drill && list.length) return /* @__PURE__ */ React.createElement("section", { className: "view" }, h(StudySession, { subject, update, toast, items: shuffle(list).map((c) => ({ kind: "card", id: c.id })), title: "Flashcard drill", onExit: () => setDrill(false) }));
+    if (drill && list.length) return /* @__PURE__ */ React.createElement("section", { className: "view" }, h(StudySession, { subject, update, toast, settings, items: shuffle(list).map((c) => ({ kind: "card", id: c.id })), title: "Flashcard drill", onExit: () => setDrill(false) }));
     return /* @__PURE__ */ React.createElement("section", { className: "view" }, /* @__PURE__ */ React.createElement("div", { className: "page-head" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h1", { className: "page-title" }, "Concept vault"), /* @__PURE__ */ React.createElement("p", { className: "muted" }, "Tap a card to flip it. Drill runs through the cards you’ve filtered, one at a time.")), /* @__PURE__ */ React.createElement("div", { className: "head-actions" }, /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: () => openEditor("card", null, { topicId: topic !== "all" && topic !== "" ? topic : null }) }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 16 }), " Add card"), /* @__PURE__ */ React.createElement("button", { className: "btn primary", disabled: !list.length, onClick: () => setDrill(true) }, "Drill ", list.length, " card", list.length === 1 ? "" : "s"))), /* @__PURE__ */ React.createElement("div", { className: "seg-filter", role: "group", "aria-label": "Filter by confidence" }, [["all", "All", subject.cards.length], ["again", "Review again", again], ["new", "New", fresh], ["known", "Known", known]].map(([k, l, n]) => /* @__PURE__ */ React.createElement("button", { key: k, className: conf === k ? "on" : "", "aria-pressed": conf === k, "data-conf": k, onClick: () => setConf(k) }, l, " ", /* @__PURE__ */ React.createElement("span", { className: "n" }, n)))), /* @__PURE__ */ React.createElement("div", { className: "chip-scroll", role: "group", "aria-label": "Filter by topic" }, /* @__PURE__ */ React.createElement("button", { className: `chip${topic === "all" ? " on" : ""}`, onClick: () => setTopic("all") }, "All topics"), topicCounts.map(({ t, n }) => /* @__PURE__ */ React.createElement("button", { key: t.id, className: `chip${topic === t.id ? " on" : ""}`, onClick: () => setTopic(t.id), title: t.title }, t.code || t.title.slice(0, 18), " ", /* @__PURE__ */ React.createElement("span", { className: "n" }, n))), unsorted > 0 && /* @__PURE__ */ React.createElement("button", { className: `chip${topic === "" ? " on" : ""}`, onClick: () => setTopic("") }, "Unsorted ", /* @__PURE__ */ React.createElement("span", { className: "n" }, unsorted))), /* @__PURE__ */ React.createElement("input", { className: "search", type: "search", placeholder: "Search questions and answers", value: query, onChange: (e) => setQuery(e.target.value), "aria-label": "Search flashcards" }), list.length ? /* @__PURE__ */ React.createElement("div", { className: "cards" }, list.map((c) => /* @__PURE__ */ React.createElement(FlipCard, { key: c.id, subject, card: c, onRate: rate, onEdit: (card) => openEditor("card", card) }))) : /* @__PURE__ */ React.createElement("div", { className: "empty" }, /* @__PURE__ */ React.createElement("p", null, subject.cards.length ? "No cards match these filters." : "No flashcards yet."), /* @__PURE__ */ React.createElement("p", { className: "muted" }, subject.cards.length ? "Pick “All” or another topic." : "Add one, or paste a batch from NotebookLM through Import data.")));
   }
   function MistakesView({ subject, update, toast, openEditor, init }) {
@@ -3249,7 +3575,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     return /* @__PURE__ */ React.createElement(Modal, { title: "Quick add", onClose }, /* @__PURE__ */ React.createElement("div", { className: "big-options" }, items.map(([k, ic, l, d]) => /* @__PURE__ */ React.createElement("button", { key: k, className: "big-option", onClick: () => onPick(k) }, /* @__PURE__ */ React.createElement(Icon, { name: ic, size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, l), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, d))))));
   }
   function MoreSheet({ onPick, onClose, settings, setSettings, go }) {
-    return /* @__PURE__ */ React.createElement(Modal, { title: "More", onClose }, /* @__PURE__ */ React.createElement("div", { className: "big-options" }, h("button", { className: "big-option", onClick: () => go("lectures") }, h(Icon, { name: "lecture", size: 22 }), h("span", null, h("strong", null, "Lectures"), h("br", null), h("span", { className: "muted" }, "Rules, treatments and traps for each topic"))), h("button", { className: "big-option", onClick: () => go("psets") }, h(Icon, { name: "pset", size: 22 }), h("span", null, h("strong", null, "Problem sets"), h("br", null), h("span", { className: "muted" }, "Problems by subtopic, with how to solve each one"))), h("button", { className: "big-option", onClick: () => go("grades") }, h(Icon, { name: "grade", size: 22 }), h("span", null, h("strong", null, "Grades"), h("br", null), h("span", { className: "muted" }, "Grade calculator, what-if, QPI summary and export"))), h("button", { className: "big-option", onClick: () => go("vault") }, h(Icon, { name: "cards", size: 22 }), h("span", null, h("strong", null, "Concept vault"), h("br", null), h("span", { className: "muted" }, "Browse, search and edit your flashcards"))), /* @__PURE__ */ React.createElement("button", { className: "big-option", onClick: () => onPick("subjects") }, /* @__PURE__ */ React.createElement(Icon, { name: "subjects", size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, "Subjects"), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "Add, rename or delete a subject"))), /* @__PURE__ */ React.createElement("button", { className: "big-option", onClick: () => onPick("data") }, /* @__PURE__ */ React.createElement(Icon, { name: "data", size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, "Import & export"), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "NotebookLM JSON, backups"))), /* @__PURE__ */ React.createElement("button", { className: "big-option", onClick: () => onPick("look") }, /* @__PURE__ */ React.createElement(Icon, { name: "look", size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, "Appearance"), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "Themes, text size, contrast")))), /* @__PURE__ */ React.createElement("p", { className: "field-label", style: { marginTop: "1rem" } }, "Quick theme"), /* @__PURE__ */ React.createElement(ThemeDots, { settings, setSettings }));
+    return /* @__PURE__ */ React.createElement(Modal, { title: "More", onClose }, /* @__PURE__ */ React.createElement("div", { className: "big-options" }, h("button", { className: "big-option", onClick: () => go("lectures") }, h(Icon, { name: "lecture", size: 22 }), h("span", null, h("strong", null, "Lectures"), h("br", null), h("span", { className: "muted" }, "Rules, treatments and traps for each topic"))), h("button", { className: "big-option", onClick: () => go("psets") }, h(Icon, { name: "pset", size: 22 }), h("span", null, h("strong", null, "Problem sets"), h("br", null), h("span", { className: "muted" }, "Problems by subtopic, with how to solve each one"))), h("button", { className: "big-option", onClick: () => go("class") }, h(Icon, { name: "subjects", size: 22 }), h("span", null, h("strong", null, "Class"), h("br", null), h("span", { className: "muted" }, "Timetable, attendance and what is due"))), h("button", { className: "big-option", onClick: () => go("grades") }, h(Icon, { name: "grade", size: 22 }), h("span", null, h("strong", null, "Grades"), h("br", null), h("span", { className: "muted" }, "Grade calculator, what-if, QPI summary and export"))), h("button", { className: "big-option", onClick: () => go("vault") }, h(Icon, { name: "cards", size: 22 }), h("span", null, h("strong", null, "Concept vault"), h("br", null), h("span", { className: "muted" }, "Browse, search and edit your flashcards"))), /* @__PURE__ */ React.createElement("button", { className: "big-option", onClick: () => onPick("subjects") }, /* @__PURE__ */ React.createElement(Icon, { name: "subjects", size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, "Subjects"), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "Add, rename or delete a subject"))), /* @__PURE__ */ React.createElement("button", { className: "big-option", onClick: () => onPick("data") }, /* @__PURE__ */ React.createElement(Icon, { name: "data", size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, "Import & export"), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "NotebookLM JSON, backups"))), /* @__PURE__ */ React.createElement("button", { className: "big-option", onClick: () => onPick("look") }, /* @__PURE__ */ React.createElement(Icon, { name: "look", size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, "Appearance"), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "Themes, text size, contrast")))), /* @__PURE__ */ React.createElement("p", { className: "field-label", style: { marginTop: "1rem" } }, "Quick theme"), /* @__PURE__ */ React.createElement(ThemeDots, { settings, setSettings }));
   }
   /* =====================================================================
      Study features: spaced repetition, mistake retests, exam readiness,
@@ -3288,8 +3614,17 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       return r.done < r.total;
     }) || exams[exams.length - 1] || null;
   }
+  // Forget a card this many times and it gets pulled out of the queue for rewriting.
+  const LEECH_AT = 6;
+  // Spread cards that would all land on the same day, so reviews never pile into one brutal Monday.
+  function fuzzIvl(n) {
+    if (n < 3) return n;
+    const span = Math.max(1, Math.round(n * (n < 7 ? 0.15 : n < 21 ? 0.1 : 0.05)));
+    return Math.max(2, n + Math.round((Math.random() * 2 - 1) * span));
+  }
   // SM-2 style scheduling, measured in days. Ease drifts with how hard a card feels.
-  function schedule(srs, grade, examDue) {
+  // opt.preview gives the plain interval without the random spread, so the grade buttons don't lie.
+  function schedule(srs, grade, examDue, opt) {
     const now = today();
     const s = srs ? { ...srs } : { ivl: 0, ease: 2.5, reps: 0, lapses: 0 };
     if (!s.first) s.first = now;
@@ -3313,13 +3648,18 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       }
       s.reps = (s.reps || 0) + 1;
     }
-    n = Math.min(n, 180);
+    n = Math.min(180, opt && opt.preview ? n : fuzzIvl(n));
     let due = addDays(now, n);
-    // Make sure a card you know still gets one look the day before your next exam.
+    // Make sure a card you know still gets one look the day before the exam that covers it.
     if (examDue && grade !== "again" && n >= 3 && due > examDue && daysUntil(examDue) >= 2) due = addDays(examDue, -1);
     s.ivl = n;
     s.due = due;
     s.last = now;
+    // A card you keep forgetting is usually a badly written card, not a bad memory. Park it.
+    if ((s.lapses || 0) >= LEECH_AT && !s.leech) {
+      s.leech = true;
+      s.susp = true;
+    }
     return s;
   }
   function bumpDay(s, patch) {
@@ -3336,10 +3676,15 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       s.days.splice(0, s.days.length - 400);
     }
   }
+  // The exam that actually covers this topic, not just the next one on the calendar.
+  function examForTopic(subject, topicId) {
+    const list = upcomingExams(subject);
+    return list.find((e) => (e.covers || []).includes(topicId)) || list.find((e) => !(e.covers || []).length) || null;
+  }
   function gradeCardIn(s, id, grade) {
     const c = s.cards.find((x) => x.id === id);
     if (!c) return;
-    const ex = upcomingExams(s)[0];
+    const ex = examForTopic(s, c.topicId);
     c.srs = schedule(c.srs, grade, ex && ex.due);
     c.conf = grade === "again" ? "again" : "known";
     bumpDay(s, { reviews: 1, right: grade === "again" ? 0 : 1 });
@@ -3355,19 +3700,29 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     m.status = right ? streak >= 2 ? "Cleared" : "Reviewing" : "Active";
     bumpDay(s, { reviews: 1, right: right ? 1 : 0 });
   }
-  const cardIsDue = (c, t) => c.srs ? c.srs.due <= t : !!c.conf;
-  function buildReview(subject, newPerDay) {
+  const cardIsDue = (c, t) => !(c.srs && c.srs.susp) && (c.srs ? c.srs.due <= t : !!c.conf);
+  function buildReview(subject, newPerDay, maxPerDay) {
     const t = today();
     const order = new Map(subject.topics.map((x, i) => [x.id, (x.status === "In progress" ? 0 : x.status === "Mastered" ? 100 : 200) + i]));
     const rank = (c) => {
       var _a;
       return (_a = order.get(c.topicId)) != null ? _a : 300;
     };
-    const due = shuffle(subject.cards.filter((c) => cardIsDue(c, t)));
-    const introduced = subject.cards.filter((c) => c.srs && c.srs.first === t).length;
-    const fresh = subject.cards.filter((c) => !c.srs && !c.conf).sort((a, b) => rank(a) - rank(b)).slice(0, Math.max(0, newPerDay - introduced));
+    const live = subject.cards.filter((c) => !(c.srs && c.srs.susp));
+    // Oldest due first, so a backlog never strands the cards you've forgotten longest.
+    const dueAll = live.filter((c) => cardIsDue(c, t)).sort((a, b) => {
+      const x = a.srs ? a.srs.due : "0", y = b.srs ? b.srs.due : "0";
+      return x < y ? -1 : x > y ? 1 : 0;
+    });
+    const introduced = live.filter((c) => c.srs && c.srs.first === t).length;
+    const freshAll = live.filter((c) => !c.srs && !c.conf).sort((a, b) => rank(a) - rank(b));
     const mist = subject.mistakes.filter((m) => m.status !== "Cleared" && mistakeDue(m) <= t);
-    return { due, fresh, mist, introduced };
+    // Mistake retests always get through; the cap only holds back ordinary cards.
+    const cap = maxPerDay > 0 ? Math.max(0, maxPerDay - mist.length) : Infinity;
+    const due = shuffle(dueAll.slice(0, cap));
+    const room = cap === Infinity ? Infinity : Math.max(0, cap - due.length);
+    const fresh = freshAll.slice(0, Math.min(Math.max(0, newPerDay - introduced), room));
+    return { due, fresh, mist, introduced, backlog: dueAll.length - due.length };
   }
   function interleave(cards, mistakes) {
     const out = [];
@@ -3379,11 +3734,16 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     while (mi < mistakes.length) out.push({ kind: "mistake", id: mistakes[mi++].id });
     return out;
   }
+  // Two things make a memory strong: how long it survives between looks (durability),
+  // and how recently you proved it (retrievability). A card decays while it waits.
   function cardStrength(c) {
-    if (!c.srs) return c.conf === "known" ? 0.35 : 0;
-    if (c.conf === "again") return 0.1;
-    const i = c.srs.ivl || 0;
-    return i >= 21 ? 1 : i >= 7 ? 0.85 : i >= 3 ? 0.65 : 0.4;
+    if (!c.srs || !c.srs.due) return c.conf === "known" ? 0.35 : 0;
+    if (c.srs.susp) return 0.1;
+    const ivl = Math.max(1, c.srs.ivl || 1);
+    const elapsed = Math.max(0, -daysUntil(c.srs.last || today()));
+    const R = Math.pow(0.9, elapsed / ivl);
+    const durable = Math.min(1, Math.log(ivl + 1) / Math.log(61));
+    return Math.max(0, Math.min(1, durable * R));
   }
   function examReadiness(subject, exam) {
     const ids = exam && exam.covers && exam.covers.length ? exam.covers : studyTopics(subject).map((t) => t.id);
@@ -3449,8 +3809,87 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     return Math.round(seen.reduce((a, c) => a + cardStrength(c), 0) / seen.length * 100);
   }
 
+  /* ----- read aloud: turns a commute into review time, hands free ----- */
+  const sayOK = () => typeof window !== "undefined" && "speechSynthesis" in window;
+  const sayStop = () => { try { if (sayOK()) window.speechSynthesis.cancel(); } catch (e) {} };
+  // Strip the markup our renderer understands, so the voice doesn't read asterisks and pipes aloud.
+  const sayClean = (t) => String(t || "").replace(/\|/g, ", ").replace(/[*_`#>]/g, "").replace(/\s*\n+\s*/g, ". ").replace(/\s{2,}/g, " ").trim();
+  function say(text, rate, done) {
+    if (!sayOK() || !text) { if (done) done(); return; }
+    try {
+      const u = new SpeechSynthesisUtterance(sayClean(text).slice(0, 800));
+      u.rate = Math.max(0.5, Math.min(2, rate || 1));
+      u.lang = "en-US";
+      if (done) { u.onend = done; u.onerror = done; }
+      window.speechSynthesis.speak(u);
+    } catch (e) { if (done) done(); }
+  }
+  // How long an item takes, roughly: enough to turn "I have 20 minutes" into a real queue.
+  const COST = { card: 0.3, mistake: 0.8 };
+  const BUDGETS = [5, 10, 15, 20, 30, 45, 60];
+  function budgetQueue(rv, mins) {
+    const out = [];
+    let left = mins;
+    const take = (list, kind) => {
+      for (const x of list) {
+        if (left < COST[kind]) return;
+        out.push({ kind, id: x.id });
+        left -= COST[kind];
+      }
+    };
+    // Mistakes first: they are the things you have already proved you get wrong.
+    take(rv.mist.slice(0, Math.max(1, Math.round(mins / 8))), "mistake");
+    take(rv.due, "card");
+    take(rv.mist, "mistake");
+    take(rv.fresh, "card");
+    return out;
+  }
+  function BudgetPanel({ rv, onStart }) {
+    const full = rv.due.length * COST.card + rv.fresh.length * COST.card + rv.mist.length * COST.mistake;
+    const total = rv.due.length + rv.fresh.length + rv.mist.length;
+    return h(
+      "div",
+      { className: "panel budget-panel" },
+      h("span", { className: "panel-kicker" }, h(Icon, { name: "clock", size: 16 }), " How long have you got?"),
+      h("p", { className: "muted small" }, total ? `Everything due would take about ${fmtMins(Math.ceil(full))}. Pick what you can actually spare and the queue is built to fit, mistakes first, then the cards you've forgotten longest.` : "Nothing due right now, so there is nothing to fit into a gap."),
+      h("div", { className: "budget-row" }, BUDGETS.map((m) => h("button", { key: m, className: "btn", disabled: !total, onClick: () => onStart(m) }, `${m} min`)))
+    );
+  }
+  /* ----- gentle nudges: a local notification, no server, nothing leaves the device ----- */
+  const NOTE_KEY = "bsa_last_note";
+  function noteAllowed() {
+    try { return "Notification" in window && Notification.permission === "granted"; } catch (e) { return false; }
+  }
+  async function askNotify() {
+    try {
+      if (!("Notification" in window)) return false;
+      if (Notification.permission === "granted") return true;
+      if (Notification.permission === "denied") return false;
+      return (await Notification.requestPermission()) === "granted";
+    } catch (e) { return false; }
+  }
+  function maybeRemind(data) {
+    const at = data.settings.remindAt;
+    if (!at || !noteAllowed()) return;
+    const now = /* @__PURE__ */ new Date();
+    const [hh, mm] = at.split(":").map(Number);
+    if (now.getHours() * 60 + now.getMinutes() < hh * 60 + (mm || 0)) return;
+    if (lsGet(NOTE_KEY) === today()) return;
+    const s = data.subjects.find((x) => x.id === data.activeId);
+    if (!s) return;
+    const rv = buildReview(s, data.settings.newPerDay || 10, data.settings.maxPerDay || 0);
+    const n = rv.due.length + rv.fresh.length + rv.mist.length;
+    const exams = data.subjects.flatMap((x) => upcomingExams(x).map((e) => ({ e, x }))).sort((a, b) => a.e.due < b.e.due ? -1 : 1);
+    const soon = exams[0] && daysUntil(exams[0].e.due) <= 7 ? exams[0] : null;
+    if (!n && !soon) return;
+    lsSet(NOTE_KEY, today());
+    try {
+      new Notification(n ? `${plural(n, "item")} to review` : "Exam coming up", { body: soon ? `${soon.e.title} in ${plural(daysUntil(soon.e.due), "day")} \u00b7 ${soon.x.name}` : `About ${Math.max(1, Math.round(n * 0.3))} minutes in ${s.name}`, tag: "bsa-review", badge: "icon-192.png", icon: "icon-192.png" });
+    } catch (e) {}
+  }
+
   /* ----- one review session: cards and mistake retests, with requeue on Again ----- */
-  function StudySession({ subject, update, items, title, onExit, toast }) {
+  function StudySession({ subject, update, items, title, onExit, toast, settings }) {
     const [queue, setQueue] = useState(items);
     const [i, setI] = useState(0);
     const [shown, setShown] = useState(false);
@@ -3469,6 +3908,22 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     useEffect(() => {
       if (typeFirst && !shown && typeRef.current) typeRef.current.focus();
     }, [i, typeFirst, shown]);
+    const [aloud, setAloud] = useState(() => localPref("aloud", false));
+    const rate = (settings && settings.speakRate) || 1;
+    // Reading the question is a prompt to recall; the pause before the answer is the work.
+    useEffect(() => {
+      if (!aloud || !item) return;
+      sayStop();
+      const t = setTimeout(() => say(card ? card.q : mistake ? mistake.question : "", rate), 180);
+      return () => { clearTimeout(t); sayStop(); };
+    }, [aloud, i, item && item.id, rate]);
+    useEffect(() => {
+      if (!aloud || !shown) return;
+      sayStop();
+      const t = setTimeout(() => say(card ? card.a : mistake ? mistake.correct : "", rate), 120);
+      return () => { clearTimeout(t); sayStop(); };
+    }, [aloud, shown, rate]);
+    useEffect(() => () => sayStop(), []);
     const next = (right, requeue) => {
       if (requeue) {
         const n = seenAgain.current.get(item.id) || 0;
@@ -3559,7 +4014,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
             "button",
             { key: g.k, className: `grade ${g.cls}`, onClick: () => gradeCard(g.k) },
             h("strong", null, g.label),
-            h("span", null, g.k === "again" ? "see again soon" : fmtIvl(schedule(card.srs, g.k).ivl)),
+            h("span", null, g.k === "again" ? "see again soon" : fmtIvl(schedule(card.srs, g.k, null, { preview: true }).ivl)),
             h("kbd", null, g.key)
           ))
         ) : h(
@@ -3576,6 +4031,11 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
           setTypeFirst(e.target.checked);
           setLocalPref("typeFirst", e.target.checked);
         } }), h("span", null, "Type my answer before revealing")),
+        sayOK() && h("label", { className: "check small" }, h("input", { type: "checkbox", checked: aloud, onChange: (e) => {
+          setAloud(e.target.checked);
+          setLocalPref("aloud", e.target.checked);
+          if (!e.target.checked) sayStop();
+        } }), h("span", null, "Read aloud")),
         h("button", { className: "btn ghost", onClick: onExit }, "End session")
       )
     );
@@ -3731,8 +4191,13 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     timerListeners.forEach((f) => f(t));
   };
   const timerElapsed = (t) => t ? (t.acc || 0) + (t.running ? Date.now() - t.start : 0) : 0;
-  function startTimer({ mins, topicId, sessionId, subjectId, label }) {
-    setTimerState({ mins, topicId: topicId || null, sessionId: sessionId || null, subjectId, label: label || "", start: Date.now(), startedAt: Date.now(), acc: 0, running: true });
+  function startTimer({ mins, topicId, sessionId, subjectId, label, pomo, round }) {
+    setTimerState({ mins, topicId: topicId || null, sessionId: sessionId || null, subjectId, label: label || "", start: Date.now(), startedAt: Date.now(), acc: 0, running: true, pomo: pomo || null, round: round || 1, phase: "work" });
+  }
+  // A break is a timer too, so the bar keeps counting and you come back on time.
+  function startBreak(prev, long) {
+    const p = prev.pomo || {};
+    setTimerState({ mins: long ? p.long || 15 : p.brk || 5, topicId: prev.topicId, sessionId: null, subjectId: prev.subjectId, label: long ? "Long break" : "Break", start: Date.now(), startedAt: Date.now(), acc: 0, running: true, pomo: prev.pomo, round: prev.round || 1, phase: "break" });
   }
   function useTimer() {
     const [t, setT] = useState(timerState);
@@ -3768,6 +4233,31 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       const cur = timerState;
       if (!cur) return;
       const mins = Math.round(timerElapsed(cur) / 6e4);
+      // A break is rest, not study: never logged, and it rolls straight into the next round.
+      if (cur.phase === "break") {
+        if (auto && cur.pomo) {
+          chime();
+          startTimer({ mins: cur.pomo.work || 25, topicId: cur.topicId, subjectId: cur.subjectId, pomo: cur.pomo, round: (cur.round || 1) + 1 });
+          toast(`Break over. Round ${(cur.round || 1) + 1}.`);
+        } else {
+          setTimerState(null);
+          if (!auto) toast("Break ended");
+        }
+        return;
+      }
+      if (auto && cur.pomo) {
+        const r = cur.round || 1;
+        const long = r % 4 === 0;
+        update(null, (d) => {
+          const s = d.subjects.find((x) => x.id === cur.subjectId) || d.subjects.find((x) => x.id === d.activeId);
+          if (!s || mins < 1) return;
+          bumpDay(s, { mins });
+        });
+        chime();
+        startBreak(cur, long);
+        toast(`Round ${r} done, ${fmtMins(mins)} logged. ${long ? "Long break" : "Break"} now.`);
+        return;
+      }
       setTimerState(null);
       if (mins < 1) {
         toast("Timer stopped. Under a minute, so nothing was logged.");
@@ -3801,9 +4291,206 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       "div",
       { className: `focus-bar${t.running ? "" : " paused"}`, role: "timer", "aria-label": "Focus timer" },
       h("span", { className: "focus-ring", style: { "--p": `${pct}%` }, "aria-hidden": "true" }),
-      h("div", { className: "focus-text" }, h("strong", null, `${Math.floor(secs / 60)}:${pad(secs % 60)}`), h("span", { className: "muted small" }, t.running ? "Focus" : "Paused", topic ? `, ${topic.code || topic.title}` : t.label ? `, ${t.label}` : "")),
+      h("div", { className: "focus-text" }, h("strong", null, `${Math.floor(secs / 60)}:${pad(secs % 60)}`), h("span", { className: "muted small" }, t.phase === "break" ? (t.label || "Break") : t.running ? "Focus" : "Paused", t.pomo && t.phase !== "break" ? ` \u00b7 round ${t.round || 1}` : "", topic && t.phase !== "break" ? `, ${topic.code || topic.title}` : !topic && t.label && t.phase !== "break" ? `, ${t.label}` : "")),
+      t.phase === "break" && t.pomo && h("button", { className: "btn", onClick: () => { setTimerState(null); startTimer({ mins: t.pomo.work || 25, topicId: t.topicId, subjectId: t.subjectId, pomo: t.pomo, round: (t.round || 1) + 1 }); } }, "Skip break"),
       h("button", { className: "btn", onClick: () => setTimerState(t.running ? { ...t, running: false, acc: timerElapsed(t) } : { ...t, running: true, start: Date.now() }) }, t.running ? "Pause" : "Resume"),
       h("button", { className: "btn primary", onClick: () => finish(false) }, "Finish")
+    );
+  }
+
+  /* ----- cards that keep beating you: park them, rewrite them, don't grind them ----- */
+  function LeechPanel({ subject, update, toast, openEditor }) {
+    const leeches = subject.cards.filter((c) => c.srs && (c.srs.leech || (c.srs.lapses || 0) >= LEECH_AT));
+    if (!leeches.length) return null;
+    const unpark = (c) => {
+      update((s) => {
+        const x = s.cards.find((y) => y.id === c.id);
+        if (!x || !x.srs) return;
+        x.srs = { ...x.srs, leech: false, susp: false, lapses: 0, reps: 0, ivl: 1, ease: Math.max(2.3, x.srs.ease || 2.5), due: today() };
+        x.conf = null;
+      });
+      toast("Back in the queue with a clean slate");
+    };
+    const park = (c) => {
+      update((s) => {
+        const x = s.cards.find((y) => y.id === c.id);
+        if (x && x.srs) x.srs = { ...x.srs, susp: true, leech: true };
+      });
+      toast("Parked. It won't come up in reviews.");
+    };
+    return h(
+      "div",
+      { className: "panel leech-panel" },
+      h("span", { className: "panel-kicker" }, h(Icon, { name: "mistakes", size: 16 }), " Cards that keep beating you"),
+      h("p", { className: "muted small" }, `You've forgotten each of these at least ${LEECH_AT} times. A card you keep failing is usually a badly written card, not a bad memory: split it into two smaller cards, or rewrite the answer in your own words. Then unpark it.`),
+      h("ul", { className: "leech-list" }, leeches.slice(0, 6).map((c) => h(
+        "li",
+        { key: c.id },
+        h("div", { className: "leech-main" }, h("strong", null, drShort(c.q, 100)), h("span", { className: "muted small" }, `${topicName(subject, c.topicId)} · forgotten ${c.srs.lapses || LEECH_AT} times${c.srs.susp ? " · parked" : ""}`)),
+        h("div", { className: "dr-acts" }, h("button", { className: "btn ghost", onClick: () => openEditor("card", c) }, "Rewrite"), c.srs.susp ? h("button", { className: "btn ghost", onClick: () => unpark(c) }, "Unpark") : h("button", { className: "btn ghost", onClick: () => park(c) }, "Park it"))
+      ))),
+      leeches.length > 6 && h("p", { className: "muted small" }, `+${leeches.length - 6} more. Clear these six first.`)
+    );
+  }
+
+  /* ===================== Class life: timetable, attendance, assignments =====================
+     subject.classes = [{ id, dow, start, end, room }]   one row per weekly meeting
+     subject.attend  = [{ id, date, classId, st }]       st: present | late | absent | excused
+     subject.tasks   = [{ id, title, due, kind, done, note }]
+     All three are in COLLS, so they merge across devices like everything else. */
+  const DOW = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const DOW3 = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const ATT = [["present", "Present"], ["late", "Late"], ["absent", "Absent"], ["excused", "Excused"]];
+  const TASK_KIND = [["assignment", "Assignment"], ["quiz", "Quiz"], ["project", "Project"], ["reading", "Reading"], ["other", "Other"]];
+  // Most Philippine schools allow absences worth about three weeks of meetings.
+  const cutLimit = (subject) => {
+    const perWeek = (subject.classes || []).length;
+    return perWeek ? Math.max(3, perWeek * 3) : 0;
+  };
+  function attendStats(subject) {
+    const rows = subject.attend || [];
+    const n = (k) => rows.filter((x) => x.st === k).length;
+    const absent = n("absent"), late = n("late");
+    // Three lates usually count as one absence.
+    const charged = absent + Math.floor(late / 3);
+    const limit = cutLimit(subject);
+    const held = rows.length;
+    const present = n("present") + late + n("excused");
+    return { present: n("present"), late, absent, excused: n("excused"), held, charged, limit, left: Math.max(0, limit - charged), pct: held ? Math.round(present / held * 100) : null };
+  }
+  const classOn = (subject, iso) => (subject.classes || []).filter((c) => c.dow === parseD(iso).getDay()).sort(byTime);
+  const attendOn = (subject, iso, classId) => (subject.attend || []).find((a) => a.date === iso && a.classId === classId);
+  function ClassLife({ subject, update, toast, go }) {
+    const [tab, setTab] = useState("week");
+    const st = attendStats(subject);
+    const classes = (subject.classes || []).slice().sort((a, b) => a.dow - b.dow || (a.start || "") < (b.start || "") ? -1 : 1);
+    const tasks = (subject.tasks || []).slice().sort((a, b) => (a.done ? 1 : 0) - (b.done ? 1 : 0) || (a.due || "9") < (b.due || "9") ? -1 : 1);
+    const addClass = () => update((s) => {
+      s.classes = s.classes || [];
+      s.classes.push({ id: uid("cl"), dow: 1, start: "08:00", end: "09:30", room: "" });
+    });
+    const setClass = (id, k, v) => update((s) => {
+      const c = (s.classes || []).find((x) => x.id === id);
+      if (c) c[k] = v;
+    });
+    const delClass = (id) => {
+      if (!window.confirm("Remove this meeting from the timetable? Attendance already recorded for it stays.")) return;
+      update((s) => { s.classes = (s.classes || []).filter((x) => x.id !== id); });
+    };
+    const markAttend = (iso, classId, stt) => update((s) => {
+      s.attend = s.attend || [];
+      const hit = s.attend.find((a) => a.date === iso && a.classId === classId);
+      if (hit) {
+        if (hit.st === stt) s.attend = s.attend.filter((a) => a !== hit);
+        else hit.st = stt;
+      } else s.attend.push({ id: uid("at"), date: iso, classId, st: stt });
+    });
+    const addTask = () => update((s) => {
+      s.tasks = s.tasks || [];
+      s.tasks.unshift({ id: uid("tk"), title: "", due: "", kind: "assignment", done: false, note: "" });
+    });
+    const setTask = (id, k, v) => update((s) => {
+      const t = (s.tasks || []).find((x) => x.id === id);
+      if (t) t[k] = v;
+    });
+    const delTask = (id) => update((s) => { s.tasks = (s.tasks || []).filter((x) => x.id !== id); });
+    // The last 14 days that actually had a meeting, newest first.
+    const recent = [];
+    for (let k = 0; k < 21 && recent.length < 14; k++) {
+      const iso = addDays(today(), -k);
+      for (const c of classOn(subject, iso)) recent.push({ iso, c });
+    }
+    const risk = st.limit && st.charged >= st.limit ? "bad" : st.limit && st.charged >= st.limit - 1 ? "warn" : "";
+    return h(
+      "section",
+      { className: "view" },
+      h("div", { className: "page-head" }, h("div", null, h("h1", { className: "page-title" }, "Class"), h("p", { className: "muted" }, "Your weekly meetings, how many cuts you have left, and what is due.")), h("div", { className: "head-actions" }, h("button", { className: "btn", onClick: () => go("calendar") }, h(Icon, { name: "calendar", size: 16 }), " Calendar"))),
+      h("div", { className: "seg-filter", role: "tablist" }, [["week", "Timetable"], ["att", "Attendance"], ["tasks", "To do"]].map(([k, l]) => h("button", { key: k, role: "tab", "aria-selected": tab === k, className: tab === k ? "on" : "", onClick: () => setTab(k) }, l))),
+      tab === "week" && h(
+        "div",
+        { className: "panel" },
+        h("p", { className: "muted small" }, "One row per weekly meeting. This drives attendance and the Today screen."),
+        classes.length ? h("div", { className: "cl-rows" }, classes.map((c) => h(
+          "div",
+          { key: c.id, className: "cl-row" },
+          h("select", { value: c.dow, "aria-label": "Day", onChange: (e) => setClass(c.id, "dow", Number(e.target.value)) }, DOW.map((d, i) => h("option", { key: d, value: i }, d))),
+          h("input", { type: "time", value: c.start || "", "aria-label": "Start", onChange: (e) => setClass(c.id, "start", e.target.value) }),
+          h("input", { type: "time", value: c.end || "", "aria-label": "End", onChange: (e) => setClass(c.id, "end", e.target.value) }),
+          h("input", { value: c.room || "", placeholder: "Room", "aria-label": "Room", onChange: (e) => setClass(c.id, "room", e.target.value) }),
+          h("button", { className: "icon-btn", "aria-label": "Remove meeting", onClick: () => delClass(c.id) }, "\u2715")
+        ))) : h("p", { className: "muted" }, "No meetings yet."),
+        h("div", { className: "row-end", style: { justifyContent: "flex-start" } }, h("button", { className: "btn", onClick: addClass }, h(Icon, { name: "plus", size: 16 }), " Add a meeting"))
+      ),
+      tab === "att" && h(
+        React.Fragment,
+        null,
+        h("div", { className: "stats" },
+          h("div", { className: `stat${risk ? " weak" : ""}` }, h("span", { className: "stat-label" }, "Cuts used"), h("span", { className: `big-num${risk === "bad" ? " bad-text" : ""}` }, st.limit ? `${st.charged} / ${st.limit}` : st.charged), h("span", { className: "muted" }, st.limit ? `${plural(st.left, "cut")} left` : "Add your timetable to see the limit")),
+          h("div", { className: "stat" }, h("span", { className: "stat-label" }, "Attendance rate"), h("span", { className: "big-num" }, st.pct === null ? "\u2014" : `${st.pct}%`), h("span", { className: "muted" }, `${st.held} meetings recorded`)),
+          h("div", { className: "stat" }, h("span", { className: "stat-label" }, "Late"), h("span", { className: "big-num" }, st.late), h("span", { className: "muted" }, "Three lates count as one absence")),
+          h("div", { className: "stat" }, h("span", { className: "stat-label" }, "Excused"), h("span", { className: "big-num" }, st.excused), h("span", { className: "muted" }, "Not charged against your cuts"))
+        ),
+        risk && h("div", { className: "panel gc-warn" }, h("p", null, risk === "bad" ? "You are at or past the usual limit. Check your handbook and talk to your instructor." : "One more absence puts you at the usual limit."), h("p", { className: "muted" }, "The limit here is a common rule of thumb, not your school's official policy. Confirm it in your student handbook.")),
+        h("div", { className: "panel" },
+          h("h2", null, "Recent meetings"),
+          recent.length ? h("ul", { className: "att-list" }, recent.map(({ iso, c }) => {
+            const a = attendOn(subject, iso, c.id);
+            return h("li", { key: `${iso}_${c.id}` }, h("div", { className: "att-main" }, h("strong", null, fmtDay(iso)), h("span", { className: "muted small" }, [DOW3[c.dow], fmtTime(c.start), c.room].filter(Boolean).join(" \u00b7 "))), h("div", { className: "att-btns" }, ATT.map(([k, l]) => h("button", { key: k, className: `chip${a && a.st === k ? ` on${k === "absent" ? " bad" : k === "present" ? " ok" : ""}` : ""}`, onClick: () => markAttend(iso, c.id, k) }, l))));
+          })) : h("p", { className: "muted" }, "No meetings in the last three weeks. Add your timetable first.")
+        )
+      ),
+      tab === "tasks" && h(
+        "div",
+        { className: "panel" },
+        h("p", { className: "muted small" }, "Anything to hand in, separate from reading a topic. Due dates show on Today."),
+        tasks.length ? h("div", { className: "tk-rows" }, tasks.map((t) => {
+          const over = t.due && !t.done && daysUntil(t.due) < 0;
+          const soon = t.due && !t.done && daysUntil(t.due) >= 0 && daysUntil(t.due) <= 2;
+          return h(
+            "div",
+            { key: t.id, className: `tk-row${t.done ? " done" : ""}` },
+            h("input", { type: "checkbox", checked: !!t.done, "aria-label": "Done", onChange: (e) => setTask(t.id, "done", e.target.checked) }),
+            h("input", { className: "tk-title", value: t.title, placeholder: "What is it?", "aria-label": "Title", onChange: (e) => setTask(t.id, "title", e.target.value) }),
+            h("select", { value: t.kind, "aria-label": "Kind", onChange: (e) => setTask(t.id, "kind", e.target.value) }, TASK_KIND.map(([k, l]) => h("option", { key: k, value: k }, l))),
+            h("input", { type: "date", value: t.due || "", "aria-label": "Due", onChange: (e) => setTask(t.id, "due", e.target.value) }),
+            h("span", { className: `tk-when${over ? " over" : soon ? " soon" : ""}` }, t.done ? "done" : t.due ? dueRel({ due: t.due, kind: "task", status: "" }) || fmtDay(t.due, "short") : ""),
+            h("button", { className: "icon-btn", "aria-label": "Remove", onClick: () => delTask(t.id) }, "\u2715")
+          );
+        })) : h("p", { className: "muted" }, "Nothing on the list."),
+        h("div", { className: "row-end", style: { justifyContent: "flex-start" } }, h("button", { className: "btn", onClick: addTask }, h(Icon, { name: "plus", size: 16 }), " Add something to do"))
+      )
+    );
+  }
+  /* ----- where your hours actually went, against what they bought ----- */
+  function RoiPanel({ subject, go }) {
+    const rows = studyTopics(subject).map((t) => {
+      const mins = (subject.sessions || []).filter((s) => s.done && s.topicId === t.id).reduce((a, s) => a + (Number(s.mins) || 0), 0);
+      const cs = subject.cards.filter((c) => c.topicId === t.id);
+      const mem = cs.length ? Math.round(cs.reduce((a, c) => a + cardStrength(c), 0) / cs.length * 100) : null;
+      return { t, mins, mem, n: cs.length };
+    }).filter((x) => x.mins > 0 || x.n > 0);
+    if (!rows.length) return null;
+    const maxM = Math.max(1, ...rows.map((x) => x.mins));
+    // Lots of hours and little to show for it means the method is wrong, not the effort.
+    const worst = rows.filter((x) => x.mins >= 60 && x.mem !== null && x.mem < 50).sort((a, b) => b.mins - a.mins)[0];
+    return h(
+      "div",
+      { className: "panel" },
+      h("div", { className: "panel-row" }, h("h2", null, "Hours against results"), h("span", { className: "muted small" }, "Timed study only")),
+      worst && h("p", { className: "roi-flag" }, `${worst.t.code || drShort(worst.t.title, 28)}: ${fmtMins(worst.mins)} spent, memory still ${worst.mem}%. That is a method problem, not an effort problem. Try answering questions on it instead of re-reading.`),
+      h("div", { className: "table-wrap" }, h(
+        "table",
+        { className: "strength-table" },
+        h("thead", null, h("tr", null, h("th", null, "Topic"), h("th", null, "Time"), h("th", null, "Memory"), h("th", { className: "num" }, "Cards"))),
+        h("tbody", null, rows.sort((a, b) => b.mins - a.mins).map((x) => h(
+          "tr",
+          { key: x.t.id },
+          h("td", null, h("button", { className: "link-btn", onClick: () => go("vault", { topic: x.t.id }) }, x.t.code || drShort(x.t.title, 24))),
+          h("td", null, h("div", { className: "bar-sm" }, h("span", { style: { width: `${x.mins / maxM * 100}%`, background: "var(--accent-2)" } })), h("span", { className: "muted small" }, fmtMins(x.mins) || "none")),
+          h("td", null, x.mem === null ? h("span", { className: "muted small" }, "no cards") : h(React.Fragment, null, h("div", { className: "bar-sm" }, h("span", { style: { width: `${x.mem}%`, background: x.mem < 50 ? "var(--bad)" : x.mem < 75 ? "var(--warn)" : "var(--ok)" } })), h("span", { className: "muted small" }, `${x.mem}%`))),
+          h("td", { className: "num" }, x.n)
+        )))
+      ))
     );
   }
 
@@ -3823,10 +4510,11 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       return h("span", { key: d, className: `act${d === today() ? " today" : ""}`, title: `${fmtDay(d)}: ${x.reviews || 0} reviews, ${fmtMins(x.mins) || "0 min"} timed`, style: { "--h": `${v ? Math.max(12, v / max * 100) : 4}%` } }, h("i", null), h("b", null, parseD(d).toLocaleDateString(void 0, { weekday: "narrow" })));
     }));
   }
-  function PracticeView({ subject, update, toast, go, init, settings, setSettings }) {
+  function PracticeView({ subject, update, toast, go, init, settings, setSettings, openEditor }) {
     const [mode, setMode] = useState(null);
     const newPerDay = settings.newPerDay || 10;
-    const rv = useMemo(() => buildReview(subject, newPerDay), [subject, newPerDay]);
+    const maxPerDay = settings.maxPerDay || 0;
+    const rv = useMemo(() => buildReview(subject, newPerDay, maxPerDay), [subject, newPerDay, maxPerDay]);
     const exam = focusExam(subject);
     const ready = exam ? examReadiness(subject, exam) : null;
     const [timerTopic, setTimerTopic] = useState(() => defaultTopic(subject) || "");
@@ -3842,8 +4530,9 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       else if (init.start === "exam" && exam) setMode({ kind: "study", title: `${exam.title} mix`, items: examMix(subject, exam).map((c) => ({ kind: "card", id: c.id })) });
       else if (init.start === "compute") setMode({ kind: "compute", set: "all" });
     }, []);
-    if (mode && mode.kind === "study") return h("section", { className: "view" }, h(StudySession, { subject, update, toast, items: mode.items, title: mode.title, onExit: () => setMode(null) }));
+    if (mode && mode.kind === "study") return h("section", { className: "view" }, h(StudySession, { subject, update, toast, settings, items: mode.items, title: mode.title, onExit: () => setMode(null) }));
     if (mode && mode.kind === "compute") return h("section", { className: "view" }, h(ComputeSet, { subject, update, toast, set: mode.set, onExit: () => setMode(null) }));
+    if (mode && mode.kind === "mock") return h("section", { className: "view" }, h(MockExam, { subject, exam, update, toast, onExit: () => setMode(null) }));
     const dueTotal = rv.due.length + rv.fresh.length + rv.mist.length;
     const topics = studyTopics(subject);
     const strength = topics.map((t) => {
@@ -3864,8 +4553,10 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
           h("span", { className: "panel-kicker" }, h(Icon, { name: "cards", size: 16 }), " Daily review"),
           h("p", { className: "big-num" }, dueTotal, h("span", { className: "big-unit" }, dueTotal === 1 ? " item" : " items")),
           h("p", { className: "muted" }, [rv.due.length && `${rv.due.length} due`, rv.fresh.length && `${rv.fresh.length} new`, rv.mist.length && `${plural(rv.mist.length, "mistake")} to retest`].filter(Boolean).join(", ") || "You’re all caught up for today."),
+          rv.backlog > 0 && h("p", { className: "muted small backlog-note" }, `${plural(rv.backlog, "card")} also due, held back so today stays finishable. They come first tomorrow.`),
           h("div", { className: "step-actions" }, h("button", { className: "btn primary", disabled: !dueTotal, onClick: startReview }, "Start review")),
-          h("label", { className: "inline-field" }, h("span", null, "New cards per day"), h("select", { value: newPerDay, onChange: (e) => setSettings({ ...settings, newPerDay: Number(e.target.value) }) }, [5, 10, 15, 20, 30, 50].map((n) => h("option", { key: n, value: n }, n))))
+          h("label", { className: "inline-field" }, h("span", null, "New cards per day"), h("select", { value: newPerDay, onChange: (e) => setSettings({ ...settings, newPerDay: Number(e.target.value) }) }, [5, 10, 15, 20, 30, 50].map((n) => h("option", { key: n, value: n }, n)))),
+          h("label", { className: "inline-field" }, h("span", null, "Most reviews in a day"), h("select", { value: maxPerDay, onChange: (e) => setSettings({ ...settings, maxPerDay: Number(e.target.value) }) }, [[0, "No limit"], [40, "40"], [60, "60"], [80, "80"], [120, "120"], [200, "200"]].map(([n, l]) => h("option", { key: n, value: n }, l))))
         ),
         exam && h(
           "div",
@@ -3873,8 +4564,11 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
           h("span", { className: "panel-kicker" }, h(Icon, { name: "chart", size: 16 }), " Exam readiness"),
           h("div", { className: "ready-head" }, h("p", { className: "big-num" }, `${ready.pct}%`), h("div", null, h("strong", null, exam.title), h("span", { className: "muted small" }, exam.due ? daysUntil(exam.due) === 0 ? "Today" : `${plural(daysUntil(exam.due), "day")} left` : "Set its date in Calendar for a countdown"))),
           ready.parts.map((p) => h("div", { key: p.k, className: "ready-part", title: p.hint }, h("span", { className: "small" }, p.k), h("div", { className: "bar-sm" }, h("span", { style: { width: `${Math.round(p.v * 100)}%` } })), h("span", { className: "small muted num" }, `${Math.round(p.v * 100)}%`))),
-          h("div", { className: "step-actions" }, h("button", { className: "btn primary", onClick: () => setMode({ kind: "study", title: `${exam.title} mix`, items: examMix(subject, exam).map((c) => ({ kind: "card", id: c.id })) }) }, "Start exam mix"), h("span", { className: "muted small" }, "20 of your weakest cards, mixed across topics"))
+          h("div", { className: "step-actions" }, h("button", { className: "btn primary", onClick: () => setMode({ kind: "study", title: `${exam.title} mix`, items: examMix(subject, exam).map((c) => ({ kind: "card", id: c.id })) }) }, "Start exam mix"), h("button", { className: "btn", onClick: () => setMode({ kind: "mock" }) }, "Sit a mock exam")),
+          h("p", { className: "muted small" }, "The mix is 20 of your weakest cards. The mock is a timed paper under exam conditions, marked and saved.")
         ),
+        h(BudgetPanel, { rv, onStart: (m) => setMode({ kind: "study", title: `${m}-minute session`, items: budgetQueue(rv, m) }) }),
+        h(LeechPanel, { subject, update, toast, openEditor }),
         h(DrPanel, { subject, onStart: (k) => setMode({ kind: "compute", set: k }), onManage: () => setDrMgr(true) }),
         h(
           "div",
@@ -3887,7 +4581,8 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
               setTimerMins(Number(e.target.value));
               setLocalPref("timerMins", Number(e.target.value));
             } }, [15, 25, 45, 50, 60, 90].map((n) => h("option", { key: n, value: n }, `${n} min`))))),
-            h("div", { className: "step-actions" }, h("button", { className: "btn primary", onClick: () => startTimer({ mins: timerMins, topicId: timerTopic || null, subjectId: subject.id }) }, "Start focus timer"))
+            h("label", { className: "check small pomo-check" }, h("input", { type: "checkbox", checked: !!settings.pomoOn, onChange: (e) => setSettings({ ...settings, pomoOn: e.target.checked }) }), h("span", null, `Pomodoro cycles \u00b7 ${settings.pomoWork || 25} min work, ${settings.pomoBreak || 5} min break, ${settings.pomoLong || 15} after four rounds`)),
+            h("div", { className: "step-actions" }, h("button", { className: "btn primary", onClick: () => startTimer(settings.pomoOn ? { mins: settings.pomoWork || 25, topicId: timerTopic || null, subjectId: subject.id, pomo: { work: settings.pomoWork || 25, brk: settings.pomoBreak || 5, long: settings.pomoLong || 15 }, round: 1 } : { mins: timerMins, topicId: timerTopic || null, subjectId: subject.id }) }, settings.pomoOn ? "Start Pomodoro" : "Start focus timer"))
           ),
           h("p", { className: "muted small" }, `This week: ${fmtMins(week) || "0 min"} timed. The time is saved as a finished study session.`)
         )
@@ -3895,6 +4590,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       h(
         "div",
         { className: "practice-grid two" },
+        h(RoiPanel, { subject, go }),
         h("div", { className: "panel" }, h("div", { className: "panel-row" }, h("h2", null, "Last 14 days"), h("span", { className: "streak" }, h(Icon, { name: "flame", size: 16 }), streak ? ` ${plural(streak, "day")} in a row` : " Start a streak today")), h(ActivityStrip, { subject })),
         h(
           "div",
@@ -3912,6 +4608,208 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         setDrMgr(false);
         setMode({ kind: "compute", set: k });
       } })
+    );
+  }
+
+  /* ===================== Mock exam: one timed paper under exam conditions =====================
+     Multiple choice comes from your problem sets, computations from your drills (fresh numbers
+     every run), and concept questions from your weakest flashcards. The app marks what it can
+     mark objectively; you mark the written answers yourself. The score is saved as a quiz, so
+     it feeds exam readiness like any other practice. */
+  const mxKey = (s) => {
+    const m = String(s || "").trim().match(/^\(?\s*([a-dA-D])\s*[.)\]]/);
+    return m ? m[1].toLowerCase() : "";
+  };
+  const mxChoiceKey = (c, i) => mxKey(c) || "abcdefgh"[i];
+  function mxPool(subject, exam) {
+    const ids = new Set(exam && exam.covers && exam.covers.length ? exam.covers : studyTopics(subject).map((t) => t.id));
+    const ok = (tid) => !tid || ids.has(tid);
+    const mcq = [];
+    for (const s of subject.psets || []) {
+      if (!ok(s.topicId)) continue;
+      for (const p of s.problems) {
+        const key = mxKey(p.answer);
+        if (!p.choices || p.choices.length < 2 || !key) continue;
+        mcq.push({ kind: "mcq", id: `x_${p.id}`, topicId: s.topicId, q: p.problem, choices: p.choices, key, why: p.solution || p.approach || "", trap: p.trap || "", src: `${s.title} \u00b7 problem ${p.no}` });
+      }
+    }
+    const calc = [];
+    for (const d of drPool(subject)) {
+      if (!ok(d.topic)) continue;
+      try {
+        const m = d.make();
+        calc.push({ kind: "calc", id: `y_${uid("n")}`, topicId: d.topic, q: m.q, lines: m.lines, ans: m.ans, tol: m.tol, prefix: m.prefix, suffix: m.suffix, ansText: m.ansText, why: (m.steps || []).join("\n"), src: d.name });
+      } catch (e) { /* a drill whose formula is broken just sits this one out */ }
+    }
+    // Weakest cards first, so the paper probes what you actually haven't learned.
+    const open = subject.cards.filter((c) => ok(c.topicId) && !(c.srs && c.srs.susp)).sort((a, b) => cardStrength(a) - cardStrength(b))
+      .map((c) => ({ kind: "open", id: `z_${c.id}`, cardId: c.id, topicId: c.topicId, q: c.q, ans: c.a, why: c.tip || "", src: "Flashcard" }));
+    return { mcq, calc, open };
+  }
+  const MX_LABEL = { mcq: "Multiple choice", calc: "Computation", open: "Written answer" };
+  function MockExam({ subject, exam, update, toast, onExit }) {
+    const [phase, setPhase] = useState("setup");
+    const [cfg, setCfg] = useState({ n: 30, mins: 45, mcq: true, calc: true, open: true });
+    const [paper, setPaper] = useState([]);
+    const [ans, setAns] = useState({});
+    const [mark, setMark] = useState({});
+    const [flag, setFlag] = useState({});
+    const [i, setI] = useState(0);
+    const [grid, setGrid] = useState(false);
+    const endAt = useRef(0), startedAt = useRef(0), usedMins = useRef(0), saved = useRef(false);
+    useTick(1000);
+    const pool = useMemo(() => mxPool(subject, exam), [subject, exam]);
+    const total = pool.mcq.length + pool.calc.length + pool.open.length;
+    const start = () => {
+      const picks = [["mcq", cfg.mcq], ["calc", cfg.calc], ["open", cfg.open]].filter(([k, on]) => on && pool[k].length);
+      if (!picks.length) return;
+      const per = Math.ceil(cfg.n / picks.length);
+      const want = [];
+      for (const [k] of picks) want.push(...(k === "open" ? pool.open.slice(0, per) : shuffle(pool[k]).slice(0, per)));
+      setPaper(shuffle(want).slice(0, cfg.n).map((x, k) => ({ ...x, no: k + 1 })));
+      setAns({}); setMark({}); setFlag({}); setI(0); setGrid(false);
+      startedAt.current = Date.now();
+      endAt.current = Date.now() + cfg.mins * 6e4;
+      saved.current = false;
+      setPhase("run");
+    };
+    const finish = () => {
+      usedMins.current = Math.max(1, Math.round((Date.now() - startedAt.current) / 6e4));
+      setPhase("report");
+    };
+    const left = phase === "run" ? Math.max(0, endAt.current - Date.now()) : 0;
+    useEffect(() => {
+      if (phase === "run" && left <= 0) finish();
+    });
+    const right = (p) => {
+      if (p.kind === "mcq") return ans[p.id] ? ans[p.id] === p.key : false;
+      if (p.kind === "calc") {
+        const v = drParse(ans[p.id]);
+        return v !== null && Math.abs(v - p.ans) <= (p.tol || 1);
+      }
+      return mark[p.id] === "r";
+    };
+    const answered = (p) => p.kind === "open" ? !!(ans[p.id] || "").trim() : p.kind === "mcq" ? !!ans[p.id] : drParse(ans[p.id]) !== null;
+    const score = paper.filter(right).length;
+    const unmarked = paper.filter((p) => p.kind === "open" && !mark[p.id]).length;
+    const save = () => {
+      if (saved.current) return;
+      saved.current = true;
+      const misses = paper.filter((p) => !right(p));
+      update((s) => {
+        s.quizzes.unshift({ id: uid("q"), topicId: exam && exam.covers && exam.covers.length === 1 ? exam.covers[0] : null, topicText: `Mock exam: ${exam ? exam.title : "all topics"}`, date: today(), score, items: paper.length });
+        bumpDay(s, { reviews: paper.length, right: score, mins: usedMins.current });
+        for (const p of misses) {
+          if (p.kind === "open" && p.cardId) gradeCardIn(s, p.cardId, "again");
+          s.mistakes.unshift({ id: uid("m"), topicId: p.topicId || null, topicText: "", date: today(), question: psPlain(p.q).slice(0, 400), wrong: p.kind === "mcq" ? (ans[p.id] ? `Chose ${ans[p.id].toUpperCase()}` : "Left blank") : (ans[p.id] || "Left blank").slice(0, 200), correct: (p.kind === "mcq" ? p.choices.find((c, k) => mxChoiceKey(c, k) === p.key) || "" : p.kind === "calc" ? p.ansText : p.ans).slice(0, 400), trap: psPlain(p.trap || p.why).slice(0, 400), status: "Active" });
+        }
+      });
+      toast(`Saved ${score}/${paper.length}. ${plural(misses.length, "miss")} added to the Mistake log.`);
+    };
+    if (!total) {
+      return h("div", { className: "drill done" }, h("span", { className: "muted" }, "Mock exam"), h("p", null, "There is nothing to build a paper from yet. Add flashcards, a problem set with multiple choice, or a computation drill first."), h("button", { className: "btn primary", onClick: onExit }, "Back"));
+    }
+    if (phase === "setup") {
+      const avail = [["mcq", pool.mcq.length], ["calc", pool.calc.length], ["open", pool.open.length]];
+      return h(
+        "div",
+        { className: "drill mx-setup" },
+        h("span", { className: "muted" }, "Mock exam"),
+        h("h2", null, exam ? exam.title : "All topics"),
+        h("p", { className: "muted small" }, "One timed sitting, no feedback until you submit. Treat it like the real thing: no notes, no going back to the book."),
+        h("div", { className: "grid-2 tight" },
+          h(Field, { label: "Number of items" }, h("select", { value: cfg.n, onChange: (e) => setCfg({ ...cfg, n: Number(e.target.value) }) }, [10, 20, 30, 40, 50, 60].map((n) => h("option", { key: n, value: n }, n)))),
+          h(Field, { label: "Time limit" }, h("select", { value: cfg.mins, onChange: (e) => setCfg({ ...cfg, mins: Number(e.target.value) }) }, [15, 30, 45, 60, 90, 120, 180].map((n) => h("option", { key: n, value: n }, fmtMins(n)))))
+        ),
+        h("fieldset", { className: "checks" }, h("legend", null, "What goes in the paper"), avail.map(([k, n]) => h("label", { key: k, className: "check" }, h("input", { type: "checkbox", checked: !!cfg[k], disabled: !n, onChange: (e) => setCfg({ ...cfg, [k]: e.target.checked }) }), h("span", null, MX_LABEL[k], " ", h("span", { className: "muted small" }, n ? `${n} available${k === "open" ? ", weakest first" : ""}${k === "calc" ? ", new numbers each run" : ""}` : "none yet"))))),
+        h("p", { className: "muted small" }, "Multiple choice and computations are marked for you. Written answers you mark yourself after submitting, the same way an examiner would."),
+        h("div", { className: "row-end" }, h("button", { className: "btn ghost", onClick: onExit }, "Cancel"), h("button", { className: "btn primary", disabled: !(cfg.mcq && pool.mcq.length || cfg.calc && pool.calc.length || cfg.open && pool.open.length), onClick: start }, "Start the exam"))
+      );
+    }
+    if (phase === "run") {
+      const p = paper[i];
+      const secs = Math.ceil(left / 1e3);
+      const low = secs <= 300;
+      const done = paper.filter(answered).length;
+      if (grid) {
+        return h(
+          "div",
+          { className: "drill" },
+          h("div", { className: "drill-meta" }, h("span", null, `${done} of ${paper.length} answered`), h("strong", { className: `mx-clock${low ? " low" : ""}` }, `${Math.floor(secs / 60)}:${pad(secs % 60)}`)),
+          h("div", { className: "mx-grid" }, paper.map((x, k) => h("button", { key: x.id, className: `mx-cell${answered(x) ? " on" : ""}${flag[x.id] ? " flag" : ""}${k === i ? " cur" : ""}`, onClick: () => { setI(k); setGrid(false); } }, x.no))),
+          h("p", { className: "muted small" }, "Filled squares are answered. Outlined ones are flagged for another look."),
+          h("div", { className: "row-end" }, h("button", { className: "btn ghost", onClick: () => setGrid(false) }, "Back to the paper"), h("button", { className: "btn primary", onClick: finish }, "Submit the exam"))
+        );
+      }
+      return h(
+        "div",
+        { className: "drill mx-run" },
+        h("div", { className: "drill-meta" }, h("span", null, `Item ${p.no} of ${paper.length}`, h("span", { className: "drill-badge" }, MX_LABEL[p.kind])), h("strong", { className: `mx-clock${low ? " low" : ""}` }, `${Math.floor(secs / 60)}:${pad(secs % 60)}`)),
+        h("div", { className: "progress" }, h("span", { style: { width: `${done / paper.length * 100}%` } })),
+        p.lines && p.lines.length > 0 && h("div", { className: "table-wrap" }, h("table", { className: "calc-table" }, h("tbody", null, p.lines.map(([k, v], r) => h("tr", { key: r }, h("td", null, k), h("td", { className: "num" }, v)))))),
+        h(PsMd, { text: p.q, className: "mx-q" }),
+        p.kind === "mcq" && h("ul", { className: "mx-choices" }, p.choices.map((c, k) => {
+          const key = mxChoiceKey(c, k);
+          return h("li", { key: k }, h("label", { className: `mx-choice${ans[p.id] === key ? " on" : ""}` }, h("input", { type: "radio", name: `mx-${p.id}`, checked: ans[p.id] === key, onChange: () => setAns({ ...ans, [p.id]: key }) }), h("span", null, psInline(c))));
+        })),
+        p.kind === "calc" && h("div", { className: "calc-answer" }, p.prefix && h("span", { className: "peso" }, p.prefix), h("input", { inputMode: "decimal", value: ans[p.id] || "", placeholder: "Your answer", onChange: (e) => setAns({ ...ans, [p.id]: e.target.value }) }), p.suffix && h("span", { className: "dr-suffix" }, p.suffix)),
+        p.kind === "open" && h("textarea", { rows: 5, value: ans[p.id] || "", placeholder: "Write your answer the way you would on paper", onChange: (e) => setAns({ ...ans, [p.id]: e.target.value }) }),
+        h("div", { className: "mx-nav" },
+          h("button", { className: "btn ghost", disabled: i === 0, onClick: () => setI(i - 1) }, "\u2039 Back"),
+          h("button", { className: `btn ghost${flag[p.id] ? " on" : ""}`, onClick: () => setFlag({ ...flag, [p.id]: !flag[p.id] }) }, flag[p.id] ? "Flagged" : "Flag"),
+          h("button", { className: "btn ghost", onClick: () => setGrid(true) }, "All items"),
+          h("span", { className: "spacer" }),
+          i + 1 < paper.length ? h("button", { className: "btn primary", onClick: () => setI(i + 1) }, "Next \u203a") : h("button", { className: "btn primary", onClick: finish }, "Submit")
+        )
+      );
+    }
+    const pct = paper.length ? Math.round(score / paper.length * 100) : 0;
+    const byKind = ["mcq", "calc", "open"].map((k) => {
+      const list = paper.filter((x) => x.kind === k);
+      return { k, n: list.length, got: list.filter(right).length };
+    }).filter((x) => x.n);
+    const byTopic = (() => {
+      const m = new Map();
+      for (const p of paper) {
+        const key = p.topicId || "";
+        if (!m.has(key)) m.set(key, { n: 0, got: 0 });
+        const e = m.get(key);
+        e.n++;
+        if (right(p)) e.got++;
+      }
+      return [...m.entries()].sort((a, b) => a[1].got / a[1].n - b[1].got / b[1].n);
+    })();
+    return h(
+      "div",
+      { className: "view mx-report" },
+      h("div", { className: "panel" },
+        h("span", { className: "panel-kicker" }, h(Icon, { name: "chart", size: 16 }), " Mock exam result"),
+        h("p", { className: "big-num" }, `${score} / ${paper.length}`, h("span", { className: "big-unit" }, ` \u00b7 ${pct}%`)),
+        h("p", { className: "muted" }, `${exam ? exam.title : "All topics"} \u00b7 ${fmtMins(usedMins.current)} used of ${fmtMins(cfg.mins)}`),
+        unmarked > 0 && h("p", { className: "mx-todo" }, `Mark your ${plural(unmarked, "written answer")} below. The score updates as you go.`),
+        byKind.map((x) => h("div", { key: x.k, className: "ready-part" }, h("span", { className: "small" }, MX_LABEL[x.k]), h("div", { className: "bar-sm" }, h("span", { style: { width: `${x.got / x.n * 100}%` } })), h("span", { className: "small muted num" }, `${x.got}/${x.n}`))),
+        byTopic.length > 1 && h(React.Fragment, null, h("p", { className: "panel-kicker", style: { marginTop: ".9rem" } }, "Weakest topics in this paper"), byTopic.slice(0, 5).map(([tid, v]) => h("div", { key: tid || "none", className: "ready-part" }, h("span", { className: "small" }, tid ? topicName(subject, tid) : "Unsorted"), h("div", { className: "bar-sm" }, h("span", { style: { width: `${v.got / v.n * 100}%` } })), h("span", { className: "small muted num" }, `${v.got}/${v.n}`)))),
+        h("div", { className: "row-end" }, h("button", { className: "btn ghost", onClick: onExit }, "Close without saving"), h("button", { className: "btn primary", disabled: unmarked > 0, onClick: () => { save(); onExit(); } }, unmarked > 0 ? `Mark ${unmarked} first` : "Save result and log my misses"))
+      ),
+      paper.map((p) => h(
+        "article",
+        { key: p.id, className: `ps-prob mx-item ${right(p) ? "st-got" : p.kind === "open" && !mark[p.id] ? "" : "st-miss"}` },
+        h("header", { className: "ps-prob-head" }, h("span", { className: "ps-no" }, p.no), h("h3", null, MX_LABEL[p.kind]), right(p) ? h("span", { className: "ps-st got" }, "Right") : p.kind === "open" && !mark[p.id] ? h("span", { className: "ps-diff" }, "Needs marking") : h("span", { className: "ps-st miss" }, "Wrong")),
+        h(PsMd, { text: p.q }),
+        p.kind === "mcq" && h("ul", { className: "ps-choices" }, p.choices.map((c, k) => {
+          const key = mxChoiceKey(c, k);
+          return h("li", { key: k, className: key === p.key ? "mx-key" : key === ans[p.id] ? "mx-yours" : "" }, psInline(c), key === p.key ? " \u2190 correct" : key === ans[p.id] ? " \u2190 you chose this" : "");
+        })),
+        p.kind === "calc" && h("p", null, h("span", { className: "muted small" }, "You answered "), h("strong", null, ans[p.id] || "nothing"), h("span", { className: "muted small" }, " \u00b7 correct answer "), h("strong", null, p.ansText)),
+        p.kind === "open" && h(React.Fragment, null,
+          h("div", { className: "your-answer" }, h("span", { className: "muted small" }, "Your answer"), h("p", null, ans[p.id] || "(left blank)")),
+          h("div", { className: "ps-answer" }, h("span", { className: "ps-label" }, "Model answer"), h(PsMd, { text: p.ans })),
+          h("div", { className: "grade-row two" }, h("button", { className: `grade g-again${mark[p.id] === "w" ? " on" : ""}`, onClick: () => setMark({ ...mark, [p.id]: "w" }) }, h("strong", null, "I missed it")), h("button", { className: `grade g-good${mark[p.id] === "r" ? " on" : ""}`, onClick: () => setMark({ ...mark, [p.id]: "r" }) }, h("strong", null, "I had it")))
+        ),
+        p.why && !right(p) && h("div", { className: "ps-approach" }, h("span", { className: "ps-label" }, "How to get it"), h(PsMd, { text: p.why })),
+        p.trap && !right(p) && h("div", { className: "ps-trap" }, h("span", { className: "ps-label" }, "Watch out"), h(PsMd, { text: p.trap })),
+        h("p", { className: "muted small" }, p.src)
+      ))
     );
   }
 
@@ -4063,7 +4961,25 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         { className: "toggles" },
         [["contrast", "High contrast", "Brighter secondary text and stronger borders"], ["comfort", "Comfortable reading", "More line spacing for long sessions"], ["calm", "Calm mode", "Turns off card flips, glows and background texture"]].map(([k, t, d]) => h("label", { key: k, className: "check" }, h("input", { type: "checkbox", checked: !!settings[k], onChange: (e) => set(k, e.target.checked) }), h("span", null, h("strong", null, t), h("br", null), h("span", { className: "muted" }, d))))
       ),
-      h("button", { className: "btn ghost", onClick: () => setSettings({ ...DEFAULT_SETTINGS, custom: settings.custom, newPerDay: settings.newPerDay }) }, "Reset appearance")
+      h("hr", null),
+      h("h3", null, "Studying"),
+      sayOK() && h(Field, { label: `Reading speed: ${Math.round((settings.speakRate || 1) * 100)}%`, hint: "Used by Read aloud during a review." }, h("input", { type: "range", min: "0.6", max: "1.6", step: "0.1", value: settings.speakRate || 1, onChange: (e) => set("speakRate", Number(e.target.value)) })),
+      h(Field, { label: "Daily review reminder", hint: "A notification on this device when something is due. Leave empty for none." }, h("div", { className: "remind-row" }, h("input", { type: "time", value: settings.remindAt || "", onChange: async (e) => {
+        const v = e.target.value;
+        if (v && !(await askNotify())) {
+          set("remindAt", "");
+          return;
+        }
+        set("remindAt", v);
+      } }), settings.remindAt && h("button", { className: "btn ghost", onClick: () => set("remindAt", "") }, "Turn off"))),
+      typeof Notification !== "undefined" && Notification.permission === "denied" && h("p", { className: "muted small" }, "Notifications are blocked for this site in your browser settings. Allow them there first."),
+      h("div", { className: "grid-2 tight" },
+        h(Field, { label: "Pomodoro work" }, h("select", { value: settings.pomoWork || 25, onChange: (e) => set("pomoWork", Number(e.target.value)) }, [15, 20, 25, 30, 45, 50].map((n) => h("option", { key: n, value: n }, `${n} min`)))),
+        h(Field, { label: "Short break" }, h("select", { value: settings.pomoBreak || 5, onChange: (e) => set("pomoBreak", Number(e.target.value)) }, [3, 5, 8, 10].map((n) => h("option", { key: n, value: n }, `${n} min`)))),
+        h(Field, { label: "Long break" }, h("select", { value: settings.pomoLong || 15, onChange: (e) => set("pomoLong", Number(e.target.value)) }, [10, 15, 20, 30].map((n) => h("option", { key: n, value: n }, `${n} min`))))
+      ),
+      h("hr", null),
+      h("button", { className: "btn ghost", onClick: () => setSettings({ ...DEFAULT_SETTINGS, custom: settings.custom, newPerDay: settings.newPerDay, remindAt: settings.remindAt }) }, "Reset appearance")
     );
   }
   function ExamReadyMini({ subject, exam, go }) {
@@ -5326,7 +6242,7 @@ Rules: the numbers above are only an example of the format; use the real ones fr
       el.id = "gc-print";
       document.body.appendChild(el);
     }
-    el.innerHTML = `<style>${GC_REPORT_CSS}</style>${html}`;
+    el.innerHTML = `<style>${GC_REPORT_CSS}<\/style>${html}`;
     document.body.classList.add("gc-printing");
     const done = () => {
       document.body.classList.remove("gc-printing");
@@ -5380,7 +6296,7 @@ Rules: the numbers above are only an example of the format; use the real ones fr
   function GcExport({ list, downloads, toast, goals }) {
     const any = list.some((x) => x.g);
     const xlsx = () => gcSaveFile(`grades-${today()}.xlsx`, gcWorkbook(list, goals), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", downloads, toast);
-    const html = () => gcSaveFile(`grade-report-${today()}.html`, `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Grade report ${today()}</title><style>body{margin:0;background:#fff}${GC_REPORT_CSS}</style></head><body><div class="gcr"><button class="pbtn" onclick="window.print()">Print or save as PDF</button></div>${gcReportHtml(list, goals)}</body></html>`, "text/html", downloads, toast);
+    const html = () => gcSaveFile(`grade-report-${today()}.html`, `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Grade report ${today()}</title><style>body{margin:0;background:#fff}${GC_REPORT_CSS}<\/style></head><body><div class="gcr"><button class="pbtn" onclick="window.print()">Print or save as PDF</button></div>${gcReportHtml(list, goals)}</body></html>`, "text/html", downloads, toast);
     return h(
       "div",
       { className: "panel gc-export" },
@@ -7002,7 +7918,7 @@ ${c.kindHint}` }
   const PS_PRINT_CSS = `.ps-print{font:11pt/1.45 Georgia,serif;color:#111}.ps-print h1{font-size:18pt;margin:0 0 4pt}.ps-print h2{font-size:13pt;margin:16pt 0 6pt;border-bottom:1px solid #999}.ps-print h3{font-size:11.5pt;margin:12pt 0 4pt}.ps-print .meta{color:#555;margin:0 0 10pt}.ps-print table{border-collapse:collapse;margin:6pt 0;width:100%;font-size:10pt}.ps-print td,.ps-print th{border:1px solid #bbb;padding:3pt 6pt;text-align:left;vertical-align:top}.ps-print .num{text-align:right;white-space:nowrap}.ps-print table.t td,.ps-print table.t th{border:0}.ps-print table.t tr:first-of-type th{border-bottom:1.5pt solid #111}.ps-print table.t td:nth-child(2){border-right:1.5pt solid #111}.ps-print caption{font-weight:bold;text-align:center}.ps-print .prob{break-inside:avoid-page;margin-bottom:10pt}.ps-print .key{break-before:page}.ps-print ol.req{list-style:lower-alpha}`;
   function psPrint(set, withKey) {
     const groups = psGroupProblems(set.problems);
-    let html = `<div class="ps-print"><style>${PS_PRINT_CSS}</style><h1>${psEsc(set.title)}</h1><p class="meta">${psEsc([set.topicText, set.source].filter(Boolean).join(". "))}</p>${set.intro ? psMdHtml(set.intro) : ""}`;
+    let html = `<div class="ps-print"><style>${PS_PRINT_CSS}<\/style><h1>${psEsc(set.title)}</h1><p class="meta">${psEsc([set.topicText, set.source].filter(Boolean).join(". "))}</p>${set.intro ? psMdHtml(set.intro) : ""}`;
     for (const [g, list] of groups) {
       if (g) html += `<h2>${psEsc(g)}</h2>`;
       for (const p of list) {
@@ -7461,7 +8377,7 @@ ${c.kindHint}` }
     };
     const go = (tab, opts = {}) => {
       if (tab === "data") {
-        setModal("data");
+        setModal(opts && opts.tab ? { data: opts.tab } : "data");
         return;
       }
       if (tab === "nlm") {
@@ -7481,6 +8397,26 @@ ${c.kindHint}` }
       } catch {
       }
     }, [data]);
+    // A home-screen shortcut lands on ?go=practice and so on.
+    useEffect(() => {
+      try {
+        const want = new URLSearchParams(location.search).get("go");
+        const okTabs = ["home", "practice", "roadmap", "calendar", "vault", "mistakes", "grades", "lectures", "psets"];
+        if (want && okTabs.includes(want)) {
+          setNav({ tab: want, opts: want === "practice" ? { start: "review" } : {}, key: 1 });
+          history.replaceState(null, "", location.pathname);
+        }
+      } catch (e) {}
+    }, []);
+    // Nudge once a day, if a time is set and the browser allows it.
+    useEffect(() => {
+      const run = () => maybeRemind(dataRef.current);
+      const t = setTimeout(run, 4000);
+      const iv = setInterval(run, 6e5);
+      const vis = () => { if (document.visibilityState === "visible") run(); };
+      document.addEventListener("visibilitychange", vis);
+      return () => { clearTimeout(t); clearInterval(iv); document.removeEventListener("visibilitychange", vis); };
+    }, []);
     useEffect(() => {
       syncHost = {
         get: () => dataRef.current,
@@ -7542,7 +8478,7 @@ ${c.kindHint}` }
     const subject = data.subjects.find((s) => s.id === data.activeId) || data.subjects[0];
     const activeMistakes = subject.mistakes.filter((m) => m.status !== "Cleared").length;
     const reviewCount = (() => {
-      const rv = buildReview(subject, data.settings.newPerDay || 10);
+      const rv = buildReview(subject, data.settings.newPerDay || 10, data.settings.maxPerDay || 0);
       return rv.due.length + rv.fresh.length + rv.mist.length;
     })();
     const tabs = [
@@ -7554,7 +8490,8 @@ ${c.kindHint}` }
       ["mistakes", "Mistake log", "mistakes", activeMistakes],
       ["grades", "Grades", "grade"],
       ["lectures", "Lectures", "lecture", (subject.lectures || []).length],
-      ["psets", "Problem sets", "pset", (subject.psets || []).reduce((a, x) => a + x.problems.filter((p) => p.st === "miss").length, 0)]
+      ["psets", "Problem sets", "pset", (subject.psets || []).reduce((a, x) => a + x.problems.filter((p) => p.st === "miss").length, 0)],
+      ["class", "Class", "subjects", (subject.tasks || []).filter((t) => !t.done && t.due && daysUntil(t.due) <= 3).length]
     ];
     const switchSubject = (id) => {
       setData((d) => ({ ...d, activeId: id }));
@@ -7571,7 +8508,7 @@ ${c.kindHint}` }
     };
     const viewProps = { key: `${subject.id}-${nav.key}`, subject, update, toast, go, openEditor, init: nav.opts, settings: data.settings, setSettings };
     const subjectPicker = (id) => /* @__PURE__ */ React.createElement("select", { id, className: "subject-select", value: data.activeId, onChange: (e) => switchSubject(e.target.value), "aria-label": "Active subject" }, data.subjects.map((s) => /* @__PURE__ */ React.createElement("option", { key: s.id, value: s.id }, s.name, s.code ? ` (${s.code})` : "")));
-    return /* @__PURE__ */ React.createElement("div", { className: "shell" }, /* @__PURE__ */ React.createElement("aside", { className: "rail", "aria-label": "Main" }, /* @__PURE__ */ React.createElement("div", { className: "brand" }, /* @__PURE__ */ React.createElement("span", { className: "brand-mark", "aria-hidden": "true" }, "Σ"), /* @__PURE__ */ React.createElement("span", null, "BSA Study Desk")), /* @__PURE__ */ React.createElement("div", { className: "rail-subject" }, /* @__PURE__ */ React.createElement("span", { className: "rail-label" }, "Subject"), subjectPicker("subj"), /* @__PURE__ */ React.createElement("button", { className: "link-btn", onClick: () => setModal("subjects") }, "+ Add new subject")), /* @__PURE__ */ React.createElement("nav", { className: "rail-nav" }, tabs.map(([k, l, ic, n]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), /* @__PURE__ */ React.createElement("span", null, l), n ? /* @__PURE__ */ React.createElement("span", { className: "n" }, n) : null))), /* @__PURE__ */ React.createElement("button", { className: "btn primary quick-btn", onClick: () => setModal("quick") }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 18 }), " Quick add"), /* @__PURE__ */ React.createElement("div", { className: "rail-tools" }, /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("data") }, /* @__PURE__ */ React.createElement(Icon, { name: "data", size: 18 }), " Import & export"), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("look") }, /* @__PURE__ */ React.createElement(Icon, { name: "look", size: 18 }), " Appearance"), /* @__PURE__ */ React.createElement(ThemeDots, { settings: data.settings, setSettings })), React.createElement(SyncBadge, { onOpen: openSync })), /* @__PURE__ */ React.createElement("header", { className: "mobilebar" }, /* @__PURE__ */ React.createElement("span", { className: "brand-mark", "aria-hidden": "true" }, "Σ"), subjectPicker("subj-m"), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal(syncAlert ? "sync" : "data"), "aria-label": syncAlert ? "Import, export and sync (needs attention)" : "Import and export", "data-sync": syncAlert }, /* @__PURE__ */ React.createElement(Icon, { name: "data" })), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal("look"), "aria-label": "Appearance" }, /* @__PURE__ */ React.createElement(Icon, { name: "look" }))), /* @__PURE__ */ React.createElement("main", { className: "content" }, nav.tab === "home" && /* @__PURE__ */ React.createElement(HomeView, { ...viewProps }), nav.tab === "practice" && h(PracticeView, { ...viewProps }), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(CalendarView, { ...viewProps }), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(PsView, { ...viewProps }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })), /* @__PURE__ */ React.createElement("nav", { className: "bottom-nav", "aria-label": "Sections" }, tabs.slice(0, 3).map(([k, l, ic]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), /* @__PURE__ */ React.createElement("span", null, l))), /* @__PURE__ */ React.createElement("button", { className: "fab", onClick: () => setModal("quick"), "aria-label": "Quick add" }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 24 })), [tabs[3], tabs[5]].map(([k, l, ic, n]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement("span", { className: "ico-wrap" }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), k === "mistakes" && n ? /* @__PURE__ */ React.createElement("span", { className: "badge" }, n) : null), /* @__PURE__ */ React.createElement("span", null, k === "calendar" ? "Calendar" : "Mistakes"))), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("more") }, /* @__PURE__ */ React.createElement(Icon, { name: "more" }), /* @__PURE__ */ React.createElement("span", null, "More"))), /* @__PURE__ */ React.createElement("div", { className: `toast${msg ? " show" : ""}`, role: "status", "aria-live": "polite" }, msg), h(FocusBar, { data, update, toast }), modal === "quick" && /* @__PURE__ */ React.createElement(QuickAdd, { onClose: () => setModal(null), onPick: (k) => {
+    return /* @__PURE__ */ React.createElement("div", { className: "shell" }, /* @__PURE__ */ React.createElement("aside", { className: "rail", "aria-label": "Main" }, /* @__PURE__ */ React.createElement("div", { className: "brand" }, /* @__PURE__ */ React.createElement("span", { className: "brand-mark", "aria-hidden": "true" }, "Σ"), /* @__PURE__ */ React.createElement("span", null, "BSA Study Desk")), /* @__PURE__ */ React.createElement("div", { className: "rail-subject" }, /* @__PURE__ */ React.createElement("span", { className: "rail-label" }, "Subject"), subjectPicker("subj"), /* @__PURE__ */ React.createElement("button", { className: "link-btn", onClick: () => setModal("subjects") }, "+ Add new subject")), /* @__PURE__ */ React.createElement("nav", { className: "rail-nav" }, tabs.map(([k, l, ic, n]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), /* @__PURE__ */ React.createElement("span", null, l), n ? /* @__PURE__ */ React.createElement("span", { className: "n" }, n) : null))), /* @__PURE__ */ React.createElement("button", { className: "btn primary quick-btn", onClick: () => setModal("quick") }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 18 }), " Quick add"), /* @__PURE__ */ React.createElement("div", { className: "rail-tools" }, /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("data") }, /* @__PURE__ */ React.createElement(Icon, { name: "data", size: 18 }), " Import & export"), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("look") }, /* @__PURE__ */ React.createElement(Icon, { name: "look", size: 18 }), " Appearance"), /* @__PURE__ */ React.createElement(ThemeDots, { settings: data.settings, setSettings })), React.createElement(SyncBadge, { onOpen: openSync })), /* @__PURE__ */ React.createElement("header", { className: "mobilebar" }, /* @__PURE__ */ React.createElement("span", { className: "brand-mark", "aria-hidden": "true" }, "Σ"), subjectPicker("subj-m"), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal(syncAlert ? "sync" : "data"), "aria-label": syncAlert ? "Import, export and sync (needs attention)" : "Import and export", "data-sync": syncAlert }, /* @__PURE__ */ React.createElement(Icon, { name: "data" })), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal("look"), "aria-label": "Appearance" }, /* @__PURE__ */ React.createElement(Icon, { name: "look" }))), /* @__PURE__ */ React.createElement("main", { className: "content" }, nav.tab === "home" && /* @__PURE__ */ React.createElement(HomeView, { ...viewProps }), nav.tab === "practice" && h(PracticeView, { ...viewProps }), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(CalendarView, { ...viewProps }), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(PsView, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })), /* @__PURE__ */ React.createElement("nav", { className: "bottom-nav", "aria-label": "Sections" }, tabs.slice(0, 3).map(([k, l, ic]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), /* @__PURE__ */ React.createElement("span", null, l))), /* @__PURE__ */ React.createElement("button", { className: "fab", onClick: () => setModal("quick"), "aria-label": "Quick add" }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 24 })), [tabs[3], tabs[5]].map(([k, l, ic, n]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement("span", { className: "ico-wrap" }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), k === "mistakes" && n ? /* @__PURE__ */ React.createElement("span", { className: "badge" }, n) : null), /* @__PURE__ */ React.createElement("span", null, k === "calendar" ? "Calendar" : "Mistakes"))), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("more") }, /* @__PURE__ */ React.createElement(Icon, { name: "more" }), /* @__PURE__ */ React.createElement("span", null, "More"))), /* @__PURE__ */ React.createElement("div", { className: `toast${msg ? " show" : ""}`, role: "status", "aria-live": "polite" }, msg), h(FocusBar, { data, update, toast }), modal === "quick" && /* @__PURE__ */ React.createElement(QuickAdd, { onClose: () => setModal(null), onPick: (k) => {
       if (k === "grade") {
         setModal(null);
         go("grades", { gtab: "scores" });
@@ -7579,7 +8516,7 @@ ${c.kindHint}` }
     } }), modal === "more" && /* @__PURE__ */ React.createElement(MoreSheet, { onClose: () => setModal(null), onPick: (k) => setModal(k), settings: data.settings, setSettings, go: (t) => {
       setModal(null);
       go(t);
-    } }), modal && modal.nlm && h(Modal, { title: "NotebookLM prompts", wide: true, onClose: () => setModal(null) }, h(NotebookLMPrompts, { subject, toast, initPid: modal.nlm.pid, initTopic: modal.nlm.topicId, onImport: () => setModal("data") })), modal === "look" && /* @__PURE__ */ React.createElement(AppearanceModal, { settings: data.settings, setSettings, onClose: () => setModal(null) }), modal === "subjects" && /* @__PURE__ */ React.createElement(SubjectModal, { data, update, onClose: () => setModal(null), toast }), (modal === "data" || modal === "sync") && /* @__PURE__ */ React.createElement(DataModal, { data, update, replaceAll, onClose: () => setModal(null), toast, downloads, initTab: modal === "sync" ? "github" : "import" }), (editor == null ? void 0 : editor.type) === "card" && /* @__PURE__ */ React.createElement(
+    } }), modal && modal.nlm && h(Modal, { title: "NotebookLM prompts", wide: true, onClose: () => setModal(null) }, h(NotebookLMPrompts, { subject, toast, initPid: modal.nlm.pid, initTopic: modal.nlm.topicId, onImport: () => setModal("data") })), modal === "look" && /* @__PURE__ */ React.createElement(AppearanceModal, { settings: data.settings, setSettings, onClose: () => setModal(null) }), modal === "subjects" && /* @__PURE__ */ React.createElement(SubjectModal, { data, update, onClose: () => setModal(null), toast }), (modal === "data" || modal === "sync" || modal && modal.data) && /* @__PURE__ */ React.createElement(DataModal, { data, update, replaceAll, onClose: () => setModal(null), toast, downloads, initTab: modal && modal.data ? modal.data : modal === "sync" ? "github" : "import" }), (editor == null ? void 0 : editor.type) === "card" && /* @__PURE__ */ React.createElement(
       CardEditor,
       {
         subject,
