@@ -1121,6 +1121,125 @@ input.gc-name.big { font-family: var(--display); font-size: 1.1rem; }
 .remind-row { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
 .remind-row input[type="time"] { width: auto; }
 .focus-bar .focus-text .muted { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 13rem; }
+/* ---------- undo, trajectory, post-mortem, hands-free ---------- */
+.toast.undo { display: flex; align-items: center; gap: .8rem; border-radius: var(--r-lg); padding: .6rem .7rem .6rem 1.1rem; }
+.toast.undo button { border: 0; background: none; color: var(--bg); font: inherit; font-weight: 800; text-decoration: underline; cursor: pointer; padding: .1rem .3rem; white-space: nowrap; }
+.tj { position: relative; height: 8rem; margin: .6rem 0 .2rem; }
+.tj svg { width: 100%; height: 100%; overflow: visible; }
+.tj .ln { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.tj .goal { stroke: var(--ok); stroke-width: 1.5; stroke-dasharray: 4 4; }
+.tj .dot { fill: var(--accent); }
+.tj .zone { fill: color-mix(in srgb, var(--accent) 12%, transparent); }
+.tj-foot { display: flex; justify-content: space-between; font-size: .76rem; color: var(--muted); }
+.tj-now { display: flex; align-items: baseline; gap: .5rem; flex-wrap: wrap; }
+.tj-delta { font-weight: 700; font-size: .9rem; }
+.tj-delta.up { color: var(--ok); } .tj-delta.down { color: var(--bad); }
+.lx-due { display: inline-flex; align-items: center; gap: .3rem; font-size: .78rem; font-weight: 700; padding: .08rem .55rem; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.lx-due.now { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 55%, var(--line)); }
+.xref { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .5rem; }
+.xref .btn { padding: .3rem .7rem; font-size: .83rem; }
+.pm-list { display: flex; flex-direction: column; gap: .5rem; margin: .7rem 0; }
+.pm-row { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: .5rem .8rem; align-items: center; padding: .55rem .8rem; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface); }
+.pm-row.on { border-color: var(--accent); }
+.pm-seg { display: inline-flex; gap: .2rem; background: var(--surface-2); border-radius: var(--r-sm); padding: .15rem; }
+.pm-seg button { border: 0; background: none; padding: .3rem .6rem; border-radius: 6px; font-size: .8rem; font-weight: 700; color: var(--muted); cursor: pointer; }
+.pm-seg button.on { background: var(--accent); color: var(--accent-ink); }
+.pm-emph { font-size: .8rem; font-weight: 700; color: var(--accent-2); }
+.hf-bar { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; padding: .6rem .8rem; border-radius: var(--r-md); background: var(--surface-2); margin-top: .6rem; }
+.hf-bar .spacer { flex: 1; }
+.hf-dot { width: .6rem; height: .6rem; border-radius: 50%; background: var(--accent); animation: ai-blink 1.4s ease-in-out infinite; }
+:root[data-calm="on"] .hf-dot { animation: none; }
+
+/* ---------- everything queue and the Today verdict ---------- */
+.all-panel { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+.all-subs { display: flex; flex-wrap: wrap; gap: .35rem; margin: .5rem 0 .2rem; }
+.all-sub { display: inline-flex; align-items: center; gap: .35rem; font-size: .82rem; font-weight: 700; padding: .12rem .6rem; border-radius: 99px; background: var(--surface-2); border: 1px solid var(--line); }
+.all-sub i { font-style: normal; color: var(--muted); font-weight: 400; }
+.sess-sub { font-size: .72rem; font-weight: 700; padding: .12rem .5rem; border-radius: 99px; background: var(--accent-soft); color: var(--text); margin-left: .4rem; white-space: nowrap; }
+.verdict { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: .8rem; align-items: stretch; margin: .7rem 0 .2rem; }
+@media (max-width: 560px) { .verdict { grid-template-columns: minmax(0,1fr); } }
+.verdict-cell { padding: .7rem .85rem; border-radius: var(--r-md); background: var(--surface-2); display: flex; flex-direction: column; gap: .1rem; }
+.verdict-cell .big-num { font-size: clamp(1.6rem, 4.5vw, 2.1rem); }
+.verdict-cell.need .big-num { color: var(--accent-2); }
+.verdict-gap { margin: .5rem 0 0; padding: .6rem .8rem; border-radius: var(--r-md); border-left: 3px solid var(--vc, var(--line)); background: color-mix(in srgb, var(--vc, var(--line)) 10%, transparent); }
+.verdict-gap.behind { --vc: var(--bad); }
+.verdict-gap.close { --vc: var(--warn); }
+.verdict-gap.ahead { --vc: var(--ok); }
+.verdict-gap p { margin: .1rem 0; }
+.pull-row { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; padding: .6rem .8rem; border-radius: var(--r-md); background: var(--surface-2); margin: .5rem 0; }
+.pull-row .spacer { flex: 1; }
+.pull-list { display: flex; flex-direction: column; gap: .3rem; margin: .5rem 0 0; }
+.pull-item { display: flex; gap: .55rem; align-items: center; font-size: .9rem; }
+.pull-item .muted { margin-left: auto; white-space: nowrap; }
+
+/* ---------- answer gap, cloze, problem retests ---------- */
+.gap-box { border: 1px dashed color-mix(in srgb, var(--warn) 55%, var(--line)); border-radius: var(--r-md); padding: .55rem .8rem; background: color-mix(in srgb, var(--warn) 8%, transparent); margin-top: .4rem; }
+.gap-box .ps-label { color: var(--warn); }
+.gap-words { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .3rem; }
+.gap-words b { font-size: .84rem; font-weight: 700; padding: .08rem .5rem; border-radius: 99px; border: 1px solid color-mix(in srgb, var(--warn) 50%, var(--line)); }
+.gap-ok { color: var(--ok); font-size: .84rem; font-weight: 700; margin-top: .3rem; }
+.drill-prob { max-width: 100%; overflow-x: auto; }
+.cloze-q { font-family: var(--display); font-weight: 700; }
+
+/* ---------- review forecast ---------- */
+.fc-panel .fc-head { display: flex; justify-content: space-between; align-items: baseline; gap: .6rem; flex-wrap: wrap; margin-bottom: .5rem; }
+.fc { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 2px; height: 7.5rem; align-items: end; margin-top: .4rem; }
+.fc-col { display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; gap: .25rem; min-width: 0; height: 100%; border: 0; background: none; padding: 0; cursor: pointer; }
+.fc-col i { display: block; width: 100%; min-height: 2px; border-radius: 3px 3px 0 0; background: var(--accent); }
+.fc-col i.over { background: var(--bad); }
+.fc-col i.exam { background: var(--text); }
+.fc-col.sel i { outline: 2px solid var(--text); outline-offset: 1px; }
+.fc-col b { font-size: .6rem; color: var(--muted); font-weight: 600; line-height: 1; text-align: center; overflow: hidden; }
+.fc-col:hover i { filter: brightness(1.25); }
+.fc-legend { display: flex; gap: .4rem 1rem; flex-wrap: wrap; margin-top: .6rem; }
+.fc-legend span { display: inline-flex; align-items: center; gap: .35rem; }
+.fc-legend i { width: .7rem; height: .7rem; border-radius: 3px; background: var(--c); }
+.fc-pick { margin-top: .7rem; padding: .7rem .85rem; border-radius: var(--r-md); background: var(--surface-2); }
+.fc-pick p { margin: .1rem 0; }
+.fc-warn { border-left: 3px solid var(--warn); padding: .55rem .8rem; background: color-mix(in srgb, var(--warn) 10%, transparent); border-radius: 0 var(--r-sm) var(--r-sm) 0; margin: .6rem 0 0; }
+
+/* ---------- confidence calibration ---------- */
+.cf-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .4rem; margin: .5rem 0 .2rem; }
+.cf-row .grade { padding: .55rem .3rem; }
+.cf-row .grade strong { font-size: .95rem; }
+.cf-ask { font-size: .82rem; color: var(--muted); margin: .5rem 0 0; }
+.cf-chip { font-size: .7rem; font-weight: 700; padding: .1rem .5rem; border-radius: 99px; background: var(--surface-2); color: var(--muted); margin-left: .4rem; white-space: nowrap; }
+.cal-table { width: 100%; border-collapse: collapse; font-size: .92rem; margin-top: .5rem; }
+.cal-table th { text-align: left; font-size: .76rem; font-weight: 700; color: var(--muted); padding: .3rem .4rem; }
+.cal-table th.num, .cal-table td.num { text-align: right; }
+.cal-table td { padding: .5rem .4rem; border-top: 1px solid var(--line); vertical-align: middle; }
+.cal-gap { font-weight: 700; }
+.cal-gap.bad { color: var(--bad); } .cal-gap.warn { color: var(--warn); } .cal-gap.ok { color: var(--ok); }
+.cal-verdict { margin-top: .7rem; padding: .6rem .8rem; border-radius: var(--r-md); border-left: 3px solid var(--sc, var(--line)); background: var(--surface-2); }
+.cal-verdict.over { --sc: var(--bad); } .cal-verdict.under { --sc: var(--warn); } .cal-verdict.good { --sc: var(--ok); }
+
+/* ---------- AI tutor ---------- */
+.ai-wrap { display: flex; flex-direction: column; gap: .8rem; }
+.ai-log { display: flex; flex-direction: column; gap: .9rem; min-height: 6rem; }
+.ai-msg { display: flex; flex-direction: column; gap: .25rem; max-width: 54rem; min-width: 0; }
+.ai-msg.me { align-self: flex-end; align-items: flex-end; max-width: 42rem; }
+.ai-who { font-size: .72rem; font-weight: 700; color: var(--muted); }
+.ai-body { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: .85rem 1rem; box-shadow: var(--lift); min-width: 0; overflow-wrap: anywhere; }
+.ai-msg.me .ai-body { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); white-space: pre-wrap; }
+.ai-body.err { border-color: var(--bad); color: var(--bad); }
+.ai-caret { display: inline-block; width: .45em; height: 1em; background: var(--accent); vertical-align: -.15em; animation: ai-blink 1s steps(2) infinite; }
+@keyframes ai-blink { 50% { opacity: 0; } }
+:root[data-calm="on"] .ai-caret { animation: none; }
+.ai-acts { display: flex; gap: .4rem; flex-wrap: wrap; margin-top: .6rem; }
+.ai-acts .btn { padding: .32rem .7rem; font-size: .84rem; }
+.ai-bar { position: sticky; bottom: 0; z-index: 5; background: var(--bg); padding: .6rem 0 .2rem; display: flex; flex-direction: column; gap: .5rem; }
+.ai-row { display: flex; gap: .5rem; align-items: flex-end; }
+.ai-row textarea { flex: 1; min-height: 2.9rem; max-height: 10rem; }
+.ai-chips { display: flex; gap: .4rem; overflow-x: auto; padding-bottom: .2rem; scrollbar-width: thin; }
+.ai-chips .chip { white-space: nowrap; }
+.ai-ctx { display: flex; gap: .4rem .6rem; align-items: center; flex-wrap: wrap; font-size: .85rem; color: var(--muted); }
+.ai-ctx select { padding: .25rem .45rem; max-width: 18rem; }
+.ai-setup { max-width: 46rem; }
+.ai-setup ol { padding-left: 1.3rem; display: grid; gap: .55rem; margin: .6rem 0; }
+.ai-model { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
+.ai-model select { flex: 1; min-width: 12rem; }
+@media (max-width: 899px) { .ai-bar { bottom: calc(env(safe-area-inset-bottom, 0px) + 4.3rem); } }
+
 /* ---------- class life ---------- */
 .cl-rows, .tk-rows { display: flex; flex-direction: column; gap: .45rem; margin: .7rem 0; }
 .cl-row { display: grid; grid-template-columns: minmax(0, 1.3fr) 7rem 7rem minmax(0, 1fr) 2.2rem; gap: .4rem; align-items: center; }
@@ -1852,6 +1971,58 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const list = ids.map((id) => subject.topics.find((t) => t.id === id)).filter(Boolean);
     return { done: list.filter((t) => t.status === "Mastered").length, total: list.length };
   }
+  /* =====================================================================
+     Exam post-mortem.
+     The syllabus says what an exam covers. What actually appeared, and how
+     heavily, is different — and it is the single most useful thing you can
+     know about a professor. Recorded after each exam, it weights readiness
+     for the next one, and by board review you have two years of evidence.
+     ===================================================================== */
+  const PM_HIT = [["none", "Didn’t appear"], ["some", "A few items"], ["lots", "Heavily"]];
+  const PM_DID = [["bad", "Struggled"], ["ok", "Mixed"], ["good", "Nailed it"]];
+  function ExamPostMortem({ subject, exam, update, toast, onClose }) {
+    const covers = (exam.covers && exam.covers.length ? exam.covers : studyTopics(subject).map((t) => t.id))
+      .map((id) => subject.topics.find((x) => x.id === id)).filter(Boolean);
+    const [pm, setPm] = useState(() => ({ ...(exam.pm || {}) }));
+    const [note, setNote] = useState(exam.pmNote || "");
+    const set = (id, k, v) => setPm((x) => ({ ...x, [id]: { ...(x[id] || {}), [k]: v } }));
+    const save = () => {
+      update((s) => {
+        const e = s.topics.find((x) => x.id === exam.id);
+        if (!e) return;
+        e.pm = pm;
+        e.pmNote = note.trim();
+        e.pmAt = today();
+        // What was heavy and went badly is what tomorrow's reviews should favour.
+        for (const [tid, v] of Object.entries(pm)) {
+          if (v.hit !== "lots" || v.did === "good") continue;
+          const t = s.topics.find((x) => x.id === tid);
+          if (t && t.status === "Mastered") t.status = "In progress";
+        }
+      });
+      toast("Recorded. Heavy topics you struggled with were reopened.");
+      onClose();
+    };
+    return h(
+      Modal,
+      { title: "After " + exam.title, onClose, wide: true, footer: h(React.Fragment, null, h("span", { className: "spacer" }), h("button", { className: "btn ghost", onClick: onClose }, "Later"), h("button", { className: "btn primary", onClick: save }, "Save")) },
+      h("p", { className: "muted" }, "What actually came up, and how it went. Over a semester this shows what your professor really emphasizes, which is rarely what the syllabus implies."),
+      h("div", { className: "pm-list" }, covers.map((t) => {
+        const v = pm[t.id] || {};
+        return h("div", { key: t.id, className: "pm-row" + (v.hit ? " on" : "") },
+          h("div", null, h("strong", null, (t.code ? t.code + " " : "") + drShort(t.title, 44)), v.hit === "lots" && h("span", { className: "pm-emph" }, " heavily tested")),
+          h("div", { style: { display: "flex", gap: ".4rem", flexWrap: "wrap" } },
+            h("div", { className: "pm-seg" }, PM_HIT.map(([k, lbl]) => h("button", { key: k, className: v.hit === k ? "on" : "", onClick: () => set(t.id, "hit", k) }, lbl))),
+            v.hit && v.hit !== "none" && h("div", { className: "pm-seg" }, PM_DID.map(([k, lbl]) => h("button", { key: k, className: v.did === k ? "on" : "", onClick: () => set(t.id, "did", k) }, lbl)))));
+      })),
+      h(Field, { label: "Anything worth remembering", hint: "Question style, what the prof repeated, what you ran out of time for." }, h("textarea", { rows: 3, value: note, onChange: (e) => setNote(e.target.value) }))
+    );
+  }
+  // An exam whose date has passed and that hasn't been reviewed yet.
+  function pmPending(subject) {
+    return subject.topics.find((t) => t.kind === "exam" && t.due && ISO_RE.test(t.due) && daysUntil(t.due) < 0 && daysUntil(t.due) > -21 && !t.pmAt) || null;
+  }
+
   function TopicEditor({ subject, topic, onSave, onDelete, onClose }) {
     const isNew = !topic;
     const [f, setF] = useState(() => topic ? { ...clone(topic), subText: (topic.sub || []).map((s) => s.p ? `${s.t} | ${s.p}` : s.t).join("\n") } : { kind: "topic", week: "", code: "", title: "", standard: "", scope: "", status: "Not started", note: "", covers: [], due: "", subText: "" });
@@ -2085,6 +2256,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     if (!d.deleted || typeof d.deleted !== "object") d.deleted = {};
     for (const s of d.subjects) {
       if (!s.id) s.id = uid("subj");
+      if (s.cal && typeof s.cal !== "object") delete s.cal;
       for (const c of COLLS) {
         if (!Array.isArray(s[c])) s[c] = [];
         s[c] = s[c].filter((x) => x && typeof x === "object");
@@ -2875,9 +3047,9 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       h("p", { className: "muted small" }, "Want a subject that isn't here? Open the NotebookLM prompts tab, use \u201cSyllabus \u2192 roadmap\u201d with your course outline loaded, and paste the reply into Import.")
     );
   }
-  function DataModal({ data, update, replaceAll, onClose, toast, downloads, initTab }) {
+  function DataModal({ data, update, replaceAll, onClose, toast, downloads, initTab, prefill }) {
     const [tab, setTab] = useState(initTab || "import");
-    const [raw, setRaw] = useState("");
+    const [raw, setRaw] = useState(prefill || "");
     const [parsed, setParsed] = useState(null);
     const [err, setErr] = useState("");
     const [target, setTarget] = useState(data.activeId);
@@ -3245,7 +3417,8 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     clock: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7.5V12l3 2",
     grade: "M18.5 5.5l-13 13M7.5 4.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM16.5 14.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z",
     lecture: "M3.5 4.5h17v11h-17zM12 15.5V20M8 20h8M7 8.5h6M7 11.5h9",
-    pset: "M9 3.5h6v3H9zM7.5 5H5v16h14V5h-2.5M8.5 13l2.5 2.5 4.5-5"
+    pset: "M9 3.5h6v3H9zM7.5 5H5v16h14V5h-2.5M8.5 13l2.5 2.5 4.5-5",
+    ask: "M4 5h16v11H9l-5 4V5zM9 9.5h6M9 12.5h4"
   };
   function Icon({ name, size = 20 }) {
     return /* @__PURE__ */ React.createElement(
@@ -3296,7 +3469,9 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const r = 30, c = 2 * Math.PI * r, p = total ? done / total : 0;
     return /* @__PURE__ */ React.createElement("div", { className: "ring", "aria-label": `${done} of ${total} topics mastered` }, /* @__PURE__ */ React.createElement("svg", { viewBox: "0 0 72 72", width: "88", height: "88", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("circle", { cx: "36", cy: "36", r, className: "ring-bg" }), /* @__PURE__ */ React.createElement("circle", { cx: "36", cy: "36", r, className: "ring-fg", strokeDasharray: `${c * p} ${c}`, transform: "rotate(-90 36 36)", style: { opacity: p ? 1 : 0 } })), /* @__PURE__ */ React.createElement("span", { className: "ring-num" }, done, /* @__PURE__ */ React.createElement("small", null, "/", total)));
   }
-  function HomeView({ subject, go, openEditor, update, settings }) {
+  function HomeView({ subject, go, openEditor, update, settings, toast }) {
+    const [pm, setPm] = useState(null);
+    const pmDue = pmPending(subject);
     const topics = studyTopics(subject);
     const mastered = topics.filter((t) => t.status === "Mastered").length;
     const current = topics.find((t) => t.status === "In progress") || topics.find((t) => t.status === "Not started");
@@ -3334,13 +3509,24 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         actions: [{ label: "Open topic", primary: true, run: () => go("roadmap", { open: current.id }) }, { label: "Plan a session", run: () => openEditor("session", null, { topicId: current.id }) }]
       },
       (() => {
+        const lxd = lxDueList(subject);
+        if (!lxd.length) return null;
+        return {
+          icon: "lecture",
+          label: "Lecture re-skim",
+          title: lxd.length === 1 ? drShort(lxd[0].title, 48) : plural(lxd.length, "lecture") + " to re-skim",
+          detail: "A five-minute look, not a re-read. Prose fades faster than cards.",
+          actions: [{ label: "Open it", primary: false, run: () => go("lectures", lxd.length === 1 ? { open: lxd[0].id } : {}) }]
+        };
+      })(),
+      (() => {
         const rv = buildReview(subject, settings && settings.newPerDay || 10, settings && settings.maxPerDay || 0);
-        const n = rv.due.length + rv.fresh.length + rv.mist.length;
+        const n = rv.due.length + rv.fresh.length + rv.mist.length + (rv.prob || []).length;
         return {
           icon: "cards",
           label: "Daily review",
           title: n ? `${plural(n, "item")} ready to review` : "Reviews done for today",
-          detail: n ? `${[rv.due.length && `${rv.due.length} due`, rv.fresh.length && `${rv.fresh.length} new`, rv.mist.length && `${plural(rv.mist.length, "mistake")} to retest`].filter(Boolean).join(", ")}. About ${Math.max(1, Math.round(n * 0.3))} min.` : "Nice work. Try an exam mix or a computation drill in Practice.",
+          detail: n ? `${[rv.due.length && `${rv.due.length} due`, rv.fresh.length && `${rv.fresh.length} new`, rv.mist.length && `${plural(rv.mist.length, "mistake")} to retest`, (rv.prob || []).length && `${plural(rv.prob.length, "problem")} to redo`].filter(Boolean).join(", ")}. About ${Math.max(1, Math.round(rv.due.length * 0.3 + rv.fresh.length * 0.3 + rv.mist.length * 0.8 + (rv.prob || []).length * 3))} min.` : "Nice work. Try an exam mix or a computation drill in Practice.",
           actions: n ? [{ label: "Start review", primary: true, run: () => go("practice", { start: "review" }) }] : [{ label: "Open Practice", run: () => go("practice") }]
         };
       })(),
@@ -3382,12 +3568,14 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         actions: active.length ? [{ label: "Open mistake log", run: () => go("mistakes") }] : []
       }
     ].filter(Boolean);
-    return /* @__PURE__ */ React.createElement("section", { className: "view" }, /* @__PURE__ */ React.createElement("div", { className: "hero" }, /* @__PURE__ */ React.createElement("div", { className: "hero-title" }, /* @__PURE__ */ React.createElement("p", { className: "muted" }, (/* @__PURE__ */ new Date()).toLocaleDateString(void 0, { weekday: "long", month: "long", day: "numeric" })), /* @__PURE__ */ React.createElement("h1", null, subject.name, subject.code ? /* @__PURE__ */ React.createElement("span", { className: "hero-code" }, " ", subject.code) : null), subject.school && /* @__PURE__ */ React.createElement("p", { className: "muted" }, subject.school)), /* @__PURE__ */ React.createElement("div", { className: "hero-figure" }, /* @__PURE__ */ React.createElement(Ring, { done: mastered, total: topics.length }), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "topics mastered"))), /* @__PURE__ */ React.createElement(Track, { subject, onJump: (id) => go("roadmap", { open: id }) }), /* @__PURE__ */ React.createElement("div", { className: "home-grid" }, /* @__PURE__ */ React.createElement("div", { className: "panel plan" }, /* @__PURE__ */ React.createElement("h2", null, "Today’s plan"), /* @__PURE__ */ React.createElement("ol", { className: "steps" }, steps.map((s, i) => /* @__PURE__ */ React.createElement("li", { key: i, className: "step" }, /* @__PURE__ */ React.createElement("span", { className: "step-num", "aria-hidden": "true" }, i + 1), /* @__PURE__ */ React.createElement("div", { className: "step-body" }, /* @__PURE__ */ React.createElement("span", { className: "step-label" }, /* @__PURE__ */ React.createElement(Icon, { name: s.icon, size: 16 }), " ", s.label), /* @__PURE__ */ React.createElement("strong", { className: "step-title" }, s.title), s.detail && /* @__PURE__ */ React.createElement("span", { className: "muted step-detail" }, s.detail), s.chip && h("span", { className: "step-chip" }, h(DueChip, { t: s.chip })), s.actions.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "step-actions" }, s.actions.map((a) => /* @__PURE__ */ React.createElement("button", { key: a.label, className: `btn${a.primary ? " primary" : ""}`, onClick: a.run }, a.label)))))))), /* @__PURE__ */ React.createElement("div", { className: "side-col" }, nextExam && (() => {
+    return /* @__PURE__ */ React.createElement("section", { className: "view" }, pmDue && h("div", { className: "panel gc-wi-bar" }, h("p", null, h("strong", null, pmDue.title + " was " + fmtDay(pmDue.due, "long") + "."), " Two minutes now on what actually came up is worth more than an hour of guessing before the next one."), h("div", { className: "step-actions" }, h("button", { className: "btn primary", onClick: () => setPm(pmDue) }, "Record how it went"), h("button", { className: "btn ghost", onClick: () => update((s) => { const e = s.topics.find((x) => x.id === pmDue.id); if (e) e.pmAt = today(); }) }, "Skip"))), pm && h(ExamPostMortem, { subject, exam: pm, update, toast, onClose: () => setPm(null) }), /* @__PURE__ */ React.createElement("div", { className: "hero" }, /* @__PURE__ */ React.createElement("div", { className: "hero-title" }, /* @__PURE__ */ React.createElement("p", { className: "muted" }, (/* @__PURE__ */ new Date()).toLocaleDateString(void 0, { weekday: "long", month: "long", day: "numeric" })), /* @__PURE__ */ React.createElement("h1", null, subject.name, subject.code ? /* @__PURE__ */ React.createElement("span", { className: "hero-code" }, " ", subject.code) : null), subject.school && /* @__PURE__ */ React.createElement("p", { className: "muted" }, subject.school)), /* @__PURE__ */ React.createElement("div", { className: "hero-figure" }, /* @__PURE__ */ React.createElement(Ring, { done: mastered, total: topics.length }), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "topics mastered"))), /* @__PURE__ */ React.createElement(Track, { subject, onJump: (id) => go("roadmap", { open: id }) }), /* @__PURE__ */ React.createElement("div", { className: "home-grid" }, /* @__PURE__ */ React.createElement("div", { className: "panel plan" }, /* @__PURE__ */ React.createElement("h2", null, "Today’s plan"), /* @__PURE__ */ React.createElement("ol", { className: "steps" }, steps.map((s, i) => /* @__PURE__ */ React.createElement("li", { key: i, className: "step" }, /* @__PURE__ */ React.createElement("span", { className: "step-num", "aria-hidden": "true" }, i + 1), /* @__PURE__ */ React.createElement("div", { className: "step-body" }, /* @__PURE__ */ React.createElement("span", { className: "step-label" }, /* @__PURE__ */ React.createElement(Icon, { name: s.icon, size: 16 }), " ", s.label), /* @__PURE__ */ React.createElement("strong", { className: "step-title" }, s.title), s.detail && /* @__PURE__ */ React.createElement("span", { className: "muted step-detail" }, s.detail), s.chip && h("span", { className: "step-chip" }, h(DueChip, { t: s.chip })), s.actions.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "step-actions" }, s.actions.map((a) => /* @__PURE__ */ React.createElement("button", { key: a.label, className: `btn${a.primary ? " primary" : ""}`, onClick: a.run }, a.label)))))))), /* @__PURE__ */ React.createElement("div", { className: "side-col" }, nextExam && (() => {
       const r = readiness(subject, nextExam);
       const covered = (nextExam.covers || []).map((id) => subject.topics.find((t) => t.id === id)).filter(Boolean);
       return /* @__PURE__ */ React.createElement("div", { className: "panel exam-panel" }, /* @__PURE__ */ React.createElement("span", { className: "muted" }, "Next exam, week ", nextExam.week), /* @__PURE__ */ React.createElement("h2", null, nextExam.title), nextExam.due && h("p", null, h(DueChip, { t: nextExam })), r.total > 0 && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "bar-lg" }, /* @__PURE__ */ React.createElement("span", { style: { width: `${r.done / r.total * 100}%` } })), /* @__PURE__ */ React.createElement("p", null, /* @__PURE__ */ React.createElement("strong", null, r.done, " of ", r.total), " topics ready"), /* @__PURE__ */ React.createElement("div", { className: "topic-chips" }, covered.map((t) => /* @__PURE__ */ React.createElement("button", { key: t.id, className: "tchip", "data-status": t.status, onClick: () => go("roadmap", { open: t.id }), title: `${t.title}: ${t.status}` }, /* @__PURE__ */ React.createElement("span", { className: "dot" }), t.code || t.standard || t.title)))), nextExam.scope && /* @__PURE__ */ React.createElement("p", { className: "muted small" }, "Covers ", nextExam.scope), h(ExamReadyMini, { subject, exam: nextExam, go }));
     })(), h(UpNext, { subject, go }), /* @__PURE__ */ React.createElement("div", { className: "mini-stats" }, /* @__PURE__ */ React.createElement("button", { className: "mini", onClick: () => go("mistakes") }, /* @__PURE__ */ React.createElement("span", { className: "mini-num" }, acc === null ? "—" : `${acc}%`), /* @__PURE__ */ React.createElement("span", null, "Quiz accuracy")), h("button", { className: "mini", onClick: () => go("practice") }, h("span", { className: "mini-num" }, (() => { const r = retentionPct(subject); return r === null ? "—" : `${r}%`; })()), h("span", null, "Card memory")), /* @__PURE__ */ React.createElement("button", { className: "mini", onClick: () => go("mistakes") }, /* @__PURE__ */ React.createElement("span", { className: `mini-num${active.length ? " bad-text" : ""}` }, active.length), /* @__PURE__ */ React.createElement("span", null, "Open mistakes")), h("button", { className: "mini", onClick: () => go("practice") }, h("span", { className: "mini-num" }, streakOf(subject)), h("span", null, "Day streak"))), h(GradeMini, { subject, go, settings }))));
   }
+  // dataRef is reachable here because RoadmapView is rendered inside App's tree
+  // and receives the same toast; the undo document is cloned at the call site.
   function RoadmapView({ subject, update, toast, go, openEditor, init }) {
     const [open, setOpen] = useState(() => new Set(init.open ? [init.open] : []));
     const [editing, setEditing] = useState(init.add ? "new" : null);
@@ -3477,6 +3665,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
           toast(editing === "new" ? "Topic added" : "Changes saved");
         },
         onDelete: (id) => {
+          const undoDoc = clone(dataRef.current);
           update((s) => {
             s.topics = s.topics.filter((x) => x.id !== id);
             s.topics.forEach((x) => {
@@ -3490,7 +3679,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
             });
           });
           setEditing(null);
-          toast("Topic deleted");
+          toast("Topic deleted", undoDoc);
         }
       }
     ));
@@ -3531,6 +3720,17 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const rated = subject.cards.filter((c) => c.conf).length;
     const recall = rated ? Math.round(subject.cards.filter((c) => c.conf === "known").length / rated * 100) : null;
     const mName = (m) => itemTopic(subject, m);
+    // A mistake already is a flashcard: question, answer and the trap as the tip.
+    // Clearing it removes it from retests forever, so this is how it stays in rotation.
+    const toCard = (m) => {
+      const q = psPlain(m.question);
+      if (!q) { toast("That mistake has no question to turn into a card."); return; }
+      if (subject.cards.some((c) => norm(c.q) === norm(q))) { toast("A card with that question is already in your vault."); return; }
+      update((s) => {
+        s.cards.unshift({ id: uid("c"), topicId: m.topicId || null, q, a: psPlain(m.correct) || "(fill this in)", tip: [m.trap && psPlain(m.trap), m.wrong && "You first answered: " + psPlain(m.wrong)].filter(Boolean).join(" — "), conf: null });
+      });
+      toast("Added to the Concept vault. It joins your reviews tomorrow.");
+    };
     const weak = useMemo(() => {
       const map = /* @__PURE__ */ new Map();
       for (const m of active) {
@@ -3554,7 +3754,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         })
       },
       MISTAKE_STATUS.map((s) => /* @__PURE__ */ React.createElement("option", { key: s }, s))
-    )), /* @__PURE__ */ React.createElement("td", { className: "edit-cell" }, /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => openEditor("mistake", m), "aria-label": "Edit mistake" }, "✎"))))))) : /* @__PURE__ */ React.createElement("div", { className: "empty" }, /* @__PURE__ */ React.createElement("p", null, subject.mistakes.length ? "Nothing matches these filters." : "No mistakes logged yet."), /* @__PURE__ */ React.createElement("p", { className: "muted" }, subject.mistakes.length ? "Try “All” or clear the search." : "After a practice set, log each wrong item and why it fooled you.")), qz.length > 0 && /* @__PURE__ */ React.createElement("details", { className: "quiz-history panel" }, /* @__PURE__ */ React.createElement("summary", null, /* @__PURE__ */ React.createElement(Icon, { name: "chart", size: 18 }), " Quiz score history (", qz.length, ")"), /* @__PURE__ */ React.createElement("ul", { className: "quiz-list" }, qz.map((q) => {
+    )), h("td", { className: "edit-cell" }, h("button", { className: "icon-btn", title: "Make a flashcard from this", "aria-label": "Make a flashcard from this mistake", onClick: () => toCard(m) }, h(Icon, { name: "cards", size: 16 })), h("button", { className: "icon-btn", onClick: () => openEditor("mistake", m), "aria-label": "Edit mistake" }, "✎"))))))) : /* @__PURE__ */ React.createElement("div", { className: "empty" }, /* @__PURE__ */ React.createElement("p", null, subject.mistakes.length ? "Nothing matches these filters." : "No mistakes logged yet."), /* @__PURE__ */ React.createElement("p", { className: "muted" }, subject.mistakes.length ? "Try “All” or clear the search." : "After a practice set, log each wrong item and why it fooled you.")), qz.length > 0 && /* @__PURE__ */ React.createElement("details", { className: "quiz-history panel" }, /* @__PURE__ */ React.createElement("summary", null, /* @__PURE__ */ React.createElement(Icon, { name: "chart", size: 18 }), " Quiz score history (", qz.length, ")"), /* @__PURE__ */ React.createElement("ul", { className: "quiz-list" }, qz.map((q) => {
       const p = Math.round(q.score / q.items * 100);
       return /* @__PURE__ */ React.createElement("li", { key: q.id }, /* @__PURE__ */ React.createElement("span", { className: "nowrap muted" }, q.date), /* @__PURE__ */ React.createElement("span", null, itemTopic(subject, q)), /* @__PURE__ */ React.createElement("span", { className: "bar" }, /* @__PURE__ */ React.createElement("span", { style: { width: `${p}%`, background: p >= 75 ? "var(--ok)" : p >= 60 ? "var(--warn)" : "var(--bad)" } })), /* @__PURE__ */ React.createElement("strong", { className: "nowrap" }, q.score, "/", q.items, " (", p, "%)"), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", "aria-label": "Delete score", onClick: () => {
         update((s) => {
@@ -3575,7 +3775,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     return /* @__PURE__ */ React.createElement(Modal, { title: "Quick add", onClose }, /* @__PURE__ */ React.createElement("div", { className: "big-options" }, items.map(([k, ic, l, d]) => /* @__PURE__ */ React.createElement("button", { key: k, className: "big-option", onClick: () => onPick(k) }, /* @__PURE__ */ React.createElement(Icon, { name: ic, size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, l), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, d))))));
   }
   function MoreSheet({ onPick, onClose, settings, setSettings, go }) {
-    return /* @__PURE__ */ React.createElement(Modal, { title: "More", onClose }, /* @__PURE__ */ React.createElement("div", { className: "big-options" }, h("button", { className: "big-option", onClick: () => go("lectures") }, h(Icon, { name: "lecture", size: 22 }), h("span", null, h("strong", null, "Lectures"), h("br", null), h("span", { className: "muted" }, "Rules, treatments and traps for each topic"))), h("button", { className: "big-option", onClick: () => go("psets") }, h(Icon, { name: "pset", size: 22 }), h("span", null, h("strong", null, "Problem sets"), h("br", null), h("span", { className: "muted" }, "Problems by subtopic, with how to solve each one"))), h("button", { className: "big-option", onClick: () => go("class") }, h(Icon, { name: "subjects", size: 22 }), h("span", null, h("strong", null, "Class"), h("br", null), h("span", { className: "muted" }, "Timetable, attendance and what is due"))), h("button", { className: "big-option", onClick: () => go("grades") }, h(Icon, { name: "grade", size: 22 }), h("span", null, h("strong", null, "Grades"), h("br", null), h("span", { className: "muted" }, "Grade calculator, what-if, QPI summary and export"))), h("button", { className: "big-option", onClick: () => go("vault") }, h(Icon, { name: "cards", size: 22 }), h("span", null, h("strong", null, "Concept vault"), h("br", null), h("span", { className: "muted" }, "Browse, search and edit your flashcards"))), /* @__PURE__ */ React.createElement("button", { className: "big-option", onClick: () => onPick("subjects") }, /* @__PURE__ */ React.createElement(Icon, { name: "subjects", size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, "Subjects"), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "Add, rename or delete a subject"))), /* @__PURE__ */ React.createElement("button", { className: "big-option", onClick: () => onPick("data") }, /* @__PURE__ */ React.createElement(Icon, { name: "data", size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, "Import & export"), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "NotebookLM JSON, backups"))), /* @__PURE__ */ React.createElement("button", { className: "big-option", onClick: () => onPick("look") }, /* @__PURE__ */ React.createElement(Icon, { name: "look", size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, "Appearance"), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "Themes, text size, contrast")))), /* @__PURE__ */ React.createElement("p", { className: "field-label", style: { marginTop: "1rem" } }, "Quick theme"), /* @__PURE__ */ React.createElement(ThemeDots, { settings, setSettings }));
+    return /* @__PURE__ */ React.createElement(Modal, { title: "More", onClose }, /* @__PURE__ */ React.createElement("div", { className: "big-options" }, h("button", { className: "big-option", onClick: () => go("ask") }, h(Icon, { name: "ask", size: 22 }), h("span", null, h("strong", null, "Ask"), h("br", null), h("span", { className: "muted" }, "A Gemini tutor that can see your roadmap, mistakes and grades"))), h("button", { className: "big-option", onClick: () => go("lectures") }, h(Icon, { name: "lecture", size: 22 }), h("span", null, h("strong", null, "Lectures"), h("br", null), h("span", { className: "muted" }, "Rules, treatments and traps for each topic"))), h("button", { className: "big-option", onClick: () => go("psets") }, h(Icon, { name: "pset", size: 22 }), h("span", null, h("strong", null, "Problem sets"), h("br", null), h("span", { className: "muted" }, "Problems by subtopic, with how to solve each one"))), h("button", { className: "big-option", onClick: () => go("class") }, h(Icon, { name: "subjects", size: 22 }), h("span", null, h("strong", null, "Class"), h("br", null), h("span", { className: "muted" }, "Timetable, attendance and what is due"))), h("button", { className: "big-option", onClick: () => go("grades") }, h(Icon, { name: "grade", size: 22 }), h("span", null, h("strong", null, "Grades"), h("br", null), h("span", { className: "muted" }, "Grade calculator, what-if, QPI summary and export"))), h("button", { className: "big-option", onClick: () => go("vault") }, h(Icon, { name: "cards", size: 22 }), h("span", null, h("strong", null, "Concept vault"), h("br", null), h("span", { className: "muted" }, "Browse, search and edit your flashcards"))), /* @__PURE__ */ React.createElement("button", { className: "big-option", onClick: () => onPick("subjects") }, /* @__PURE__ */ React.createElement(Icon, { name: "subjects", size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, "Subjects"), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "Add, rename or delete a subject"))), /* @__PURE__ */ React.createElement("button", { className: "big-option", onClick: () => onPick("data") }, /* @__PURE__ */ React.createElement(Icon, { name: "data", size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, "Import & export"), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "NotebookLM JSON, backups"))), /* @__PURE__ */ React.createElement("button", { className: "big-option", onClick: () => onPick("look") }, /* @__PURE__ */ React.createElement(Icon, { name: "look", size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, "Appearance"), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "Themes, text size, contrast")))), /* @__PURE__ */ React.createElement("p", { className: "field-label", style: { marginTop: "1rem" } }, "Quick theme"), /* @__PURE__ */ React.createElement(ThemeDots, { settings, setSettings }));
   }
   /* =====================================================================
      Study features: spaced repetition, mistake retests, exam readiness,
@@ -3662,6 +3862,92 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     }
     return s;
   }
+  /* =====================================================================
+     Review forecast and load smoothing.
+     Every card already carries srs.due. Bucketing those by day turns an
+     invisible pile-up into something you can see three weeks out — and then
+     do something about, which is what smoothing is for: pull the worst day's
+     cards a few days earlier, oldest and strongest first, so nothing lands
+     on the Tuesday of finals week.
+     ===================================================================== */
+  const FC_DAYS = 30;
+  function forecast(subject, days = FC_DAYS) {
+    const t0 = today();
+    const out = [];
+    for (let i = 0; i < days; i++) out.push({ id: addDays(t0, i), n: 0, over: 0, exam: null, cards: [] });
+    const at = new Map(out.map((d, i) => [d.id, i]));
+    for (const c of subject.cards) {
+      if (!c.srs || c.srs.susp || !c.srs.due) continue;
+      if (c.srs.due <= t0) { out[0].n++; out[0].over += c.srs.due < t0 ? 1 : 0; out[0].cards.push(c); continue; }
+      const i = at.get(c.srs.due);
+      if (i !== undefined) { out[i].n++; out[i].cards.push(c); }
+    }
+    for (const e of subject.topics) if (e.kind === "exam" && e.due && at.has(e.due)) out[at.get(e.due)].exam = e;
+    return out;
+  }
+  // The pile-up worth warning about: a day far above the ordinary load.
+  function fcWorst(list) {
+    const busy = list.filter((d) => d.n > 0);
+    if (busy.length < 4) return null;
+    const avg = busy.reduce((a, d) => a + d.n, 0) / busy.length;
+    const peak = list.slice(1).reduce((a, d) => (d.n > a.n ? d : a), { n: 0 });
+    return peak.n >= 25 && peak.n > avg * 1.8 ? { day: peak, avg: Math.round(avg) } : null;
+  }
+  // Move some of a heavy day's cards earlier. Strongest first: those are the
+  // ones an early look costs least, and the ones you are least likely to forget.
+  function smoothDay(s, iso, keep) {
+    const cards = s.cards.filter((c) => c.srs && !c.srs.susp && c.srs.due === iso);
+    if (cards.length <= keep) return 0;
+    const move = cards.sort((a, b) => cardStrength(b) - cardStrength(a)).slice(0, cards.length - keep);
+    const t0 = today();
+    let n = 0;
+    for (const c of move) {
+      const span = Math.max(1, Math.min(7, Math.round((c.srs.ivl || 1) * 0.25)));
+      let d = addDays(iso, -(1 + Math.floor(Math.random() * span)));
+      if (d < t0) d = t0;
+      if (d === c.srs.due) continue;
+      c.srs = { ...c.srs, due: d };
+      n++;
+    }
+    return n;
+  }
+  function ForecastPanel({ subject, update, toast, go }) {
+    const [sel, setSel] = useState(null);
+    const list = useMemo(() => forecast(subject), [subject]);
+    const total = list.reduce((a, d) => a + d.n, 0);
+    if (!total) return null;
+    const max = Math.max(1, ...list.map((d) => d.n));
+    const worst = fcWorst(list);
+    const picked = sel && list.find((d) => d.id === sel);
+    const smooth = () => {
+      const target = Math.max(20, Math.round(worst.avg * 1.2));
+      let n = 0;
+      update((s) => { n = smoothDay(s, worst.day.id, target); });
+      toast(n ? "Moved " + plural(n, "card") + " earlier. " + fmtDay(worst.day.id, "short") + " is manageable now." : "Nothing to move.");
+    };
+    return h(
+      "div",
+      { className: "panel fc-panel" },
+      h("div", { className: "fc-head" }, h("h2", null, "What's coming"), h("span", { className: "muted small" }, plural(total, "review") + " over the next 30 days")),
+      h("div", { className: "fc" }, list.map((d) => {
+        const dt = parseD(d.id);
+        const label = dt.getDate() === 1 || d.id === today() ? dt.toLocaleDateString(void 0, { month: "short" }) : dt.getDay() === 1 ? String(dt.getDate()) : "";
+        return h("button", { key: d.id, className: "fc-col" + (sel === d.id ? " sel" : ""), onClick: () => setSel(sel === d.id ? null : d.id), title: fmtDay(d.id) + ": " + plural(d.n, "card") + (d.exam ? " · " + d.exam.title : "") },
+          h("i", { className: d.exam ? "exam" : d.over ? "over" : "", style: { height: Math.max(2, d.n / max * 100) + "%" } }),
+          h("b", null, label));
+      })),
+      h("div", { className: "fc-legend small muted" }, h("span", null, h("i", { style: { "--c": "var(--accent)" } }), "Due"), h("span", null, h("i", { style: { "--c": "var(--bad)" } }), "Overdue, waiting today"), h("span", null, h("i", { style: { "--c": "var(--text)" } }), "Exam day")),
+      picked && h("div", { className: "fc-pick" },
+        h("p", null, h("strong", null, fmtDay(picked.id, "long")), picked.exam ? " · " + picked.exam.title : ""),
+        h("p", { className: "muted small" }, picked.n ? plural(picked.n, "card") + " due" + (picked.over ? ", " + picked.over + " of them already overdue" : "") : "Nothing due."),
+        picked.id === today() && picked.n > 0 && h("button", { className: "btn", onClick: () => go("practice", { start: "review" }) }, "Start today's review")),
+      worst && h("div", { className: "fc-warn" },
+        h("p", null, h("strong", null, fmtDay(worst.day.id, "long") + ": " + plural(worst.day.n, "card") + "."), " Your usual day is about " + worst.avg + "."),
+        h("p", { className: "muted small" }, worst.day.exam ? "That's also " + worst.day.exam.title + ", which is the worst possible day for a backlog." : "A day like that usually gets skipped, and then it snowballs."),
+        h("div", { className: "step-actions" }, h("button", { className: "btn", onClick: smooth }, "Spread them over earlier days")))
+    );
+  }
+
   function bumpDay(s, patch) {
     if (!Array.isArray(s.days)) s.days = [];
     const id = today();
@@ -3681,12 +3967,75 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const list = upcomingExams(subject);
     return list.find((e) => (e.covers || []).includes(topicId)) || list.find((e) => !(e.covers || []).length) || null;
   }
-  function gradeCardIn(s, id, grade) {
+  /* =====================================================================
+     Confidence calibration.
+     Before the answer is revealed you say how sure you are. Afterwards the
+     grade says whether you were right. Pairing the two is the only way to
+     catch overconfidence, which is what actually loses exams: you skip
+     revising the thing you were certain about, and that is the thing you miss.
+     Stored on the card as cal = { sure, think, guess } counts of right/seen.
+     ===================================================================== */
+  const CONF = [
+    { k: "sure", label: "Sure", sub: "I know this", key: "1" },
+    { k: "think", label: "Think so", sub: "fairly confident", key: "2" },
+    { k: "guess", label: "Guessing", sub: "no real idea", key: "3" }
+  ];
+  const CONF_EXPECT = { sure: 0.95, think: 0.7, guess: 0.3 };
+  function calBump(s, conf, right) {
+    if (!conf) return;
+    if (!s.cal || typeof s.cal !== "object") s.cal = {};
+    const c = s.cal[conf] || (s.cal[conf] = { n: 0, right: 0 });
+    c.n = (c.n || 0) + 1;
+    if (right) c.right = (c.right || 0) + 1;
+  }
+  function calStats(subject) {
+    const cal = subject.cal || {};
+    const rows = CONF.map((c) => {
+      const x = cal[c.k] || {};
+      const n = x.n || 0;
+      return { ...c, n, right: x.right || 0, pct: n ? (x.right || 0) / n : null, expect: CONF_EXPECT[c.k] };
+    });
+    const total = rows.reduce((a, r) => a + r.n, 0);
+    const sure = rows[0];
+    let verdict = null;
+    if (sure.n >= 25 && sure.pct !== null) {
+      const gap = sure.expect - sure.pct;
+      if (gap > 0.15) verdict = { kind: "over", text: "You said “Sure” on " + plural(sure.n, "card") + " and got " + Math.round(sure.pct * 100) + "% of them right. That gap is the dangerous one: the cards you feel safe about are the ones you stop revising, and then they show up on the exam. Slow down before you tap Sure." };
+      else if (rows[2].n >= 15 && rows[2].pct !== null && rows[2].pct > 0.6) verdict = { kind: "under", text: "You get " + Math.round(rows[2].pct * 100) + "% of your “Guessing” cards right. You know more than you think — that under-confidence costs you time on cards you've already learned." };
+      else verdict = { kind: "good", text: "Your confidence matches your accuracy closely. That's rarer than it sounds, and it means you can trust your own sense of what still needs work." };
+    }
+    return { rows, total, verdict };
+  }
+  function CalibrationPanel({ subject }) {
+    const { rows, total, verdict } = calStats(subject);
+    if (total < 10) return null;
+    return h(
+      "div",
+      { className: "panel" },
+      h("span", { className: "panel-kicker" }, h(Icon, { name: "chart", size: 16 }), " Are you right when you feel sure?"),
+      h("table", { className: "cal-table" },
+        h("thead", null, h("tr", null, h("th", null, "You said"), h("th", { className: "num" }, "Cards"), h("th", null, "Actually right"), h("th", { className: "num" }, "Gap"))),
+        h("tbody", null, rows.map((r) => {
+          const gap = r.pct === null ? null : r.pct - r.expect;
+          const cls = gap === null ? "" : gap < -0.15 ? "bad" : gap < -0.05 ? "warn" : "ok";
+          return h("tr", { key: r.k },
+            h("td", null, r.label),
+            h("td", { className: "num" }, r.n || "—"),
+            h("td", null, r.pct === null ? h("span", { className: "muted" }, "not enough yet") : h(React.Fragment, null, h("div", { className: "bar-sm" }, h("span", { style: { width: Math.round(r.pct * 100) + "%", background: cls === "bad" ? "var(--bad)" : cls === "warn" ? "var(--warn)" : "var(--ok)" } })), h("span", { className: "muted small" }, Math.round(r.pct * 100) + "%"))),
+            h("td", { className: "num cal-gap " + cls }, gap === null ? "—" : (gap > 0 ? "+" : "") + Math.round(gap * 100)));
+        }))),
+      verdict && h("div", { className: "cal-verdict " + verdict.kind }, h("p", { className: "small" }, verdict.text)),
+      h("p", { className: "muted small", style: { marginTop: ".6rem" } }, "Measured from " + plural(total, "answer") + " where you said how sure you were before revealing.")
+    );
+  }
+
+  function gradeCardIn(s, id, grade, conf) {
     const c = s.cards.find((x) => x.id === id);
     if (!c) return;
     const ex = examForTopic(s, c.topicId);
     c.srs = schedule(c.srs, grade, ex && ex.due);
     c.conf = grade === "again" ? "again" : "known";
+    calBump(s, conf, grade !== "again");
     bumpDay(s, { reviews: 1, right: grade === "again" ? 0 : 1 });
   }
   const mistakeDue = (m) => m.rt && m.rt.due || addDays(ISO_RE.test(m.date || "") ? m.date : today(), 1);
@@ -3722,8 +4071,116 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const due = shuffle(dueAll.slice(0, cap));
     const room = cap === Infinity ? Infinity : Math.max(0, cap - due.length);
     const fresh = freshAll.slice(0, Math.min(Math.max(0, newPerDay - introduced), room));
-    return { due, fresh, mist, introduced, backlog: dueAll.length - due.length };
+    return { due, fresh, mist, prob: probsDue(subject), introduced, backlog: dueAll.length - due.length };
   }
+  /* =====================================================================
+     Problem retests.
+     A problem you got wrong used to sit in its set until you happened to
+     reopen it. Mistakes come back on a schedule; problems now do too, with
+     the same two-different-days rule, so a miss is a commitment rather than
+     a note. They are the most expensive item in a session, so there are
+     never many at once.
+     ===================================================================== */
+  const probDue = (p) => (p.rt && p.rt.due) || addDays(p.at && ISO_RE.test(p.at) ? p.at : today(), 1);
+  function findProb(subject, id) {
+    for (const s of subject.psets || []) {
+      const p = s.problems.find((x) => x.id === id);
+      if (p) return { set: s, p };
+    }
+    return null;
+  }
+  function probsDue(subject, cap = 4) {
+    const t = today();
+    const out = [];
+    for (const s of subject.psets || []) for (const p of s.problems) {
+      if (p.st === "miss" && probDue(p) <= t) out.push(p);
+    }
+    return out.sort((a, b) => probDue(a) < probDue(b) ? -1 : 1).slice(0, cap);
+  }
+  function gradeProbIn(s, id, right) {
+    const hit = findProb(s, id);
+    if (!hit) return;
+    const p = hit.p;
+    const prev = p.rt || {};
+    const sameDay = prev.last === today();
+    const streak = right ? (sameDay ? Math.max(prev.streak || 0, 1) : (prev.streak || 0) + 1) : 0;
+    p.rt = { streak, due: addDays(today(), right ? 4 : 1), last: today() };
+    p.at = today();
+    // Right on two different days clears it, exactly like a mistake.
+    if (right && streak >= 2) { p.st = "got"; p.rt = null; }
+    else p.st = "miss";
+    bumpDay(s, { reviews: 1, right: right ? 1 : 0 });
+  }
+  /* =====================================================================
+     Answer-gap check.
+     A typed answer shown back to you proves nothing: you read your own words
+     and feel they match. Naming the words from the model answer that you did
+     NOT write is what breaks "I basically knew that", which is the single
+     most expensive self-deception in exam prep.
+     ===================================================================== */
+  const GAP_STOP = new Set(("the a an and or of to in is are was were be been being it its that this these those for from with by on at as if then than when which who whom whose what not no any all each both other such same so into over under more most less least may might must can could would should shall will do does did done has have had you your they their there here about after before during while because between among within without upon per also only just very much many few own one two three but out up down off than how why where whether given also".split(" ")));
+  function gapCheck(model, typed) {
+    const flat = (s) => String(s || "").toLowerCase().replace(/[*_`#>|]/g, " ").replace(/[^a-z0-9%₱.\-\s]/g, " ");
+    const stem = (w) => w.replace(/(ies)$/, "y").replace(/(es|s)$/, "");
+    const mine = new Set(flat(typed).split(/\s+/).filter(Boolean).map(stem));
+    const seen = new Set(), out = [];
+    for (const raw of flat(model).split(/\s+/)) {
+      const w = raw.replace(/^[^a-z0-9₱]+|[^a-z0-9%]+$/g, "");
+      if (!w || GAP_STOP.has(w)) continue;
+      if (w.length < 4 && !/\d/.test(w)) continue;
+      const k = stem(w);
+      if (seen.has(k)) continue;
+      seen.add(k);
+      if (!mine.has(k)) out.push(w);
+    }
+    return out.slice(0, 10);
+  }
+
+  /* =====================================================================
+     One queue across every subject.
+     buildReview is per-subject, which means six subjects is six sessions and
+     five dropdown switches. Nobody does that on a Tuesday. This merges them
+     into one list, ordered by what is actually urgent: an exam three days out
+     beats an exam three weeks out, and inside a subject the oldest-due card
+     comes first. Each item remembers which subject it belongs to so grading
+     writes back to the right place.
+     ===================================================================== */
+  function examPressure(subject) {
+    const ex = upcomingExams(subject)[0];
+    if (!ex || !ex.due) return 999;
+    return Math.max(0, daysUntil(ex.due));
+  }
+  function buildAll(data, newPerDay, maxPerDay) {
+    const subs = data.subjects.map((s) => {
+      const rv = buildReview(s, newPerDay, maxPerDay);
+      const n = rv.due.length + rv.fresh.length + rv.mist.length + (rv.prob || []).length;
+      return { s, rv, n, press: examPressure(s) };
+    }).filter((x) => x.n > 0);
+    subs.sort((a, b) => a.press - b.press || b.n - a.n);
+    const items = [];
+    for (const x of subs) {
+      const one = interleave([...x.rv.due, ...shuffle(x.rv.fresh)], x.rv.mist);
+      const probs = (x.rv.prob || []).map((p) => ({ kind: "prob", id: p.id }));
+      one.splice(Math.min(one.length, 8), 0, ...probs);
+      for (const it of one) items.push({ ...it, subjectId: x.s.id });
+    }
+    return { items, subs, total: items.length };
+  }
+  function AllSubjectsPanel({ data, onStart }) {
+    const all = useMemo(() => buildAll(data, data.settings.newPerDay || 10, data.settings.maxPerDay || 0), [data]);
+    if (all.subs.length < 2) return null;
+    const mins = Math.max(1, Math.round(all.subs.reduce((a, x) => a + x.rv.due.length * COST.card + x.rv.fresh.length * COST.card + x.rv.mist.length * COST.mistake + (x.rv.prob || []).length * COST.prob, 0)));
+    return h(
+      "div",
+      { className: "panel all-panel" },
+      h("span", { className: "panel-kicker" }, h(Icon, { name: "bolt", size: 16 }), " Everything due, all subjects"),
+      h("p", { className: "big-num" }, all.total, h("span", { className: "big-unit" }, all.total === 1 ? " item" : " items")),
+      h("div", { className: "all-subs" }, all.subs.map((x) => h("span", { key: x.s.id, className: "all-sub" }, x.s.code || drShort(x.s.name, 18), h("i", null, x.n)))),
+      h("p", { className: "muted small" }, "About " + fmtMins(mins) + ". Subjects with the nearest exam come first" + (all.subs[0].press < 900 ? ", so " + (all.subs[0].s.code || all.subs[0].s.name) + " leads" : "") + "."),
+      h("div", { className: "step-actions" }, h("button", { className: "btn primary", onClick: () => onStart(all) }, "Review everything"))
+    );
+  }
+
   function interleave(cards, mistakes) {
     const out = [];
     let mi = 0;
@@ -3825,7 +4282,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     } catch (e) { if (done) done(); }
   }
   // How long an item takes, roughly: enough to turn "I have 20 minutes" into a real queue.
-  const COST = { card: 0.3, mistake: 0.8 };
+  const COST = { card: 0.3, mistake: 0.8, prob: 3 };
   const BUDGETS = [5, 10, 15, 20, 30, 45, 60];
   function budgetQueue(rv, mins) {
     const out = [];
@@ -3841,12 +4298,14 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     take(rv.mist.slice(0, Math.max(1, Math.round(mins / 8))), "mistake");
     take(rv.due, "card");
     take(rv.mist, "mistake");
+    // Problems only fit in a real sitting, so they wait for one.
+    if (mins >= 20) take((rv.prob || []).slice(0, Math.floor(mins / 20)), "prob");
     take(rv.fresh, "card");
     return out;
   }
   function BudgetPanel({ rv, onStart }) {
-    const full = rv.due.length * COST.card + rv.fresh.length * COST.card + rv.mist.length * COST.mistake;
-    const total = rv.due.length + rv.fresh.length + rv.mist.length;
+    const full = rv.due.length * COST.card + rv.fresh.length * COST.card + rv.mist.length * COST.mistake + (rv.prob || []).length * COST.prob;
+    const total = rv.due.length + rv.fresh.length + rv.mist.length + (rv.prob || []).length;
     return h(
       "div",
       { className: "panel budget-panel" },
@@ -3889,19 +4348,26 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
   }
 
   /* ----- one review session: cards and mistake retests, with requeue on Again ----- */
-  function StudySession({ subject, update, items, title, onExit, toast, settings }) {
+  // `all` turns this into a cross-subject session: each item carries its own
+  // subjectId, lookups follow it, and grading writes back to that subject.
+  function StudySession({ subject, update, items, title, onExit, toast, settings, all }) {
     const [queue, setQueue] = useState(items);
     const [i, setI] = useState(0);
     const [shown, setShown] = useState(false);
     const [typed, setTyped] = useState("");
     const [typeFirst, setTypeFirst] = useState(() => localPref("typeFirst", false));
+    const [askConf, setAskConf] = useState(() => localPref("askConf", true));
+    const [conf, setConf] = useState(null);
     const [tally, setTally] = useState({ done: 0, right: 0, again: 0 });
     const seenAgain = useRef(/* @__PURE__ */ new Map());
     const typeRef = useRef(null);
     const item = queue[i];
-    const card = item && item.kind === "card" ? subject.cards.find((c) => c.id === item.id) : null;
-    const mistake = item && item.kind === "mistake" ? subject.mistakes.find((m) => m.id === item.id) : null;
-    const missing = item && !card && !mistake;
+    const owner = (all && item && item.subjectId && all.find((s) => s.id === item.subjectId)) || subject;
+    const card = item && item.kind === "card" ? owner.cards.find((c) => c.id === item.id) : null;
+    const mistake = item && item.kind === "mistake" ? owner.mistakes.find((m) => m.id === item.id) : null;
+    const probHit = item && item.kind === "prob" ? findProb(owner, item.id) : null;
+    const prob = probHit ? probHit.p : null;
+    const missing = item && !card && !mistake && !prob;
     useEffect(() => {
       if (missing) setI((x) => x + 1);
     }, [missing, i]);
@@ -3909,20 +4375,45 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       if (typeFirst && !shown && typeRef.current) typeRef.current.focus();
     }, [i, typeFirst, shown]);
     const [aloud, setAloud] = useState(() => localPref("aloud", false));
+    const [hands, setHands] = useState(() => localPref("hands", false));
+    const [hfWait, setHfWait] = useState(0);
     const rate = (settings && settings.speakRate) || 1;
+    /* =====================================================================
+       Hands-free. Read aloud already existed, but you still had to tap Reveal
+       and tap a grade, which is useless on a jeepney. This reads the question,
+       waits while you answer out loud, reads the answer, then grades Good on
+       its own unless you tap. Tapping anything cancels it, so you never lose
+       a card to the timer.
+       ===================================================================== */
+    const hfTimer = useRef(null);
+    const clearHf = () => { clearTimeout(hfTimer.current); hfTimer.current = null; setHfWait(0); };
+    useEffect(() => clearHf, []);
     // Reading the question is a prompt to recall; the pause before the answer is the work.
     useEffect(() => {
       if (!aloud || !item) return;
       sayStop();
-      const t = setTimeout(() => say(card ? card.q : mistake ? mistake.question : "", rate), 180);
+      const t = setTimeout(() => say(card ? card.q : mistake ? mistake.question : prob ? psPlain(prob.problem) : "", rate), 180);
       return () => { clearTimeout(t); sayStop(); };
     }, [aloud, i, item && item.id, rate]);
     useEffect(() => {
       if (!aloud || !shown) return;
       sayStop();
-      const t = setTimeout(() => say(card ? card.a : mistake ? mistake.correct : "", rate), 120);
+      const t = setTimeout(() => say(card ? card.a : mistake ? mistake.correct : prob ? psPlain(prob.answer) : "", rate, () => {
+        // Graded only after the answer has actually finished being spoken.
+        if (hands && card) {
+          setHfWait(4);
+          hfTimer.current = setTimeout(() => { clearHf(); gradeCard("good"); }, 4000);
+        }
+      }), 120);
       return () => { clearTimeout(t); sayStop(); };
-    }, [aloud, shown, rate]);
+    }, [aloud, shown, rate, hands]);
+    // Hands-free reveals on its own too, after a pause long enough to recall.
+    useEffect(() => {
+      if (!hands || !aloud || shown || !item) return;
+      const wait = card ? 7000 : 12000;
+      hfTimer.current = setTimeout(() => { hfTimer.current = null; setShown(true); }, wait);
+      return () => { clearTimeout(hfTimer.current); hfTimer.current = null; };
+    }, [hands, aloud, shown, i, item && item.id]);
     useEffect(() => () => sayStop(), []);
     const next = (right, requeue) => {
       if (requeue) {
@@ -3940,16 +4431,36 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       setTally((t) => ({ done: t.done + 1, right: t.right + (right ? 1 : 0), again: t.again + (right ? 0 : 1) }));
       setShown(false);
       setTyped("");
+      setConf(null);
       setI((x) => x + 1);
     };
+    // In a cross-subject session the write has to go to the item's own subject,
+    // not whichever one happens to be selected in the sidebar.
+    const write = (fn) => {
+      if (all && item && item.subjectId) update(null, (d) => {
+        const s = d.subjects.find((x) => x.id === item.subjectId);
+        if (s) fn(s);
+      });
+      else update(fn);
+    };
     const gradeCard = (g) => {
-      update((s) => gradeCardIn(s, card.id, g));
+      const c = conf;
+      clearHf();
+      write((s) => gradeCardIn(s, card.id, g, c));
       next(g !== "again", g === "again");
     };
+    // Saying how sure you are also reveals, so the extra step costs no extra tap.
+    const pickConf = (k) => { setConf(k); setShown(true); };
     const gradeMistake = (right) => {
-      update((s) => gradeMistakeIn(s, mistake.id, right));
+      write((s) => gradeMistakeIn(s, mistake.id, right));
       if (right && mistake.rt && mistake.rt.streak >= 1 && mistake.rt.last !== today() && toast) toast("Mistake cleared: right on two different days");
       next(right, !right);
+    };
+    const gradeProb = (right) => {
+      const clears = right && prob.rt && (prob.rt.streak || 0) >= 1 && prob.rt.last !== today();
+      write((s) => gradeProbIn(s, prob.id, right));
+      if (clears && toast) toast("Problem cleared: right on two different days");
+      next(right, false);
     };
     useEffect(() => {
       const k = (e) => {
@@ -3960,6 +4471,10 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
             setShown(true);
           }
           return;
+        }
+        if (!shown && askConf && card) {
+          const c = CONF.find((x) => x.key === e.key);
+          if (c) { e.preventDefault(); pickConf(c.k); return; }
         }
         if (!shown && (e.key === " " || e.key === "Enter")) {
           e.preventDefault();
@@ -3973,6 +4488,9 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         } else if (mistake) {
           if (e.key === "1") gradeMistake(false);
           if (e.key === "2") gradeMistake(true);
+        } else if (prob) {
+          if (e.key === "1") gradeProb(false);
+          if (e.key === "2") gradeProb(true);
         }
       };
       window.addEventListener("keydown", k);
@@ -3992,21 +4510,34 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     if (missing) return null;
     const total = queue.length;
     const isNew = card && !card.srs && !card.conf;
-    const badge = mistake ? "Mistake retest" : isNew ? "New card" : "Review";
-    const topicId = card ? card.topicId : mistake.topicId;
+    const badge = mistake ? "Mistake retest" : prob ? "Problem retest" : isNew ? "New card" : "Review";
+    const topicId = card ? card.topicId : mistake ? mistake.topicId : prob ? probHit.set.topicId : null;
     return h(
       "div",
       { className: "drill" },
-      h("div", { className: "drill-meta" }, h("span", null, `${Math.min(i + 1, total)} of ${total}`, h("span", { className: `drill-badge${mistake ? " mist" : isNew ? " new" : ""}` }, badge)), h("span", null, mistake ? itemTopic(subject, mistake) : topicName(subject, topicId))),
+      h("div", { className: "drill-meta" }, h("span", null, `${Math.min(i + 1, total)} of ${total}`, h("span", { className: `drill-badge${mistake || prob ? " mist" : isNew ? " new" : ""}` }, badge), all && owner.id !== subject.id && h("span", { className: "sess-sub" }, owner.code || drShort(owner.name, 16))), h("span", null, mistake ? itemTopic(owner, mistake) : prob ? drShort(probHit.set.title, 34) : topicName(owner, topicId))),
       h("div", { className: "progress" }, h("span", { style: { width: `${i / total * 100}%` } })),
-      h("p", { className: "drill-q" }, card ? card.q : mistake.question),
+      hands && aloud && h("div", { className: "hf-bar" }, h("span", { className: "hf-dot", "aria-hidden": "true" }), h("span", { className: "small" }, hfWait ? "Grading Good in a moment — tap anything to choose yourself" : shown ? "Listening to the answer" : "Answer out loud, then it reveals"), h("span", { className: "spacer" }), h("button", { className: "btn ghost", onClick: () => { clearHf(); setHands(false); setLocalPref("hands", false); sayStop(); } }, "Take over")),
+      prob ? h("div", { className: "drill-prob" }, h("p", { className: "drill-q" }, "Problem " + prob.no + ": " + prob.title), h(PsMd, { text: prob.problem }), prob.req && prob.req.length > 0 && h("div", { className: "ps-req" }, h("strong", null, "Required"), h("ol", null, prob.req.map((r, k) => h("li", { key: k }, psInline(r))))), prob.choices && prob.choices.length > 0 && h("ul", { className: "ps-choices" }, prob.choices.map((c, k) => h("li", { key: k }, psInline(c)))))
+           : h("p", { className: "drill-q" }, card ? card.q : mistake.question),
       !shown && typeFirst && h("textarea", { ref: typeRef, className: "drill-type", rows: 3, value: typed, placeholder: "Type your answer from memory, then reveal (Ctrl + Enter)", onChange: (e) => setTyped(e.target.value) }),
       shown ? h(
         "div",
         { className: "drill-a" },
-        typed.trim() && h("div", { className: "your-answer" }, h("span", { className: "muted small" }, "Your answer"), h("p", null, typed)),
-        card && h(React.Fragment, null, h("span", { className: "muted small" }, "Answer"), h("p", { className: "drill-ans" }, card.a), card.tip && h("p", { className: "flash-tip" }, card.tip)),
+        typed.trim() && h(React.Fragment, null,
+          h("div", { className: "your-answer" }, h("span", { className: "muted small" }, "Your answer"), h("p", null, typed)),
+          (() => {
+            const model = card ? card.a : mistake ? mistake.correct : prob ? prob.answer : "";
+            const gaps = gapCheck(model, typed);
+            if (!model) return null;
+            return gaps.length
+              ? h("div", { className: "gap-box" }, h("span", { className: "ps-label" }, "Words in the answer you didn’t write"), h("div", { className: "gap-words" }, gaps.map((w) => h("b", { key: w }, w))), h("p", { className: "muted small", style: { marginTop: ".35rem" } }, "“I basically knew that” usually hides a missing term. Grade yourself on whether you’d have earned the points."))
+              : h("p", { className: "gap-ok" }, "You used every key word from the answer.");
+          })()
+        ),
+        card && h(React.Fragment, null, h("span", { className: "muted small" }, "Answer", conf && h("span", { className: "cf-chip" }, "you said: " + CONF.find((x) => x.k === conf).label.toLowerCase())), h("p", { className: "drill-ans" }, card.a), card.tip && h("p", { className: "flash-tip" }, card.tip)),
         mistake && h(React.Fragment, null, h("span", { className: "muted small" }, "Correct answer"), h("p", { className: "drill-ans" }, mistake.correct || "(not recorded)"), mistake.wrong && h("p", { className: "muted small" }, "You first answered: ", mistake.wrong), mistake.trap && h("p", { className: "flash-tip" }, mistake.trap)),
+        prob && h(React.Fragment, null, prob.answer && h("div", { className: "ps-answer" }, h("span", { className: "ps-label" }, "Answer"), h(PsMd, { text: prob.answer })), prob.approach && h("div", { className: "ps-approach" }, h("span", { className: "ps-label" }, "How to approach it"), h(PsMd, { text: prob.approach })), prob.solution && h(PsMd, { text: prob.solution }), prob.trap && h("div", { className: "ps-trap" }, h("span", { className: "ps-label" }, "Watch out"), h(PsMd, { text: prob.trap }))),
         card ? h(
           "div",
           { className: "grade-row" },
@@ -4017,13 +4548,24 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
             h("span", null, g.k === "again" ? "see again soon" : fmtIvl(schedule(card.srs, g.k, null, { preview: true }).ivl)),
             h("kbd", null, g.key)
           ))
+        ) : prob ? h(
+          "div",
+          { className: "grade-row two" },
+          h("button", { className: "grade g-again", onClick: () => gradeProb(false) }, h("strong", null, "Missed it again"), h("span", null, "back tomorrow"), h("kbd", null, "1")),
+          h("button", { className: "grade g-good", onClick: () => gradeProb(true) }, h("strong", null, "Got it right"), h("span", null, (prob.rt && prob.rt.streak) >= 1 && prob.rt.last !== today() ? "clears it" : "again in 4 days"), h("kbd", null, "2"))
         ) : h(
           "div",
           { className: "grade-row two" },
           h("button", { className: "grade g-again", onClick: () => gradeMistake(false) }, h("strong", null, "Missed it"), h("span", null, "back tomorrow"), h("kbd", null, "1")),
           h("button", { className: "grade g-good", onClick: () => gradeMistake(true) }, h("strong", null, "Got it right"), h("span", null, (mistake.rt && mistake.rt.streak) >= 1 && mistake.rt.last !== today() ? "clears it" : "again in 3 days"), h("kbd", null, "2"))
         )
-      ) : h("button", { className: "btn primary reveal", onClick: () => setShown(true) }, "Show answer ", h("kbd", null, "Space")),
+      ) : (askConf && card ? h(
+        "div",
+        null,
+        h("p", { className: "cf-ask" }, "Before you look: how sure are you?"),
+        h("div", { className: "cf-row" }, CONF.map((c) => h("button", { key: c.k, className: "grade " + (c.k === "sure" ? "g-good" : c.k === "think" ? "g-hard" : "g-again"), onClick: () => pickConf(c.k) }, h("strong", null, c.label), h("span", null, c.sub), h("kbd", null, c.key)))),
+        h("button", { className: "btn ghost", style: { marginTop: ".5rem" }, onClick: () => setShown(true) }, "Just show it ", h("kbd", null, "Space"))
+      ) : h("button", { className: "btn primary reveal", onClick: () => setShown(true) }, "Show answer ", h("kbd", null, "Space"))),
       h(
         "div",
         { className: "drill-foot" },
@@ -4031,11 +4573,19 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
           setTypeFirst(e.target.checked);
           setLocalPref("typeFirst", e.target.checked);
         } }), h("span", null, "Type my answer before revealing")),
+        h("label", { className: "check small" }, h("input", { type: "checkbox", checked: askConf, onChange: (e) => {
+          setAskConf(e.target.checked);
+          setLocalPref("askConf", e.target.checked);
+        } }), h("span", null, "Ask how sure I am")),
         sayOK() && h("label", { className: "check small" }, h("input", { type: "checkbox", checked: aloud, onChange: (e) => {
           setAloud(e.target.checked);
           setLocalPref("aloud", e.target.checked);
-          if (!e.target.checked) sayStop();
+          if (!e.target.checked) { sayStop(); setHands(false); }
         } }), h("span", null, "Read aloud")),
+        sayOK() && aloud && h("label", { className: "check small" }, h("input", { type: "checkbox", checked: hands, onChange: (e) => {
+          setHands(e.target.checked);
+          setLocalPref("hands", e.target.checked);
+        } }), h("span", null, "Hands-free")),
         h("button", { className: "btn ghost", onClick: onExit }, "End session")
       )
     );
@@ -4259,6 +4809,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         return;
       }
       setTimerState(null);
+      holdScreen(false);
       if (mins < 1) {
         toast("Timer stopped. Under a minute, so nothing was logged.");
         return;
@@ -4282,6 +4833,15 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     useEffect(() => {
       if (t && t.running && left <= 0) finish(true);
     });
+    // The phone sleeping after 30 seconds should not interrupt a 50-minute block.
+    useEffect(() => {
+      holdScreen(!!(t && t.running));
+      const wake = () => {
+        if (document.visibilityState === "visible" && timerState && timerState.running) holdScreen(true);
+      };
+      document.addEventListener("visibilitychange", wake);
+      return () => { document.removeEventListener("visibilitychange", wake); };
+    }, [t && t.running]);
     if (!t) return null;
     const subject = data.subjects.find((s) => s.id === t.subjectId);
     const topic = subject && t.topicId && subject.topics.find((x) => x.id === t.topicId);
@@ -4510,7 +5070,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       return h("span", { key: d, className: `act${d === today() ? " today" : ""}`, title: `${fmtDay(d)}: ${x.reviews || 0} reviews, ${fmtMins(x.mins) || "0 min"} timed`, style: { "--h": `${v ? Math.max(12, v / max * 100) : 4}%` } }, h("i", null), h("b", null, parseD(d).toLocaleDateString(void 0, { weekday: "narrow" })));
     }));
   }
-  function PracticeView({ subject, update, toast, go, init, settings, setSettings, openEditor }) {
+  function PracticeView({ subject, update, toast, go, init, settings, setSettings, openEditor, data }) {
     const [mode, setMode] = useState(null);
     const newPerDay = settings.newPerDay || 10;
     const maxPerDay = settings.maxPerDay || 0;
@@ -4522,7 +5082,12 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const timer = useTimer();
     const [drMgr, setDrMgr] = useState(false);
     const startReview = () => {
+      // Problems come after a warm-up: they are slow, and a cold start on one
+      // is how a session gets abandoned.
       const items = interleave([...rv.due, ...shuffle(rv.fresh)], rv.mist);
+      const probs = (rv.prob || []).map((p) => ({ kind: "prob", id: p.id }));
+      const at = Math.min(items.length, 8);
+      items.splice(at, 0, ...probs);
       setMode({ kind: "study", title: "Daily review", items });
     };
     useEffect(() => {
@@ -4530,7 +5095,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       else if (init.start === "exam" && exam) setMode({ kind: "study", title: `${exam.title} mix`, items: examMix(subject, exam).map((c) => ({ kind: "card", id: c.id })) });
       else if (init.start === "compute") setMode({ kind: "compute", set: "all" });
     }, []);
-    if (mode && mode.kind === "study") return h("section", { className: "view" }, h(StudySession, { subject, update, toast, settings, items: mode.items, title: mode.title, onExit: () => setMode(null) }));
+    if (mode && mode.kind === "study") return h("section", { className: "view" }, h(StudySession, { subject, update, toast, settings, items: mode.items, title: mode.title, all: mode.all, onExit: () => setMode(null) }));
     if (mode && mode.kind === "compute") return h("section", { className: "view" }, h(ComputeSet, { subject, update, toast, set: mode.set, onExit: () => setMode(null) }));
     if (mode && mode.kind === "mock") return h("section", { className: "view" }, h(MockExam, { subject, exam, update, toast, onExit: () => setMode(null) }));
     const dueTotal = rv.due.length + rv.fresh.length + rv.mist.length;
@@ -4552,7 +5117,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
           { className: "panel review-panel" },
           h("span", { className: "panel-kicker" }, h(Icon, { name: "cards", size: 16 }), " Daily review"),
           h("p", { className: "big-num" }, dueTotal, h("span", { className: "big-unit" }, dueTotal === 1 ? " item" : " items")),
-          h("p", { className: "muted" }, [rv.due.length && `${rv.due.length} due`, rv.fresh.length && `${rv.fresh.length} new`, rv.mist.length && `${plural(rv.mist.length, "mistake")} to retest`].filter(Boolean).join(", ") || "You’re all caught up for today."),
+          h("p", { className: "muted" }, [rv.due.length && `${rv.due.length} due`, rv.fresh.length && `${rv.fresh.length} new`, rv.mist.length && `${plural(rv.mist.length, "mistake")} to retest`, (rv.prob || []).length && `${plural(rv.prob.length, "problem")} to redo`].filter(Boolean).join(", ") || "You’re all caught up for today."),
           rv.backlog > 0 && h("p", { className: "muted small backlog-note" }, `${plural(rv.backlog, "card")} also due, held back so today stays finishable. They come first tomorrow.`),
           h("div", { className: "step-actions" }, h("button", { className: "btn primary", disabled: !dueTotal, onClick: startReview }, "Start review")),
           h("label", { className: "inline-field" }, h("span", null, "New cards per day"), h("select", { value: newPerDay, onChange: (e) => setSettings({ ...settings, newPerDay: Number(e.target.value) }) }, [5, 10, 15, 20, 30, 50].map((n) => h("option", { key: n, value: n }, n)))),
@@ -4567,6 +5132,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
           h("div", { className: "step-actions" }, h("button", { className: "btn primary", onClick: () => setMode({ kind: "study", title: `${exam.title} mix`, items: examMix(subject, exam).map((c) => ({ kind: "card", id: c.id })) }) }, "Start exam mix"), h("button", { className: "btn", onClick: () => setMode({ kind: "mock" }) }, "Sit a mock exam")),
           h("p", { className: "muted small" }, "The mix is 20 of your weakest cards. The mock is a timed paper under exam conditions, marked and saved.")
         ),
+        data && h(AllSubjectsPanel, { data, onStart: (all) => setMode({ kind: "study", title: "Every subject", items: all.items, all: data.subjects }) }),
         h(BudgetPanel, { rv, onStart: (m) => setMode({ kind: "study", title: `${m}-minute session`, items: budgetQueue(rv, m) }) }),
         h(LeechPanel, { subject, update, toast, openEditor }),
         h(DrPanel, { subject, onStart: (k) => setMode({ kind: "compute", set: k }), onManage: () => setDrMgr(true) }),
@@ -4591,6 +5157,8 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         "div",
         { className: "practice-grid two" },
         h(RoiPanel, { subject, go }),
+        h(ForecastPanel, { subject, update, toast, go }),
+        h(CalibrationPanel, { subject }),
         h("div", { className: "panel" }, h("div", { className: "panel-row" }, h("h2", null, "Last 14 days"), h("span", { className: "streak" }, h(Icon, { name: "flame", size: 16 }), streak ? ` ${plural(streak, "day")} in a row` : " Start a streak today")), h(ActivityStrip, { subject })),
         h(
           "div",
@@ -4982,14 +5550,52 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       h("button", { className: "btn ghost", onClick: () => setSettings({ ...DEFAULT_SETTINGS, custom: settings.custom, newPerDay: settings.newPerDay, remindAt: settings.remindAt }) }, "Reset appearance")
     );
   }
+  /* =====================================================================
+     The two numbers that matter, finally in the same place.
+     The app already knew how ready you are (examReadiness) and what score you
+     need to hold your target grade (gcNeed). They had never met. Side by side
+     they answer the only question that counts: is the effort I'm putting in
+     enough for the grade I want, with the days I have left?
+     ===================================================================== */
   function ExamReadyMini({ subject, exam, go }) {
     const r = examReadiness(subject, exam);
+    const g = subject.grading ? gcNorm(subject.grading) : null;
+    const sum = g ? gcSummary(g) : null;
+    const tgt = g && g.target && g.scale.find((x) => x.letter === g.target);
+    const need = tgt && sum ? gcNeed(g, sum, tgt.min) : null;
+    const needPct = need && need.kind === "need" ? Math.ceil(need.r * 100) : need && need.kind === "reach" ? Math.ceil(need.r * 100) : null;
+    const weak = (exam.covers && exam.covers.length ? exam.covers : studyTopics(subject).map((t) => t.id))
+      .map((id) => {
+        const t = subject.topics.find((x) => x.id === id);
+        if (!t) return null;
+        const cs = subject.cards.filter((c) => c.topicId === id);
+        return cs.length ? { t, s: Math.round(cs.reduce((a, c) => a + cardStrength(c), 0) / cs.length * 100) } : null;
+      }).filter(Boolean).sort((a, b) => a.s - b.s).slice(0, 3);
+    let gap = null;
+    if (needPct !== null) {
+      const d = r.pct - needPct;
+      gap = {
+        cls: need.kind === "reach" ? "behind" : d < -12 ? "behind" : d < 4 ? "close" : "ahead",
+        text: need.kind === "reach" ? "Even a perfect score on everything left can’t reach " + tgt.letter + " now. Aim at the next letter down and protect it."
+          : d < -12 ? "You need " + needPct + "% and you’re sitting at " + r.pct + "% ready. That gap is " + Math.abs(d) + " points with " + (exam.due ? plural(Math.max(0, daysUntil(exam.due)), "day") : "limited time") + " to close it."
+          : d < 4 ? "You’re roughly where you need to be, with nothing spare. One skipped week flips this."
+          : "You’re ahead of what " + tgt.letter + " requires. Keep the reviews ticking and don’t let it slide."
+      };
+    } else if (need && need.kind === "secured") gap = { cls: "ahead", text: tgt.letter + " is already secured no matter what happens on this exam. Anything more is for the QPI." };
     return h(
       "div",
       { className: "ready-mini" },
-      h("div", { className: "ready-mini-head" }, h("span", { className: "small muted" }, "Exam readiness"), h("strong", null, `${r.pct}%`)),
-      h("div", { className: "bar-sm" }, h("span", { style: { width: `${r.pct}%` } })),
-      h("div", { className: "step-actions" }, h("button", { className: "btn primary", onClick: () => go("practice", { start: "exam" }) }, "Exam mix"), h("button", { className: "btn ghost", onClick: () => go("practice") }, "See breakdown"))
+      needPct !== null || (need && need.kind === "secured")
+        ? h("div", { className: "verdict" },
+            h("div", { className: "verdict-cell need" }, h("span", { className: "small muted" }, "To hold " + tgt.letter), h("span", { className: "big-num" }, need.kind === "secured" ? "Secured" : needPct + "%"), h("span", { className: "small muted" }, need.kind === "secured" ? "whatever you score" : "average on what’s left")),
+            h("div", { className: "verdict-cell" }, h("span", { className: "small muted" }, "Ready for this exam"), h("span", { className: "big-num" }, r.pct + "%"), h("span", { className: "small muted" }, exam.due ? plural(Math.max(0, daysUntil(exam.due)), "day") + " to go" : "no date set")))
+        : h(React.Fragment, null,
+            h("div", { className: "ready-mini-head" }, h("span", { className: "small muted" }, "Exam readiness"), h("strong", null, r.pct + "%")),
+            h("div", { className: "bar-sm" }, h("span", { style: { width: r.pct + "%" } }))),
+      gap && h("div", { className: "verdict-gap " + gap.cls }, h("p", { className: "small" }, gap.text)),
+      weak.length > 0 && h("p", { className: "muted small", style: { marginTop: ".5rem" } }, "Weakest in scope: " + weak.map((x) => (x.t.code || drShort(x.t.title, 20)) + " " + x.s + "%").join(", ") + "."),
+      !g && h("p", { className: "muted small", style: { marginTop: ".5rem" } }, "Set up Grades and pick a target letter to see what score you actually need."),
+      h("div", { className: "step-actions" }, h("button", { className: "btn primary", onClick: () => go("practice", { start: "exam" }) }, "Exam mix"), weak.length > 0 && h("button", { className: "btn", onClick: () => go("vault", { topic: weak[0].t.id, drill: true }) }, "Drill " + (weak[0].t.code || "the weakest")), h("button", { className: "btn ghost", onClick: () => go("practice") }, "Breakdown"))
     );
   }
   /* =====================================================================
@@ -5052,6 +5658,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       trans: Math.min(99, w(g.trans, 0)),
       target: typeof g.target === "string" ? g.target : "",
       retention: !!g.retention,
+      hist: Array.isArray(g.hist) ? g.hist.filter((x) => x && ISO_RE.test(x.d) && Number.isFinite(Number(x.v))).map((x) => ({ d: x.d, v: Number(x.v) })) : [],
       retMin: typeof g.retMin === "string" ? g.retMin : "",
       terms: arr(g.terms).map((t) => ({
         id: t.id || gcId("gt"),
@@ -5066,7 +5673,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
             name: String(p.name || c.name || "Scores"),
             weight: w(p.weight, 100),
             calc: p.calc === "average" ? "average" : "points",
-            items: arr(p.items).map((it) => ({ id: it.id || gcId("gi"), label: String(it.label || ""), score: gcNum(it.score), max: gcNum(it.max) }))
+                  items: arr(p.items).map((it) => ({ id: it.id || gcId("gi"), label: String(it.label || ""), score: gcNum(it.score), max: gcNum(it.max), src: typeof it.src === "string" ? it.src : undefined }))
           }))
         }))
       })),
@@ -5780,6 +6387,55 @@ Rules: the numbers above are only an example of the format; use the real ones fr
     });
   }
   // Big numbers, the range bar, and "what you need" for each letter.
+  /* =====================================================================
+     Grade trajectory.
+     The Grades tab shows one instant with no memory. A number that has been
+     sliding since prelims means something very different from the same number
+     holding steady, and only the shape tells you which you're looking at.
+     Snapshots are kept on the grading object, one per day, capped.
+     ===================================================================== */
+  function gcSnap(g, pct) {
+    if (pct === null || pct === undefined) return g;
+    const v = Math.round(pct * 10000) / 100;
+    const hist = Array.isArray(g.hist) ? g.hist.slice() : [];
+    const last = hist[hist.length - 1];
+    if (last && last.d === today()) { if (Math.abs(last.v - v) < 0.005) return g; last.v = v; }
+    else {
+      if (last && Math.abs(last.v - v) < 0.005) return g;
+      hist.push({ d: today(), v });
+    }
+    if (hist.length > 180) hist.splice(0, hist.length - 180);
+    return { ...g, hist };
+  }
+  function GcTrajectory({ g, sum }) {
+    const hist = Array.isArray(g.hist) ? g.hist : [];
+    if (hist.length < 3) return null;
+    const vals = hist.map((x) => x.v);
+    const tgt = g.target && g.scale.find((x) => x.letter === g.target);
+    const lo = Math.max(0, Math.min(...vals, tgt ? tgt.min : 100) - 4);
+    const hi = Math.min(100, Math.max(...vals, tgt ? tgt.min : 0) + 4);
+    const W = 300, H = 90;
+    const x = (i) => hist.length < 2 ? 0 : i / (hist.length - 1) * W;
+    const y = (v) => H - (v - lo) / Math.max(1, hi - lo) * H;
+    const d = hist.map((p, i) => (i ? "L" : "M") + x(i).toFixed(1) + " " + y(p.v).toFixed(1)).join(" ");
+    const first = hist[0], last = hist[hist.length - 1];
+    const delta = last.v - first.v;
+    const recent = hist.slice(-5);
+    const trend = recent.length > 1 ? recent[recent.length - 1].v - recent[0].v : 0;
+    return h(
+      "div",
+      { className: "panel" },
+      h("span", { className: "panel-kicker" }, h(Icon, { name: "chart", size: 16 }), " Where this grade has been going"),
+      h("div", { className: "tj-now" }, h("span", { className: "big-num" }, gcPctTxt(g, sum.now)), h("span", { className: "tj-delta " + (delta >= 0 ? "up" : "down") }, (delta >= 0 ? "+" : "") + delta.toFixed(1) + " since " + fmtDay(first.d, "short"))),
+      h("div", { className: "tj" }, h("svg", { viewBox: "0 0 " + W + " " + H, preserveAspectRatio: "none", "aria-label": "Grade over time" },
+        tgt && tgt.min >= lo && tgt.min <= hi && h("line", { className: "goal", x1: 0, y1: y(tgt.min), x2: W, y2: y(tgt.min) }),
+        h("path", { className: "ln", d }),
+        h("circle", { className: "dot", cx: x(hist.length - 1), cy: y(last.v), r: 3.5 }))),
+      h("div", { className: "tj-foot" }, h("span", null, fmtDay(first.d, "short")), tgt && h("span", null, g.target + " line at " + tgt.min + "%"), h("span", null, "today")),
+      Math.abs(trend) >= 1.5 && h("p", { className: "muted small", style: { marginTop: ".5rem" } }, trend < 0 ? "Down " + Math.abs(trend).toFixed(1) + " points across your last few entries. A number this shape doesn’t recover on its own." : "Up " + trend.toFixed(1) + " points recently. Whatever changed, keep doing it.")
+    );
+  }
+
   function GcOverview({ g, sum, change, sandbox, goals }) {
     const ret = gcRetention(g, sum, goals || GC_GOALS);
     const [r, setR] = useState(() => localPref("gcSlider", 85));
@@ -5841,7 +6497,54 @@ Rules: the numbers above are only an example of the format; use the real ones fr
     );
   }
   // Terms, components, sub-parts and scores. `structure` edits names and weights; `scores` edits the scores.
-  function GcEditor({ g, sum, change, structure, scores }) {
+  /* =====================================================================
+     Pull scores you already logged into the grade calculator.
+     Quizzes live in subject.quizzes; attendance lives in subject.attend with
+     the three-lates-is-an-absence rule already implemented. Both were being
+     typed a second time by hand. Matching on date means re-pulling is safe.
+     ===================================================================== */
+  const gcQuizLabel = (subject, q) => (itemTopic(subject, q) || "Quiz") + " " + fmtDay(q.date, "short");
+  function gcPullable(subject, part) {
+    const have = new Set(part.items.map((it) => String(it.src || "")));
+    return (subject.quizzes || []).filter((q) => q.items > 0 && !have.has("q:" + q.id));
+  }
+  function GcPullQuizzes({ subject, part, onAdd }) {
+    const [open, setOpen] = useState(false);
+    const [pick, setPick] = useState({});
+    const list = gcPullable(subject, part);
+    if (!list.length) return null;
+    const chosen = list.filter((q) => pick[q.id]);
+    return h(
+      "div",
+      { className: "pull-row" },
+      h("span", { className: "small" }, plural(list.length, "logged quiz score") + " not in here yet"),
+      h("span", { className: "spacer" }),
+      open ? h(React.Fragment, null,
+        h("button", { className: "btn ghost", onClick: () => { setOpen(false); setPick({}); } }, "Cancel"),
+        h("button", { className: "btn primary", disabled: !chosen.length, onClick: () => { onAdd(chosen); setOpen(false); setPick({}); } }, "Add " + chosen.length)
+      ) : h("button", { className: "btn", onClick: () => { setOpen(true); setPick(Object.fromEntries(list.map((q) => [q.id, true]))); } }, "Pull them in"),
+      open && h("div", { className: "pull-list" }, list.map((q) => h("label", { key: q.id, className: "pull-item check" },
+        h("input", { type: "checkbox", checked: !!pick[q.id], onChange: (e) => setPick((v) => ({ ...v, [q.id]: e.target.checked })) }),
+        h("span", null, gcQuizLabel(subject, q)),
+        h("span", { className: "muted" }, q.score + "/" + q.items))))
+    );
+  }
+  function GcPullAttendance({ subject, part, onSet }) {
+    const st = attendStats(subject);
+    if (!st.held) return null;
+    const have = part.items.find((it) => it.src === "attend");
+    const score = Math.max(0, st.held - st.charged);
+    if (have && gcNum(have.score) === score && gcNum(have.max) === st.held) return null;
+    return h(
+      "div",
+      { className: "pull-row" },
+      h("span", { className: "small" }, "Attendance recorded in Class: " + score + " of " + st.held + (st.late ? ", " + plural(st.late, "late") + " counted as " + Math.floor(st.late / 3) : "")),
+      h("span", { className: "spacer" }),
+      h("button", { className: "btn", onClick: () => onSet(score, st.held) }, have ? "Update it" : "Use it here")
+    );
+  }
+
+  function GcEditor({ g, sum, change, structure, scores, subject }) {
     const [focusId, setFocusId] = useState(null);
     const del = (msg, fn) => {
       if (window.confirm(msg)) change(fn);
@@ -5856,13 +6559,28 @@ Rules: the numbers above are only an example of the format; use the real ones fr
       });
       setFocusId(id);
     };
+    const pullQuiz = (ti, ci, pi) => (list) => change((n) => {
+      const p = n.terms[ti].comps[ci].parts[pi];
+      for (const q of list) p.items.push({ id: gcId("gi"), label: gcQuizLabel(subject, q), score: q.score, max: q.items, src: "q:" + q.id });
+    });
+    const pullAttend = (ti, ci, pi) => (score, max) => change((n) => {
+      const p = n.terms[ti].comps[ci].parts[pi];
+      const hit = p.items.find((it) => it.src === "attend");
+      if (hit) { hit.score = score; hit.max = max; hit.label = "Attendance to date"; }
+      else p.items.push({ id: gcId("gi"), label: "Attendance to date", score, max, src: "attend" });
+    });
     const items = (ti, ci, pi, p) => h(
       "div",
       { className: "gc-items" },
+      subject && scores && /quiz/i.test(p.name) && h(GcPullQuizzes, { subject, part: p, onAdd: pullQuiz(ti, ci, pi) }),
+      subject && scores && /attend/i.test(p.name) && h(GcPullAttendance, { subject, part: p, onSet: pullAttend(ti, ci, pi) }),
       p.items.length > 0 && h("div", { className: "gc-item gc-item-head", "aria-hidden": "true" }, h("span", null, "Label"), h("span", null, "Score"), h("span", null), h("span", null, "Out of"), h("span", null), h("span", null)),
       p.items.map((it, ii) => {
         const set = (k, v) => change((n) => {
-          n.terms[ti].comps[ci].parts[pi].items[ii][k] = v;
+          const x = n.terms[ti].comps[ci].parts[pi].items[ii];
+          x[k] = v;
+          // Edited by hand, so stop treating it as a pulled copy.
+          if (k !== "label") delete x.src;
         });
         const pct = gcPctItem(it);
         return h(
@@ -6507,6 +7225,12 @@ Rules: the numbers above are only an example of the format; use the real ones fr
       }
     }, [subject.grading]);
     const sum = useMemo(() => g ? gcSummary(g) : null, [g]);
+    // One snapshot a day, written only when the standing actually moved.
+    useEffect(() => {
+      if (!g || !sum || sum.now === null) return;
+      const next = gcSnap(g, sum.now);
+      if (next !== g) change((n) => { n.hist = next.hist; });
+    }, [sum && sum.now]);
     const list = useMemo(() => gcListFor(allSubjects, subject.id, g), [allSubjects, subject.id, g]);
     const others = allSubjects.filter((s) => s.id !== subject.id && s.grading);
     const start = (ng) => {
@@ -6523,7 +7247,7 @@ Rules: the numbers above are only an example of the format; use the real ones fr
       h("div", { className: "page-head" }, h("div", null, h("h1", { className: "page-title" }, "Grades"), h("p", { className: "muted" }, tab === "all" ? "Every subject at a glance, with your semester QPI." : tab === "whatif" ? "Test scores without changing your real ones." : `${subject.name}: enter scores as you get them and see exactly what you need.`)), h("div", { className: "head-actions" }, tab !== "all" && h("button", { className: "btn", onClick: () => setTab("all") }, "Summary & export"))),
       h("div", { className: "seg-filter", role: "tablist", "aria-label": "Grades sections" }, GC_TABS.map(([k, l]) => h("button", { key: k, role: "tab", "aria-selected": tab === k, className: tab === k ? "on" : "", onClick: () => setTab(k) }, l))),
       needsSetup && h(GcStart, { subject, others, onStart: start }),
-      !needsSetup && tab === "scores" && h(React.Fragment, null, h(GcOverview, { g, sum, change, goals }), h(GcEditor, { g, sum, change, structure: false, scores: true }), h("p", { className: "muted small" }, "Leave the score empty for something that’s coming (like next week’s quiz) and it counts as “still ungraded”. Change weights and letter cutoffs in Setup.")),
+      !needsSetup && tab === "scores" && h(React.Fragment, null, h(GcOverview, { g, sum, change, goals }), h(GcTrajectory, { g, sum }), h(GcEditor, { g, sum, change, structure: false, scores: true, subject }), h("p", { className: "muted small" }, "Leave the score empty for something that’s coming (like next week’s quiz) and it counts as “still ungraded”. Change weights and letter cutoffs in Setup.")),
       !needsSetup && tab === "setup" && h(
         React.Fragment,
         null,
@@ -8003,7 +8727,88 @@ ${c.kindHint}` }
     };
     return h("div", { className: "panel ps-sample" }, h("div", null, h("strong", null, "PAS 7 Statement of Cash Flows starter pack"), h("p", { className: "muted small" }, "33 problems in two sets (squeezes, direct and indirect method, full statements), each with its solution and T-accounts, plus a lecture on the standard.")), h("button", { className: "btn", onClick: add }, "Add to this subject"));
   }
+  /* =====================================================================
+     Cloze cards from bolded rules.
+     The lecture prompt already tells NotebookLM to bold the rule itself, so
+     every bold span is a human-curated key phrase. Blanking one out turns
+     prose you would otherwise only re-read into something you have to recall.
+     Free content from a convention you already follow.
+     ===================================================================== */
+  function lxCloze(l) {
+    const out = [], seen = new Set();
+    for (const sec of l.sections || []) {
+      for (const line of String(sec.body || "").split("\n")) {
+        const t = line.trim();
+        if (!t || t.startsWith("|") || t.startsWith("#")) continue;
+        const body = t.replace(/^[-*•]\s+/, "").replace(/^\d+[.)]\s+/, "").replace(/^>\s?/, "").trim();
+        const spans = [...body.matchAll(/\*\*([^*]+)\*\*/g)];
+        if (!spans.length || spans.length > 3) continue;
+        for (const m of spans) {
+          const term = m[1].trim();
+          if (term.length < 3 || term.length > 70) continue;
+          const q = body.replace(m[0], "______").replace(/\*\*/g, "").trim();
+          if (q.length < 34 || q.length > 320) continue;
+          const k = norm(q);
+          if (seen.has(k)) continue;
+          seen.add(k);
+          out.push({ q, a: term, h: sec.h });
+        }
+      }
+    }
+    return out;
+  }
+
   /* ----- Lectures tab ----- */
+  /* =====================================================================
+     Lecture spaced repetition.
+     A lecture had one boolean: done. But prose is forgotten faster than cards,
+     and "I read that once in October" is how a topic quietly rots. Marking one
+     studied now schedules a re-skim at 3, 10, 30 then 60 days — short looks,
+     not re-reading, which is the point.
+     ===================================================================== */
+  const LX_STEPS = [3, 10, 30, 60, 120];
+  const lxDue = (l) => (l.rv && l.rv.due) || null;
+  const lxIsDue = (l) => !!(l.done && lxDue(l) && lxDue(l) <= today());
+  function lxStudied(l, again) {
+    const n = again ? 0 : Math.min(LX_STEPS.length - 1, ((l.rv && l.rv.n) || 0) + (l.done ? 1 : 0));
+    return { n, due: addDays(today(), LX_STEPS[n]), last: today() };
+  }
+  function lxDueList(subject) {
+    return (subject.lectures || []).filter(lxIsDue).sort((a, b) => lxDue(a) < lxDue(b) ? -1 : 1);
+  }
+  function LxDueChip({ l }) {
+    const d = lxDue(l);
+    if (!l.done || !d) return null;
+    const n = daysUntil(d);
+    return h("span", { className: "lx-due" + (n <= 0 ? " now" : "") }, h(Icon, { name: "calendar", size: 12 }), n <= 0 ? "Re-skim now" : n === 1 ? "Re-skim tomorrow" : "Re-skim in " + plural(n, "day"));
+  }
+
+  /* ----- lecture and problem set cross-links -----
+     p.subtopic and lecture section headings are both free text about the same
+     concepts. Matching them means a missed problem is two taps from the exact
+     paragraph that governs it, which is a much tighter loop than "go find it". */
+  function xrefLecture(subject, p, setTopicId) {
+    const pool = (subject.lectures || []).filter((l) => !setTopicId || !l.topicId || l.topicId === setTopicId);
+    if (!pool.length) return null;
+    const want = norm(p.subtopic || p.title || "");
+    if (!want) return null;
+    const words = want.split(" ").filter((w) => w.length > 3);
+    let best = null;
+    for (const l of pool) {
+      for (const sec of l.sections || []) {
+        const hd = norm(sec.h || "");
+        if (!hd) continue;
+        let score = 0;
+        if (hd === want) score = 100;
+        else if (hd.includes(want) || want.includes(hd)) score = 60;
+        else score = words.filter((w) => hd.includes(w)).length * 12;
+        if (l.topicId && l.topicId === setTopicId) score += 8;
+        if (score >= 24 && (!best || score > best.score)) best = { l, sec, score };
+      }
+    }
+    return best;
+  }
+
   function LxView({ subject, update, toast, go, init }) {
     const lectures = subject.lectures || [];
     const [open, setOpen] = useState(init && init.open || null);
@@ -8011,7 +8816,7 @@ ${c.kindHint}` }
     const [query, setQuery] = useState("");
     const [edit, setEdit] = useState(null);
     const cur = open && lectures.find((x) => x.id === open);
-    if (cur) return h(React.Fragment, null, h(LxReader, { subject, l: cur, update, toast, go, onBack: () => setOpen(null), onEdit: () => setEdit(cur) }), edit && h(LxEditor, { subject, item: edit === "new" ? null : edit, update, toast, onClose: () => setEdit(null), onDeleted: () => { setEdit(null); setOpen(null); } }));
+    if (cur) return h(React.Fragment, null, h(LxReader, { subject, l: cur, update, toast, go, jumpTo: init && init.sec, onBack: () => setOpen(null), onEdit: () => setEdit(cur) }), edit && h(LxEditor, { subject, item: edit === "new" ? null : edit, update, toast, onClose: () => setEdit(null), onDeleted: () => { setEdit(null); setOpen(null); } }));
     const q = norm(query);
     const shown = lectures.filter((l) => (topic === "all" || (topic === "" ? !l.topicId : l.topicId === topic)) && (!q || norm(`${l.title} ${l.summary} ${l.sections.map((s) => s.h).join(" ")}`).includes(q)));
     const groups = psByTopic(subject, shown);
@@ -8029,7 +8834,14 @@ ${c.kindHint}` }
   function PsEmpty({ icon, title, text, go, pid }) {
     return h("div", { className: "empty big" }, h(Icon, { name: icon, size: 32 }), h("h2", null, title), h("p", { className: "muted", style: { maxWidth: "34rem" } }, text), h("div", { className: "row-end", style: { justifyContent: "center" } }, h("button", { className: "btn", onClick: () => go("nlm", { pid }) }, "Get the NotebookLM prompt"), h("button", { className: "btn primary", onClick: () => go("data") }, "Paste NotebookLM reply")));
   }
-  function LxReader({ subject, l, update, toast, go, onBack, onEdit }) {
+  function LxReader({ subject, l, update, toast, go, onBack, onEdit, jumpTo }) {
+    // cloze and addCloze are defined below, next to addCards.
+    // Arriving from a missed problem: scroll to the exact section that governs it.
+    useEffect(() => {
+      if (!jumpTo) return;
+      const el = document.getElementById(jumpTo);
+      if (el) requestAnimationFrame(() => el.scrollIntoView({ behavior: "smooth", block: "start" }));
+    }, [jumpTo]);
     const [shown, setShown] = useState({});
     const set = (fn) => update((s) => {
       const x = (s.lectures || []).find((y) => y.id === l.id);
@@ -8047,6 +8859,19 @@ ${c.kindHint}` }
       });
       toast(n ? `Added ${n} flashcard${n === 1 ? "" : "s"} to the Concept vault` : "These terms are already in your Concept vault");
     };
+    const cloze = useMemo(() => lxCloze(l), [l]);
+    const addCloze = () => {
+      const fresh = cloze.filter((c) => !subject.cards.some((x) => norm(x.q) === norm("Fill in the blank: " + c.q)));
+      if (!fresh.length) { toast("Every one of those is already in your vault."); return; }
+      update((s) => {
+        for (const c of fresh) {
+          const q = "Fill in the blank: " + c.q;
+          if (s.cards.some((x) => norm(x.q) === norm(q))) continue;
+          s.cards.push({ id: uid("c"), topicId: l.topicId || null, q, a: c.a, tip: [l.title, c.h].filter(Boolean).join(" — "), conf: null });
+        }
+      });
+      toast(`Added ${plural(fresh.length, "cloze card")} from the bolded rules`);
+    };
     const t = l.topicId && subject.topics.find((x) => x.id === l.topicId);
     return h(
       "section",
@@ -8058,7 +8883,12 @@ ${c.kindHint}` }
       l.sections.map((s) => h("section", { key: s.id, id: s.id, className: "lx-sec" }, s.h && h("h2", null, s.h), h(PsMd, { text: s.body }))),
       l.terms.length > 0 && h("section", { className: "lx-sec" }, h("h2", null, "Key terms"), h("dl", { className: "lx-terms" }, l.terms.map((x, i) => h("div", { key: i }, h("dt", null, x.t), h("dd", null, psInline(x.d)))))),
       l.checks.length > 0 && h("section", { className: "lx-sec" }, h("h2", null, "Check yourself"), h("ol", { className: "lx-checks" }, l.checks.map((c, i) => h("li", { key: i }, h(PsMd, { text: c.q }), shown[i] ? h("div", { className: "lx-ans" }, h(PsMd, { text: c.a })) : h("button", { className: "link-btn", onClick: () => setShown((v) => ({ ...v, [i]: true })) }, "Show answer"))))),
-      h("div", { className: "lx-foot panel" }, h("button", { className: `btn${l.done ? "" : " primary"}`, onClick: () => { set((x) => { x.done = !x.done; }); toast(l.done ? "Marked as not studied" : "Marked as studied"); } }, l.done ? "Studied ✓ (undo)" : "Mark as studied"), l.terms.length > 0 && h("button", { className: "btn", onClick: addCards }, `Make ${l.terms.length} flashcards`), h("button", { className: "btn", onClick: () => go("nlm", { pid: "pset", topicId: l.topicId || "" }) }, "Problem set prompt for this topic"), h("button", { className: "btn ghost", onClick: async () => toast(await copyText(lxText(l)) ? "Lecture copied. Paste it into NotebookLM as a source" : "Couldn’t copy") }, "Copy as text"), h("button", { className: "btn ghost", onClick: onEdit }, "Edit"))
+      h("div", { className: "lx-foot panel" }, lxIsDue(l)
+        ? h(React.Fragment, null,
+            h("button", { className: "btn primary", onClick: () => { set((x) => { x.rv = lxStudied(x, false); }); toast("Re-skimmed. Next look in " + plural(LX_STEPS[Math.min(LX_STEPS.length - 1, ((l.rv && l.rv.n) || 0) + 1)], "day") + "."); } }, "Still solid"),
+            h("button", { className: "btn bad", onClick: () => { set((x) => { x.rv = lxStudied(x, true); }); toast("Back in 3 days."); } }, "Shaky, show me sooner"))
+        : h("button", { className: `btn${l.done ? "" : " primary"}`, onClick: () => { const was = l.done; set((x) => { x.done = !was; x.rv = was ? null : lxStudied(x, false); }); toast(was ? "Marked as not studied" : "Studied. It comes back in 3 days for a quick re-skim."); } }, l.done ? "Studied ✓ (undo)" : "Mark as studied")),
+      h("div", { className: "lx-foot panel", style: { marginTop: "-.4rem" } }, l.terms.length > 0 && h("button", { className: "btn", onClick: addCards }, `Make ${l.terms.length} flashcards`), cloze.length > 0 && h("button", { className: "btn", onClick: addCloze, title: "One card per bolded rule, with the rule blanked out" }, `Make ${cloze.length} cloze cards`), h("button", { className: "btn", onClick: () => go("ask", { focus: { kind: "lecture", id: l.id } }) }, h(Icon, { name: "ask", size: 16 }), " Ask about this lecture"), h("button", { className: "btn", onClick: () => go("nlm", { pid: "pset", topicId: l.topicId || "" }) }, "Problem set prompt for this topic"), h("button", { className: "btn ghost", onClick: async () => toast(await copyText(lxText(l)) ? "Lecture copied. Paste it into NotebookLM as a source" : "Couldn’t copy") }, "Copy as text"), h("button", { className: "btn ghost", onClick: onEdit }, "Edit"))
     );
   }
   function LxEditor({ subject, item, update, toast, onClose, onDeleted }) {
@@ -8135,7 +8965,13 @@ ${c.kindHint}` }
     const mark = (pid, st) => update((s) => {
       const x = (s.psets || []).find((y) => y.id === set.id);
       const p = x && x.problems.find((y) => y.id === pid);
-      if (p) { p.st = p.st === st ? "" : st; p.at = today(); }
+      if (!p) return;
+      const off = p.st === st;
+      p.st = off ? "" : st;
+      p.at = today();
+      // Marking a miss schedules it back into tomorrow's review.
+      if (!off && st === "miss") p.rt = { streak: 0, due: addDays(today(), 1), last: today() };
+      else p.rt = null;
     });
     const logMistake = (p) => {
       update((s) => {
@@ -8150,7 +8986,7 @@ ${c.kindHint}` }
       h("button", { className: "link-btn back-link", onClick: onBack }, "‹ All problem sets"),
       h("header", { className: "lx-head" }, h("h1", { className: "page-title" }, set.title), h("p", { className: "muted" }, set.topicId && h("span", { className: "std" }, topicName(subject, set.topicId)), " ", [!set.topicId && set.topicText, set.source].filter(Boolean).join(". "))),
       set.intro && h(PsMd, { text: set.intro, className: "lx-summary" }),
-      h("div", { className: "ps-tools" }, h("div", { className: "seg-filter", role: "group", "aria-label": "Show problems" }, [["all", "All", t.n], ["todo", "Not tried", t.todo], ["miss", "Missed", t.miss], ["got", "Got it", t.got]].map(([k, l, n]) => h("button", { key: k, className: filter === k ? "on" : "", "aria-pressed": filter === k, onClick: () => setFilter(k) }, l, " ", h("span", { className: "n" }, n)))), h("label", { className: "ps-switch" }, h("input", { type: "checkbox", checked: reveal, onChange: toggleAll }), " Show all solutions"), h("span", { className: "spacer" }), h("button", { className: "btn ghost", onClick: () => psPrint(set, false) }, "Print problems"), h("button", { className: "btn ghost", onClick: () => psPrint(set, true) }, "Print with answer key"), h("button", { className: "btn ghost", onClick: () => setMeta(true) }, "Set options")),
+      h("div", { className: "ps-tools" }, h("div", { className: "seg-filter", role: "group", "aria-label": "Show problems" }, [["all", "All", t.n], ["todo", "Not tried", t.todo], ["miss", "Missed", t.miss], ["got", "Got it", t.got]].map(([k, l, n]) => h("button", { key: k, className: filter === k ? "on" : "", "aria-pressed": filter === k, onClick: () => setFilter(k) }, l, " ", h("span", { className: "n" }, n)))), h("label", { className: "ps-switch" }, h("input", { type: "checkbox", checked: reveal, onChange: toggleAll }), " Show all solutions"), h("span", { className: "spacer" }), h("button", { className: "btn ghost", onClick: () => psPrint(set, false) }, "Print problems"), h("button", { className: "btn ghost", onClick: () => psPrint(set, true) }, "Print with answer key"), h("button", { className: "btn ghost", onClick: () => go("ask", { focus: { kind: "pset", id: set.id } }) }, "Ask about my misses"), h("button", { className: "btn ghost", onClick: () => setMeta(true) }, "Set options")),
       allGroups.length > 1 && allGroups.some(([k]) => k) && h("nav", { className: "lx-toc ps-toc", "aria-label": "Subtopics in this set" }, h("span", { className: "muted small" }, "In this set"), h("ul", null, allGroups.map(([k, list]) => h("li", { key: k || "_" }, h("a", { href: "#", onClick: (e) => { e.preventDefault(); setFilter("all"); setTimeout(() => { const el = document.getElementById(`sub-${norm(k) || "other"}`); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }, 30); } }, k || "Other problems"), h("span", { className: "muted small" }, ` ${list.length}`))))),
       !groups.length ? h("div", { className: "empty" }, h("p", null, "Nothing here."), h("p", { className: "muted" }, "Pick “All” to see every problem.")) : groups.map(([k, list]) => h("div", { key: k || "_", className: "ps-sub", id: `sub-${norm(k) || "other"}` }, k && h("h2", { className: "ps-sub-h" }, k), list.map((p) => h(PsProblem, { key: p.id, p, revealAll: reveal, onMark: (st) => mark(p.id, st), onLog: () => logMistake(p), onEdit: () => setEdit(p) })))),
       h("div", { className: "row-end" }, h("button", { className: "btn", onClick: () => setEdit("new") }, h(Icon, { name: "plus", size: 16 }), " Add a problem"), h("button", { className: "btn", onClick: () => go("nlm", { pid: "pset", topicId: set.topicId || "" }) }, "Get more from NotebookLM")),
@@ -8158,7 +8994,7 @@ ${c.kindHint}` }
       meta && h(PsSetEditor, { subject, set, update, toast, onClose: () => setMeta(false), onDeleted: () => { setMeta(false); onBack(); } })
     );
   }
-  function PsProblem({ p, revealAll, onMark, onLog, onEdit }) {
+  function PsProblem({ p, revealAll, onMark, onLog, onEdit, xref, onXref }) {
     const [open, setOpen] = useState(false);
     const show = open || revealAll;
     const hasSol = p.answer || p.solution || p.approach;
@@ -8327,6 +9163,370 @@ ${c.kindHint}` }
   ];
   NLM_PROMPTS.push(...PS_NEW_PROMPTS);
   NLM_GROUPS.splice(2, 0, ["lp", "Lectures & problem sets", "JSON replies go to Import, then show in the Lectures and Problem sets tabs"]);
+  /* =====================================================================
+     Gemini tutor.
+     Why hand-rolled attempts at this usually fail, written down so it stays fixed:
+       1. The key must come from aistudio.google.com/apikey. Google AI Plus and
+          Google One are subscriptions to the Gemini APP, not to this API.
+       2. A key with an HTTP referrer or IP restriction returns 403 from a browser.
+          Leave it unrestricted; it never leaves this device.
+       3. Model names are retired and renamed constantly. Nothing here hardcodes one:
+          we ask the key which models it can actually run, and remember the choice.
+       4. Newer models stream internal reasoning parts marked `thought`. Those must
+          be filtered out or the answer looks like gibberish.
+     The key and the chat live in localStorage only. They are deliberately NOT part
+     of `data`, so neither is ever pushed to your GitHub repo.
+     ===================================================================== */
+  const GEM = { k: "bsa_gem_key", m: "bsa_gem_model", base: "https://generativelanguage.googleapis.com/v1beta" };
+  const gemKey = () => (lsGet(GEM.k) || "").trim();
+  const gemModel = () => (lsGet(GEM.m) || "").trim();
+  const gemReady = () => !!gemKey() && !!gemModel();
+
+  async function gemErr(resp) {
+    let j = {};
+    try { j = await resp.json(); } catch (e) {}
+    const m = (j.error && j.error.message) || resp.statusText || "";
+    if (resp.status === 400 && /api[_ ]?key|API_KEY/i.test(m)) return new Error("Google didn’t accept that key. Make sure it came from aistudio.google.com/apikey and was pasted whole, with no spaces.");
+    if (resp.status === 400) return new Error("Google rejected the request: " + m);
+    if (resp.status === 401 || resp.status === 403) return new Error("Google refused the key (" + resp.status + "). Two usual causes: the key has a website or IP restriction on it (remove the restriction), or the Generative Language API isn’t enabled on that project. " + m);
+    if (resp.status === 404) return new Error("That model isn’t available to this key any more. Tap Change model and pick another from the list.");
+    if (resp.status === 429) return new Error("You’ve hit Google’s rate limit for now. Wait a minute, or switch to a Flash model, which has a much higher free allowance.");
+    if (resp.status >= 500) return new Error("Google’s servers had a problem. Try again in a moment.");
+    return new Error("Gemini error " + resp.status + ": " + m);
+  }
+  function gemNetErr(e) {
+    if (e && e.name === "AbortError") return e;
+    if (!navigator.onLine) return new Error("You’re offline. The tutor needs a connection; everything else in the app still works.");
+    return new Error("Couldn’t reach Google. If you’re on school or office Wi-Fi it may be blocking generativelanguage.googleapis.com — switching to mobile data is a quick way to check.");
+  }
+  // Ask the key what it can actually run, so a renamed or retired model never breaks the app.
+  async function gemListModels(key) {
+    let resp;
+    try { resp = await fetch(GEM.base + "/models?pageSize=200&key=" + encodeURIComponent(key)); }
+    catch (e) { throw gemNetErr(e); }
+    if (!resp.ok) throw await gemErr(resp);
+    const j = await resp.json();
+    const out = (j.models || [])
+      .filter((m) => (m.supportedGenerationMethods || []).includes("generateContent"))
+      .map((m) => ({ id: String(m.name || "").replace(/^models\//, ""), name: m.displayName || "" }))
+      .filter((m) => m.id && !/embed|aqa|imagen|veo|tts|audio|image-generation/i.test(m.id));
+    if (!out.length) throw new Error("The key works, but no chat models came back. Check that the Generative Language API is enabled for that project in Google AI Studio.");
+    // Prefer a current, stable Flash model: fast, and the most generous free allowance.
+    const score = (m) => {
+      let s = 0;
+      if (/flash/i.test(m.id)) s += 100;
+      if (/pro/i.test(m.id)) s += 60;
+      if (/lite/i.test(m.id)) s -= 15;
+      if (/preview|exp|experimental|thinking/i.test(m.id)) s -= 40;
+      if (/latest/i.test(m.id)) s += 3;
+      const v = m.id.match(/(\d+)[.-](\d+)/) || [0, 0, 0];
+      return s + Number(v[1] || 0) * 10 + Number(v[2] || 0);
+    };
+    out.sort((a, b) => score(b) - score(a) || a.id.localeCompare(b.id));
+    return out;
+  }
+  // Streams the reply. Falls back to reading the whole body where streaming isn't available.
+  async function gemSend({ key, model, system, turns, onText, signal }) {
+    const body = {
+      systemInstruction: { parts: [{ text: system }] },
+      contents: turns.map((t) => ({ role: t.role === "me" ? "user" : "model", parts: [{ text: t.text }] })),
+      generationConfig: { temperature: 0.4, topP: 0.95, maxOutputTokens: 8192 }
+    };
+    const url = GEM.base + "/models/" + encodeURIComponent(model) + ":streamGenerateContent?alt=sse&key=" + encodeURIComponent(key);
+    let resp;
+    try {
+      resp = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal });
+    } catch (e) { throw gemNetErr(e); }
+    if (!resp.ok) throw await gemErr(resp);
+    let got = false, stopped = "";
+    const eat = (chunk) => {
+      for (const line of chunk.split("\n")) {
+        if (!line.startsWith("data:")) continue;
+        const d = line.slice(5).trim();
+        if (!d || d === "[DONE]") continue;
+        let j;
+        try { j = JSON.parse(d); } catch (e) { continue; }
+        if (j.promptFeedback && j.promptFeedback.blockReason) stopped = j.promptFeedback.blockReason;
+        const c = (j.candidates || [])[0];
+        if (!c) continue;
+        if (c.finishReason && c.finishReason !== "STOP" && c.finishReason !== "MAX_TOKENS") stopped = c.finishReason;
+        // Some models stream internal reasoning parts; show only the answer.
+        const t = ((c.content && c.content.parts) || []).filter((p) => !p.thought && p.text).map((p) => p.text).join("");
+        if (t) { got = true; onText(t); }
+      }
+    };
+    if (resp.body && resp.body.getReader) {
+      const reader = resp.body.getReader(), dec = new TextDecoder();
+      let buf = "";
+      for (;;) {
+        const r = await reader.read();
+        if (r.done) break;
+        buf += dec.decode(r.value, { stream: true });
+        const parts = buf.split("\n\n");
+        buf = parts.pop();
+        for (const p of parts) eat(p);
+      }
+      if (buf.trim()) eat(buf);
+    } else {
+      const text = await resp.text();
+      for (const p of text.split("\n\n")) eat(p);
+    }
+    if (!got) throw new Error(stopped === "SAFETY" ? "Gemini declined to answer that one. Try rephrasing it." : stopped ? "Gemini stopped early (" + stopped + ")." : "Gemini returned an empty answer. Try again, or pick a different model.");
+  }
+
+  /* ----- what the tutor knows: rebuilt from your dashboard on every single turn ----- */
+  function gemContext(subject, focus) {
+    const L = [];
+    L.push("Today is " + fmtDay(today(), "long") + ". The student is taking " + subject.name + (subject.code ? " (" + subject.code + ")" : "") + (subject.school ? " at " + subject.school : "") + ".");
+    const topics = studyTopics(subject);
+    if (topics.length) {
+      L.push("\nCOURSE ROADMAP (status is the student's own marking):");
+      for (const t of topics) L.push("- " + [t.code, t.title].filter(Boolean).join(" ") + (t.standard ? " [" + t.standard + "]" : "") + " — " + t.status + (t.due ? ", due " + fmtDay(t.due, "short") : ""));
+    }
+    const ex = focusExam(subject);
+    if (ex) {
+      const r = examReadiness(subject, ex);
+      L.push("\nNEXT EXAM: " + ex.title + (ex.due ? " on " + fmtDay(ex.due, "long") + " (" + plural(Math.max(0, daysUntil(ex.due)), "day") + " away)" : "") + ". Scope: " + (ex.scope || "see roadmap") + ". The app rates overall readiness at " + r.pct + "%.");
+    }
+    const weak = topics.map((t) => {
+      const cs = subject.cards.filter((c) => c.topicId === t.id);
+      return cs.length ? { t, s: Math.round(cs.reduce((a, c) => a + cardStrength(c), 0) / cs.length * 100) } : null;
+    }).filter(Boolean).sort((a, b) => a.s - b.s).slice(0, 6);
+    if (weak.length) L.push("\nWEAKEST TOPICS, by how well flashcards are sticking: " + weak.map((x) => (x.t.code || x.t.title) + " " + x.s + "%").join(", ") + ".");
+    const open = subject.mistakes.filter((m) => m.status !== "Cleared").slice(0, 10);
+    if (open.length) {
+      L.push("\nMISTAKES THE STUDENT HAS NOT CLEARED (from their own log):");
+      for (const m of open) L.push("- [" + itemTopic(subject, m) + "] Q: " + psPlain(m.question).slice(0, 220) + " | they answered: " + (psPlain(m.wrong).slice(0, 120) || "(blank)") + " | correct: " + psPlain(m.correct).slice(0, 160) + (m.trap ? " | trap: " + psPlain(m.trap).slice(0, 160) : ""));
+    }
+    const qz = subject.quizzes.slice(0, 6);
+    if (qz.length) L.push("\nRECENT QUIZ SCORES: " + qz.map((q) => q.date + " " + q.score + "/" + q.items + " (" + itemTopic(subject, q) + ")").join("; ") + ".");
+    const g = subject.grading ? gcNorm(subject.grading) : null;
+    if (g) {
+      const sum = gcSummary(g);
+      const tgt = g.target && g.scale.find((x) => x.letter === g.target);
+      L.push("\nGRADES: standing " + gcPctTxt(g, sum.now) + (sum.letter ? " (" + sum.letter.letter + ")" : "") + ". " + Math.round(sum.share * 100) + "% of the final grade is still ungraded." + (tgt ? " Their goal is " + tgt.letter + ": they need " + gcNeedView(gcNeed(g, sum, tgt.min)).t + " on everything left." : ""));
+    }
+    const lx = subject.lectures || [];
+    if (lx.length) L.push("\nLECTURE NOTES SAVED IN THE APP: " + lx.map((x) => x.title).join("; ") + ".");
+    if (focus && focus.kind === "lecture") {
+      const l = lx.find((x) => x.id === focus.id);
+      if (l) L.push("\n=== FULL TEXT OF THE LECTURE THE STUDENT IS ASKING ABOUT ===\n" + lxText(l).slice(0, 14000) + "\n=== END OF LECTURE ===");
+    }
+    if (focus && focus.kind === "pset") {
+      const s = (subject.psets || []).find((x) => x.id === focus.id);
+      if (s) {
+        const missed = s.problems.filter((p) => p.st === "miss");
+        const show = (missed.length ? missed : s.problems).slice(0, 6);
+        L.push("\n=== PROBLEMS FROM \"" + s.title + "\"" + (missed.length ? " THAT THE STUDENT GOT WRONG" : "") + " ===");
+        for (const p of show) L.push("Problem " + p.no + " (" + (p.subtopic || "general") + "): " + psPlain(p.problem).slice(0, 900) + "\nAnswer: " + psPlain(p.answer).slice(0, 400) + (p.trap ? "\nTrap: " + psPlain(p.trap).slice(0, 300) : ""));
+        L.push("=== END OF PROBLEMS ===");
+      }
+    }
+    return L.join("\n");
+  }
+  function gemSystem(subject, focus) {
+    return [
+      "You are a patient but exacting tutor for a Philippine college student. Below is a snapshot of their study dashboard: their roadmap, their own mistake log, how well their flashcards are sticking, and their grades. Treat it as fact about this specific student.",
+      "",
+      "How to answer:",
+      "- Use their data. If they ask what to study, name the actual weak topics below. Never give generic study advice.",
+      "- Be concrete. State the rule first, then apply it to a worked example with real numbers where the subject is computational.",
+      "- Philippine context where it matters: PAS and PFRS numbering, pesos, RA numbers, local examples.",
+      "- Keep it tight. Short paragraphs, bullets and markdown tables. No preamble like \"Great question\".",
+      "- If you are unsure, or the dashboard does not contain something, say so plainly. Never invent a standard number, a page reference or a rule.",
+      "- When they ask for flashcards, mistakes, a problem set or a lecture to import, reply with ONLY valid JSON in the shape the app expects, with no code fences and no commentary around it.",
+      "",
+      gemContext(subject, focus)
+    ].join("\n");
+  }
+  // A reply that is importable JSON gets a one-tap route into the Import tab.
+  function gemFindJSON(text) {
+    const t = String(text || "");
+    const keys = /"(flashcards|topics|mistakes|quizzes|problemSets|lectures|drills|grading|textbook)"\s*:/;
+    const fence = t.match(/```(?:json)?\s*([\s\S]*?)```/);
+    const cand = fence ? fence[1] : ((t.match(/[[{][\s\S]*[\]}]/) || [])[0] || "");
+    if (!cand || !keys.test(cand)) return "";
+    try { JSON.parse(cand); return cand.trim(); } catch (e) {}
+    try { const fixed = psRepairJSON(cand); JSON.parse(fixed); return fixed.trim(); } catch (e) {}
+    return "";
+  }
+  const GEM_CHIPS = [
+    ["What should I study today?", "Look at my roadmap, my weakest topics and my next exam. Tell me exactly what to study today and for how long, in order, and why that order. Name real topics, not generic advice."],
+    ["Teach my weakest topic", "Take my weakest topic from my data and teach it from scratch: the rule in plain words first, then at exam level with the exact terms, then one worked example, then the two traps examiners use on it. End with three questions and wait for my answers."],
+    ["Quiz me", "Quiz me on my weakest topics, one question at a time, and wait for my answer before continuing. After each answer say whether I'm right, give the correct answer, and explain in one or two sentences why the wrong choice was tempting. Ask ten, then give my score and the three things to review first."],
+    ["Why do I keep missing these?", "Look at my uncleared mistakes. Find the pattern: is it one concept I never learned, careless reading, or two similar rules I keep confusing? Name the pattern, give me the single rule that fixes most of them, and three questions that test exactly that."],
+    ["Make flashcards", "Make 15 flashcards on my weakest topic. Reply with ONLY valid JSON, no code fences, in this shape: { \"flashcards\": [ { \"topic\": \"...\", \"question\": \"...\", \"answer\": \"...\", \"tip\": \"...\" } ] }. Keep every answer under 60 words."],
+    ["Am I on track?", "Given my grades, my exam readiness and the days left, am I on track? Be honest, including if the answer is no. If not, say precisely what has to change this week."]
+  ];
+
+  function GemSetup({ onDone, onClose, toast }) {
+    const [key, setKey] = useState(() => gemKey());
+    const [models, setModels] = useState([]);
+    const [model, setModel] = useState(() => gemModel());
+    const [busy, setBusy] = useState(false);
+    const [err, setErr] = useState("");
+    const test = () => {
+      setErr("");
+      setBusy(true);
+      gemListModels(key.trim()).then((ms) => {
+        setModels(ms);
+        setModel((cur) => (cur && ms.some((m) => m.id === cur)) ? cur : ms[0].id);
+        setBusy(false);
+      }).catch((e) => { setErr(e.message); setBusy(false); });
+    };
+    const save = () => {
+      lsSet(GEM.k, key.trim());
+      lsSet(GEM.m, model);
+      toast("Connected to Gemini");
+      onDone();
+    };
+    return h(
+      Modal,
+      { title: "Connect Gemini", onClose, wide: true, footer: h(React.Fragment, null, gemKey() && h("button", { className: "btn danger ghost", onClick: () => { if (!window.confirm("Remove the key from this device? Your chats stay.")) return; lsSet(GEM.k, null); lsSet(GEM.m, null); toast("Key removed"); onDone(); } }, "Remove key"), h("span", { className: "spacer" }), h("button", { className: "btn ghost", onClick: onClose }, "Cancel"), models.length ? h("button", { className: "btn primary", onClick: save }, "Save and start") : h("button", { className: "btn primary", disabled: busy || !key.trim(), onClick: test }, busy ? "Checking…" : "Test the key")) },
+      h("div", { className: "ai-setup" },
+        h("p", null, h("strong", null, "Google AI Plus does not include this."), " That subscription is for the Gemini app at gemini.google.com. The API is a separate product with its own key and its own free allowance, which is plenty for a study tutor."),
+        h("ol", null,
+          h("li", null, "Open ", h("a", { href: "https://aistudio.google.com/apikey", target: "_blank", rel: "noopener noreferrer" }, "aistudio.google.com/apikey"), " and sign in with your Google account."),
+          h("li", null, "Create an API key. If it asks for a project, let it make one."),
+          h("li", null, h("strong", null, "Do not add a website or IP restriction."), " Restricted keys are refused from a browser with a 403. The key is stored on this device only and never goes to your GitHub repo."),
+          h("li", null, "Copy it and paste it below.")
+        ),
+        h(Field, { label: "API key" }, h("input", { type: "password", value: key, placeholder: "AIza…", autoComplete: "off", autoCapitalize: "none", autoCorrect: "off", spellCheck: false, onChange: (e) => { setKey(e.target.value); setModels([]); setErr(""); } })),
+        err && h("p", { className: "error", role: "alert" }, err),
+        models.length > 0 && h(React.Fragment, null,
+          h("p", { className: "bk-note" }, "The key works. " + plural(models.length, "model") + " available."),
+          h(Field, { label: "Model", hint: "Flash models are fast and have the most generous free allowance. Pro is slower but stronger on hard computations." },
+            h("select", { value: model, onChange: (e) => setModel(e.target.value) }, models.map((m) => h("option", { key: m.id, value: m.id }, m.name ? m.name + " — " + m.id : m.id))))
+        )
+      )
+    );
+  }
+
+  function AskView({ subject, toast, go, init, settings }) {
+    const CHAT = "bsa_chat_" + subject.id;
+    const [msgs, setMsgs] = useState(() => { try { return JSON.parse(lsGet(CHAT) || "[]") || []; } catch (e) { return []; } });
+    const [text, setText] = useState("");
+    const [busy, setBusy] = useState(false);
+    const [setup, setSetup] = useState(false);
+    const [ready, setReady] = useState(gemReady);
+    const [focus, setFocus] = useState(() => (init && init.focus) || null);
+    const abort = useRef(null);
+    const endRef = useRef(null);
+    const stick = useRef(true);
+    const boxRef = useRef(null);
+    useEffect(() => { try { lsSet(CHAT, JSON.stringify(msgs.slice(-60))); } catch (e) {} }, [msgs]);
+    useEffect(() => { if (stick.current && endRef.current) endRef.current.scrollIntoView({ block: "end" }); }, [msgs]);
+    useEffect(() => {
+      const onScroll = () => { stick.current = window.innerHeight + window.scrollY >= document.body.scrollHeight - 160; };
+      window.addEventListener("scroll", onScroll, { passive: true });
+      return () => { window.removeEventListener("scroll", onScroll); if (abort.current) abort.current.abort(); };
+    }, []);
+    const lectures = subject.lectures || [], psets = subject.psets || [];
+    const ask = (q) => {
+      const body = String(q || "").trim();
+      if (!body || busy) return;
+      if (!gemReady()) { setSetup(true); return; }
+      stick.current = true;
+      setText("");
+      const mine = { id: uid("u"), role: "me", text: body };
+      const reply = { id: uid("a"), role: "ai", text: "" };
+      const history = msgs.filter((m) => m.text && !m.err).slice(-20).concat([mine]);
+      setMsgs((v) => v.concat([mine, reply]));
+      setBusy(true);
+      const ctrl = new AbortController();
+      abort.current = ctrl;
+      let acc = "";
+      gemSend({
+        key: gemKey(), model: gemModel(), system: gemSystem(subject, focus), turns: history, signal: ctrl.signal,
+        onText: (t) => {
+          acc += t;
+          setMsgs((v) => v.map((m) => m.id === reply.id ? { ...m, text: acc } : m));
+        }
+      }).catch((e) => {
+        if (e && e.name === "AbortError") {
+          setMsgs((v) => v.map((m) => m.id === reply.id ? { ...m, text: acc + (acc ? "\n\n_(stopped)_" : "Stopped.") } : m));
+          return;
+        }
+        setMsgs((v) => v.map((m) => m.id === reply.id ? { ...m, text: e.message, err: true } : m));
+      }).then(() => { setBusy(false); abort.current = null; });
+    };
+    const clear = () => {
+      if (msgs.length && !window.confirm("Clear this conversation? Your study data is not affected.")) return;
+      setMsgs([]);
+      lsSet(CHAT, null);
+    };
+    const focusLabel = focus && focus.kind === "lecture" ? (lectures.find((x) => x.id === focus.id) || {}).title : focus && focus.kind === "pset" ? (psets.find((x) => x.id === focus.id) || {}).title : "";
+    return h(
+      "section",
+      { className: "view ai-wrap" },
+      h("div", { className: "page-head" }, h("div", null, h("h1", { className: "page-title" }, "Ask"), h("p", { className: "muted" }, "A tutor that can already see your roadmap, your mistake log, your flashcard memory and your grades. You never have to explain your situation.")), h("div", { className: "head-actions" }, msgs.length > 0 && h("button", { className: "btn ghost", onClick: clear }, "Clear chat"), h("button", { className: "btn ghost", onClick: () => setSetup(true) }, ready ? "Key & model" : "Connect"))),
+      !ready ? h("div", { className: "empty big" },
+        h(Icon, { name: "ask", size: 32 }),
+        h("h2", null, "Connect Gemini to start"),
+        h("p", { className: "muted", style: { maxWidth: "36rem" } }, "One free API key from Google AI Studio. Your Google AI Plus subscription is for the Gemini app and won’t work here — the API is separate, and its free tier is plenty for this."),
+        h("button", { className: "btn primary", onClick: () => setSetup(true) }, "Connect Gemini")
+      ) : h(React.Fragment, null,
+        (lectures.length > 0 || psets.length > 0) && h("div", { className: "ai-ctx" },
+          h("span", null, "Looking at:"),
+          h("select", { value: focus ? focus.kind + ":" + focus.id : "", onChange: (e) => { const v = e.target.value; setFocus(v ? { kind: v.split(":")[0], id: v.split(":").slice(1).join(":") } : null); } },
+            h("option", { value: "" }, "My whole dashboard"),
+            lectures.length > 0 && h("optgroup", { label: "Lectures" }, lectures.map((l) => h("option", { key: l.id, value: "lecture:" + l.id }, drShort(l.title, 46)))),
+            psets.length > 0 && h("optgroup", { label: "Problem sets" }, psets.map((s) => h("option", { key: s.id, value: "pset:" + s.id }, drShort(s.title, 46))))),
+          focusLabel && h("span", { className: "small" }, "the full text goes with every question")
+        ),
+        msgs.length === 0 && h("div", { className: "empty" }, h("p", { className: "muted" }, "Ask anything, or start with one of these.")),
+        h("div", { className: "ai-log" }, msgs.map((m, i) => {
+          const live = busy && i === msgs.length - 1 && m.role === "ai";
+          const json = m.role === "ai" && !m.err && !live ? gemFindJSON(m.text) : "";
+          return h("div", { key: m.id, className: "ai-msg " + (m.role === "me" ? "me" : "ai") },
+            h("span", { className: "ai-who" }, m.role === "me" ? "You" : "Gemini"),
+            h("div", { className: "ai-body" + (m.err ? " err" : "") },
+              m.role === "me" ? m.text : (m.text ? h(PsMd, { text: m.text }) : null),
+              live && h("span", { className: "ai-caret", "aria-label": "typing" }),
+              m.role === "ai" && !live && m.text && !m.err && h("div", { className: "ai-acts" },
+                h("button", { className: "btn ghost", onClick: async () => toast(await copyText(m.text) ? "Copied" : "Couldn’t copy") }, "Copy"),
+                json && h("button", { className: "btn", onClick: () => go("data", { tab: "import", prefill: json }) }, "Send to Import"),
+                h("button", { className: "btn ghost", onClick: () => ask("Go deeper on that: give me a worked example with numbers and the exact wording an exam would use.") }, "Go deeper")
+              )
+            ));
+        }), h("div", { ref: endRef })),
+        h("div", { className: "ai-bar" },
+          h("div", { className: "ai-chips" }, GEM_CHIPS.map(([label, prompt]) => h("button", { key: label, className: "chip", disabled: busy, onClick: () => ask(prompt) }, label))),
+          h("div", { className: "ai-row" },
+            h("textarea", { ref: boxRef, rows: 2, value: text, placeholder: "Ask about anything in " + subject.name + "…", onChange: (e) => setText(e.target.value), onKeyDown: (e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); ask(text); } } }),
+            busy ? h("button", { className: "btn danger ghost", onClick: () => { if (abort.current) abort.current.abort(); } }, "Stop")
+                 : h("button", { className: "btn primary", disabled: !text.trim(), onClick: () => ask(text) }, "Send")),
+          h("p", { className: "muted small", style: { margin: 0 } }, "Ctrl or Cmd + Enter sends. Gemini can be wrong — check anything that contradicts your book, and log what you get wrong in the Mistake log.")
+        )
+      ),
+      setup && h(GemSetup, { toast, onClose: () => setSetup(false), onDone: () => { setSetup(false); setReady(gemReady()); } })
+    );
+  }
+
+  /* ----- home-screen badge: the installed icon shows how many items are due ----- */
+  function setBadge(n) {
+    try {
+      if (!("setAppBadge" in navigator)) return;
+      if (n > 0) navigator.setAppBadge(n);
+      else navigator.clearAppBadge();
+    } catch (e) {}
+  }
+  /* ----- keep the screen awake while a focus timer runs ----- */
+  let wakeLock = null;
+  async function holdScreen(on) {
+    try {
+      if (on) {
+        if (!wakeLock && "wakeLock" in navigator) {
+          wakeLock = await navigator.wakeLock.request("screen");
+          wakeLock.addEventListener("release", () => { wakeLock = null; });
+        }
+      } else if (wakeLock) {
+        await wakeLock.release();
+        wakeLock = null;
+      }
+    } catch (e) { wakeLock = null; }
+  }
+
   function App() {
     const [data, setData] = useState(() => loadLocal() || buildDefault());
     const [nav, setNav] = useState({ tab: "home", opts: {}, key: 0 });
@@ -8337,11 +9537,35 @@ ${c.kindHint}` }
     const dataRef = useRef(data);
     dataRef.current = data;
     const syncInfo = useSync();
-    const toast = useCallback((m) => {
+    /* =====================================================================
+       Undo. Every destructive action goes through window.confirm, which is a
+       modal interruption for something you are almost always sure about. A
+       toast holding the previous document for ten seconds is kinder and much
+       faster, and it covers the deletes that never asked at all.
+       ===================================================================== */
+    const [undo, setUndo] = useState(null);
+    const undoRef = useRef(null);
+    const toast = useCallback((m, prev) => {
       setMsg(m);
       clearTimeout(toast.t);
-      toast.t = setTimeout(() => setMsg(""), 2800);
+      if (prev) {
+        setUndo({ doc: prev, at: Date.now() });
+        clearTimeout(undoRef.current);
+        undoRef.current = setTimeout(() => setUndo(null), 10000);
+        toast.t = setTimeout(() => setMsg(""), 9800);
+      } else {
+        toast.t = setTimeout(() => setMsg(""), 2800);
+      }
     }, []);
+    const doUndo = () => {
+      if (!undo) return;
+      const d = undo.doc;
+      setUndo(null);
+      clearTimeout(undoRef.current);
+      setMsg("");
+      replaceAll(d);
+      setTimeout(() => toast("Undone"), 60);
+    };
     const update = useCallback((fn, whole) => {
       const now = Date.now();
       setData((d) => {
@@ -8377,7 +9601,8 @@ ${c.kindHint}` }
     };
     const go = (tab, opts = {}) => {
       if (tab === "data") {
-        setModal(opts && opts.tab ? { data: opts.tab } : "data");
+        if (opts && (opts.tab || opts.prefill)) setModal({ data: opts.tab || "import", prefill: opts.prefill });
+        else setModal("data");
         return;
       }
       if (tab === "nlm") {
@@ -8391,19 +9616,34 @@ ${c.kindHint}` }
       setModal(null);
       setEditor({ type, item, defaults });
     };
+    // Browsers stop saving at about 5 MB. Silence there would mean editing for an
+    // hour and losing it on reload, so a failed save says so once, out loud.
+    const [storeFull, setStoreFull] = useState(false);
     useEffect(() => {
       try {
         localStorage.setItem(STORE_KEY, JSON.stringify(data));
-      } catch {
+        if (storeFull) setStoreFull(false);
+      } catch (e) {
+        if (!storeFull) {
+          setStoreFull(true);
+          toast("This device is out of storage. Changes are NOT being saved. Open Import & export to free space.");
+        }
       }
     }, [data]);
-    // A home-screen shortcut lands on ?go=practice and so on.
+    // A home-screen shortcut lands on ?go=practice and so on. Text shared from
+    // another app (NotebookLM, Notes) arrives as ?shared= and goes straight to Import.
     useEffect(() => {
       try {
-        const want = new URLSearchParams(location.search).get("go");
-        const okTabs = ["home", "practice", "roadmap", "calendar", "vault", "mistakes", "grades", "lectures", "psets"];
+        const qs = new URLSearchParams(location.search);
+        const want = qs.get("go");
+        const okTabs = ["home", "practice", "roadmap", "calendar", "vault", "mistakes", "grades", "lectures", "psets", "class"];
         if (want && okTabs.includes(want)) {
           setNav({ tab: want, opts: want === "practice" ? { start: "review" } : {}, key: 1 });
+          history.replaceState(null, "", location.pathname);
+        }
+        const shared = qs.get("shared");
+        if (shared && shared.trim()) {
+          setModal({ data: "import", prefill: shared });
           history.replaceState(null, "", location.pathname);
         }
       } catch (e) {}
@@ -8481,6 +9721,7 @@ ${c.kindHint}` }
       const rv = buildReview(subject, data.settings.newPerDay || 10, data.settings.maxPerDay || 0);
       return rv.due.length + rv.fresh.length + rv.mist.length;
     })();
+    useEffect(() => { setBadge(reviewCount); }, [reviewCount]);
     const tabs = [
       ["home", "Today", "home"],
       ["practice", "Practice", "bolt", reviewCount],
@@ -8491,7 +9732,8 @@ ${c.kindHint}` }
       ["grades", "Grades", "grade"],
       ["lectures", "Lectures", "lecture", (subject.lectures || []).length],
       ["psets", "Problem sets", "pset", (subject.psets || []).reduce((a, x) => a + x.problems.filter((p) => p.st === "miss").length, 0)],
-      ["class", "Class", "subjects", (subject.tasks || []).filter((t) => !t.done && t.due && daysUntil(t.due) <= 3).length]
+      ["class", "Class", "subjects", (subject.tasks || []).filter((t) => !t.done && t.due && daysUntil(t.due) <= 3).length],
+      ["ask", "Ask", "ask"]
     ];
     const switchSubject = (id) => {
       setData((d) => ({ ...d, activeId: id }));
@@ -8508,7 +9750,7 @@ ${c.kindHint}` }
     };
     const viewProps = { key: `${subject.id}-${nav.key}`, subject, update, toast, go, openEditor, init: nav.opts, settings: data.settings, setSettings };
     const subjectPicker = (id) => /* @__PURE__ */ React.createElement("select", { id, className: "subject-select", value: data.activeId, onChange: (e) => switchSubject(e.target.value), "aria-label": "Active subject" }, data.subjects.map((s) => /* @__PURE__ */ React.createElement("option", { key: s.id, value: s.id }, s.name, s.code ? ` (${s.code})` : "")));
-    return /* @__PURE__ */ React.createElement("div", { className: "shell" }, /* @__PURE__ */ React.createElement("aside", { className: "rail", "aria-label": "Main" }, /* @__PURE__ */ React.createElement("div", { className: "brand" }, /* @__PURE__ */ React.createElement("span", { className: "brand-mark", "aria-hidden": "true" }, "Σ"), /* @__PURE__ */ React.createElement("span", null, "BSA Study Desk")), /* @__PURE__ */ React.createElement("div", { className: "rail-subject" }, /* @__PURE__ */ React.createElement("span", { className: "rail-label" }, "Subject"), subjectPicker("subj"), /* @__PURE__ */ React.createElement("button", { className: "link-btn", onClick: () => setModal("subjects") }, "+ Add new subject")), /* @__PURE__ */ React.createElement("nav", { className: "rail-nav" }, tabs.map(([k, l, ic, n]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), /* @__PURE__ */ React.createElement("span", null, l), n ? /* @__PURE__ */ React.createElement("span", { className: "n" }, n) : null))), /* @__PURE__ */ React.createElement("button", { className: "btn primary quick-btn", onClick: () => setModal("quick") }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 18 }), " Quick add"), /* @__PURE__ */ React.createElement("div", { className: "rail-tools" }, /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("data") }, /* @__PURE__ */ React.createElement(Icon, { name: "data", size: 18 }), " Import & export"), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("look") }, /* @__PURE__ */ React.createElement(Icon, { name: "look", size: 18 }), " Appearance"), /* @__PURE__ */ React.createElement(ThemeDots, { settings: data.settings, setSettings })), React.createElement(SyncBadge, { onOpen: openSync })), /* @__PURE__ */ React.createElement("header", { className: "mobilebar" }, /* @__PURE__ */ React.createElement("span", { className: "brand-mark", "aria-hidden": "true" }, "Σ"), subjectPicker("subj-m"), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal(syncAlert ? "sync" : "data"), "aria-label": syncAlert ? "Import, export and sync (needs attention)" : "Import and export", "data-sync": syncAlert }, /* @__PURE__ */ React.createElement(Icon, { name: "data" })), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal("look"), "aria-label": "Appearance" }, /* @__PURE__ */ React.createElement(Icon, { name: "look" }))), /* @__PURE__ */ React.createElement("main", { className: "content" }, nav.tab === "home" && /* @__PURE__ */ React.createElement(HomeView, { ...viewProps }), nav.tab === "practice" && h(PracticeView, { ...viewProps }), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(CalendarView, { ...viewProps }), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(PsView, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })), /* @__PURE__ */ React.createElement("nav", { className: "bottom-nav", "aria-label": "Sections" }, tabs.slice(0, 3).map(([k, l, ic]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), /* @__PURE__ */ React.createElement("span", null, l))), /* @__PURE__ */ React.createElement("button", { className: "fab", onClick: () => setModal("quick"), "aria-label": "Quick add" }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 24 })), [tabs[3], tabs[5]].map(([k, l, ic, n]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement("span", { className: "ico-wrap" }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), k === "mistakes" && n ? /* @__PURE__ */ React.createElement("span", { className: "badge" }, n) : null), /* @__PURE__ */ React.createElement("span", null, k === "calendar" ? "Calendar" : "Mistakes"))), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("more") }, /* @__PURE__ */ React.createElement(Icon, { name: "more" }), /* @__PURE__ */ React.createElement("span", null, "More"))), /* @__PURE__ */ React.createElement("div", { className: `toast${msg ? " show" : ""}`, role: "status", "aria-live": "polite" }, msg), h(FocusBar, { data, update, toast }), modal === "quick" && /* @__PURE__ */ React.createElement(QuickAdd, { onClose: () => setModal(null), onPick: (k) => {
+    return /* @__PURE__ */ React.createElement("div", { className: "shell" }, /* @__PURE__ */ React.createElement("aside", { className: "rail", "aria-label": "Main" }, /* @__PURE__ */ React.createElement("div", { className: "brand" }, /* @__PURE__ */ React.createElement("span", { className: "brand-mark", "aria-hidden": "true" }, "Σ"), /* @__PURE__ */ React.createElement("span", null, "BSA Study Desk")), /* @__PURE__ */ React.createElement("div", { className: "rail-subject" }, /* @__PURE__ */ React.createElement("span", { className: "rail-label" }, "Subject"), subjectPicker("subj"), /* @__PURE__ */ React.createElement("button", { className: "link-btn", onClick: () => setModal("subjects") }, "+ Add new subject")), /* @__PURE__ */ React.createElement("nav", { className: "rail-nav" }, tabs.map(([k, l, ic, n]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), /* @__PURE__ */ React.createElement("span", null, l), n ? /* @__PURE__ */ React.createElement("span", { className: "n" }, n) : null))), /* @__PURE__ */ React.createElement("button", { className: "btn primary quick-btn", onClick: () => setModal("quick") }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 18 }), " Quick add"), /* @__PURE__ */ React.createElement("div", { className: "rail-tools" }, /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("data") }, /* @__PURE__ */ React.createElement(Icon, { name: "data", size: 18 }), " Import & export"), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("look") }, /* @__PURE__ */ React.createElement(Icon, { name: "look", size: 18 }), " Appearance"), /* @__PURE__ */ React.createElement(ThemeDots, { settings: data.settings, setSettings })), React.createElement(SyncBadge, { onOpen: openSync })), /* @__PURE__ */ React.createElement("header", { className: "mobilebar" }, /* @__PURE__ */ React.createElement("span", { className: "brand-mark", "aria-hidden": "true" }, "Σ"), subjectPicker("subj-m"), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal(syncAlert ? "sync" : "data"), "aria-label": syncAlert ? "Import, export and sync (needs attention)" : "Import and export", "data-sync": syncAlert }, /* @__PURE__ */ React.createElement(Icon, { name: "data" })), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal("look"), "aria-label": "Appearance" }, /* @__PURE__ */ React.createElement(Icon, { name: "look" }))), /* @__PURE__ */ React.createElement("main", { className: "content" }, nav.tab === "home" && /* @__PURE__ */ React.createElement(HomeView, { ...viewProps }), nav.tab === "practice" && h(PracticeView, { ...viewProps, data }), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(CalendarView, { ...viewProps }), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(PsView, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })), /* @__PURE__ */ React.createElement("nav", { className: "bottom-nav", "aria-label": "Sections" }, tabs.slice(0, 3).map(([k, l, ic]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), /* @__PURE__ */ React.createElement("span", null, l))), /* @__PURE__ */ React.createElement("button", { className: "fab", onClick: () => setModal("quick"), "aria-label": "Quick add" }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 24 })), [tabs[3], tabs[5]].map(([k, l, ic, n]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement("span", { className: "ico-wrap" }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), k === "mistakes" && n ? /* @__PURE__ */ React.createElement("span", { className: "badge" }, n) : null), /* @__PURE__ */ React.createElement("span", null, k === "calendar" ? "Calendar" : "Mistakes"))), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("more") }, /* @__PURE__ */ React.createElement(Icon, { name: "more" }), /* @__PURE__ */ React.createElement("span", null, "More"))), /* @__PURE__ */ React.createElement("div", { className: `toast${msg ? " show" : ""}`, role: "status", "aria-live": "polite" }, msg), h(FocusBar, { data, update, toast }), modal === "quick" && /* @__PURE__ */ React.createElement(QuickAdd, { onClose: () => setModal(null), onPick: (k) => {
       if (k === "grade") {
         setModal(null);
         go("grades", { gtab: "scores" });
@@ -8516,7 +9758,7 @@ ${c.kindHint}` }
     } }), modal === "more" && /* @__PURE__ */ React.createElement(MoreSheet, { onClose: () => setModal(null), onPick: (k) => setModal(k), settings: data.settings, setSettings, go: (t) => {
       setModal(null);
       go(t);
-    } }), modal && modal.nlm && h(Modal, { title: "NotebookLM prompts", wide: true, onClose: () => setModal(null) }, h(NotebookLMPrompts, { subject, toast, initPid: modal.nlm.pid, initTopic: modal.nlm.topicId, onImport: () => setModal("data") })), modal === "look" && /* @__PURE__ */ React.createElement(AppearanceModal, { settings: data.settings, setSettings, onClose: () => setModal(null) }), modal === "subjects" && /* @__PURE__ */ React.createElement(SubjectModal, { data, update, onClose: () => setModal(null), toast }), (modal === "data" || modal === "sync" || modal && modal.data) && /* @__PURE__ */ React.createElement(DataModal, { data, update, replaceAll, onClose: () => setModal(null), toast, downloads, initTab: modal && modal.data ? modal.data : modal === "sync" ? "github" : "import" }), (editor == null ? void 0 : editor.type) === "card" && /* @__PURE__ */ React.createElement(
+    } }), modal && modal.nlm && h(Modal, { title: "NotebookLM prompts", wide: true, onClose: () => setModal(null) }, h(NotebookLMPrompts, { subject, toast, initPid: modal.nlm.pid, initTopic: modal.nlm.topicId, onImport: () => setModal("data") })), modal === "look" && /* @__PURE__ */ React.createElement(AppearanceModal, { settings: data.settings, setSettings, onClose: () => setModal(null) }), modal === "subjects" && /* @__PURE__ */ React.createElement(SubjectModal, { data, update, onClose: () => setModal(null), toast }), (modal === "data" || modal === "sync" || modal && modal.data) && /* @__PURE__ */ React.createElement(DataModal, { data, update, replaceAll, onClose: () => setModal(null), toast, downloads, initTab: modal && modal.data ? modal.data : modal === "sync" ? "github" : "import", prefill: modal && modal.prefill }), (editor == null ? void 0 : editor.type) === "card" && /* @__PURE__ */ React.createElement(
       CardEditor,
       {
         subject,
@@ -8534,11 +9776,12 @@ ${c.kindHint}` }
           toast(isNew ? "Card added" : "Changes saved");
         },
         onDelete: (id) => {
+          const prev = clone(dataRef.current);
           update((s) => {
             s.cards = s.cards.filter((x) => x.id !== id);
           });
           setEditor(null);
-          toast("Card deleted");
+          toast("Card deleted", prev);
         }
       }
     ), (editor == null ? void 0 : editor.type) === "mistake" && /* @__PURE__ */ React.createElement(
@@ -8559,11 +9802,12 @@ ${c.kindHint}` }
           toast(isNew ? "Mistake logged" : "Changes saved");
         },
         onDelete: (id) => {
+          const prev = clone(dataRef.current);
           update((s) => {
             s.mistakes = s.mistakes.filter((x) => x.id !== id);
           });
           setEditor(null);
-          toast("Mistake deleted");
+          toast("Mistake deleted", prev);
         }
       }
     ), (editor == null ? void 0 : editor.type) === "quiz" && /* @__PURE__ */ React.createElement(QuizEditor, { subject, onClose: () => setEditor(null), onSave: (q) => {
@@ -8589,11 +9833,12 @@ ${c.kindHint}` }
         toast(isNew ? `Session added for ${fmtDay(x.date)}` : "Changes saved");
       },
       onDelete: (id) => {
+        const prev = clone(dataRef.current);
         update((s) => {
           s.sessions = (s.sessions || []).filter((y) => y.id !== id);
         });
         setEditor(null);
-        toast("Session deleted");
+        toast("Session deleted", prev);
       }
     }));
   }

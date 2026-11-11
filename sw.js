@@ -2,7 +2,7 @@
    Keeps a copy of the app on each device so it opens without internet.
    Your study data is NOT stored here; it lives in the browser's storage and in your GitHub data repo.
    If you change this file later, bump VERSION so every device picks up the new copy. */
-const VERSION = "study-desk-v6";
+const VERSION = "study-desk-v12";
 const SCOPE = self.registration.scope;               // e.g. https://you.github.io/bsa-dashboard/
 const SHELL = ["index.html", "manifest.json", "icon-192.png", "icon-512.png", "icon-maskable-512.png", "apple-touch-icon.png", "favicon.png"];
 const CDN = [
@@ -81,6 +81,7 @@ self.addEventListener("fetch", (event) => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
   if (url.hostname === "api.github.com") return;               // sync traffic always goes to GitHub live
+  if (url.hostname === "generativelanguage.googleapis.com") return;   // AI tutor always goes live
   if (req.mode === "navigate" || isAppPage(url)) { event.respondWith(networkFirst(req)); return; }
   if (url.hostname === "cdn.jsdelivr.net") { event.respondWith(cacheFirst(req)); return; }
   if (url.href.startsWith(SCOPE) || url.hostname === "fonts.googleapis.com" || url.hostname === "fonts.gstatic.com") {
