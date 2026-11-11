@@ -3495,7 +3495,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       }
     ));
   }
-  function VaultView({ subject, update, openEditor, init, toast }) {
+  function VaultView({ subject, update, openEditor, init, toast, settings }) {
     var _a, _b;
     const [topic, setTopic] = useState((_a = init.topic) != null ? _a : "all");
     const [conf, setConf] = useState((_b = init.conf) != null ? _b : "all");
