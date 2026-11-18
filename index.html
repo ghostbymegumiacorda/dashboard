@@ -1270,6 +1270,31 @@ input.gc-name.big { font-family: var(--display); font-size: 1.1rem; }
   .tk-row > .tk-when { grid-area: when; text-align: left; }
   .tk-row > .icon-btn { grid-area: del; }
 }
+
+/* Study intelligence + always-accessible tutor controls */
+.smart-study { display:flex; flex-direction:column; gap:.65rem; }
+.smart-head { display:flex; align-items:flex-start; justify-content:space-between; gap:.8rem; flex-wrap:wrap; }
+.smart-item { display:flex; align-items:center; gap:.7rem; padding:.65rem 0; border-top:1px solid var(--line); }
+.smart-rank { width:1.65rem; height:1.65rem; flex:none; display:grid; place-items:center; border-radius:50%; background:var(--accent-soft); font-weight:700; }
+.smart-info { flex:1; min-width:0; display:flex; flex-direction:column; gap:.1rem; }
+.smart-info strong { overflow-wrap:anywhere; }
+.ai-quicktools { display:flex; gap:.35rem; align-items:center; flex-wrap:wrap; border-bottom:1px solid var(--line); padding-bottom:.4rem; }
+.ai-quicktools .btn { font-size:.8rem; padding:.35rem .55rem; }
+@media(max-width:500px) { .ai-quicktools .btn { font-size:.76rem; padding:.35rem .42rem; } .smart-item { flex-wrap:wrap; } }
+
+/* Additive study hub and tutor usability */
+.enhance {display:flex;flex-direction:column;gap:.8rem}
+.enhance-tabs {display:flex;gap:.4rem;flex-wrap:wrap}
+.enhance-body {display:flex;flex-direction:column;gap:.65rem}
+.enhance-plan {margin:.25rem 0;padding-left:1.5rem}
+.enhance-plan li {margin-bottom:.45rem}
+.ai-answer-collapsed {max-height:13rem;overflow:hidden;mask-image:linear-gradient(to bottom,black 70%,transparent)}
+.ai-bar {position:sticky;bottom:calc(env(safe-area-inset-bottom, 0px) + .5rem);z-index:10;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:.6rem;box-shadow:var(--lift)}
+@media(max-width:899px){.ai-bar {bottom:calc(4.8rem + env(safe-area-inset-bottom, 0px));}}
+.ai-lab-question,.ai-lab-result{border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface-2);padding:1rem;overflow-wrap:anywhere}
+.ai-lab-question strong,.ai-lab-result strong{display:block;margin-bottom:.5rem}
+.ai-practice textarea{min-height:9rem}
+.ai-practice .row-center{justify-content:flex-start}
 </style>
 </head>
 <body>
@@ -2204,7 +2229,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
      - Offline edits are counted and kept; they upload as soon as a connection is back. */
   const GH_KEYS = { user: "bsa_gh_user", repo: "bsa_gh_repo", token: "bsa_gh_key", path: "bsa_gh_path" };
   const SYNC_META_KEY = "bsa_sync_meta";
-  const COLLS = ["topics", "cards", "mistakes", "quizzes", "sessions", "days", "lectures", "psets", "classes", "attend", "tasks"];
+  const COLLS = ["topics", "cards", "mistakes", "quizzes", "sessions", "days", "lectures", "psets", "classes", "attend", "tasks", "aiAttempts"];
   const TOMB_DAYS = 120;
   const POLL_MS = 3e4;
   const lsGet = (k) => {
@@ -3469,6 +3494,171 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const r = 30, c = 2 * Math.PI * r, p = total ? done / total : 0;
     return /* @__PURE__ */ React.createElement("div", { className: "ring", "aria-label": `${done} of ${total} topics mastered` }, /* @__PURE__ */ React.createElement("svg", { viewBox: "0 0 72 72", width: "88", height: "88", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("circle", { cx: "36", cy: "36", r, className: "ring-bg" }), /* @__PURE__ */ React.createElement("circle", { cx: "36", cy: "36", r, className: "ring-fg", strokeDasharray: `${c * p} ${c}`, transform: "rotate(-90 36 36)", style: { opacity: p ? 1 : 0 } })), /* @__PURE__ */ React.createElement("span", { className: "ring-num" }, done, /* @__PURE__ */ React.createElement("small", null, "/", total)));
   }
+  /* Study intelligence: derived from existing records; no new synced schema. */
+  function smartTopicStats(subject) {
+    const exam = focusExam(subject);
+    const examIds = new Set(exam && exam.covers || []);
+    return (subject.topics || []).filter(t => t.kind !== "exam").map(t => {
+      const cards = (subject.cards || []).filter(c => c.topicId === t.id);
+      const rated = cards.filter(c => c.conf === "known" || c.conf === "again" || c.conf === "hard");
+      const known = rated.filter(c => c.conf === "known").length;
+      const problems = (subject.psets || []).flatMap(set => (set.problems || []).filter(p => p.topicId === t.id || (!p.topicId && set.topicId === t.id)));
+      const attempted = problems.filter(p => p.st === "got" || p.st === "miss");
+      const correct = attempted.filter(p => p.st === "got").length;
+      const mistakes = (subject.mistakes || []).filter(m => m.topicId === t.id && m.status !== "Cleared");
+      const ai = (subject.aiAttempts || []).filter(a => a.topicId === t.id && (a.verdict === "correct" || a.verdict === "incorrect" || a.verdict === "partial"));
+      const aiCorrect = ai.filter(a => a.verdict === "correct").length;
+      const observations = rated.length + attempted.length + ai.length;
+      const accuracy = observations ? Math.round(100 * (known + correct + aiCorrect) / observations) : null;
+      const mastery = accuracy === null ? (t.status === "Mastered" ? "Marked mastered (unverified)" : "Not assessed") : accuracy >= 80 && !mistakes.length ? "Strong" : accuracy >= 55 ? "Developing" : "Needs practice";
+      const dueCards = cards.filter(c => c.srs && c.srs.due && c.srs.due <= today()).length;
+      const days = exam && exam.due ? daysUntil(exam.due) : null;
+      const relevant = !!exam && (examIds.has(t.id) || (!examIds.size && t.week <= exam.week));
+      const urgency = relevant ? (days !== null && days <= 3 ? 30 : days !== null && days <= 7 ? 22 : 12) : 0;
+      const score = (accuracy === null ? 18 : Math.round((100 - accuracy) * .55)) + Math.min(25, mistakes.length * 9) + Math.min(18, dueCards * 3) + urgency + (t.status === "In progress" ? 8 : 0);
+      return { topic: t, accuracy, mastery, observations, mistakes: mistakes.length, dueCards, relevant, score };
+    }).sort((a,b) => b.score - a.score);
+  }
+  /* AI Practice Lab: interactive, generated practice using the existing Gemini connection. */
+  function AiPracticeLab({ subject, toast, update, initialTopicId }) {
+    const modes = [
+      ["journal", "Journal entries", "Give a realistic accounting transaction requiring a journal entry; include enough information for exact amounts, possibly multiple debit or credit lines."],
+      ["adjust", "Adjusting entries", "Give an end-of-period adjusting-entry problem with relevant dates and amounts; state the original recording method."],
+      ["detect", "Find the error", "Show a plausible but conceptually incorrect accounting entry and the underlying transaction. Ask the student to identify and correct the error."],
+      ["explain", "Explain the concept", "Give a short accounting scenario that requires explaining WHY a particular accounting treatment is appropriate."],
+      ["taccount", "T-account challenge", "Give beginning balance and 3 to 5 transactions affecting one account. Ask for the correct T-account postings and ending balance."],
+      ["custom", "Custom challenge", "Create a problem matching the student's custom instructions, with an unambiguous requested answer."]
+    ];
+    const [mode, setMode] = useState("journal");
+    const [topicId, setTopicId] = useState(initialTopicId || "");
+    const [level, setLevel] = useState("Intermediate");
+    const [custom, setCustom] = useState("");
+    const [question, setQuestion] = useState("");
+    const [answer, setAnswer] = useState("");
+    const [feedback, setFeedback] = useState("");
+    const [hint, setHint] = useState("");
+    const [busy, setBusy] = useState("");
+    const [error, setError] = useState("");
+    const attempts = (subject.aiAttempts || []).length;
+    const solved = (subject.aiAttempts || []).filter(a => a.verdict === "correct").length;
+    const controller = useRef(null);
+    useEffect(() => () => { if (controller.current) controller.current.abort(); }, []);
+    const topic = (subject.topics || []).find(t => t.id === topicId);
+    const choice = modes.find(x => x[0] === mode) || modes[0];
+    async function run(action) {
+      if (busy) return;
+      if (!gemReady()) { setError("Connect Gemini in the Ask tab first (API key and model). Your existing connection will also work here."); return; }
+      if (action !== "new" && !question) return;
+      if (action === "grade" && !answer.trim()) { setError("Write your answer before checking it."); return; }
+      setError(""); setBusy(action);
+      const ctrl = new AbortController(); controller.current = ctrl;
+      const context = "You are a careful accounting professor helping a first-year BSA student. Subject: " + subject.name + ". Topic: " + (topic ? topic.title : "general accounting") + ". Difficulty: " + level + ". Use Philippine peso amounts and PFRS terminology where relevant. Be precise, avoid ambiguous transactions, and double-check calculations. Plain text with light markdown; never return JSON.";
+      let instruction;
+      if (action === "new") instruction = "Create ONE fresh original exercise. Mode: " + choice[1] + ". " + choice[2] + (custom.trim() ? " Student preference: " + custom.slice(0, 500) : "") + ". Give ONLY the problem statement and required output. Do NOT include the answer, solution, hints, or grading rubric. Vary numbers and scenario.";
+      else if (action === "hint") instruction = "Here is the problem:\n" + question + "\nGive ONE useful scaffolded hint, without revealing the final answer or entire journal entry. Previous hint: " + hint;
+      else if (action === "solution") instruction = "Here is the problem:\n" + question + "\nProvide a complete verified model answer, including calculations and accounting reasoning. Explicitly say if the problem is underspecified.";
+      else instruction = "Problem:\n" + question + "\nStudent answer:\n" + answer + "\nAssess the student's accounting answer, not merely whether debits equal credits. Check account names, debit/credit directions, amounts, timing and reasoning as applicable. Allow equivalent account names and formats. Start with VERDICT: Correct / Partially correct / Incorrect / Cannot determine. Then identify precisely what is right and wrong, show calculations and the correct solution, and give one short next-step study tip. If the original question is ambiguous, say so rather than inventing facts. Do not claim you have saved a grade.";
+      let result = "";
+      try {
+        await gemSend({ key:gemKey(), model:gemModel(), system:context, turns:[{role:"me",text:instruction}], signal:ctrl.signal, onText:t => { result += t; if (action === "new") setQuestion(result); else if (action === "hint") setHint(result); else setFeedback(result); } });
+        if (action === "new") { setAnswer(""); setFeedback(""); setHint(""); }
+        if (action === "grade" && result.trim()) {
+          const match = result.match(/^\s*(?:\*\*)?VERDICT:\s*(Correct|Partially correct|Incorrect|Cannot determine)\b/im);
+          const verdict = !match ? "unverified" : match[1].toLowerCase() === "correct" ? "correct" : match[1].toLowerCase() === "incorrect" ? "incorrect" : match[1].toLowerCase() === "partially correct" ? "partial" : "unverified";
+          const entryId = uid("ai");
+          update(s => {
+            if (!Array.isArray(s.aiAttempts)) s.aiAttempts = [];
+            s.aiAttempts.push({ id:entryId, topicId:topicId || "", mode, level, question, answer, feedback:result, verdict, date:today(), at:Date.now(), source:"Gemini (provisional)" });
+            if ((verdict === "incorrect" || verdict === "partial") && topicId) {
+              s.mistakes.push({ id:uid("m"), topicId, question, wrong:answer, correct:"Review the AI feedback and verify against your course materials.", trap:result.slice(0,1500), date:today(), status:"Active", sourceAttemptId:entryId });
+            }
+          });
+          toast(verdict === "unverified" ? "AI response saved as unverified" : "Practice saved to study history" + (verdict === "correct" ? "" : "; review it in Mistake Log"));
+        }
+      } catch (e) { if (e.name !== "AbortError") setError(e.message || "AI request failed. Try again."); }
+      finally { setBusy(""); controller.current = null; }
+    }
+    return h("div", {className:"enhance-body ai-practice"},
+      h("p", {className:"muted small"}, "Gemini generates new problems, offers hints, and checks the accounting logic of your answer. Requires the Gemini connection in Ask; results are AI feedback, not verified grades."),
+      h("div", {className:"grid-2"},
+        h("label",{className:"field"},h("span",{className:"field-label"},"Practice mode"),h("select",{value:mode,onChange:e=>{setMode(e.target.value);setQuestion("");setFeedback("");setHint("");}},modes.map(x=>h("option",{key:x[0],value:x[0]},x[1])))),
+        h("label",{className:"field"},h("span",{className:"field-label"},"Difficulty"),h("select",{value:level,onChange:e=>setLevel(e.target.value)},["Beginner","Intermediate","Advanced","Board-exam style"].map(x=>h("option",{key:x},x)))),
+        h("label",{className:"field"},h("span",{className:"field-label"},"Topic"),h("select",{value:topicId,onChange:e=>setTopicId(e.target.value)},h("option",{value:""},"Any topic"),(subject.topics||[]).filter(t=>t.kind!=="exam").map(t=>h("option",{key:t.id,value:t.id},t.title)))),
+        h("label",{className:"field"},h("span",{className:"field-label"},"Extra instructions (optional)"),h("input",{value:custom,maxLength:500,onChange:e=>setCustom(e.target.value),placeholder:"e.g. Include reversing entries"}))
+      ),
+      h("div",{className:"row-center"},h("button",{className:"btn primary",disabled:!!busy,onClick:()=>run("new")},busy==="new"?"Generating…":question?"Generate another problem":"Generate a problem"),busy&&h("button",{className:"btn ghost",onClick:()=>controller.current&&controller.current.abort()},"Stop")),
+      question&&h("div",{className:"ai-lab-question",role:"region","aria-label":"Generated practice problem"},h("strong",null,"Your challenge"),h(PsMd,{text:question})),
+      question&&h("label",{className:"field"},h("span",{className:"field-label"},"Your answer — include accounts, amounts, and reasoning"),h("textarea",{rows:6,value:answer,onChange:e=>setAnswer(e.target.value),placeholder:"Write your complete solution here. For entries, list each debit and credit on a separate line."})),
+      question&&h("div",{className:"row-center"},h("button",{className:"btn primary",disabled:!!busy||!answer.trim(),onClick:()=>run("grade")},busy==="grade"?"Checking…":"Check my answer with AI"),h("button",{className:"btn",disabled:!!busy,onClick:()=>run("hint")},"Give me a hint"),h("button",{className:"btn ghost",disabled:!!busy,onClick:()=>run("solution")},"Show worked solution")),
+      hint&&h("div",{className:"ai-lab-result"},h("strong",null,"Hint"),h(PsMd,{text:hint})),
+      feedback&&h("div",{className:"ai-lab-result",role:"status"},h("strong",null,"AI feedback / worked solution"),h(PsMd,{text:feedback})),
+      error&&h("p",{className:"error",role:"alert"},error),
+      (attempts>0)&&h("p",{className:"muted small"},"Saved history: ",attempts," AI assessments · ",solved," marked correct by AI. These are provisional, sync with your study data, and do not affect your gradebook."),
+      h("p",{className:"muted small"},"Tip: Verify AI-generated solutions against your textbook or instructor's method, especially for complex accounting standards.")
+    );
+  }
+  /* Additive study hub: derived metrics, no changes to sync schema. */
+  function StudyEnhancements({ subject, go, update, toast }) {
+    const [pane, setPane] = useState("exam");
+    const [practiceTopic, setPracticeTopic] = useState("");
+    const [minutes, setMinutes] = useState(60);
+        const ranked = smartTopicStats(subject);
+    const exam = focusExam(subject);
+    const due = exam && exam.due ? Math.max(0, daysUntil(exam.due)) : null;
+    const dueCount = (subject.cards || []).filter(c => c.srs && c.srs.due && c.srs.due <= today()).length;
+    const aiHistory = subject.aiAttempts || [];
+    const missed = (subject.psets || []).flatMap(x => x.problems || []).filter(x => x.st === "miss");
+    const total = (subject.psets || []).flatMap(x => x.problems || []).filter(x => x.st === "miss" || x.st === "got");
+    const recent = total.filter(x => x.at && daysUntil(x.at) >= -7 && daysUntil(x.at) <= 0);
+    const correct = recent.filter(x => x.st === "got").length;
+    const backup = () => {
+      const raw = localStorage.getItem(STORE_KEY);
+      if (!raw) { toast("No saved study data found"); return; }
+      const blob = new Blob([raw], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a"); a.href = url; a.download = "bsa-study-backup-" + today() + ".json";
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+      toast("Backup downloaded. Keep it somewhere safe.");
+    };
+    const suggest = ranked.slice(0, 4);
+    const share = suggest.length ? Math.max(10, Math.floor(Number(minutes || 60) / suggest.length)) : 0;
+    return h("div", { className: "panel enhance" },
+      h("div", { className: "smart-head" }, h("div", null, h("h2", null, "Study tools"), h("p", { className: "muted small" }, "AI-powered accounting challenges, exam planning, analytics and backups."))),
+      h("div", { className: "enhance-tabs" }, [["exam","Exam plan"],["account","Accounting"],["analytics","Insights"],["backup","Backup"]].map(([k,label]) => h("button", { key:k, className:"chip"+(pane===k?" on":""), onClick:()=>setPane(k), "aria-pressed":pane===k },label))),
+      pane === "exam" && h("div", { className:"enhance-body" },
+        h("p", null, exam ? h("strong", null, exam.title, due === null ? " · date not set" : " · " + due + " days remaining") : "Add an exam in Roadmap to enable exam countdowns."),
+        h("label", { className:"field" }, h("span", { className:"field-label" }, "Study minutes available"), h("input", { type:"number", min:15, max:480, value:minutes, onChange:e=>setMinutes(e.target.value) })),
+        suggest.length ? h("ol", { className:"enhance-plan" }, suggest.map(r => h("li", { key:r.topic.id }, h("strong",null,r.topic.title), " — ", share, " min", h("span", { className:"muted small" }, " · ",r.mastery,r.mistakes?" · "+r.mistakes+" open mistakes":"")))) : h("p",null,"Add topics to get a plan."),
+        h("p", { className:"muted small" }, "Suggested time allocation only. The plan is recalculated from your recorded work."),
+        suggest.length > 0 && h("button", { className:"btn", onClick:()=>{setPracticeTopic(suggest[0].topic.id);setPane("account");} }, "Practice highest-priority topic with AI"),
+        h("button", { className:"btn primary", onClick:()=>go("practice") }, "Start reviewing")),
+      pane === "account" && h(AiPracticeLab, {subject, toast, update, initialTopicId:practiceTopic}),
+      pane === "analytics" && h("div",{className:"enhance-body"},
+        h("div",{className:"grid-2"},
+          h("div",{className:"stat"},h("span",{className:"stat-label"},"Recorded problems (last 7 days)"),h("span",{className:"big-num"},recent.length)),
+          h("div",{className:"stat"},h("span",{className:"stat-label"},"Latest recorded accuracy"),h("span",{className:"big-num"},recent.length?Math.round(correct/recent.length*100)+"%":"—")),
+          h("div",{className:"stat"},h("span",{className:"stat-label"},"Missed problems"),h("span",{className:"big-num"},missed.length)),
+          h("div",{className:"stat"},h("span",{className:"stat-label"},"Flashcards due"),h("span",{className:"big-num"},dueCount)),
+          h("div",{className:"stat"},h("span",{className:"stat-label"},"Saved AI attempts"),h("span",{className:"big-num"},aiHistory.length))),
+        aiHistory.length > 0 && h("div",{className:"ai-lab-result"},h("strong",null,"Recent AI practice"), h("ol",null,aiHistory.slice(-5).reverse().map(a=>h("li",{key:a.id},(subject.topics||[]).find(t=>t.id===a.topicId)?.title || "General", " · ",a.verdict," · ",a.date)))),
+        h("p",{className:"muted small"},"Accuracy uses each problem's latest saved result, not a complete history of attempts. No recorded results means insufficient data.")),
+      pane === "backup" && h("div",{className:"enhance-body"},
+        h("p",null,"Download a complete JSON snapshot of your current local study data before deploying an update."),
+        h("button",{className:"btn primary",onClick:backup},"Download full backup"),
+        h("p",{className:"muted small"},"This is a manual backup, not automatic version history. The existing Data import can be used for restoration; check the import preview before replacing any data."))
+    );
+  }
+  function SmartStudyPanel({ subject, go }) {
+    const ranked = smartTopicStats(subject);
+    if (!ranked.length) return null;
+    return h("div", { className: "panel smart-study" },
+      h("div", { className: "smart-head" }, h("div", null, h("h2", null, "Smart study priorities"), h("p", { className: "muted small" }, "Based on recorded answers, open mistakes, due cards and upcoming exams.")), h("button", { className: "btn ghost", onClick: () => go("practice") }, "Practice")),
+      ranked.slice(0, 4).map((r,i) => h("div", { key: r.topic.id, className: "smart-item" },
+        h("span", { className: "smart-rank" }, i+1),
+        h("div", { className: "smart-info" }, h("strong", null, r.topic.title), h("span", { className: "muted small" }, r.mastery, " · ", r.accuracy === null ? "No scored attempts" : r.accuracy + "% observed accuracy", r.mistakes ? " · " + r.mistakes + " open mistakes" : "", r.dueCards ? " · " + r.dueCards + " cards due" : "", r.relevant ? " · Next exam" : "")),
+        h("button", { className: "btn", onClick: () => go("roadmap", { open: r.topic.id }) }, "Open"))),
+      h("p", { className: "muted small" }, "Accuracy reflects recorded practice, not a validated mastery score. Topics without attempts are not assumed mastered."));
+  }
   function HomeView({ subject, go, openEditor, update, settings, toast }) {
     const [pm, setPm] = useState(null);
     const pmDue = pmPending(subject);
@@ -3568,7 +3758,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         actions: active.length ? [{ label: "Open mistake log", run: () => go("mistakes") }] : []
       }
     ].filter(Boolean);
-    return /* @__PURE__ */ React.createElement("section", { className: "view" }, pmDue && h("div", { className: "panel gc-wi-bar" }, h("p", null, h("strong", null, pmDue.title + " was " + fmtDay(pmDue.due, "long") + "."), " Two minutes now on what actually came up is worth more than an hour of guessing before the next one."), h("div", { className: "step-actions" }, h("button", { className: "btn primary", onClick: () => setPm(pmDue) }, "Record how it went"), h("button", { className: "btn ghost", onClick: () => update((s) => { const e = s.topics.find((x) => x.id === pmDue.id); if (e) e.pmAt = today(); }) }, "Skip"))), pm && h(ExamPostMortem, { subject, exam: pm, update, toast, onClose: () => setPm(null) }), /* @__PURE__ */ React.createElement("div", { className: "hero" }, /* @__PURE__ */ React.createElement("div", { className: "hero-title" }, /* @__PURE__ */ React.createElement("p", { className: "muted" }, (/* @__PURE__ */ new Date()).toLocaleDateString(void 0, { weekday: "long", month: "long", day: "numeric" })), /* @__PURE__ */ React.createElement("h1", null, subject.name, subject.code ? /* @__PURE__ */ React.createElement("span", { className: "hero-code" }, " ", subject.code) : null), subject.school && /* @__PURE__ */ React.createElement("p", { className: "muted" }, subject.school)), /* @__PURE__ */ React.createElement("div", { className: "hero-figure" }, /* @__PURE__ */ React.createElement(Ring, { done: mastered, total: topics.length }), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "topics mastered"))), /* @__PURE__ */ React.createElement(Track, { subject, onJump: (id) => go("roadmap", { open: id }) }), /* @__PURE__ */ React.createElement("div", { className: "home-grid" }, /* @__PURE__ */ React.createElement("div", { className: "panel plan" }, /* @__PURE__ */ React.createElement("h2", null, "Today’s plan"), /* @__PURE__ */ React.createElement("ol", { className: "steps" }, steps.map((s, i) => /* @__PURE__ */ React.createElement("li", { key: i, className: "step" }, /* @__PURE__ */ React.createElement("span", { className: "step-num", "aria-hidden": "true" }, i + 1), /* @__PURE__ */ React.createElement("div", { className: "step-body" }, /* @__PURE__ */ React.createElement("span", { className: "step-label" }, /* @__PURE__ */ React.createElement(Icon, { name: s.icon, size: 16 }), " ", s.label), /* @__PURE__ */ React.createElement("strong", { className: "step-title" }, s.title), s.detail && /* @__PURE__ */ React.createElement("span", { className: "muted step-detail" }, s.detail), s.chip && h("span", { className: "step-chip" }, h(DueChip, { t: s.chip })), s.actions.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "step-actions" }, s.actions.map((a) => /* @__PURE__ */ React.createElement("button", { key: a.label, className: `btn${a.primary ? " primary" : ""}`, onClick: a.run }, a.label)))))))), /* @__PURE__ */ React.createElement("div", { className: "side-col" }, nextExam && (() => {
+    return /* @__PURE__ */ React.createElement("section", { className: "view" }, pmDue && h("div", { className: "panel gc-wi-bar" }, h("p", null, h("strong", null, pmDue.title + " was " + fmtDay(pmDue.due, "long") + "."), " Two minutes now on what actually came up is worth more than an hour of guessing before the next one."), h("div", { className: "step-actions" }, h("button", { className: "btn primary", onClick: () => setPm(pmDue) }, "Record how it went"), h("button", { className: "btn ghost", onClick: () => update((s) => { const e = s.topics.find((x) => x.id === pmDue.id); if (e) e.pmAt = today(); }) }, "Skip"))), pm && h(ExamPostMortem, { subject, exam: pm, update, toast, onClose: () => setPm(null) }), /* @__PURE__ */ React.createElement("div", { className: "hero" }, /* @__PURE__ */ React.createElement("div", { className: "hero-title" }, /* @__PURE__ */ React.createElement("p", { className: "muted" }, (/* @__PURE__ */ new Date()).toLocaleDateString(void 0, { weekday: "long", month: "long", day: "numeric" })), /* @__PURE__ */ React.createElement("h1", null, subject.name, subject.code ? /* @__PURE__ */ React.createElement("span", { className: "hero-code" }, " ", subject.code) : null), subject.school && /* @__PURE__ */ React.createElement("p", { className: "muted" }, subject.school)), /* @__PURE__ */ React.createElement("div", { className: "hero-figure" }, /* @__PURE__ */ React.createElement(Ring, { done: mastered, total: topics.length }), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "topics mastered"))), /* @__PURE__ */ React.createElement(Track, { subject, onJump: (id) => go("roadmap", { open: id }) }), h(SmartStudyPanel, { subject, go }), h(StudyEnhancements, { subject, go, update, toast }), /* @__PURE__ */ React.createElement("div", { className: "home-grid" }, /* @__PURE__ */ React.createElement("div", { className: "panel plan" }, /* @__PURE__ */ React.createElement("h2", null, "Today’s plan"), /* @__PURE__ */ React.createElement("ol", { className: "steps" }, steps.map((s, i) => /* @__PURE__ */ React.createElement("li", { key: i, className: "step" }, /* @__PURE__ */ React.createElement("span", { className: "step-num", "aria-hidden": "true" }, i + 1), /* @__PURE__ */ React.createElement("div", { className: "step-body" }, /* @__PURE__ */ React.createElement("span", { className: "step-label" }, /* @__PURE__ */ React.createElement(Icon, { name: s.icon, size: 16 }), " ", s.label), /* @__PURE__ */ React.createElement("strong", { className: "step-title" }, s.title), s.detail && /* @__PURE__ */ React.createElement("span", { className: "muted step-detail" }, s.detail), s.chip && h("span", { className: "step-chip" }, h(DueChip, { t: s.chip })), s.actions.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "step-actions" }, s.actions.map((a) => /* @__PURE__ */ React.createElement("button", { key: a.label, className: `btn${a.primary ? " primary" : ""}`, onClick: a.run }, a.label)))))))), /* @__PURE__ */ React.createElement("div", { className: "side-col" }, nextExam && (() => {
       const r = readiness(subject, nextExam);
       const covered = (nextExam.covers || []).map((id) => subject.topics.find((t) => t.id === id)).filter(Boolean);
       return /* @__PURE__ */ React.createElement("div", { className: "panel exam-panel" }, /* @__PURE__ */ React.createElement("span", { className: "muted" }, "Next exam, week ", nextExam.week), /* @__PURE__ */ React.createElement("h2", null, nextExam.title), nextExam.due && h("p", null, h(DueChip, { t: nextExam })), r.total > 0 && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "bar-lg" }, /* @__PURE__ */ React.createElement("span", { style: { width: `${r.done / r.total * 100}%` } })), /* @__PURE__ */ React.createElement("p", null, /* @__PURE__ */ React.createElement("strong", null, r.done, " of ", r.total), " topics ready"), /* @__PURE__ */ React.createElement("div", { className: "topic-chips" }, covered.map((t) => /* @__PURE__ */ React.createElement("button", { key: t.id, className: "tchip", "data-status": t.status, onClick: () => go("roadmap", { open: t.id }), title: `${t.title}: ${t.status}` }, /* @__PURE__ */ React.createElement("span", { className: "dot" }), t.code || t.standard || t.title)))), nextExam.scope && /* @__PURE__ */ React.createElement("p", { className: "muted small" }, "Covers ", nextExam.scope), h(ExamReadyMini, { subject, exam: nextExam, go }));
@@ -8970,14 +9160,22 @@ ${c.kindHint}` }
       p.st = off ? "" : st;
       p.at = today();
       // Marking a miss schedules it back into tomorrow's review.
-      if (!off && st === "miss") p.rt = { streak: 0, due: addDays(today(), 1), last: today() };
-      else p.rt = null;
+      if (!off && st === "miss") {
+        p.rt = { streak: 0, due: addDays(today(), 1), last: today() };
+        const label = `${set.title}, problem ${p.no}: ${p.title}`;
+        if (!(s.mistakes || []).some(m => m.question === label && m.status !== "Cleared")) {
+          s.mistakes = s.mistakes || [];
+          s.mistakes.unshift({ id: uid("m"), topicId: set.topicId || null, topicText: set.topicText, date: today(), question: label, wrong: "", correct: psPlain(p.answer).slice(0, 400), trap: psPlain(p.trap || p.approach).slice(0, 400), status: "Active" });
+        }
+      } else p.rt = null;
     });
     const logMistake = (p) => {
       update((s) => {
-        s.mistakes.unshift({ id: uid("m"), topicId: set.topicId || null, topicText: set.topicText, date: today(), question: `${set.title}, problem ${p.no}: ${p.title}`, wrong: "", correct: psPlain(p.answer).slice(0, 400), trap: psPlain(p.trap || p.approach).slice(0, 400), status: "Active" });
+        const label = `${set.title}, problem ${p.no}: ${p.title}`;
+        if ((s.mistakes || []).some(m => m.question === label && m.status !== "Cleared")) return;
+        s.mistakes.unshift({ id: uid("m"), topicId: set.topicId || null, topicText: set.topicText, date: today(), question: label, wrong: "", correct: psPlain(p.answer).slice(0, 400), trap: psPlain(p.trap || p.approach).slice(0, 400), status: "Active" });
       });
-      toast("Logged in the Mistake log");
+      toast("Mistake saved (duplicates skipped)");
     };
     const toggleAll = () => { setReveal((v) => { setLocalPref("psRevealAll", !v); return !v; }); };
     return h(
@@ -9336,6 +9534,7 @@ ${c.kindHint}` }
       "- If you are unsure, or the dashboard does not contain something, say so plainly. Never invent a standard number, a page reference or a rule.",
       "- When they ask for flashcards, mistakes, a problem set or a lecture to import, reply with ONLY valid JSON in the shape the app expects, with no code fences and no commentary around it.",
       "",
+      "\nADDITIONAL TOPIC PRIORITIES (estimates, not exam grades): " + smartTopicStats(subject).slice(0, 5).map(r => r.topic.title + ": " + r.mastery + (r.accuracy === null ? " (unassessed)" : " (" + r.accuracy + "% observed accuracy)")).join("; "),
       gemContext(subject, focus)
     ].join("\n");
   }
@@ -9414,7 +9613,10 @@ ${c.kindHint}` }
     const endRef = useRef(null);
     const stick = useRef(true);
     const boxRef = useRef(null);
-    useEffect(() => { try { lsSet(CHAT, JSON.stringify(msgs.slice(-60))); } catch (e) {} }, [msgs]);
+    const topRef = useRef(null);
+    const [showTools, setShowTools] = useState(false);
+    const [collapsed, setCollapsed] = useState({});
+    useEffect(() => { try { lsSet(CHAT, JSON.stringify(msgs.slice(-60))); } catch (e) {} }, [CHAT, msgs]);
     useEffect(() => { if (stick.current && endRef.current) endRef.current.scrollIntoView({ block: "end" }); }, [msgs]);
     useEffect(() => {
       const onScroll = () => { stick.current = window.innerHeight + window.scrollY >= document.body.scrollHeight - 160; };
@@ -9452,13 +9654,17 @@ ${c.kindHint}` }
     };
     const clear = () => {
       if (msgs.length && !window.confirm("Clear this conversation? Your study data is not affected.")) return;
+      if (abort.current) abort.current.abort();
+      setBusy(false);
       setMsgs([]);
       lsSet(CHAT, null);
+      stick.current = false;
+      toast("Conversation cleared");
     };
     const focusLabel = focus && focus.kind === "lecture" ? (lectures.find((x) => x.id === focus.id) || {}).title : focus && focus.kind === "pset" ? (psets.find((x) => x.id === focus.id) || {}).title : "";
     return h(
       "section",
-      { className: "view ai-wrap" },
+      { className: "view ai-wrap", ref: topRef },
       h("div", { className: "page-head" }, h("div", null, h("h1", { className: "page-title" }, "Ask"), h("p", { className: "muted" }, "A tutor that can already see your roadmap, your mistake log, your flashcard memory and your grades. You never have to explain your situation.")), h("div", { className: "head-actions" }, msgs.length > 0 && h("button", { className: "btn ghost", onClick: clear }, "Clear chat"), h("button", { className: "btn ghost", onClick: () => setSetup(true) }, ready ? "Key & model" : "Connect"))),
       !ready ? h("div", { className: "empty big" },
         h(Icon, { name: "ask", size: 32 }),
@@ -9481,7 +9687,8 @@ ${c.kindHint}` }
           return h("div", { key: m.id, className: "ai-msg " + (m.role === "me" ? "me" : "ai") },
             h("span", { className: "ai-who" }, m.role === "me" ? "You" : "Gemini"),
             h("div", { className: "ai-body" + (m.err ? " err" : "") },
-              m.role === "me" ? m.text : (m.text ? h(PsMd, { text: m.text }) : null),
+              m.role === "me" ? m.text : (m.text ? h("div", { className: collapsed[m.id] ? "ai-answer-collapsed" : "" }, h(PsMd, { text: m.text })) : null),
+              m.role === "ai" && m.text && m.text.length > 1500 && !live && h("button", { className: "link-btn", onClick: () => setCollapsed(v => ({...v, [m.id]: !v[m.id]})) }, collapsed[m.id] ? "Expand answer" : "Collapse long answer"),
               live && h("span", { className: "ai-caret", "aria-label": "typing" }),
               m.role === "ai" && !live && m.text && !m.err && h("div", { className: "ai-acts" },
                 h("button", { className: "btn ghost", onClick: async () => toast(await copyText(m.text) ? "Copied" : "Couldn’t copy") }, "Copy"),
@@ -9491,6 +9698,12 @@ ${c.kindHint}` }
             ));
         }), h("div", { ref: endRef })),
         h("div", { className: "ai-bar" },
+          h("div", { className: "ai-quicktools" },
+            h("span", { className: "muted small" }, msgs.length ? Math.floor(msgs.length / 2) + " exchanges" : "New conversation"),
+            h("span", { className: "spacer" }),
+            msgs.length > 0 && h("button", { className: "btn ghost", onClick: () => { stick.current = false; topRef.current && topRef.current.scrollIntoView({ behavior: "smooth", block: "start" }); } }, "↑ Top"),
+            msgs.length > 0 && h("button", { className: "btn ghost", onClick: () => { stick.current = true; endRef.current && endRef.current.scrollIntoView({ behavior: "smooth", block: "end" }); } }, "↓ Latest"),
+            msgs.length > 0 && h("button", { className: "btn danger ghost", disabled: busy, onClick: clear, title: "Clear this conversation without scrolling to the top" }, "Clear chat")),
           h("div", { className: "ai-chips" }, GEM_CHIPS.map(([label, prompt]) => h("button", { key: label, className: "chip", disabled: busy, onClick: () => ask(prompt) }, label))),
           h("div", { className: "ai-row" },
             h("textarea", { ref: boxRef, rows: 2, value: text, placeholder: "Ask about anything in " + subject.name + "…", onChange: (e) => setText(e.target.value), onKeyDown: (e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); ask(text); } } }),
