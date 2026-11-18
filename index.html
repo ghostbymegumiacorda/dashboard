@@ -1306,6 +1306,14 @@ input.gc-name.big { font-family: var(--display); font-size: 1.1rem; }
 .vault-delete-confirm { border:1px solid #b84c42; border-radius:12px; padding:14px; margin:12px 0; display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
 .vault-delete-confirm p { flex-basis:100%; margin:0; }
 
+/* v25: prioritize the navigation list; allow more visible links on desktop. */
+@media (min-width: 900px) {
+  .rail { gap: .65rem; padding-top: .8rem; padding-bottom: .65rem; }
+  .rail-nav { flex: 1 1 auto; min-height: 180px; }
+  .rail-tools { flex: 0 0 auto; padding-top: .4rem; }
+  .rail-tools > button { padding-top: .35rem; padding-bottom: .35rem; }
+  .rail-subject { padding: .55rem .7rem; }
+}
 /* v22: clear navigation, improved responsive spacing and curriculum */
 .rail-nav {display:flex;flex-direction:column;gap:.18rem;overflow-y:auto;scrollbar-width:thin}
 .rail-nav button {min-height:2.55rem;transition:background .16s ease,border-color .16s ease}
@@ -9928,6 +9936,8 @@ ${c.kindHint}` }
     const CHAT = "bsa_chat_" + subject.id + "_" + mode;
     const [msgs, setMsgs] = useState(() => { try { return JSON.parse(lsGet(CHAT) || "[]") || []; } catch (e) { return []; } });
     const [selectedModel, setSelectedModel] = useState(gemModel);
+    // Initialize this before the model-list effect reads it in its dependency array.
+    const [ready, setReady] = useState(gemReady);
     const [availableModels, setAvailableModels] = useState([]);
     const [modelError, setModelError] = useState("");
     useEffect(() => {
@@ -9940,7 +9950,6 @@ ${c.kindHint}` }
     const [text, setText] = useState("");
     const [busy, setBusy] = useState(false);
     const [setup, setSetup] = useState(false);
-    const [ready, setReady] = useState(gemReady);
     const [focus, setFocus] = useState(() => (init && init.focus) || null);
     const abort = useRef(null);
     const endRef = useRef(null);

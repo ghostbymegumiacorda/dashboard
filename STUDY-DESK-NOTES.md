@@ -319,3 +319,9 @@ All code is in one block before `function App()`, prefixed `ps`/`lx`. CSS is at 
 
 ## v24 appearance sidebar
 Sidebar displays only seven favorite theme swatches in a single row. Customize the seven in Appearance; the full theme catalog remains available there.
+
+
+## v25 Tutor and sidebar fixes
+- Fixed Ask Tutor blank screen caused by referencing `ready` before its `useState` declaration.
+- Increased available desktop sidebar navigation height and compacted spacing without changing stored data.
+- Updated service worker cache version to v25.
