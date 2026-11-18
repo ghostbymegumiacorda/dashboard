@@ -235,3 +235,12 @@ Still pending: verified XP rewards for flashcards, quizzes, and problem sets; fu
 - Built-in Study Town tile map remains under Study Life → Study Town and is distinct from the separate game.
 - Game requires a separate GitHub Pages deployment; linked site availability was not verified. Its save is separate from dashboard academic progress.
 - No changes to academic XP, subjects, study time, or Study Life storage.
+
+
+## v114 — Isolated shared Study Library
+- Publisher no longer exports a modified copy of the personal app. It creates an independent static HTML read-only library with Quizzes, Flashcards, Problem Sets, Lectures and Study Toolkit.
+- Built-in Study Toolkit exports accounting formulas only, never private notes, worksheets or saved user data.
+- Shared site includes no add/edit/delete/import/sync controls, main dashboard storage keys, or personal app data state.
+- Selected subject materials are exported with optional answers. Study Life and academic XP remain only in the private dashboard.
+- You must re-publish the shared website for your classmates to see the change; previously downloaded public HTML cannot be recalled.
+- Source syntax and export-template checks completed; no live GitHub Pages / browser tests performed.
