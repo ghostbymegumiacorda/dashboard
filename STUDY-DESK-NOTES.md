@@ -367,3 +367,12 @@ Added Notes (local browser storage, export Markdown and print/PDF), calculator, 
 - Maps existing subject codes to prospectus terms in the selector without modifying subject records.
 - Adds a Toolkit error boundary and safer parsing of local toolkit data; if a runtime failure remains it displays the error instead of a blank area.
 - Note: this patch has not been visually validated in the user browser.
+
+
+## v32 — Verified Toolkit render correction
+- Fixed misplaced closing parenthesis in ToolkitView: the root React element was prematurely closed after Notes, leaving subsequent tool branches in a comma expression whose final result was `false`.
+- All six tool panels now belong to the root element.
+- Verified by directly executing the component with mocked React hooks: before patch return was `false`; after patch root element contains 12 children.
+- Retains v31 print formatting and curriculum grouping changes.
+- No new PDF export for quizzes or Concept Vault in this release.
+- Do not clear site data. Back up before deployment.
