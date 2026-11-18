@@ -1976,6 +1976,51 @@ body{background:var(--bg)!important;color:var(--text);background-image:var(--tex
 @media(max-width:420px){.bsa-guide-flow{grid-template-columns:repeat(2,minmax(0,1fr))}.bsa-new-actions{width:100%}.bsa-new-actions .btn{flex:1}}
 @media(prefers-reduced-motion:reduce){.bsa-guide-card{transition:none}.bsa-guide-card:hover{transform:none}}
 </style>
+<style id="bsa-v118-audit-stability">
+/* Desktop has one scrolling workspace, not a horizontally scrolling page. */
+html,body,#root{max-width:100%;overflow-x:clip}
+.shell,.shell>.content,.shell>.rail{min-width:0}
+.shell>.content{overflow-x:hidden!important;scroll-behavior:auto;overflow-anchor:none}
+.shell>.content>.view,.shell>.content>.home-redesign{min-width:0}
+.shell>.content .panel,.shell>.content .card,.shell>.content .hero{min-width:0}
+.shell>.content img,.shell>.content video,.shell>.content canvas{max-width:100%}
+.shell>.content pre,.shell>.content .md-scroll{max-width:100%;overflow-x:auto}
+.shell>.content :where(.formatted,.ai-body,.lx-body,.ps-problem,.md-preview){overflow-wrap:anywhere;word-break:normal}
+.shell>.content :where(.table-wrap,.md-scroll){overscroll-behavior-x:contain}
+/* Tutor is its own pane. The composer stays within Ask, never covers lectures. */
+.shell>.content>.ai-wrap{min-width:0;max-width:1040px!important;height:calc(100dvh - 140px);min-height:430px;overflow:hidden;display:flex;flex-direction:column;gap:10px;padding-bottom:0!important}
+.ai-wrap .page-head,.ai-wrap .ai-ctx,.ai-wrap .empty{flex-shrink:0}
+.ai-wrap .ai-log{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding:8px 6px 14px;overscroll-behavior:contain;scrollbar-width:thin}
+.ai-wrap .ai-msg{max-width:min(100%,54rem)}
+.ai-wrap .ai-msg.me{max-width:min(90%,42rem)}
+.ai-wrap .ai-body{max-width:100%}
+.ai-wrap .ai-bar{position:relative!important;bottom:auto!important;flex-shrink:0;max-width:100%;width:100%;z-index:1;box-shadow:none!important;margin:0;padding:12px!important;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.ai-wrap .ai-row{min-width:0}
+.ai-wrap .ai-row textarea{min-width:0;max-width:100%;resize:vertical}
+.ai-wrap .ai-quicktools{gap:6px}
+/* Prevent long Markdown from pushing the application sideways. */
+.ai-wrap .ai-body table{display:block;overflow-x:auto;max-width:100%}
+.ai-wrap .ai-body pre{max-width:100%;overflow:auto}
+/* Sidebar: consistent scroll region, no clipping of expanded groups. */
+.shell>.rail .rail-nav-wrap{min-height:0;overflow:hidden!important}
+.shell>.rail .rail-nav{min-height:0;overflow-y:auto!important;overflow-x:hidden!important}
+.shell>.rail .rail-tools{flex-shrink:0}
+@media(max-width:899px){
+ html,body,#root{overflow-x:clip!important}
+ .shell>.content{overflow-x:hidden!important}
+ .shell>.content>.ai-wrap{height:auto;min-height:0;max-height:none;overflow:visible;padding-bottom:calc(100px + env(safe-area-inset-bottom))!important}
+ .ai-wrap .ai-log{max-height:min(60dvh,650px);min-height:220px;flex:none}
+ .ai-wrap .ai-bar{position:sticky!important;bottom:calc(65px + env(safe-area-inset-bottom))!important;z-index:12}
+}
+@media(max-width:520px){
+ .ai-wrap .ai-row{align-items:stretch}
+ .ai-wrap .ai-row textarea{min-height:64px}
+ .ai-wrap .ai-row .btn{align-self:stretch}
+ .ai-wrap .ai-quicktools{flex-wrap:wrap}
+ .ai-wrap .ai-quicktools>.spacer{display:none}
+}
+@media(prefers-reduced-motion:reduce){.ai-wrap .ai-log{scroll-behavior:auto!important}}
+</style>
 </head>
 <body>
 <div id="root"><p class="boot">Opening your study desk… If this doesn’t load, connect to the internet once so the app can save itself for offline use.</p></div>
@@ -10384,7 +10429,7 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
       h("div", { className: "page-head" }, h("div", null, h("h1", { className: "page-title" }, "Lectures"), h("p", { className: "muted" }, "The rules, how to treat or apply them, and the traps, one topic at a time. Each ends with check questions.")), h("div", { className: "head-actions" }, h("button", { className: "btn", onClick: () => setEdit("new") }, h(Icon, { name: "plus", size: 16 }), " Write one"), h("button", { className: "btn", onClick: () => go("nlm", { pid: "lecture" }) }, "Get the NotebookLM prompt"), h("button", { className: "btn primary", onClick: () => go("data") }, "Paste NotebookLM reply"))),
       h(PsSampleCard, { subject, update, toast }),
       lectures.length > 0 && h("div", { className: "filters" }, h("input", { className: "search", type: "search", placeholder: "Search lectures", value: query, onChange: (e) => setQuery(e.target.value), "aria-label": "Search lectures" }), usedTopics.length > 0 && h("div", { className: "chip-scroll", role: "group", "aria-label": "Filter by topic" }, h("button", { className: `chip${topic === "all" ? " on" : ""}`, onClick: () => setTopic("all") }, "All topics"), usedTopics.map((t) => h("button", { key: t.id, className: `chip${topic === t.id ? " on" : ""}`, onClick: () => setTopic(t.id), title: t.title }, t.code || t.title.slice(0, 18))), lectures.some((l) => !l.topicId) && h("button", { className: `chip${topic === "" ? " on" : ""}`, onClick: () => setTopic("") }, "Unsorted"))),
-      !lectures.length ? h(PsEmpty, { icon: "lecture", title: "No lectures yet", text: "Copy the lecture prompt into NotebookLM with your book or slides loaded, then paste its reply here. It works for any subject: standards, laws, science, history, programming.", go, pid: "lecture" }) : !shown.length ? h("div", { className: "empty" }, h("p", null, "No lectures match."), h("p", { className: "muted" }, "Clear the search or pick “All topics”.")) : groups.map((g) => h("div", { key: g.key, className: "ps-group" }, h("h2", { className: "ps-group-h" }, g.label, g.std && h("span", { className: "std" }, g.std)), h("div", { className: "lx-list" }, g.items.map((l) => h("button", { key: l.id, className: "lx-row", onClick: () => { setOpen(l.id); window.scrollTo({ top: 0 }); } }, h("span", { className: "lx-row-main" }, h("strong", null, l.title), h("span", { className: "muted small" }, [l.source, `${l.sections.length} sections`, l.terms.length ? `${l.terms.length} key terms` : ""].filter(Boolean).join(", "))), l.done ? h("span", { className: "ps-st got" }, h(Icon, { name: "check", size: 14 }), " Studied") : h("span", { className: "chev-i" }, h(Icon, { name: "chevron", size: 16 }))))))),
+      !lectures.length ? h(PsEmpty, { icon: "lecture", title: "No lectures yet", text: "Copy the lecture prompt into NotebookLM with your book or slides loaded, then paste its reply here. It works for any subject: standards, laws, science, history, programming.", go, pid: "lecture" }) : !shown.length ? h("div", { className: "empty" }, h("p", null, "No lectures match."), h("p", { className: "muted" }, "Clear the search or pick “All topics”.")) : groups.map((g) => h("div", { key: g.key, className: "ps-group" }, h("h2", { className: "ps-group-h" }, g.label, g.std && h("span", { className: "std" }, g.std)), h("div", { className: "lx-list" }, g.items.map((l) => h("button", { key: l.id, className: "lx-row", onClick: () => { setOpen(l.id); const workspace=document.querySelector(".shell > .content"); if(workspace)workspace.scrollTop=0; else window.scrollTo({top:0}); } }, h("span", { className: "lx-row-main" }, h("strong", null, l.title), h("span", { className: "muted small" }, [l.source, `${l.sections.length} sections`, l.terms.length ? `${l.terms.length} key terms` : ""].filter(Boolean).join(", "))), l.done ? h("span", { className: "ps-st got" }, h(Icon, { name: "check", size: 14 }), " Studied") : h("span", { className: "chev-i" }, h(Icon, { name: "chevron", size: 16 }))))))),
       edit && h(LxEditor, { subject, item: edit === "new" ? null : edit, update, toast, onClose: () => setEdit(null), onDeleted: () => setEdit(null) })
     );
   }
@@ -10509,7 +10554,7 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
       !sets.length ? h(PsEmpty, { icon: "pset", title: "No problem sets yet", text: "Copy the problem set prompt into NotebookLM with your sources loaded, then paste its reply here. You’ll get problems sorted by subtopic, each with the answer and step-by-step solution.", go, pid: "pset" }) : !shown.length ? h("div", { className: "empty" }, h("p", null, "No sets match."), h("p", { className: "muted" }, "Clear the search or pick “All topics”.")) : psByTopic(subject, shown).map((g) => h("div", { key: g.key, className: "ps-group" }, h("h2", { className: "ps-group-h" }, g.label, g.std && h("span", { className: "std" }, g.std)), h("div", { className: "lx-list" }, g.items.map((s) => {
         const t = psTally(s);
         const subs = psGroupProblems(s.problems).map(([k]) => k).filter(Boolean);
-        return h("button", { key: s.id, className: "lx-row ps-row", onClick: () => { setOpen(s.id); window.scrollTo({ top: 0 }); } }, h("span", { className: "lx-row-main" }, h("strong", null, s.title), h("span", { className: "muted small" }, `${plural(t.n, "problem")}${subs.length ? `: ${subs.slice(0, 4).join(", ")}${subs.length > 4 ? `, +${subs.length - 4} more` : ""}` : ""}`), h(PsBar, { t })), h("span", { className: "ps-row-n" }, t.got + t.miss ? `${t.got}/${t.n}` : "New"));
+        return h("button", { key: s.id, className: "lx-row ps-row", onClick: () => { setOpen(s.id); const workspace=document.querySelector(".shell > .content"); if(workspace)workspace.scrollTop=0; else window.scrollTo({top:0}); } }, h("span", { className: "lx-row-main" }, h("strong", null, s.title), h("span", { className: "muted small" }, `${plural(t.n, "problem")}${subs.length ? `: ${subs.slice(0, 4).join(", ")}${subs.length > 4 ? `, +${subs.length - 4} more` : ""}` : ""}`), h(PsBar, { t })), h("span", { className: "ps-row-n" }, t.got + t.miss ? `${t.got}/${t.n}` : "New"));
       }))))
     );
   }
@@ -11113,18 +11158,16 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const [focus, setFocus] = useState(() => (init && init.focus) || null);
     const abort = useRef(null);
     const endRef = useRef(null);
+    const logRef = useRef(null);
     const stick = useRef(true);
     const boxRef = useRef(null);
     const topRef = useRef(null);
     const [showTools, setShowTools] = useState(false);
     const [collapsed, setCollapsed] = useState({});
     useEffect(() => { try { lsSet(CHAT, JSON.stringify(msgs.slice(-60))); } catch (e) {} }, [CHAT, msgs]);
-    useEffect(() => { if (stick.current && endRef.current) endRef.current.scrollIntoView({ block: "end" }); }, [msgs]);
-    useEffect(() => {
-      const onScroll = () => { stick.current = window.innerHeight + window.scrollY >= document.body.scrollHeight - 160; };
-      window.addEventListener("scroll", onScroll, { passive: true });
-      return () => { window.removeEventListener("scroll", onScroll); if (abort.current) abort.current.abort(); };
-    }, []);
+    useEffect(() => { if (stick.current && logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight; }, [msgs]);
+    useEffect(() => () => { if (abort.current) abort.current.abort(); }, []);
+    const onChatScroll = () => { const el=logRef.current; if(el)stick.current=el.scrollHeight-el.scrollTop-el.clientHeight<120; };
     const lectures = subject.lectures || [], psets = subject.psets || [];
     const ask = (q) => {
       const body = String(q || "").trim();
@@ -11195,8 +11238,8 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
           focusLabel && h("span", { className: "small" }, "the full text goes with every question")
         ),
         msgs.length === 0 && h("div", { className: "empty" }, h("p", { className: "muted" }, "Ask anything, or start with one of these.")),
-        h("div", { className: "ai-log" }, msgs.map((m, i) => {
-          const live = busy && i === msgs.length - 1 && m.role === "ai";
+        h("div", { className: "ai-log", ref: logRef, onScroll: onChatScroll, role:"log", "aria-label":"Tutor conversation", "aria-live":"polite" }, msgs.slice(-60).map((m, i) => {
+          const live = busy && i === Math.min(msgs.length, 60) - 1 && m.role === "ai";
           const json = m.role === "ai" && !m.err && !live ? gemFindJSON(m.text) : "";
           return h("div", { key: m.id, className: "ai-msg " + (m.role === "me" ? "me" : "ai") },
             h("span", { className: "ai-who" }, m.role === "me" ? "You" : "Gemini"),
@@ -11215,8 +11258,8 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
           h("div", { className: "ai-quicktools" },
             h("span", { className: "muted small" }, msgs.length ? Math.floor(msgs.length / 2) + " exchanges" : "New conversation"),
             h("span", { className: "spacer" }),
-            msgs.length > 0 && h("button", { className: "btn ghost", onClick: () => { stick.current = false; topRef.current && topRef.current.scrollIntoView({ behavior: "smooth", block: "start" }); } }, "↑ Top"),
-            msgs.length > 0 && h("button", { className: "btn ghost", onClick: () => { stick.current = true; endRef.current && endRef.current.scrollIntoView({ behavior: "smooth", block: "end" }); } }, "↓ Latest"),
+            msgs.length > 0 && h("button", { className: "btn ghost", onClick: () => { stick.current = false; if(logRef.current)logRef.current.scrollTo({top:0,behavior:"smooth"}); } }, "↑ Top"),
+            msgs.length > 0 && h("button", { className: "btn ghost", onClick: () => { stick.current = true; if(logRef.current)logRef.current.scrollTo({top:logRef.current.scrollHeight,behavior:"smooth"}); } }, "↓ Latest"),
             msgs.length > 0 && h("button", { className: "btn danger ghost", disabled: busy, onClick: clear, title: "Clear this conversation without scrolling to the top" }, "Clear chat")),
           mode === "sources" && h("div", { className: "ai-chips" }, [["Summarize source", "Summarize the selected source and identify the main rules, using only its contents."], ["Quiz from source", "Quiz me one question at a time using only the selected source."], ["Explain a problem", "Explain a worked problem from the selected source step by step."]].map(([label, prompt]) => h("button", { key: label, className: "chip", disabled: busy, onClick: () => ask(prompt) }, label))),
           h("div", { className: "ai-row" },
@@ -11706,11 +11749,11 @@ window.__BSA_READ_ONLY__=true;
       let app=appScript.textContent;
       app=app.replace('(() => {','(() => {\n  const localStorage = window.__BSA_SHARED_STORAGE__;\n  const sessionStorage = window.__BSA_SHARED_STORAGE__;',1);
       // Hide authoring/navigation features but keep exactly the study components.
-      const oldGroups=`{name:"Start here", items:["home","guide","practice","lectures","psets"]},
-      {name:"Study library", items:["vault","mistakes","toolkit","ask","howto"]},
-      {name:"My progress", items:["stats-clean","grades","achievements"]},
-      {name:"Planning", items:["roadmap","calendar","class","curriculum"]},
-      {name:"Personal", items:["life","break","personalize"]}`;
+      const oldGroups=`{name:"Study", items:["home","guide","vault","psets","lectures","practice"]},
+      {name:"Tools", items:["toolkit","roadmap","ask","curriculum","howto"]},
+      {name:"Progress", items:["stats-clean","mistakes","grades","achievements"]},
+      {name:"Plan", items:["calendar","class"]},
+      {name:"Your space", items:["life","break","personalize"]}`;
       const newGroups=`{name:"Study",items:["home","vault","practice","psets","lectures"]},
       {name:"Reference",items:["toolkit"]}`;
       if(!app.includes(oldGroups))throw Error('Shared dashboard navigation compatibility check failed');
@@ -12624,7 +12667,7 @@ h('div',{className:'life-avatar-preview'},h('span',null,life.avatar.accessory===
         return;
       }
       setNav((n) => ({ tab, opts, key: n.key + 1 }));
-      if (!opts.open) window.scrollTo({ top: 0 });
+      if (!opts.open) { const workspace=document.querySelector(".shell > .content"); if (workspace) workspace.scrollTop=0; else window.scrollTo({top:0}); }
     };
     const openEditor = (type, item = null, defaults = {}) => {
       setModal(null);
@@ -12757,7 +12800,7 @@ h('div',{className:'life-avatar-preview'},h('span',null,life.avatar.accessory===
       ["life", "Study Life", "look"], ["personalize", "Personalization Corner", "look"], ["howto", "How-To Corner", "book"]
     ];
     const navGroups = [
-      {name:"Study", items:["home","vault","psets","lectures","practice"]},
+      {name:"Study", items:["home","guide","vault","psets","lectures","practice"]},
       {name:"Tools", items:["toolkit","roadmap","ask","curriculum","howto"]},
       {name:"Progress", items:["stats-clean","mistakes","grades","achievements"]},
       {name:"Plan", items:["calendar","class"]},
