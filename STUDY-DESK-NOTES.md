@@ -616,3 +616,42 @@ Study Toolkit now offers **Backup all study data** and **Restore all study data*
 - Switch changes require re-export and redeployment. GitHub Pages is static hosting, so switches do not remotely revoke content or synchronize.
 - Classmate notes, cards, and practice scratchpad are stored only in their own browser localStorage.
 - Shared submissions are disabled without secure authentication/backend. Public material should be reviewed before publishing.
+
+## v68 — GitHub publishing from the personal dashboard
+- Share Dashboard now offers Publish selected materials & permissions.
+- GitHub API updates index.html in ghostbymegumiacorda/bsa-study-desk-shared; existing SHA fetched before update.
+- Fine-grained GitHub personal access token must be manually supplied each session and limited to the shared repository (Contents read/write). It is held in React memory only, not persisted or exported.
+- Publish is explicit, not automatic on every save. GitHub Pages deployment follows the commit; allow minutes for propagation.
+- Create shared repository and configure GitHub Pages main/root before publishing.
+- Classmate personal data remains in each browser. No secure real-time permissions or multi-device student sync.
+- SECURITY: A token entered into a website can be stolen by malicious scripts or extensions. Use a short-lived, repository-scoped token; revoke it if exposed. Never include it in HTML or public files.
+
+## v69 — Pinch zoom and paper panning
+- One-finger touch pans the handwriting paper; two-finger pinch zooms from 50% to 400% with viewport anchoring.
+- Pen/stylus pointer still draws. Optional Finger draws toggle enables one-finger writing; switch it off for panning.
+- Zoom buttons preserve the center of the visible paper and exports retain the original 1100×1500 coordinate system.
+- Existing handwriting data model unchanged. Back up notebooks before upgrading.
+- Live iPad touch testing has not been performed; verify gestures and stylus behavior before relying on this release.
+
+## v70 — Readable PDF export styling
+- Shared A4 print design: stronger typography hierarchy, green section bands, table header shading, row striping, generous spacing and print-friendly page breaks.
+- Branded heading treatment for lecture notes, problem sets, study sheets and general print exports.
+- Handwriting single-page and all-pages PDF print layouts have clearer titles and metadata.
+- PDF export still uses the browser Print / Save as PDF dialog. Enable Background graphics to reproduce the subtle shading, if desired.
+- Content is unchanged; this is a presentation-only update. Actual printer and iPad rendering have not been visually verified.
+
+## v71 — Personalization Corner and PDF signature
+- Personalization Corner in Home navigation and sidebar tools.
+- Editable name, block, program, school, and text sign-off; preview and toggles for which identity fields appear on exports.
+- Defaults to John Angel / ACC. Profile is browser-local and not included in the shared classmate website.
+- New PDF exports display a Prepared by identity strip instead of the former generic footer/link.
+- Added identity treatment to common print flows including problem sets, study sheets, journal/general print and handwriting.
+- Fixed a pre-existing syntax error in the handwriting multi-page print CSS string (unescaped quote).
+- Save your study data backup before updating. Test printing on your browser/iPad.
+
+## v72 — Handwriting selection and two erasers
+- Select / Move supports touch, Apple Pencil and mouse: tap a vector stroke/shape and drag; selection remains indicated.
+- Hit testing now follows the actual stroke or shape more closely, rather than a broad rectangular bound.
+- Stroke eraser deletes entire editable vector strokes or shapes.
+- Pencil eraser rubs out raster pixels; older flattened ink is not individually selectable.
+- Pen, zoom, PDF and personalization features retained. Test on iPad before class; back up notebooks before replacing.
