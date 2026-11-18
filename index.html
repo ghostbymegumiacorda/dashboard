@@ -10768,7 +10768,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       const safeJSON=JSON.stringify(snapshot).replace(/</g,'\\u003c').replace(/>/g,'\\u003e').replace(/&/g,'\\u0026');
       const boot='<script>window.__BSA_SHARED_SNAPSHOT__='+safeJSON+';window.__BSA_READ_ONLY__=true;<'+'/script>';
       const css='<style id="bsa-shared-style">.bsa-readonly-banner{position:fixed;right:12px;top:10px;z-index:999999;background:#175e45;color:white;padding:7px 12px;border-radius:99px;box-shadow:0 4px 14px #0003;font:700 12px system-ui;pointer-events:none}@media print{.bsa-readonly-banner{display:none!important}}</style>';
-      source=source.replace('</head>',css+boot+'</head>');
+      {const pos=source.lastIndexOf('</head>');if(pos<0)throw Error('Missing HTML head');source=source.slice(0,pos)+css+boot+source.slice(pos);}
       source=source.replace('<div id="root"></div>','<div class="bsa-readonly-banner">BSA Study Desk · Read-only</div><div id="root"></div>');
       const changes=[
         ['const [data, setData] = useState(() => loadLocal() || buildDefault());','const [data, setData] = useState(() => window.__BSA_SHARED_SNAPSHOT__ || loadLocal() || buildDefault());'],
@@ -10783,7 +10783,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       // Keep the full navigation and visible buttons. All core document
       // mutations are blocked, and edit-only controls are disabled on capture.
       const guard='<script>(function(){if(!window.__BSA_READ_ONLY__)return;const forbidden=/^(add|new|create|edit|delete|remove|rename|duplicate|reset|clear|import|upload|save changes|change appearance|add subject|add topic|add lecture|add problem|add quiz|manage|reorder|publish|sync now|restore|apply theme|customize appearance)/i;document.addEventListener("click",function(e){const el=e.target.closest("button,[role=button]");if(!el)return;const label=(el.getAttribute("aria-label")||el.innerText||el.title||"").trim();if(forbidden.test(label)){e.preventDefault();e.stopImmediatePropagation();}},true);document.addEventListener("submit",function(e){e.preventDefault();e.stopImmediatePropagation()},true)})();<'+'/script>';
-      source=source.replace('</body>',guard+'</body>');
+      {const pos=source.lastIndexOf('</body>');if(pos<0)throw Error('Missing HTML body');source=source.slice(0,pos)+guard+source.slice(pos);}
       source=source.replace(/Classmate Study Desk/g,'BSA Study Desk').replace(/Classmate Library/g,'Study Library').replace(/Classmate sharing/g,'Sharing').replace(/classmates/g,'visitors');
       source=source.replace('<title>BSA Study Desk</title>','<title>BSA Study Desk · Read-only</title>');
       return source;

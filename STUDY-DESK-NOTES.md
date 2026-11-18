@@ -701,3 +701,6 @@ Study Toolkit now offers **Backup all study data** and **Restore all study data*
 - Central document mutations, editor opening and settings updates are blocked in read-only mode; edit-only buttons are intercepted while reading/navigation and PDF buttons remain available.
 - The public site is rebuilt when Publish is clicked. It is not an authenticated permissions system; any data deliberately published is public.
 - IMPORTANT: interactive iPad and GitHub Pages browser tests are not completed. Test in a private/incognito browser and verify no changes to the personal dashboard.
+
+## v79 shared publish fix
+Insert bootstrap and read-only guard at the actual closing HTML tags, not earlier string literals inside the dashboard JavaScript. Re-publish the shared site after uploading v79 to the personal repository.
