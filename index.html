@@ -9658,8 +9658,8 @@ ${c.kindHint}` }
       if(!selected.length){window.alert('Select at least one problem to export.');return}
       psPrint(set,withKey,selected);
     };
-    return h('div',{className:'modal-overlay',role:'presentation',onClick:onClose},
-      h('div',{className:'modal',role:'dialog','aria-modal':true,'aria-label':'Customize problem set PDF',onClick:e=>e.stopPropagation(),style:{maxWidth:720,maxHeight:'90vh',overflowY:'auto'}},
+    return h('div',{className:'backdrop',role:'presentation',onClick:onClose},
+      h('div',{className:'modal',role:'dialog','aria-modal':true,'aria-label':'Customize problem set PDF',onClick:e=>e.stopPropagation(),style:{width:'min(720px, 100%)',maxHeight:'90vh',overflowY:'auto',padding:'14px 20px 20px'}},
         h('div',{className:'modal-head'},h('h2',null,'Customize PDF export'),h('button',{className:'icon-btn',onClick:onClose,'aria-label':'Close'},'×')),
         h('p',{className:'muted'},'Choose the problems to include in your PDF. Your original problem set stays unchanged.'),
         h('div',{style:{display:'flex',gap:8,flexWrap:'wrap',marginBottom:12}},
@@ -10613,7 +10613,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
   /* v33: privacy-scoped static classmate handout. Not a live access-control service. */
   function ClassmatePublisher({data,toast}) {
     const [allowed,setAllowed]=useState(()=>data.subjects.map(x=>x.id));
-    const [kinds,setKinds]=useState({lectures:true,cards:true,problems:true,quizzes:true,notes:false});
+    const [kinds,setKinds]=useState({lectures:true,cards:false,problems:true,quizzes:true,notes:false});
     const [showAnswers,setShowAnswers]=useState(true);
     const [preview,setPreview]=useState(false);
     const sharedUrl='https://ghostbymegumiacorda.github.io/bsa-study-desk-shared/';
@@ -10630,7 +10630,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       if(publishBusy)return;
       if(!githubToken.trim()){setPublishStatus('Enter a fine-grained GitHub token with Contents: Read and write access to the shared repository.');return}
       if(!allowed.length||!Object.values(kinds).some(Boolean)){setPublishStatus('Select at least one subject and material type.');return}
-      if(!window.confirm('Publish the selected materials to the PUBLIC read-only BSA Study Desk? Review the content for private information.'))return;
+      if(!window.confirm('Replace the PUBLIC shared website with a read-only Study Library containing ONLY lectures, quizzes and problem sets? Review the materials first.'))return;
       setPublishBusy(true);setPublishStatus('Connecting to GitHub…');
       try{
         const headers={'Authorization':'Bearer '+githubToken.trim(),'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'};
@@ -10638,11 +10638,11 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
         let sha;
         if(existing.ok){const result=await existing.json();sha=result.sha}
         else if(existing.status!==404){const err=await existing.text();throw Error('GitHub read failed ('+existing.status+'): '+err.slice(0,220))}
-        const utf8=new TextEncoder().encode(await makeFullSharedHtml());
+        const utf8=new TextEncoder().encode(safeSharedHtml());
         let binary='';for(let i=0;i<utf8.length;i+=16384)binary+=String.fromCharCode(...utf8.subarray(i,i+16384));
         const content=btoa(binary);
         setPublishStatus('Uploading shared website to GitHub…');
-        const response=await fetch(githubEndpoint,{method:'PUT',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({message:'Publish shared BSA Study Desk from personal dashboard',content,...(sha?{sha}:{})})});
+        const response=await fetch(githubEndpoint,{method:'PUT',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({message:'Publish read-only Study Library (lectures, quizzes, problem sets)',content,...(sha?{sha}:{})})});
         if(!response.ok){const err=await response.text();throw Error('GitHub publish failed ('+response.status+'): '+err.slice(0,260))}
         const timestamp=new Date().toLocaleString();
         setLastPublish(timestamp);setPublishStatus('Published to GitHub at '+timestamp+'. GitHub Pages may take a few minutes to update.');toast('Shared website published to GitHub');
@@ -10701,28 +10701,43 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       source=source.replace('if (tab === "data") {','if (window.__BSA_READ_ONLY__ && (tab === "share" || tab === "data")) return; if (tab === "data") {');
       return source;
     };
-    const downloadDashboard=async()=>{if(!allowed.length||!Object.values(kinds).some(Boolean)){toast('Select subjects and materials first');return}const blob=new Blob([await makeFullSharedHtml().catch(e=>{toast(e.message);throw e})],{type:'text/html;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='index.html';a.click();setTimeout(()=>URL.revokeObjectURL(url),4000);toast('Shared dashboard downloaded. Review before publishing.')};
+    const safeSharedHtml=()=>{
+      const selected=data.subjects.filter(sub=>allowed.includes(sub.id));
+      const blocks=[];
+      selected.forEach((sub,si)=>{
+        const subjectName=esc((sub.code?sub.code+' · ':'')+sub.name);
+        const make=(kind,title,items,render)=>{
+          if(!items.length)return;
+          blocks.push('<section class="collection" data-subject="'+si+'" data-kind="'+kind+'"><h2>'+subjectName+' <span class="type">/ '+title+'</span></h2>'+items.map(render).join('')+'</section>');
+        };
+        make('lectures','Lectures',sub.lectures||[],l=>'<article><h3>'+esc(l.title||'Lecture')+'</h3>'+(l.summary?'<div class="formatted">'+psMdHtml(l.summary)+'</div>':'')+(l.sections||[]).map(x=>'<h4>'+esc(x.h||'')+'</h4><div class="formatted">'+psMdHtml(x.body||'')+'</div>').join('')+'</article>');
+        make('problems','Problem sets',sub.psets||[],set=>'<article><h3>'+esc(set.title||'Problem set')+'</h3>'+(set.problems||[]).map((pr,i)=>'<div class="question"><div class="number">Problem '+(i+1)+'</div><div class="formatted">'+psMdHtml(pr.q||pr.question||pr.prompt||pr.text||'')+'</div>'+(showAnswers?'<div class="answer"><strong>Answer / Solution</strong><div class="formatted">'+psMdHtml(pr.answer||pr.ans||pr.solution||'')+'</div></div>':'')+'</div>').join('')+'</article>');
+        make('quizzes','Quizzes',sub.quizzes||[],q=>'<article><h3>'+esc(q.title||'Quiz')+'</h3>'+(q.questions||[]).map((item,i)=>'<div class="question"><div class="number">Question '+(i+1)+'</div><div class="formatted">'+psMdHtml(item.q||item.question||item.prompt||'')+'</div>'+(showAnswers?'<div class="answer"><strong>Answer</strong><p>'+esc(item.answer||item.a||'')+'</p></div>':'')+'</div>').join('')+'</article>');
+      });
+      const css=`:root{font-family:system-ui,-apple-system,Arial,sans-serif;color:#18392e;background:#f2f7f3}*{box-sizing:border-box}body{margin:0}.shell{display:grid;grid-template-columns:255px 1fr;min-height:100vh}aside{padding:24px 18px;background:white;border-right:1px solid #d7e5dc}aside h1{font-size:20px;letter-spacing:-.5px;margin:0 0 4px}aside p{color:#698072;font-size:12px;margin:0 0 25px}aside button{display:block;width:100%;margin:5px 0;padding:11px 12px;text-align:left;background:transparent;border:0;border-radius:9px;color:#2a5140;font:600 13px system-ui;cursor:pointer}aside button.active,aside button:hover{background:#e5f3eb;color:#125b40}main{max-width:1150px;width:100%;margin:auto;padding:32px 34px 80px}header{background:#fff;padding:24px 28px;border-radius:15px;border:1px solid #d9e7de;margin-bottom:24px}header h1{font-size:29px;margin:0 0 5px}header p{color:#688073;margin:0}.toolbar{display:flex;flex-wrap:wrap;gap:10px;margin:15px 0 0}.toolbar button{background:#18774f;color:white;border:0;border-radius:8px;padding:10px 14px;cursor:pointer;font-weight:600}.toolbar button.secondary{background:#e8f3ed;color:#1b6044}.collection{margin-bottom:22px}.collection h2{font-size:19px;margin:0 0 13px;padding:8px 0;border-bottom:2px solid #bcd8c6}.type{font-size:13px;color:#6e8677;font-weight:500}article{background:#fff;border:1px solid #d9e7de;border-radius:13px;padding:24px;margin-bottom:15px}article h3{font-size:19px;margin:0 0 15px;color:#16583e}article h4{margin:17px 0 7px;color:#1b6247}.formatted{line-height:1.7;overflow-wrap:anywhere}.formatted table{width:100%;border-collapse:collapse}.formatted th,.formatted td{border:1px solid #d2e0d6;padding:7px}.formatted pre{white-space:pre-wrap;overflow-wrap:anywhere}.question{border-top:1px solid #e1eae3;padding:15px 0}.number{font-weight:750;color:#18774f;font-size:12px;letter-spacing:.4px;margin-bottom:7px}.answer{background:#eff7f1;border-left:3px solid #21805b;padding:11px 14px;margin-top:12px}.empty{padding:40px;background:white;border-radius:13px;color:#6b7d70}@media(max-width:700px){.shell{display:block}aside{border:0;border-bottom:1px solid #d7e5dc;padding:15px}aside h1{font-size:17px}aside p{margin-bottom:10px}aside button{display:inline-block;width:auto;margin:2px}main{padding:16px}header{padding:19px}article{padding:16px}}@page{size:A4;margin:16mm}@media print{.shell{display:block}aside,.toolbar{display:none!important}main{padding:0;max-width:none}header,article{border:0;padding:0}article{break-inside:auto}.question{break-inside:avoid}.collection h2{break-after:avoid}header{margin-bottom:14px}}`;
+      const nav=selected.map((sub,i)=>'<button data-subject="'+i+'">'+esc((sub.code?sub.code+' · ':'')+sub.name)+'</button>').join('');
+      const js=`const buttons=[...document.querySelectorAll('[data-subject]')].filter(x=>x.tagName==='BUTTON');const sections=[...document.querySelectorAll('.collection')];let active='all';let kind='all';function render(){sections.forEach(el=>{el.hidden=(active!=='all'&&el.dataset.subject!==active)||(kind!=='all'&&el.dataset.kind!==kind)});buttons.forEach(b=>b.classList.toggle('active',b.dataset.subject===active));document.querySelectorAll('[data-kind-filter]').forEach(b=>b.classList.toggle('active',b.dataset.kindFilter===kind))}buttons.forEach(b=>b.addEventListener('click',()=>{active=b.dataset.subject;render()}));document.querySelectorAll('[data-kind-filter]').forEach(b=>b.addEventListener('click',()=>{kind=b.dataset.kindFilter;render()}));render();`;
+      return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>BSA Study Desk · Study Library</title><style>'+css+'</style></head><body><div class="shell"><aside><h1>Σ BSA Study Desk</h1><p>Study Library · Read-only</p><button data-subject="all" class="active">All subjects</button>'+nav+'</aside><main><header><h1>Study Library</h1><p>Lectures, quizzes and problem sets</p><div class="toolbar"><button class="secondary" data-kind-filter="all">All materials</button><button class="secondary" data-kind-filter="lectures">Lectures</button><button class="secondary" data-kind-filter="quizzes">Quizzes</button><button class="secondary" data-kind-filter="problems">Problem sets</button>'+(permissions.download?'<button onclick="window.print()">Print / Save PDF</button>':'')+'</div></header>'+(blocks.join('')||'<div class="empty">No published materials yet.</div>')+'</main></div><script>'+js+'<'+'/script></body></html>';
+    };
+    const downloadDashboard=async()=>{if(!allowed.length||!Object.values(kinds).some(Boolean)){toast('Select subjects and materials first');return}const blob=new Blob([safeSharedHtml()],{type:'text/html;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='index.html';a.click();setTimeout(()=>URL.revokeObjectURL(url),4000);toast('Shared dashboard downloaded. Review before publishing.')};
     const download=()=>{if(!allowed.length||!Object.values(kinds).some(Boolean)){toast('Select at least one subject and material type');return}const blob=new Blob([html()],{type:'text/html;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='BSA-Classmate-Library.html';a.click();setTimeout(()=>URL.revokeObjectURL(url),4000);toast('Read-only handout downloaded. Review the file before sharing.')};
-    return h('section',{className:'toolkit-panel share-panel'},h('h2',null,'Share Dashboard'),h('p',{className:'muted'},'Publish the full BSA Study Desk interface with selected materials in view-only mode. The public website uses the same navigation and study layouts.'),
+    return h('section',{className:'toolkit-panel share-panel'},h('h2',null,'Share Dashboard'),h('p',{className:'muted'},'Publish only lectures, quizzes and problem sets in a separate read-only Study Library. Subject management, personal settings and other data are never exported.'),
       h('h3',null,'Permission Manager — shared website export'),
       h('p',{className:'muted small'},'Switches affect the next published shared website. Press Publish to update GitHub; changes are not instantaneous and are not secure access controls.'),
-      h('div',{className:'share-options'},[
-        ['view','View shared materials'],['download','Print / Save as PDF'],['personalNotes','Create private personal notes'],['flashcards','Create private flashcards'],['quizzes','Practice answer scratchpad'],['submissions','Submit materials to admin (not available without a backend)']
-      ].map(([key,label])=>h('label',{key},h('input',{type:'checkbox',checked:!!permissions[key],disabled:key==='submissions',onChange:e=>setPermission(key,e.target.checked)}),label))),
-      h('p',{className:'muted small'},'Published material is view-only. Any personal practice data remains on the visitor’s device. Submissions require a backend.'),
+      h('p',{className:'muted small'},'Published site: view and print only. No local storage, add-subject controls, or appearance settings.'),
       h('div',{className:'toolkit-actions'},h('a',{className:'btn',href:sharedUrl,target:'_blank',rel:'noopener noreferrer'},'Open Shared Dashboard website ↗')),
       h('p',{className:'muted small'},'Create the bsa-study-desk-shared GitHub repository and enable GitHub Pages from the main branch/root to activate the link.'),      h('h3',null,'Publish updates directly to GitHub'),
       h('p',{className:'muted small'},'Use a fine-grained token restricted to the shared repository with Contents: Read and write. The token is not saved or included in published files.'),
       h('label',null,'GitHub token (not saved)',h('input',{type:'password',value:githubToken,autoComplete:'off',spellCheck:false,placeholder:'github_pat_…',onChange:e=>setGithubToken(e.target.value),style:{display:'block',width:'100%',maxWidth:'540px',padding:'10px',margin:'8px 0'}})),
-      h('div',{className:'toolkit-actions'},h('button',{className:'btn primary',disabled:publishBusy,onClick:publishGithub},publishBusy?'Publishing…':'Publish selected materials & permissions'),h('button',{className:'btn',onClick:()=>setGithubToken('')},'Clear token'),h('a',{className:'btn',href:'https://github.com/settings/personal-access-tokens/new',target:'_blank',rel:'noopener noreferrer'},'Create limited token ↗')),
+      h('div',{className:'toolkit-actions'},h('button',{className:'btn primary',disabled:publishBusy,onClick:publishGithub},publishBusy?'Publishing…':'Publish Study Library'),h('button',{className:'btn',onClick:()=>setGithubToken('')},'Clear token'),h('a',{className:'btn',href:'https://github.com/settings/personal-access-tokens/new',target:'_blank',rel:'noopener noreferrer'},'Create limited token ↗')),
       publishStatus&&h('p',{role:'status',className:'muted small'},publishStatus),
       h('p',{className:'muted small'},'Updates are published when you press Publish. The shared website changes after GitHub Pages redeploys; no HTML download needed. Create the shared repository and enable GitHub Pages from the main branch/root first.'),
 
       h('h3',null,'1. Allowed subjects'),h('div',{className:'share-options'},data.subjects.map(sub=>h('label',{key:sub.id},h('input',{type:'checkbox',checked:allowed.includes(sub.id),onChange:e=>setAllowed(p=>e.target.checked?[...p,sub.id]:p.filter(x=>x!==sub.id))}),sub.code||sub.name,' · ',sub.name))),
-      h('h3',null,'2. Allowed materials'),h('div',{className:'share-options'},[['lectures','Lectures'],['cards','Flashcards'],['problems','Problem sets'],['quizzes','Quizzes'],['notes','My typed notes']].map(([k,l])=>h('label',{key:k},h('input',{type:'checkbox',checked:kinds[k],onChange:e=>setKinds(p=>({...p,[k]:e.target.checked}))}),l))),
+      h('h3',null,'2. Included materials'),h('p',null,'Lectures · Quizzes · Problem sets (only)'),
       h('label',{className:'share-toggle'},h('input',{type:'checkbox',checked:showAnswers,onChange:e=>setShowAnswers(e.target.checked)}),'Include answers and solutions'),
-      h('p',{className:'muted small'},'The published snapshot excludes private grades, history, streaks, and mastery statistics. Review every selected material before publishing. The public website uses the same app interface, but published records cannot be edited there.'),
-      h('div',{className:'toolkit-actions'},h('button',{className:'btn primary',onClick:downloadDashboard},'Export shared dashboard'),h('button',{className:'btn',onClick:download},'Export printable handout'),h('button',{className:'btn',onClick:()=>setPreview(v=>!v)},preview?'Hide preview':'Preview selected content'),h('button',{className:'btn',onClick:()=>{const w=window.open('','_blank');if(!w){toast('Allow pop-ups to print');return}w.document.write(html());w.document.close();w.focus();setTimeout(()=>w.print(),500)}},'Print selected materials / PDF')),
+      h('p',{className:'muted small'},'Only published lecture, quiz and problem-set content is included. No grades, appearance, study history, private notes, or account settings.'),
+      h('div',{className:'toolkit-actions'},h('button',{className:'btn primary',onClick:downloadDashboard},'Export read-only Study Library'),h('button',{className:'btn',onClick:()=>setPreview(v=>!v)},preview?'Hide preview':'Preview selected content'),h('button',{className:'btn',onClick:()=>{const w=window.open('','_blank');if(!w){toast('Allow pop-ups to print');return}w.document.write(html());w.document.close();w.focus();setTimeout(()=>w.print(),500)}},'Print selected materials / PDF')),
       preview&&h('div',{className:'share-preview'},h('strong',null,allowed.length+' subject(s) selected'),h('p',null,Object.entries(kinds).filter(([k,v])=>v).map(([k])=>k).join(', ')),h('p',null,'Answers: '+(showAnswers?'Included':'Hidden'))),
       h('p',{className:'muted small'},'Sharing is PUBLIC, not authenticated access control. Only selected content is embedded. To share a link, publish the exported HTML file alongside your GitHub Pages site; anyone with its URL can access or copy it. Regenerate and republish to change permissions; old downloads cannot be revoked.'));
   }

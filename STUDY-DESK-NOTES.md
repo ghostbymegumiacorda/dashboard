@@ -672,3 +672,17 @@ Study Toolkit now offers **Backup all study data** and **Restore all study data*
 - Existing full-set and filtered print actions remain.
 - Physical PDF page numbers can still be selected in the browser's print dialog.
 - JavaScript syntax checked; interactive browser/iPad tests not performed.
+
+## v75 — Customize PDF dialog display fix
+- Reused the app's existing `.backdrop` modal overlay CSS rather than an undefined `.modal-overlay` class.
+- Increased custom PDF dialog width and added internal padding for controls.
+- Added explicit button type to prevent accidental form submission.
+- Existing problem range and solution selection options unchanged.
+
+## v76 — Separate read-only Study Library
+- IMPORTANT: Replaces the v73 full-dashboard clone. That clone retained unrelated app controls and created confusing shared/local behavior.
+- Shared website is now a self-contained, read-only Study Library containing ONLY selected subjects' lectures, quizzes, and problem sets.
+- No personal app source, localStorage, subject creation, appearance settings, progress, grades, private notes, flashcards, or publisher controls are included.
+- The public website has subject navigation, Lectures / Quizzes / Problem sets filters, and optional Print / Save PDF.
+- Publish again from the PERSONAL dashboard using GitHub token to replace the existing shared index.html. Old shared website remains online until this new version is published.
+- This release does not modify or remove any records already saved by the previous shared website. Back up the personal dashboard and check URLs if data appears in both.
