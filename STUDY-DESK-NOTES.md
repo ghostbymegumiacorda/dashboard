@@ -709,3 +709,9 @@ Insert bootstrap and read-only guard at the actual closing HTML tags, not earlie
 
 
 v81: NotebookLM math expressions (inline/display fractions and labels) and more resilient JSON candidate extraction. Supports common math notation; complex LaTeX is not a full KaTeX renderer.
+
+
+## v83 additions
+- Personal dashboard only: Break Corner with break timer, memory matching, and breathing visual. Break activities do not change study statistics.
+- Statistics cleanup with confirmation and per-subject/all-subject selection; export a backup before use. Keeps learning materials and does not reset manually entered grades or planned sessions.
+- Shared publishing remains based on v82 restrictions and should be tested after publishing.

@@ -10779,7 +10779,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
   /* v33: privacy-scoped static classmate handout. Not a live access-control service. */
   function ClassmatePublisher({data,toast}) {
     const [allowed,setAllowed]=useState(()=>data.subjects.map(x=>x.id));
-    const [kinds,setKinds]=useState({lectures:true,cards:false,problems:true,quizzes:true,notes:false});
+    const [kinds,setKinds]=useState({lectures:true,cards:true,problems:true,quizzes:false,notes:false});
     const [showAnswers,setShowAnswers]=useState(true);
     const [preview,setPreview]=useState(false);
     const sharedUrl='https://ghostbymegumiacorda.github.io/bsa-study-desk-shared/';
@@ -10796,7 +10796,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       if(publishBusy)return;
       if(!githubToken.trim()){setPublishStatus('Enter a fine-grained GitHub token with Contents: Read and write access to the shared repository.');return}
       if(!allowed.length||!Object.values(kinds).some(Boolean)){setPublishStatus('Select at least one subject and material type.');return}
-      if(!window.confirm('Publish the FULL BSA Study Desk interface in read-only mode, with ONLY selected lectures, quizzes and problem sets? Review the materials first.'))return;
+      if(!window.confirm('Publish ONLY Flashcards, Problem Sets, Lectures and Study Toolkit in read-only mode?'))return;
       setPublishBusy(true);setPublishStatus('Connecting to GitHub…');
       try{
         const headers={'Authorization':'Bearer '+githubToken.trim(),'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'};
@@ -10808,7 +10808,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
         let binary='';for(let i=0;i<utf8.length;i+=16384)binary+=String.fromCharCode(...utf8.subarray(i,i+16384));
         const content=btoa(binary);
         setPublishStatus('Uploading shared website to GitHub…');
-        const response=await fetch(githubEndpoint,{method:'PUT',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({message:'Publish full BSA Study Desk (read-only lectures, quizzes, problem sets)',content,...(sha?{sha}:{})})});
+        const response=await fetch(githubEndpoint,{method:'PUT',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({message:'Publish read-only BSA Study Desk (flashcards, problems, lectures, toolkit)',content,...(sha?{sha}:{})})});
         if(!response.ok){const err=await response.text();throw Error('GitHub publish failed ('+response.status+'): '+err.slice(0,260))}
         const timestamp=new Date().toLocaleString();
         setLastPublish(timestamp);setPublishStatus('Published to GitHub at '+timestamp+'. GitHub Pages may take a few minutes to update.');toast('Shared website published to GitHub');
@@ -10834,10 +10834,10 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
         // are structural metadata, not progress, grades, or private study records.
         const clean={id:x.id,name:x.name,code:x.code,school:'',textbook:false};
         clean.topics=(x.topics||[]).map(t=>({id:t.id,title:t.title,name:t.name,chapter:t.chapter,unit:t.unit,status:'Not started',done:false,sub:(t.sub||[]).map(v=>({id:v.id,title:v.title,name:v.name,done:false}))}));
-        clean.cards=[];
+        clean.cards=(x.cards||[]).map(c=>JSON.parse(JSON.stringify(c)));
         clean.lectures=(x.lectures||[]).map(l=>JSON.parse(JSON.stringify(l)));
         clean.psets=(x.psets||[]).map(set=>JSON.parse(JSON.stringify(set)));
-        clean.quizzes=(x.quizzes||[]).map(q=>JSON.parse(JSON.stringify(q)));
+        clean.quizzes=[];
         clean.mistakes=[];clean.sessions=[];clean.grades=[];
         return clean;
       });
@@ -10851,23 +10851,36 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       if(!source||!source.includes('function App()'))throw Error('Could not read your personal dashboard HTML. Open your personal GitHub Pages site, then publish again.');
       const snapshot=sharedSnapshot();
       const safeJSON=JSON.stringify(snapshot).replace(/</g,'\\u003c').replace(/>/g,'\\u003e').replace(/&/g,'\\u0026');
-      const boot='<script>window.__BSA_SHARED_SNAPSHOT__='+safeJSON+';window.__BSA_READ_ONLY__=true;<'+'/script>';
-      const css='<style id="bsa-shared-style">.bsa-readonly-banner{position:fixed;right:12px;top:10px;z-index:999999;background:#175e45;color:white;padding:7px 12px;border-radius:99px;box-shadow:0 4px 14px #0003;font:700 12px system-ui;pointer-events:none}@media print{.bsa-readonly-banner{display:none!important}}</style>';
+      const boot='<script>window.__BSA_SHARED_SNAPSHOT__='+safeJSON+';window.__BSA_READ_ONLY__=true;window.__BSA_SHARED_ALLOWED__=["vault","psets","lectures","toolkit"];(function(){const memory=new Map();const store={getItem:k=>memory.has(String(k))?memory.get(String(k)):null,setItem:(k,v)=>memory.set(String(k),String(v)),removeItem:k=>memory.delete(String(k)),clear:()=>memory.clear(),key:i=>Array.from(memory.keys())[i]||null,get length(){return memory.size}};try{Object.defineProperty(window,"localStorage",{configurable:true,value:store})}catch(e){}})();<'+'/script>';
+      const css='<style id="bsa-shared-style">.workspace-actions,.workspace-launcher{display:none!important;}.bsa-readonly-banner{position:fixed;right:12px;top:10px;z-index:999999;background:#175e45;color:white;padding:7px 12px;border-radius:99px;box-shadow:0 4px 14px #0003;font:700 12px system-ui;pointer-events:none}@media print{.bsa-readonly-banner{display:none!important}}</style>';
       {const pos=source.indexOf('</head>');if(pos<0)throw Error('Missing HTML head');source=source.slice(0,pos)+css+boot+source.slice(pos);}
       source=source.replace('<div id="root">','<div class="bsa-readonly-banner">BSA Study Desk · Read-only</div><div id="root">');
       const changes=[
         ['const [data, setData] = useState(() => loadLocal() || buildDefault());','const [data, setData] = useState(() => window.__BSA_SHARED_SNAPSHOT__ || loadLocal() || buildDefault());'],
+        ['const [nav, setNav] = useState({ tab: "home", opts: {}, key: 0 });','const [nav, setNav] = useState({ tab: window.__BSA_READ_ONLY__ ? "lectures" : "home", opts: {}, key: 0 });'],
         ['const update = useCallback((fn, whole) => {','const update = useCallback((fn, whole) => { if(window.__BSA_READ_ONLY__)return;'],
         ['const replaceAll = (incoming) => {','const replaceAll = (incoming) => { if(window.__BSA_READ_ONLY__)return;'],
         ['const openEditor = (type, item = null, defaults = {}) => {','const openEditor = (type, item = null, defaults = {}) => { if(window.__BSA_READ_ONLY__)return;'],
         ['const setSettings = (st) => {','const setSettings = (st) => { if(window.__BSA_READ_ONLY__)return;'],
         ['localStorage.setItem(STORE_KEY, JSON.stringify(data));','if(!window.__BSA_READ_ONLY__)localStorage.setItem(STORE_KEY, JSON.stringify(data));'],
-        ['if (tab === "data") {','if(window.__BSA_READ_ONLY__ && (tab === "data" || tab === "share"))return; if (tab === "data") {']
+        ['const go = (tab, opts = {}) => {','const go = (tab, opts = {}) => { if(window.__BSA_READ_ONLY__ && !window.__BSA_SHARED_ALLOWED__.includes(tab))return;'],
+        ['const tabs = [','const tabs = ['],
+        ['const filteredNavGroups = navGroups.map(group=>({','const filteredNavGroups = navGroups.filter(group=>!window.__BSA_READ_ONLY__ || group.items.some(k=>window.__BSA_SHARED_ALLOWED__.includes(k))).map(group=>({'],
+        ['tabs:tabs.filter(t=>group.items.includes(t[0]) && (t[1].toLowerCase().includes(navSearch.toLowerCase()) || group.name.toLowerCase().includes(navSearch.toLowerCase())))','tabs:tabs.filter(t=>(!window.__BSA_READ_ONLY__ || window.__BSA_SHARED_ALLOWED__.includes(t[0])) && group.items.includes(t[0]) && (t[1].toLowerCase().includes(navSearch.toLowerCase()) || group.name.toLowerCase().includes(navSearch.toLowerCase())))'],
+        ['const jumpLinks = [','const jumpLinks = ['],
+        ['const subjectPicker = (id) =>','const subjectPicker = (id) =>'],
+        ['const okTabs = ["curriculum",','const okTabs = ["curriculum",'],
+        ['if (want && okTabs.includes(want)) {','if (want && okTabs.includes(want) && (!window.__BSA_READ_ONLY__ || window.__BSA_SHARED_ALLOWED__.includes(want))) {']
       ];
       for(const [from,to] of changes){if(!source.includes(from))throw Error('Read-only compatibility check failed: '+from.slice(0,65));source=source.replace(from,to)}
+      // Limit shared navigation to the four requested sections, retaining their original components.
+      source=source.replace('const tabs = [\n      ["home", "Today", "home"],','const tabs = [\n      ["home", "Today", "home"],');
+      source=source.replace('const jumpLinks = [\n      ["home","StudyFlow","home"], ["break","Take a break","home"],','const jumpLinks = [\n      ["home","StudyFlow","home"],');
+      source=source.replace('const jumpLinks = [','const jumpLinks = [');
+      // Hide unrelated quick-access links and management actions on the shared page.
       // Keep the full navigation and visible buttons. All core document
       // mutations are blocked, and edit-only controls are disabled on capture.
-      const guard='<script>(function(){if(!window.__BSA_READ_ONLY__)return;const forbidden=/^(add|new|create|edit|delete|remove|rename|duplicate|reset|clear|import|upload|save changes|change appearance|add subject|add topic|add lecture|add problem|add quiz|manage|reorder|publish|sync now|restore|apply theme|customize appearance)/i;document.addEventListener("click",function(e){const el=e.target.closest("button,[role=button]");if(!el)return;const label=(el.getAttribute("aria-label")||el.innerText||el.title||"").trim();if(forbidden.test(label)){e.preventDefault();e.stopImmediatePropagation();}},true);document.addEventListener("submit",function(e){e.preventDefault();e.stopImmediatePropagation()},true)})();<'+'/script>';
+      const guard='<script>(function(){if(!window.__BSA_READ_ONLY__)return;const deny=/^(\+?\s*(add|new|create)|edit|delete|remove|rename|duplicate|reset|clear|import|upload|save|change|manage|reorder|publish|sync|restore|apply|customize|mark|archive|record|submit|undo|quick add|ask tutor)/i;document.addEventListener("click",function(e){const el=e.target.closest("button,[role=button],a");if(!el)return;const label=(el.getAttribute("aria-label")||el.innerText||el.title||"").trim();if(deny.test(label)){e.preventDefault();e.stopImmediatePropagation();}},true);document.addEventListener("submit",function(e){e.preventDefault();e.stopImmediatePropagation()},true);function hide(){document.querySelectorAll(".workspace-actions,.workspace-launcher").forEach(el=>el.style.display="none");document.querySelectorAll("button,a").forEach(el=>{const t=(el.getAttribute("aria-label")||el.textContent||"").trim();if(deny.test(t)){el.style.display="none"}})}new MutationObserver(hide).observe(document.documentElement,{childList:true,subtree:true});document.addEventListener("DOMContentLoaded",hide)})();<'+'/script>';
       {const pos=source.lastIndexOf('</body>');if(pos<0)throw Error('Missing HTML body');source=source.slice(0,pos)+guard+source.slice(pos);}
       source=source.replace(/Classmate Study Desk/g,'BSA Study Desk').replace(/Classmate Library/g,'Study Library').replace(/Classmate sharing/g,'Sharing').replace(/classmates/g,'visitors');
       source=source.replace('<title>BSA Study Desk</title>','<title>BSA Study Desk · Read-only</title>');
@@ -10893,20 +10906,20 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     };
     const downloadDashboard=async()=>{if(!allowed.length){toast('Select subjects first');return}try{const blob=new Blob([await makeFullSharedHtml()],{type:'text/html;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='index.html';a.click();setTimeout(()=>URL.revokeObjectURL(url),4000);toast('Full read-only dashboard downloaded.')}catch(e){toast('Export failed: '+e.message)}};
     const download=()=>{if(!allowed.length||!Object.values(kinds).some(Boolean)){toast('Select at least one subject and material type');return}const blob=new Blob([html()],{type:'text/html;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='BSA-Classmate-Library.html';a.click();setTimeout(()=>URL.revokeObjectURL(url),4000);toast('Read-only handout downloaded. Review the file before sharing.')};
-    return h('section',{className:'toolkit-panel share-panel'},h('h2',null,'Share Dashboard'),h('p',{className:'muted'},'Publish only lectures, quizzes and problem sets in a separate read-only Study Library. Subject management, personal settings and other data are never exported.'),
+    return h('section',{className:'toolkit-panel share-panel'},h('h2',null,'Share Dashboard'),h('p',{className:'muted'},'Publish only Flashcards, Problem Sets, Lectures and Study Toolkit with the same dashboard UI, read-only. Subject management, personal settings and other data are never exported.'),
       h('h3',null,'Permission Manager — shared website export'),
       h('p',{className:'muted small'},'Switches affect the next published shared website. Press Publish to update GitHub; changes are not instantaneous and are not secure access controls.'),
-      h('p',{className:'muted small'},'Published site: view and print only. No local storage, add-subject controls, or appearance settings.'),
+      h('p',{className:'muted small'},'Published site: read-only four-section dashboard. No personal settings, curriculum or shared writes to personal storage.'),
       h('div',{className:'toolkit-actions'},h('a',{className:'btn',href:sharedUrl,target:'_blank',rel:'noopener noreferrer'},'Open Shared Dashboard website ↗')),
       h('p',{className:'muted small'},'Create the bsa-study-desk-shared GitHub repository and enable GitHub Pages from the main branch/root to activate the link.'),      h('h3',null,'Publish updates directly to GitHub'),
       h('p',{className:'muted small'},'Use a fine-grained token restricted to the shared repository with Contents: Read and write. The token is not saved or included in published files.'),
       h('label',null,'GitHub token (not saved)',h('input',{type:'password',value:githubToken,autoComplete:'off',spellCheck:false,placeholder:'github_pat_…',onChange:e=>setGithubToken(e.target.value),style:{display:'block',width:'100%',maxWidth:'540px',padding:'10px',margin:'8px 0'}})),
-      h('div',{className:'toolkit-actions'},h('button',{className:'btn primary',disabled:publishBusy,onClick:publishGithub},publishBusy?'Publishing…':'Publish Study Library'),h('button',{className:'btn',onClick:()=>setGithubToken('')},'Clear token'),h('a',{className:'btn',href:'https://github.com/settings/personal-access-tokens/new',target:'_blank',rel:'noopener noreferrer'},'Create limited token ↗')),
+      h('div',{className:'toolkit-actions'},h('button',{className:'btn primary',disabled:publishBusy,onClick:publishGithub},publishBusy?'Publishing…':'Publish Read-only Dashboard'),h('button',{className:'btn',onClick:()=>setGithubToken('')},'Clear token'),h('a',{className:'btn',href:'https://github.com/settings/personal-access-tokens/new',target:'_blank',rel:'noopener noreferrer'},'Create limited token ↗')),
       publishStatus&&h('p',{role:'status',className:'muted small'},publishStatus),
       h('p',{className:'muted small'},'Updates are published when you press Publish. The shared website changes after GitHub Pages redeploys; no HTML download needed. Create the shared repository and enable GitHub Pages from the main branch/root first.'),
 
       h('h3',null,'1. Allowed subjects'),h('div',{className:'share-options'},data.subjects.map(sub=>h('label',{key:sub.id},h('input',{type:'checkbox',checked:allowed.includes(sub.id),onChange:e=>setAllowed(p=>e.target.checked?[...p,sub.id]:p.filter(x=>x!==sub.id))}),sub.code||sub.name,' · ',sub.name))),
-      h('h3',null,'2. Included materials'),h('p',null,'Lectures · Quizzes · Problem sets (only)'),
+      h('h3',null,'2. Included materials'),h('p',null,'Flashcards · Problem sets · Lectures · Study Toolkit (only)'),
       h('label',{className:'share-toggle'},h('input',{type:'checkbox',checked:showAnswers,onChange:e=>setShowAnswers(e.target.checked)}),'Include answers and solutions'),
       h('p',{className:'muted small'},'Only published lecture, quiz and problem-set content is included. No grades, appearance, study history, private notes, or account settings.'),
       h('div',{className:'toolkit-actions'},h('button',{className:'btn primary',onClick:downloadDashboard},'Export read-only Study Library'),h('button',{className:'btn',onClick:()=>setPreview(v=>!v)},preview?'Hide preview':'Preview selected content'),h('button',{className:'btn',onClick:()=>{const w=window.open('','_blank');if(!w){toast('Allow pop-ups to print');return}w.document.write(html());w.document.close();w.focus();setTimeout(()=>w.print(),500)}},'Print selected materials / PDF')),
@@ -11165,6 +11178,38 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       !shown.length&&h('p',{className:'muted'},'No matching guides. Try a shorter search.')
     );
   }
+  /* Break activities are intentionally local UI state: no study stats are written. */
+  function BreakCorner() {
+    const [mode,setMode]=useState("rest");
+    const [seconds,setSeconds]=useState(300);
+    const [running,setRunning]=useState(false);
+    const [tiles,setTiles]=useState(()=>Array.from({length:12},(_,i)=>i));
+    const [flipped,setFlipped]=useState([]);
+    const [matched,setMatched]=useState([]);
+    const [moves,setMoves]=useState(0);
+    const icons=["☕","🌿","🌙","⭐","🌼","🎧"];
+    const resetGame=()=>{setTiles(Array.from({length:12},(_,i)=>i).sort(()=>Math.random()-.5));setFlipped([]);setMatched([]);setMoves(0);};
+    useEffect(()=>{if(!running||seconds<=0)return;const id=setInterval(()=>setSeconds(v=>Math.max(0,v-1)),1000);return()=>clearInterval(id);},[running,seconds]);
+    useEffect(()=>{if(seconds===0)setRunning(false);},[seconds]);
+    useEffect(()=>{if(flipped.length!==2)return;const [a,b]=flipped;if(tiles[a]%6===tiles[b]%6){setMatched(v=>[...v,a,b]);setFlipped([]);return;}const id=setTimeout(()=>setFlipped([]),850);return()=>clearTimeout(id);},[flipped,tiles]);
+    const turn=i=>{if(flipped.length>=2||flipped.includes(i)||matched.includes(i))return;setFlipped(v=>[...v,i]);if(flipped.length===1)setMoves(v=>v+1);};
+    return h("section",{className:"view break-corner"},
+      h("div",{className:"page-head"},h("div",null,h("h1",{className:"page-title"},"Break Corner 🌿"),h("p",{className:"muted"},"A little breathing room. Break activities never count toward your study statistics."))),
+      h("div",{className:"break-tabs"},[["rest","Break timer"],["game","Memory match"],["breathe","Breathing"]].map(([k,label])=>h("button",{key:k,className:"btn "+(mode===k?"primary":""),onClick:()=>setMode(k)},label))),
+      mode==="rest"&&h("div",{className:"panel break-panel"},h("h2",null,"Time for yourself"),h("div",{className:"break-clock","aria-live":"off"},`${Math.floor(seconds/60).toString().padStart(2,"0")}:${(seconds%60).toString().padStart(2,"0")}`),h("p",{className:"muted"},seconds===0?"Your break is finished. Ready when you are!":"Take a stretch, drink water, or simply do nothing."),h("div",{className:"break-actions"},[5,10,15].map(n=>h("button",{className:"btn",onClick:()=>{setSeconds(n*60);setRunning(false);}},n+" min")),h("button",{className:"btn primary",onClick:()=>{if(seconds===0)setSeconds(300);setRunning(v=>!v);}},running?"Pause":"Start / resume"),h("button",{className:"btn",onClick:()=>{setRunning(false);setSeconds(300);}},"Reset"))),
+      mode==="game"&&h("div",{className:"panel break-panel"},h("h2",null,"Memory match"),h("p",{className:"muted"},"Find six matching pairs. Moves: "+moves+(matched.length===12?" · You found every pair! 🎉":"")),h("div",{className:"break-memory-grid"},tiles.map((value,i)=>h("button",{key:i,className:"break-tile"+(flipped.includes(i)||matched.includes(i)?" revealed":""),onClick:()=>turn(i),disabled:matched.includes(i),"aria-label":flipped.includes(i)||matched.includes(i)?"Revealed tile":"Hidden tile"},flipped.includes(i)||matched.includes(i)?icons[value%6]:"?"))),h("button",{className:"btn",onClick:resetGame},"New game")),
+      mode==="breathe"&&h("div",{className:"panel break-panel"},h("h2",null,"Slow breathing"),h("p",{className:"muted"},"Breathe in for 4 seconds, hold for 4, then breathe out for 6. Repeat at your own pace."),h("div",{className:"break-orb","aria-hidden":"true"},"🌿"),h("p",{className:"muted"},"No scores. No streaks. Just a moment to rest.")));
+  }
+  function StatsFreshStart({data,update,toast}) {
+    const [scope,setScope]=useState("all");
+    const reset=()=>{
+      const targets=scope==="all"?data.subjects.map(s=>s.id):[data.activeId];
+      if(!window.confirm("Reset recorded test activity for "+(scope==="all"?"ALL subjects":"the current subject")+"? This removes recorded quiz scores, study-day activity, review history and attempt logs. It keeps your lectures, flashcard questions, problem sets, notebooks and curriculum. Export a backup first. This cannot be undone without a backup."))return;
+      update(null,d=>{for(const s of d.subjects){if(!targets.includes(s.id))continue;s.days=[];s.quizzes=[];s.learningEvents=[];s.aiAttempts=[];s.foundationAttempts=[];for(const c of s.cards||[]){delete c.srs;delete c.conf;}for(const set of s.psets||[])for(const p of set.problems||[]){delete p.rt;if(["got","miss"].includes(p.st))p.st="new";}}});
+      toast("Test activity cleared. Study materials preserved.");
+    };
+    return h("section",{className:"view"},h("div",{className:"page-head"},h("div",null,h("h1",{className:"page-title"},"Statistics cleanup"),h("p",{className:"muted"},"Remove practice and test activity without deleting your study materials."))),h("div",{className:"panel"},h("h2",null,"Fresh start"),h("p",null,"This resets recorded quiz scores, daily activity, flashcard review history, problem attempt statuses, and learning attempt logs. It does not remove your lectures, flashcard questions, problem-set questions, notebooks or curriculum."),h("p",{className:"muted"},"Some manually entered grades, scheduled sessions and mistake-log entries remain untouched. Export a full backup before resetting."),h("label",null,"Reset scope ",h("select",{value:scope,onChange:e=>setScope(e.target.value)},h("option",{value:"all"},"All subjects"),h("option",{value:"current"},"Current subject only"))),h("div",{className:"break-actions"},h("button",{className:"btn primary",onClick:reset},"Reset test activity"))));
+  }
   function App() {
     const [data, setData] = useState(() => loadLocal() || buildDefault());
     const [nav, setNav] = useState({ tab: "home", opts: {}, key: 0 });
@@ -11277,7 +11322,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       try {
         const qs = new URLSearchParams(location.search);
         const want = qs.get("go");
-        const okTabs = ["curriculum", "home", "practice", "roadmap", "calendar", "vault", "mistakes", "grades", "lectures", "psets", "class", "toolkit", "howto"];
+        const okTabs = ["curriculum", "home", "break", "stats-clean", "practice", "roadmap", "calendar", "vault", "mistakes", "grades", "lectures", "psets", "class", "toolkit", "howto"];
         if (want && okTabs.includes(want)) {
           setNav({ tab: want, opts: want === "practice" ? { start: "review" } : {}, key: 1 });
           history.replaceState(null, "", location.pathname);
@@ -11365,6 +11410,8 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     useEffect(() => { setBadge(reviewCount); }, [reviewCount]);
     const tabs = [
       ["home", "Today", "home"],
+      ["break", "Break Corner", "home"],
+      ["stats-clean", "Statistics cleanup", "grade"],
       ["curriculum", "Curriculum", "book"],
       ["practice", "Practice", "bolt", reviewCount],
       ["roadmap", "Roadmap", "roadmap"],
@@ -11380,10 +11427,10 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       ["personalize", "Personalization Corner", "look"], ["howto", "How-To Corner", "book"]
     ];
     const navGroups = [
-      {name:"Home", items:["home","curriculum","howto","personalize"]},
+      {name:"Home", items:["home","break","curriculum","howto","personalize"]},
       {name:"Learn", items:["roadmap","lectures","vault","toolkit"]},
       {name:"Practice", items:["practice","psets","ask"]},
-      {name:"Progress", items:["mistakes","grades"]},
+      {name:"Progress", items:["mistakes","grades","stats-clean"]},
       {name:"Plan & organize", items:["calendar","class"]}
     ];
     const filteredNavGroups = navGroups.map(group=>({
@@ -11417,7 +11464,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       nav.tab==="home"&&h("section",{className:"workspace-launcher","aria-label":"Quick study tools"},
         h("div",{className:"launcher-heading"},h("div",null,h("strong",null,"Where do you want to start?"),h("p",{className:"muted small"},"Jump straight into a tool. Your subject stays selected."))),
         h("div",{className:"launcher-links"},jumpLinks.map(([key,label,ico])=>h("button",{key,className:"launcher-tile",onClick:()=>go(key)},h(Icon,{name:ico,size:20}),h("span",null,label))))),
-      nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), nav.tab === "home" && /* @__PURE__ */ React.createElement(HomeView, { ...viewProps }), nav.tab === "practice" && h(PracticeView, { ...viewProps, data }), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(CalendarView, { ...viewProps }), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(PsView, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })), /* @__PURE__ */ React.createElement("nav", { className: "bottom-nav", "aria-label": "Sections" }, tabs.filter(x=>["home","practice","roadmap"].includes(x[0])).map(([k, l, ic]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), /* @__PURE__ */ React.createElement("span", null, l))), /* @__PURE__ */ React.createElement("button", { className: "fab", onClick: () => setModal("quick"), "aria-label": "Quick add" }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 24 })), [tabs.find(x=>x[0]==="calendar"), tabs.find(x=>x[0]==="mistakes")].map(([k, l, ic, n]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement("span", { className: "ico-wrap" }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), k === "mistakes" && n ? /* @__PURE__ */ React.createElement("span", { className: "badge" }, n) : null), /* @__PURE__ */ React.createElement("span", null, k === "calendar" ? "Calendar" : "Mistakes"))), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("more") }, /* @__PURE__ */ React.createElement(Icon, { name: "more" }), /* @__PURE__ */ React.createElement("span", null, "More"))), /* @__PURE__ */ React.createElement("div", { className: `toast${msg ? " show" : ""}`, role: "status", "aria-live": "polite" }, msg), h(FocusBar, { data, update, toast }), modal === "quick" && /* @__PURE__ */ React.createElement(QuickAdd, { onClose: () => setModal(null), onPick: (k) => {
+      nav.tab === "break" && h(BreakCorner), nav.tab === "stats-clean" && h(StatsFreshStart,{data,update,toast}), nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), nav.tab === "home" && /* @__PURE__ */ React.createElement(HomeView, { ...viewProps }), nav.tab === "practice" && h(PracticeView, { ...viewProps, data }), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(CalendarView, { ...viewProps }), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(PsView, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })), /* @__PURE__ */ React.createElement("nav", { className: "bottom-nav", "aria-label": "Sections" }, tabs.filter(x=>["home","practice","roadmap"].includes(x[0])).map(([k, l, ic]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), /* @__PURE__ */ React.createElement("span", null, l))), /* @__PURE__ */ React.createElement("button", { className: "fab", onClick: () => setModal("quick"), "aria-label": "Quick add" }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 24 })), [tabs.find(x=>x[0]==="calendar"), tabs.find(x=>x[0]==="mistakes")].map(([k, l, ic, n]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement("span", { className: "ico-wrap" }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), k === "mistakes" && n ? /* @__PURE__ */ React.createElement("span", { className: "badge" }, n) : null), /* @__PURE__ */ React.createElement("span", null, k === "calendar" ? "Calendar" : "Mistakes"))), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("more") }, /* @__PURE__ */ React.createElement(Icon, { name: "more" }), /* @__PURE__ */ React.createElement("span", null, "More"))), /* @__PURE__ */ React.createElement("div", { className: `toast${msg ? " show" : ""}`, role: "status", "aria-live": "polite" }, msg), h(FocusBar, { data, update, toast }), modal === "quick" && /* @__PURE__ */ React.createElement(QuickAdd, { onClose: () => setModal(null), onPick: (k) => {
       if (k === "grade") {
         setModal(null);
         go("grades", { gtab: "scores" });
@@ -11525,4 +11572,8 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
 <style>
 /* v30: practical foundation workspace and clean form layout */
 .foundation-panel{max-width:100%;}.foundation-fields{display:grid;gap:12px;margin:14px 0 22px;max-width:850px}.foundation-fields label{display:grid;gap:6px;font-weight:650}.foundation-fields input,.foundation-fields textarea,.foundation-fields select{width:100%;min-width:0;padding:10px;border:1px solid var(--line,#bfd4c6);border-radius:9px;background:var(--card,#fff);color:inherit;font:inherit}.foundation-fields textarea{resize:vertical;line-height:1.5}.foundation-attempt{border:1px solid var(--line,#d3e1d8);border-radius:12px;padding:14px;margin:12px 0;background:var(--card,#fff)}.foundation-attempt pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}.foundation-attempt details{margin:10px 0}.foundation-attempt summary{cursor:pointer;font-weight:650}.toolkit-tabs{flex-wrap:wrap}
+</style>
+
+<style>
+.break-corner .break-tabs,.break-actions{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0}.break-panel{max-width:750px;padding:24px;text-align:center}.break-clock{font-size:clamp(3rem,9vw,6rem);font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.06em;margin:24px auto;color:var(--text,#fff)}.break-memory-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;max-width:450px;margin:20px auto}.break-tile{aspect-ratio:1;min-height:65px;border:1px solid var(--line,#555);border-radius:14px;background:var(--surface,#1b263c);color:var(--text,#fff);font-size:2rem;cursor:pointer}.break-tile.revealed{background:var(--card,#29384e)}.break-tile:focus-visible{outline:3px solid #4dcfe8}.break-orb{display:grid;place-items:center;margin:30px auto;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,#a9e9d4,#367b78);font-size:4rem;animation:break-breathe 14s ease-in-out infinite}@keyframes break-breathe{0%,100%{transform:scale(.78)}28%{transform:scale(1.08)}55%{transform:scale(1.08)}}
 </style>
