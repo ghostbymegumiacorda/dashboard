@@ -2174,6 +2174,45 @@ html,body,#root{background:var(--surface)!important;}
   .shell>.content{padding-bottom:calc(6rem + env(safe-area-inset-bottom,0px))!important;}
 }
 </style>
+<style id="bsa-v125-ipad-layout-repair">
+/* Tablet viewport: do not reserve a second safe-area strip outside the app. */
+:root{padding-top:0!important;padding-bottom:0!important;}
+html,body,#root{margin:0!important;width:100%;min-height:100%;background:var(--bg)!important;}
+body{overflow:hidden!important;}
+.shell{height:100vh!important;height:100dvh!important;min-height:0!important;overflow:hidden!important;}
+.shell>.rail{height:100%!important;max-height:100%!important;min-height:0!important;overflow-y:auto!important;overscroll-behavior:contain;}
+.shell>.content{height:100%!important;min-height:0!important;min-width:0!important;overflow-x:hidden!important;overflow-y:auto!important;scrollbar-gutter:auto!important;overscroll-behavior:contain;padding-bottom:32px!important;}
+/* Study Life is a three-part card, never a flex row that crushes text into a narrow column. */
+.bsa-v108-top-grid>.life-home-widget{
+ display:grid!important;grid-template-columns:minmax(130px, .7fr) minmax(210px, 1.3fr)!important;
+ grid-template-areas:"avatar details" "actions actions"!important;
+ align-items:center!important;align-content:center!important;justify-content:stretch!important;
+ gap:16px 22px!important;min-width:0!important;min-height:210px!important;
+ padding:22px!important;text-align:left!important;
+}
+.bsa-v108-top-grid .life-home-character{grid-area:avatar!important;width:100%!important;min-width:0!important;min-height:150px!important;max-width:none!important;}
+.bsa-v108-top-grid .life-home-copy{grid-area:details!important;min-width:0!important;width:100%!important;max-width:none!important;text-align:left!important;overflow-wrap:normal!important;word-break:normal!important;}
+.bsa-v108-top-grid .life-home-copy strong{display:block!important;line-height:1.35!important;white-space:normal!important;}
+.bsa-v108-top-grid .life-home-copy p{line-height:1.5!important;white-space:normal!important;overflow-wrap:break-word!important;}
+.bsa-v108-top-grid .life-launch-actions{grid-area:actions!important;min-width:0!important;width:100%!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important;}
+.bsa-v108-top-grid .life-launch-actions>.btn{width:100%!important;min-width:0!important;margin:0!important;white-space:normal!important;text-align:center!important;}
+@media (min-width:900px) and (max-width:1199px){
+ .bsa-v108-top-grid>.life-home-widget{grid-template-columns:minmax(150px,.6fr) minmax(230px,1.4fr)!important;}
+}
+@media (max-width:899px){
+ html,body,#root{height:auto!important;overflow:visible!important;}
+ body{overflow-x:hidden!important;overflow-y:auto!important;}
+ .shell{height:auto!important;min-height:100dvh!important;overflow:visible!important;}
+ .shell>.content{height:auto!important;min-height:100dvh!important;overflow:visible!important;padding-bottom:calc(7rem + env(safe-area-inset-bottom,0px))!important;}
+ .bsa-v108-top-grid>.life-home-widget{grid-template-columns:minmax(100px,.6fr) minmax(0,1.4fr)!important;}
+}
+@media (max-width:520px){
+ .bsa-v108-top-grid>.life-home-widget{grid-template-columns:minmax(0,1fr)!important;grid-template-areas:"avatar" "details" "actions"!important;text-align:center!important;}
+ .bsa-v108-top-grid .life-home-copy{text-align:center!important;}
+ .bsa-v108-top-grid .life-home-character{min-height:120px!important;}
+ .bsa-v108-top-grid .life-launch-actions{grid-template-columns:minmax(0,1fr)!important;}
+}
+</style>
 </head>
 <body>
 <div id="root"><p class="boot">Opening your study desk… If this doesn’t load, connect to the internet once so the app can save itself for offline use.</p></div>
