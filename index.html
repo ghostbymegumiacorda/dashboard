@@ -1684,84 +1684,149 @@ button.life-item{cursor:pointer}
 .life-home-character .life-sprite-wrap{width:44px;height:58px}
 .life-pose-picker{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
 @media(max-width:650px){.life-scene-avatar .life-sprite-wrap{width:66px;height:95px}.life-avatar-preview .life-sprite-wrap{width:125px;height:170px}}
-</style><style id="bsa-v100-accessories">.life-sprite-wrap{position:relative}.life-sprite-accessory{position:absolute;pointer-events:none;font-size:18px;line-height:1;filter:drop-shadow(1px 1px 0 #25202c)}.life-sprite-studs{top:38%;left:29%;color:#f7d77e}.life-sprite-necklace{top:49%;left:49%;color:#d9d9e5}.life-sprite-watch{top:66%;left:71%;font-size:14px}.life-sprite-headphones{top:24%;left:35%;font-size:29px}.life-sprite-scarf{top:43%;left:38%;font-size:26px}.life-scene-avatar .life-sprite-accessory,.life-home-character .life-sprite-accessory{font-size:10px}.life-avatar-preview .life-sprite-accessory{font-size:16px}</style>
-<style id="bsa-v101-app-design">
-/* Modern app polish: visual-only changes, no changes to saved records or app logic. */
-:root{--app-shadow:0 8px 30px rgba(19,23,43,.055);--app-shadow-hover:0 12px 34px rgba(19,23,43,.095)}
-body{font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
-button,input,select,textarea{font:inherit}
-button{-webkit-tap-highlight-color:transparent}
-.btn,.rail-nav button,.rail-tools>button{transition:background-color .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease}
-.btn{min-height:40px;border-radius:11px;font-weight:650;justify-content:center;letter-spacing:-.01em}
-.btn.primary{box-shadow:0 3px 12px rgba(110,92,165,.14)}
-.btn:hover:not(:disabled){transform:translateY(-1px)}
-.btn:focus-visible,.rail-nav button:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-input:not([type=checkbox]):not([type=radio]):not([type=range]),select,textarea{border-radius:11px;min-height:42px;max-width:100%;transition:border-color .16s,box-shadow .16s}
-input:not([type=checkbox]):not([type=radio]):not([type=range]):focus,select:focus,textarea:focus{border-color:var(--accent)!important;box-shadow:0 0 0 3px rgba(160,140,220,.12);outline:0}
-label{letter-spacing:-.005em}
-.panel,.card,.life-panel,.joy-panel{border-radius:17px;box-shadow:var(--app-shadow)}
-.page-title,h1,h2,h3{letter-spacing:-.025em}
-.rail{box-shadow:4px 0 25px rgba(22,24,39,.035)}
-.rail-nav button{min-height:40px;border-radius:11px;font-weight:570}
-.rail-nav button.on{font-weight:730}
-.rail-tools>button{min-height:39px;border-radius:10px}
-.joy-tabs,.break-corner .break-tabs{display:flex;flex-wrap:nowrap;gap:8px;overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-width:thin;padding:5px 2px 9px;max-width:100%}
-.joy-tabs>.btn,.break-corner .break-tabs>.btn{white-space:nowrap;flex:0 0 auto;border-radius:999px;padding-inline:16px}
-.life-summary{gap:8px}
-.life-summary>span{border-radius:12px;font-weight:600;box-shadow:var(--app-shadow)}
-.life-page .life-panel{border-radius:20px}
-.life-item,.life-town-place{border-radius:16px;box-shadow:0 2px 8px rgba(20,20,30,.025);transition:transform .18s,box-shadow .18s,border-color .18s}
-.life-item:hover,.life-town-place:not(.locked):hover{border-color:var(--accent);box-shadow:var(--app-shadow-hover)}
-button.life-item:hover{transform:translateY(-2px)}
-.life-item button{border-radius:10px}
-.life-options label{font-weight:650;gap:8px}
-.life-options select,.life-options input{min-height:43px;border-radius:11px;padding:10px 12px}
-.life-pet-card{border-radius:17px;box-shadow:var(--app-shadow)}
-.life-home-widget{border-radius:18px;box-shadow:var(--app-shadow)}
-.life-town-grid{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
-.life-town-place .btn{margin-top:auto;width:100%}
-.life-scene{box-shadow:0 12px 30px rgba(32,23,60,.11);image-rendering:pixelated}
-.snake-grid,.bubble-grid,.nonogram-board{touch-action:manipulation}
-@media(max-width:760px){
-  body{overflow-x:hidden}
-  .view,.life-page,.joy-page{min-width:0;max-width:100%}
-  .page-head{flex-wrap:wrap;gap:10px}
-  .life-panel{padding:16px!important}
-  .life-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
-  .life-summary>span{font-size:.8rem;padding:10px;min-width:0;overflow-wrap:anywhere}
-  .life-summary>span:last-child:nth-child(odd){grid-column:1/-1}
-  .life-inventory-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-  .life-item{min-width:0;padding:11px 8px}
-  .life-town-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-  .life-town-place{padding:12px}
-  .life-home-widget{padding:12px;gap:9px}
-  .life-scene{max-width:100%;height:240px}
-  .btn{min-height:43px}
-  input,select,textarea{font-size:16px!important}
-}
-@media(max-width:390px){.life-inventory-grid,.life-town-grid{gap:7px}.life-item,.life-town-place{font-size:.83rem}.life-home-character{font-size:25px}}
-@media(prefers-reduced-motion:reduce){.btn,.rail-nav button,.life-item,.life-town-place{transition:none!important}}
+</style><style id="bsa-v100-dashboard-stability">
+.academic-quick-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0 16px}
+.academic-quick-action{display:flex;align-items:center;gap:9px;min-height:64px;text-align:left;padding:11px 12px;border:1px solid var(--line);border-radius:13px;background:var(--surface);color:var(--text);font:inherit;cursor:pointer}
+.academic-quick-action:hover,.academic-quick-action:focus-visible{border-color:var(--accent);background:var(--surface-2)}
+.academic-quick-action>span:nth-child(2){flex:1;font-size:.87rem;font-weight:650}
+.backup-guidance{margin:12px 0;padding:15px}
+.dashboard-recovery{margin:8vh auto;max-width:580px;padding:28px;background:#fff;color:#17252a;border:1px solid #cbd6cc;border-radius:16px;font:16px/1.5 system-ui,sans-serif}
+.dashboard-recovery button{margin:8px 8px 8px 0;padding:10px 15px}
+.dashboard-recovery pre{max-height:180px;overflow:auto;white-space:pre-wrap;font-size:12px}
+@media(max-width:800px){.academic-quick-actions{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:390px){.academic-quick-actions{grid-template-columns:1fr}}
 </style>
-<style id="bsa-v102-mobile-town-fixes">
-.life-sprite-wrap.sprite-missing:after{content:"Avatar image missing — upload all PNG files";position:absolute;inset:0;display:grid;place-items:center;text-align:center;font-size:11px;line-height:1.3;background:#f4e6e1;color:#703a34;border:1px dashed #a56d63;border-radius:9px;padding:5px}
-.life-place-art{position:relative;min-height:270px;overflow:hidden;flex-direction:column;justify-content:flex-end;gap:0;background:linear-gradient(#d8d0e6 0 72%,#a18c7c 72%);image-rendering:pixelated}
-.life-place-backdrop{position:absolute;top:15%;left:5%;right:5%;text-align:center;font-size:44px;letter-spacing:12px;white-space:nowrap;overflow:hidden}
-.life-place-characters{display:flex;align-items:flex-end;justify-content:center;gap:22px;font-size:42px;z-index:2;margin-bottom:18px}
-.life-place-characters .life-sprite-wrap{width:112px;height:150px}
-.life-destination-cafe{background:linear-gradient(#c3a0a1 0 72%,#765e58 72%)}
-.life-destination-park{background:linear-gradient(#b9d8cb 0 72%,#82a27c 72%)}
-.life-destination-petshop{background:linear-gradient(#e7d6bc 0 72%,#a68b75 72%)}
-.life-destination-observatory{background:linear-gradient(#383a67 0 72%,#77728b 72%)}
-@media(max-width:760px){.bottom-nav{overflow:visible}.bottom-nav button{min-width:0}.life-page .joy-tabs{flex-wrap:nowrap!important;overflow-x:auto!important;white-space:nowrap}.life-page .joy-tabs .btn{flex:0 0 auto!important}.life-page .page-head{margin-bottom:10px}}
-</style><style id="bsa-v104-avatar-live-customization">
-.life-sprite-wrap canvas.life-sprite{display:block;width:100%;height:100%;object-fit:contain}
-.life-sprite-cap{top:9%;left:33%;font-size:24px}
-.sprite-load-error{position:absolute;inset:25% 0 auto;font-size:10px;background:#fff4eb;color:#9b3f2b;padding:5px}
-</style><style id='bsa-v105-study-town-launch'>.life-game-launch{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:15px 18px;margin:10px 0 16px;border:1px solid var(--line);border-radius:15px;background:linear-gradient(110deg,rgba(180,155,222,.13),rgba(150,207,181,.11))}.life-game-launch p{margin:4px 0 0}.life-game-launch a{text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center}@media(max-width:620px){.life-game-launch{flex-direction:column;align-items:stretch}.life-game-launch a{justify-content:center}}</style></head>
+<style id="bsa-v101-academic-stability">
+.academic-next-step{display:flex;gap:16px;justify-content:space-between;align-items:center;padding:18px 20px;margin:0 0 18px;background:linear-gradient(125deg,color-mix(in srgb,var(--accent) 8%,var(--surface)),var(--surface));border-left:3px solid var(--accent)}
+.academic-next-step h2{font-size:1.05rem;margin:4px 0}.academic-next-step p{margin:0;font-size:.87rem}.academic-next-step>.btn{flex-shrink:0;min-height:42px}
+.study-audit-row{flex-wrap:wrap}.study-audit-row small{display:block;flex-basis:100%;text-align:right;margin-top:3px}
+.rail-nav button,.academic-quick-action,.btn{min-height:38px}
+@media(max-width:720px){.academic-next-step{align-items:stretch;flex-direction:column}.academic-next-step>.btn{width:100%}.study-audit-row small{text-align:left}.ink-workspace{grid-template-columns:minmax(0,1fr)}.ink-writing-area{min-width:0}.table-wrap{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}}
+@media(prefers-reduced-motion:reduce){.life-scene-avatar,.life-scene-pet,.break-orb{animation:none!important}.academic-quick-action{transition:none!important}}
+</style>
+<style id="bsa-v106-consolidation">
+.bsa-academic-command{padding:18px 20px;margin:0 0 17px;border-left:3px solid #aa9bd3}
+.bsa-command-head{display:flex;align-items:start;justify-content:space-between;gap:12px}
+.bsa-command-head h2{margin:3px 0 6px;font-size:1.1rem}
+.bsa-home-options{min-width:145px;font-size:.8rem}
+.bsa-home-options summary{cursor:pointer;font-weight:600;padding:8px}
+.bsa-home-options label{display:flex;gap:7px;align-items:center;margin:8px 0}
+.bsa-command-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:14px 0}
+.bsa-command-stat{border:1px solid var(--line);border-radius:11px;background:transparent;display:flex;flex-direction:column;align-items:flex-start;gap:5px;padding:12px;text-align:left;color:inherit;cursor:pointer}
+.bsa-command-stat:hover{border-color:#ad9bd1}
+.bsa-command-value{font-size:1.35rem;font-weight:750;line-height:1.2}
+.bsa-command-focus{display:flex;align-items:center;justify-content:space-between;gap:12px;border-radius:11px;background:rgba(174,153,210,.1);padding:12px 13px}
+.bsa-command-focus p{margin:5px 0 0}
+.bsa-command-batch{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px}
+.bsa-topic-insights{margin-top:16px;border-top:1px solid var(--line);padding-top:13px}
+.bsa-topic-insights summary{cursor:pointer;font-weight:650}
+.bsa-topic-list{display:grid;gap:8px;margin-top:12px}
+.bsa-topic-row{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.bsa-topic-row p{margin:4px 0 0}
+.bsa-compact-mode .panel{padding:12px!important}
+.bsa-compact-mode .home-grid{gap:10px!important}
+.life-pet-actions{display:flex;gap:8px;flex-wrap:wrap}
+@media(max-width:750px){.bsa-command-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.bsa-command-head,.bsa-command-focus,.bsa-command-batch,.bsa-topic-row{flex-wrap:wrap}.bsa-command-stat{min-height:76px}}
+@media(hover:none){.bsa-command-stat,.life-pet-actions button{min-height:44px}}
+@media(prefers-reduced-motion:reduce){.bsa-academic-command *{transition:none!important;animation:none!important}}
+</style>
+<style id='bsa-v106-room'>.life-room-layout{padding:10px 0}.life-room-layout select{padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:inherit}</style><style id="bsa-v107-final-consolidation">
+/* Pixel avatar customization uses real CSS colors, keeping the original transparent assets for compatibility. */
+.life-custom-sprite{overflow:visible}.life-custom-sprite .pixel-scholar{transform:scale(1.15);transform-origin:center}
+.pixel-hair-long .pixel-hair{height:47px;box-shadow:-7px 9px 0 var(--pixel-hair),7px 9px 0 var(--pixel-hair)}
+.pixel-hair-curly .pixel-hair{border-radius:6px 8px 3px 4px;box-shadow:-8px 2px 0 var(--pixel-hair),8px 3px 0 var(--pixel-hair),0 -6px 0 var(--pixel-hair)}
+.pixel-hair-ponytail .pixel-hair:after{content:"";position:absolute;left:31px;top:12px;width:12px;height:37px;background:var(--pixel-hair)}
+.pixel-walk .pixel-leg.left{transform:translate(-4px,-2px) rotate(9deg)}.pixel-walk .pixel-leg.right{transform:translate(4px,1px) rotate(-9deg)}
+.pixel-happy .pixel-arm.left{transform:rotate(-30deg);transform-origin:top center}.pixel-happy .pixel-arm.right{transform:rotate(30deg);transform-origin:top center}
+.pixel-back .pixel-face{background:var(--pixel-hair)}
+.life-avatar-preview .life-custom-sprite{width:130px;height:160px}.life-scene-avatar .life-custom-sprite{width:94px;height:125px}
+.life-home-character .life-custom-sprite{width:48px;height:65px}.life-home-character .pixel-scholar{transform:scale(.52);transform-origin:top left}
+.life-place-art .life-custom-sprite{width:100px;height:145px}
+.life-place-options{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:12px;margin-top:10px}
+.life-place-options label{font-size:.85rem;display:flex;align-items:center;gap:7px}.life-place-options select{padding:8px;border-radius:9px;border:1px solid var(--line);color:inherit;background:var(--surface)}
+.life-scene-lamp.life-place-left{left:17%}.life-scene-lamp.life-place-right{left:75%}.life-scene-lamp.life-place-center{left:53%}
+.life-scene-plants.life-place-left{left:5%;right:auto}.life-scene-plants.life-place-center{left:47%;right:auto}.life-scene-plants.life-place-right{right:15px;left:auto}
+.life-map-wrap{border:1px solid var(--line);border-radius:15px;padding:14px;margin:15px 0;background:linear-gradient(160deg,#ebf1e5,#e8e0ef)}
+.life-map-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));max-width:480px;gap:4px;margin:0 auto 12px}
+.life-map-tile{min-width:0;aspect-ratio:1;display:grid;place-items:center;border:1px solid #b8c8ac;border-radius:8px;background:#bcd6b1;font-size:clamp(16px,4vw,32px);color:#667d52;cursor:pointer;padding:0;touch-action:manipulation}
+.life-map-tile:nth-child(2n){background:#c8dfc0}.life-map-tile.destination{background:#e1d4bd;border-color:#c0ab92}
+.life-map-tile.player{outline:3px solid #7867ab;outline-offset:-3px;background:#f6e7bc;z-index:1}
+.life-map-tile .life-custom-sprite{width:38px;height:45px;transform:scale(.42);transform-origin:center;overflow:visible}
+.life-map-controls{display:flex;align-items:center;flex-direction:column;gap:4px;margin:12px auto}.life-map-controls>div{display:flex;gap:8px}.life-map-controls button{min-width:56px;min-height:44px}
+.life-map-wrap>p{color:#4b5548!important;text-align:center}
+.life-page .joy-tabs{display:flex;flex-wrap:wrap;gap:7px}.life-page .joy-tabs>.btn{flex:0 1 auto;white-space:normal}
+.life-page .life-inventory-grid,.life-page .life-town-grid{min-width:0}
+.life-page .btn:focus-visible,.life-map-tile:focus-visible{outline:3px solid #8d7ac5;outline-offset:2px}
+@media(max-width:650px){.life-map-tile .life-custom-sprite{transform:scale(.34)}.life-map-wrap{padding:9px}.life-page .joy-tabs>.btn{font-size:.81rem;padding:9px}.life-scene-avatar .life-custom-sprite{transform:scale(.85)}}
+@media(prefers-reduced-motion:reduce){.life-page *{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+</style>
+<style id="bsa-v108-visual-refresh">
+/* v108: visual presentation only. Layout does not modify any academic or Study Life records. */
+:root{--v108-lilac:#8061c7;--v108-mist:#f3eefc;--v108-mint:#dceee8;--v108-radius:17px}
+:root[data-skin="light"],:root[data-skin="lavender"]{--bg:#f9f8fd;--surface:#ffffff;--surface-2:#f3effa;--line:#e7e2f0;--text:#24213a;--muted:#716b85;--accent:#7754ba;--accent-soft:#eee7fb}
+.shell{grid-template-columns:clamp(218px,18vw,255px) minmax(0,1fr)}
+.rail{padding:1.35rem .85rem;gap:.9rem;background:linear-gradient(164deg,color-mix(in srgb,var(--surface) 90%,#e8ddff),var(--surface) 48%,color-mix(in srgb,var(--surface) 95%,#d7efea));border-right:1px solid var(--line)}
+.brand{font-size:1.05rem;letter-spacing:-.035em;line-height:1.1;gap:.7rem;padding:4px 8px 12px}
+.brand-mark{width:39px;height:39px;border-radius:13px;background:linear-gradient(140deg,#aa8ce0,#7052b4);box-shadow:0 6px 16px #9270c12a;color:#fff}
+.rail-subject{background:color-mix(in srgb,var(--surface-2) 74%,transparent);border:1px solid var(--line);border-radius:13px;padding:12px}
+.rail-nav-wrap{padding-right:2px;scrollbar-width:thin}
+.rail-nav .nav-group-heading{font-size:.64rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-top:8px;padding:5px 10px;min-height:29px}
+.rail-nav .nav-group-links{gap:3px}
+.rail-nav .nav-group-links button{font-size:.87rem;font-weight:550;min-height:40px;border-radius:11px!important;border:0!important;padding:9px 11px!important;gap:10px}
+.rail-nav .nav-group-links button.on{background:color-mix(in srgb,var(--accent) 12%,var(--surface));color:var(--accent);font-weight:750;box-shadow:inset 3px 0 var(--accent)}
+.rail-nav .nav-group-links button:hover{transform:none;background:color-mix(in srgb,var(--accent) 7%,var(--surface))}
+.content{max-width:none;padding:1.25rem clamp(14px,2.4vw,32px) 46px}
+.content>.view{max-width:1340px!important}
+.workspace-topbar{padding:12px 7px 18px!important;margin-bottom:20px!important;border-radius:0!important;min-height:65px}
+.workspace-context strong{font-size:1.15rem;letter-spacing:-.02em}
+.workspace-actions .btn{border-radius:12px;padding:9px 16px}
+.panel,.card,.toolkit-panel{border-radius:var(--v108-radius)!important;border-color:var(--line);background:var(--surface);box-shadow:0 3px 8px #31204d06,0 12px 26px #31204d06!important}
+.view{gap:1rem}.view>h1,.page-title{letter-spacing:-.04em}
+.bsa-v108-home{gap:16px}
+.bsa-v108-home>p:first-child{font-size:.9rem;font-weight:650!important;color:var(--muted);margin:0}
+.bsa-v108-top-grid{display:grid;grid-template-columns:minmax(0,2.3fr) minmax(255px,1fr);gap:16px;align-items:stretch}
+.bsa-v108-top-grid>.bsa-academic-command{margin:0;padding:23px 25px;border-left:0;position:relative;overflow:hidden;background:linear-gradient(115deg,color-mix(in srgb,var(--accent) 11%,var(--surface)) 0%,var(--surface) 87%)}
+.bsa-v108-top-grid>.bsa-academic-command:before{content:"";position:absolute;right:-50px;top:-70px;width:180px;height:180px;border:1px solid color-mix(in srgb,var(--accent) 17%,transparent);border-radius:50%;pointer-events:none}
+.bsa-v108-top-grid .bsa-command-head h2{font-size:clamp(1.25rem,2vw,1.75rem);line-height:1.16;letter-spacing:-.045em;max-width:520px}
+.bsa-v108-top-grid .panel-kicker{color:var(--accent);font-size:.7rem;letter-spacing:.13em;text-transform:uppercase}
+.bsa-command-metrics{gap:8px;margin:20px 0 14px}
+.bsa-command-stat{border-radius:12px;background:color-mix(in srgb,var(--surface) 75%,transparent);min-height:83px;padding:12px}
+.bsa-command-value{font-size:1.35rem;letter-spacing:-.025em}
+.bsa-command-focus{background:color-mix(in srgb,var(--accent) 10%,var(--surface));border:1px solid color-mix(in srgb,var(--accent) 14%,var(--line));padding:15px;border-radius:13px;position:relative}
+.bsa-command-focus .btn{border-radius:11px}
+.bsa-command-batch{margin-top:12px;border-top:1px solid var(--line);padding-top:12px}
+.bsa-topic-insights{margin-top:11px;padding-top:11px;font-size:.86rem}
+.bsa-topic-insights summary{padding:5px;cursor:pointer}
+.bsa-v108-top-grid>.life-home-widget{margin:0;min-height:100%;padding:23px 20px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:10px;background:linear-gradient(150deg,var(--surface),color-mix(in srgb,#dfd4f6 22%,var(--surface)));border-radius:var(--v108-radius);box-shadow:0 3px 10px #31204d09}
+.bsa-v108-top-grid .life-home-character{font-size:34px}
+.bsa-v108-top-grid .life-home-copy strong{font-size:1.08rem}
+.bsa-v108-top-grid .life-home-copy p{margin:7px 0}
+.bsa-v108-top-grid .life-home-widget .btn{width:100%;margin-top:auto;min-height:42px;border-radius:11px}
+.academic-quick-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.academic-quick-action{min-height:94px;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;border:1px solid var(--line)!important;background:var(--surface);border-radius:15px!important;padding:15px 17px!important;text-align:left;font-weight:650;box-shadow:0 3px 13px #36244b07;gap:8px}
+.academic-quick-action .ico{color:var(--accent)}
+.academic-quick-action:hover{background:var(--surface-2);border-color:color-mix(in srgb,var(--accent) 25%,var(--line))!important;transform:translateY(-2px)}
+.bsa-v108-home .hero{padding:18px 22px;border:1px solid var(--line);border-radius:var(--v108-radius);background:var(--surface);align-items:center}
+.bsa-v108-home .hero h1{font-size:clamp(1.55rem,3vw,2.5rem)}
+.bsa-v108-home .home-grid{gap:15px}
+.bsa-v108-home .mini-stats{gap:10px}
+.bsa-v108-home .mini{border:1px solid var(--line);border-radius:12px;padding:14px}
+.bsa-v108-home .panel h2{font-size:1.08rem}
+.content button,.rail button{transition:background-color .16s,border-color .16s,transform .16s}
+.content button:focus-visible,.rail button:focus-visible,.content input:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+@media(max-width:1100px){.bsa-v108-top-grid{grid-template-columns:minmax(0,1fr)}.bsa-v108-top-grid>.life-home-widget{display:flex;flex-direction:row;align-items:center;min-height:0}.bsa-v108-top-grid>.life-home-widget .btn{width:auto;min-width:135px;margin:0 0 0 auto}}
+@media(max-width:899px){.shell{grid-template-columns:minmax(0,1fr)}.content{padding:16px}.rail{background:var(--surface)}.workspace-topbar{position:relative!important}.bsa-v108-home .hero{padding:16px}}
+@media(max-width:650px){.academic-quick-actions{grid-template-columns:repeat(2,minmax(0,1fr))}.academic-quick-action{min-height:84px;padding:13px!important}.bsa-v108-top-grid>.bsa-academic-command{padding:18px}.bsa-v108-top-grid>.life-home-widget{flex-wrap:wrap;padding:16px}.bsa-v108-top-grid>.life-home-widget .btn{width:100%;margin-left:0}.bsa-command-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.bsa-command-head{flex-wrap:wrap}.bsa-v108-home .hero h1{font-size:1.65rem}}
+@media(prefers-reduced-motion:reduce){.academic-quick-action:hover{transform:none}.content button,.rail button{transition:none!important}}
+</style>
+</head>
 <body>
 <div id="root"><p class="boot">Opening your study desk… If this doesn’t load, connect to the internet once so the app can save itself for offline use.</p></div>
 <script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script>
+if(!window.React||!window.ReactDOM){document.getElementById('root').innerHTML='<div class="dashboard-recovery"><h2>Unable to load dashboard libraries</h2><p>React could not load. Check your connection, then reload. Your browser study data has not been deleted.</p><button type="button" onclick="location.reload()">Retry loading</button></div>';throw Error('React CDN unavailable')}
+</script>
 <script>
 (() => {
   const S = (t, p = null, s = false) => ({ t, p, s });
@@ -2294,6 +2359,9 @@ button.life-item:hover{transform:translateY(-2px)}
       const cards2 = parseQA(text);
       if (cards2.length) return { kind: "partial", subject: "", topics: [], cards: cards2, mistakes: [], quizzes: [] };
       throw new Error("This isn’t valid JSON, and no Q:/A: pairs were found. Check for a missing comma, bracket or quote.");
+    }
+    if(obj && !Array.isArray(obj) && obj.format==='bsa-unified-study-backup') {
+      throw new Error('This is a COMPLETE study-data backup. Restore it through Study Toolkit → Restore all study data, not the subject importer. Your current data has not changed.');
     }
     if (obj && !Array.isArray(obj) && Array.isArray(obj.subjects) && obj.subjects.every((s) => Array.isArray(s.topics))) {
       return { kind: "backup", data: obj };
@@ -3606,13 +3674,32 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       const b = parsed.data;
       const subjects = b.subjects.map((s) => ({ name: "Imported subject", code: "", school: "", cards: [], mistakes: [], quizzes: [], sessions: [], ...s, topics: s.topics || [] }));
       if (mode === "replace") {
-        if (!window.confirm("Replace everything in this dashboard with the backup? This can’t be undone.")) return;
-        replaceAll({ ...buildDefault(), ...b, settings: { ...DEFAULT_SETTINGS, ...b.settings || data.settings }, subjects, activeId: subjects.some((s) => s.id === b.activeId) ? b.activeId : subjects[0].id });
-        if(b.academicProgress&&Array.isArray(b.academicProgress.events))localStorage.setItem(PROGRESS_KEY,JSON.stringify(b.academicProgress));
-        if(b.studyLife&&typeof b.studyLife==='object')localStorage.setItem(LIFE_KEY,JSON.stringify(b.studyLife));
-        if(b.studyJoy&&typeof b.studyJoy==='object')localStorage.setItem(JOY_KEY,JSON.stringify(b.studyJoy));
+        if(!bsaValidMainRecord({subjects})) {toast('Import cancelled: subject IDs or required fields are invalid.');return;}
+        if(!window.confirm('Replace all subjects using an older subject-only backup? This file may NOT contain separate XP, pet, coin, or handwriting records. Export a complete backup first.'))return;
+        const next={...buildDefault(),...b,settings:{...DEFAULT_SETTINGS,...(b.settings||data.settings)},subjects,activeId:subjects.some(s=>s.id===b.activeId)?b.activeId:subjects[0].id};
+        // Do not copy optional cross-record payloads into the main dashboard state.
+        delete next.academicProgress;delete next.studyLife;delete next.studyJoy;
+        const extras=[];
+        if(b.academicProgress!==undefined){
+          const pr=b.academicProgress;
+          if(!pr||!Array.isArray(pr.events)||pr.events.length>100000||!pr.events.every(e=>e&&typeof e==='object'&&!Array.isArray(e)&&typeof e.id==='string'&&typeof e.kind==='string'&&typeof e.day==='string'&&Number.isFinite(Number(e.xp))&&Number(e.xp)>=0)) {toast('Import cancelled: invalid XP records.');return;}
+          extras.push([PROGRESS_KEY,JSON.stringify(pr)]);
+        }
+        if(b.studyLife!==undefined){
+          if(!b.studyLife||typeof b.studyLife!=='object'||Array.isArray(b.studyLife)||!Number.isFinite(Number(b.studyLife.spent??0))||Number(b.studyLife.spent??0)<0) {toast('Import cancelled: invalid Study Life records.');return;}
+          extras.push([LIFE_KEY,JSON.stringify(b.studyLife)]);
+        }
+        if(b.studyJoy!==undefined){
+          if(!b.studyJoy||typeof b.studyJoy!=='object'||Array.isArray(b.studyJoy)) {toast('Import cancelled: invalid garden records.');return;}
+          extras.push([JOY_KEY,JSON.stringify(b.studyJoy)]);
+        }
+        const originals=extras.map(([key])=>[key,localStorage.getItem(key)]);
+        try{for(const [key,value] of extras)localStorage.setItem(key,value)}
+        catch(e){for(const [key,value] of originals){try{if(value===null)localStorage.removeItem(key);else localStorage.setItem(key,value)}catch(_){}}toast('Import cancelled: unable to save optional records. Existing subjects were not replaced.');return;}
+        try{replaceAll(next)}
+        catch(e){for(const [key,value] of originals){try{if(value===null)localStorage.removeItem(key);else localStorage.setItem(key,value)}catch(_){}}toast('Import cancelled: '+(e.message||'save failed'));return;}
         window.dispatchEvent(new Event('bsa-progress-updated'));
-        toast("Backup restored");
+        toast('Subjects restored. Separate academic records were changed only if present in the imported file.');
       } else {
         update(null, (d) => {
           for (const s of subjects) d.subjects.push({ ...clone(s), id: uid("subj") });
@@ -3623,7 +3710,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     };
     const exportText = useMemo(() => {
       const subs = scope === "all" ? data.subjects : [active];
-      return JSON.stringify({ app: "bsa-study-dashboard", version: 1, exportedAt: (/* @__PURE__ */ new Date()).toISOString(), activeId: data.activeId, settings: data.settings, subjects: subs, academicProgress:readProgress(), studyLife:readLife(), studyJoy:readJoy() }, null, 2);
+      return JSON.stringify({ app: "bsa-study-dashboard", version: 1, exportedAt: (/* @__PURE__ */ new Date()).toISOString(), activeId: data.activeId, subjects: subs }, null, 2);
     }, [scope, data]);
     const fileName = `${scope === "all" ? "bsa-study" : norm(active.name).replace(/ /g, "-")}-backup-${today()}.json`;
     const save = async () => {
@@ -3677,11 +3764,14 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       };
       rd.onerror = () => setErr("Couldn\u2019t read that file. Open it and paste the text instead.");
       rd.readAsText(f);
-    } })), /* @__PURE__ */ React.createElement("button", { className: "btn primary", disabled: !raw.trim(), onClick: check }, "Check data")), (parsed == null ? void 0 : parsed.kind) === "backup" && /* @__PURE__ */ React.createElement("div", { className: "preview" }, /* @__PURE__ */ React.createElement("p", null, /* @__PURE__ */ React.createElement("strong", null, "Full backup found:"), " ", parsed.data.subjects.length, " subject", parsed.data.subjects.length === 1 ? "" : "s", " (", parsed.data.subjects.map((s) => s.name).join(", "), ")."), /* @__PURE__ */ React.createElement("div", { className: "row-end" }, /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: () => backup("add") }, "Add alongside my subjects"), /* @__PURE__ */ React.createElement("button", { className: "btn danger", onClick: () => backup("replace") }, "Replace everything"))), preview && /* @__PURE__ */ React.createElement("div", { className: "preview" }, /* @__PURE__ */ React.createElement("p", null, /* @__PURE__ */ React.createElement("strong", null, "Ready to import:"), " ", preview.topics.length, " topics, ", preview.cards.length, " flashcards, ", preview.mistakes.length, " mistakes, ", preview.quizzes.length, " quiz scores", preview.book ? `, a textbook map (${preview.book.chapters.length} chapters)` : "", preview.drills && preview.drills.length ? `, ${preview.drills.length} computation drill${preview.drills.length === 1 ? "" : "s"}` : "", preview.lectures && preview.lectures.length ? `, ${preview.lectures.length} lecture${preview.lectures.length === 1 ? "" : "s"}` : "", preview.psets && preview.psets.length ? `, ${preview.psets.length} problem set${preview.psets.length === 1 ? "" : "s"} (${preview.psets.reduce((a, x) => a + x.problems.length, 0)} problems)` : "", preview.grading ? ", and a grading system for the Grades calculator (your scores are kept)" : "", "."), preview.drillBad && preview.drillBad.length > 0 && h("p", { className: "muted" }, `${preview.drillBad.length} computation drill${preview.drillBad.length === 1 ? " was" : "s were"} left out because a formula didn’t work. First one: ${preview.drillBad[0]}`), preview.unmatched > 0 && /* @__PURE__ */ React.createElement("p", { className: "muted" }, preview.unmatched, " flashcards don’t match a roadmap topic and will go to “Unsorted”. You can reassign them by editing each card."), /* @__PURE__ */ React.createElement("div", { className: "grid-2" }, /* @__PURE__ */ React.createElement(Field, { label: "Add to" }, /* @__PURE__ */ React.createElement("select", { value: target, onChange: (e) => setTarget(e.target.value) }, data.subjects.map((s) => /* @__PURE__ */ React.createElement("option", { key: s.id, value: s.id }, s.name, s.code ? ` (${s.code})` : "")), /* @__PURE__ */ React.createElement("option", { value: "__new" }, "New subject…"))), target === "__new" && /* @__PURE__ */ React.createElement(Field, { label: "New subject name" }, /* @__PURE__ */ React.createElement("input", { value: newName, onChange: (e) => setNewName(e.target.value) }))), /* @__PURE__ */ React.createElement("div", { className: "row-end" }, /* @__PURE__ */ React.createElement("button", { className: "btn ghost", onClick: () => setParsed(null) }, "Back"), /* @__PURE__ */ React.createElement("button", { className: "btn primary", onClick: doImport }, "Import")))), tab === "packs" && h(StarterPacks, { data, update, toast, onClose }), tab === "github" && React.createElement(GitHubPanel, { data, toast }), tab === "export" && /* @__PURE__ */ React.createElement("div", { className: "export" }, /* @__PURE__ */ React.createElement("div", { className: "grid-2" }, /* @__PURE__ */ React.createElement(Field, { label: "What to export" }, /* @__PURE__ */ React.createElement("select", { value: scope, onChange: (e) => setScope(e.target.value) }, /* @__PURE__ */ React.createElement("option", { value: "all" }, "All subjects (", data.subjects.length, ")"), /* @__PURE__ */ React.createElement("option", { value: "one" }, "Only ", active.name)))), /* @__PURE__ */ React.createElement("textarea", { className: "code", rows: 10, readOnly: true, value: exportText, onFocus: (e) => e.target.select() }), /* @__PURE__ */ React.createElement("div", { className: "row-end" }, /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: async () => toast(await copyText(exportText) ? "JSON copied" : "Select the text and copy it manually") }, "Copy JSON"), /* @__PURE__ */ React.createElement("button", { className: "btn primary", onClick: save }, "Download ", fileName)), (() => {
-      const bytes = new Blob([JSON.stringify(data)]).size;
+    } })), /* @__PURE__ */ React.createElement("button", { className: "btn primary", disabled: !raw.trim(), onClick: check }, "Check data")), (parsed == null ? void 0 : parsed.kind) === "backup" && /* @__PURE__ */ React.createElement("div", { className: "preview" }, /* @__PURE__ */ React.createElement("p", null, /* @__PURE__ */ React.createElement("strong", null, "Full backup found:"), " ", parsed.data.subjects.length, " subject", parsed.data.subjects.length === 1 ? "" : "s", " (", parsed.data.subjects.map((s) => s.name).join(", "), ")."), /* @__PURE__ */ React.createElement("div", { className: "row-end" }, /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: () => backup("add") }, "Add alongside my subjects"), /* @__PURE__ */ React.createElement("button", { className: "btn danger", onClick: () => backup("replace") }, "Replace everything"))), preview && /* @__PURE__ */ React.createElement("div", { className: "preview" }, /* @__PURE__ */ React.createElement("p", null, /* @__PURE__ */ React.createElement("strong", null, "Ready to import:"), " ", preview.topics.length, " topics, ", preview.cards.length, " flashcards, ", preview.mistakes.length, " mistakes, ", preview.quizzes.length, " quiz scores", preview.book ? `, a textbook map (${preview.book.chapters.length} chapters)` : "", preview.drills && preview.drills.length ? `, ${preview.drills.length} computation drill${preview.drills.length === 1 ? "" : "s"}` : "", preview.lectures && preview.lectures.length ? `, ${preview.lectures.length} lecture${preview.lectures.length === 1 ? "" : "s"}` : "", preview.psets && preview.psets.length ? `, ${preview.psets.length} problem set${preview.psets.length === 1 ? "" : "s"} (${preview.psets.reduce((a, x) => a + x.problems.length, 0)} problems)` : "", preview.grading ? ", and a grading system for the Grades calculator (your scores are kept)" : "", "."), preview.drillBad && preview.drillBad.length > 0 && h("p", { className: "muted" }, `${preview.drillBad.length} computation drill${preview.drillBad.length === 1 ? " was" : "s were"} left out because a formula didn’t work. First one: ${preview.drillBad[0]}`), preview.unmatched > 0 && /* @__PURE__ */ React.createElement("p", { className: "muted" }, preview.unmatched, " flashcards don’t match a roadmap topic and will go to “Unsorted”. You can reassign them by editing each card."), /* @__PURE__ */ React.createElement("div", { className: "grid-2" }, /* @__PURE__ */ React.createElement(Field, { label: "Add to" }, /* @__PURE__ */ React.createElement("select", { value: target, onChange: (e) => setTarget(e.target.value) }, data.subjects.map((s) => /* @__PURE__ */ React.createElement("option", { key: s.id, value: s.id }, s.name, s.code ? ` (${s.code})` : "")), /* @__PURE__ */ React.createElement("option", { value: "__new" }, "New subject…"))), target === "__new" && /* @__PURE__ */ React.createElement(Field, { label: "New subject name" }, /* @__PURE__ */ React.createElement("input", { value: newName, onChange: (e) => setNewName(e.target.value) }))), /* @__PURE__ */ React.createElement("div", { className: "row-end" }, /* @__PURE__ */ React.createElement("button", { className: "btn ghost", onClick: () => setParsed(null) }, "Back"), /* @__PURE__ */ React.createElement("button", { className: "btn primary", onClick: doImport }, "Import")))), tab === "packs" && h(StarterPacks, { data, update, toast, onClose }), tab === "github" && React.createElement(GitHubPanel, { data, toast }), tab === "export" && /* @__PURE__ */ React.createElement("div", { className: "export" }, h("div",{className:"panel backup-guidance"},h("strong",null,"Complete backup (recommended)"),h("p",{className:"muted small"},"Includes all subjects, XP, Study Life and saved study sessions. Excludes private API keys and sync credentials. Export validates subjects first. Keep the file private."),h("button",{className:"btn primary",onClick:()=>bsaDownloadUnifiedBackup(toast)},"Download complete study backup"),h("button",{className:"btn",onClick:()=>{try{const keys=bsaBackupKeys(),items={};keys.forEach(k=>items[k]=localStorage.getItem(k));const counts=bsaBackupPreview(items);toast('Backup check: '+counts.subjects+' subjects, '+counts.flashcards+' cards, '+counts.problemSets+' sets, '+counts.sessionRecords+' sessions, '+keys.length+' records included. No data changed.')}catch(e){toast('Backup check failed: '+e.message)}}},"Check backup contents"),h("p",{className:"muted small"},"The export below transfers subject records, including any ratings, attempts, grades and personal notes stored within those subjects. It excludes the separate XP ledger and Study Life. Keep this file private; use Complete backup above for all local study data.")),  /* @__PURE__ */ React.createElement("div", { className: "grid-2" }, /* @__PURE__ */ React.createElement(Field, { label: "What to export" }, /* @__PURE__ */ React.createElement("select", { value: scope, onChange: (e) => setScope(e.target.value) }, /* @__PURE__ */ React.createElement("option", { value: "all" }, "All subjects (", data.subjects.length, ")"), /* @__PURE__ */ React.createElement("option", { value: "one" }, "Only ", active.name)))), /* @__PURE__ */ React.createElement("textarea", { className: "code", rows: 10, readOnly: true, value: exportText, onFocus: (e) => e.target.select() }), /* @__PURE__ */ React.createElement("div", { className: "row-end" }, /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: async () => toast(await copyText(exportText) ? "JSON copied" : "Select the text and copy it manually") }, "Copy JSON"), /* @__PURE__ */ React.createElement("button", { className: "btn primary", onClick: save }, "Download ", fileName)), (() => {
+      let bytes=0, records=0;
+      try {for(const key of bsaBackupKeys()){const value=localStorage.getItem(key);if(value!==null){bytes+=(key.length+value.length)*2;records++;}}}
+      catch(e){bytes=JSON.stringify(data).length*2;}
       const kb = Math.round(bytes / 1024);
+      // Approximate only: quota varies by browser and device.
       const pct = Math.min(100, Math.round(bytes / 5242880 * 100));
-      return h("div", { className: "store-meter" }, h("div", { className: "panel-row" }, h("span", { className: "small" }, "Space used on this device"), h("strong", { className: "small" }, `${kb.toLocaleString()} KB of about 5,000 KB`)), h("div", { className: "bar-sm" }, h("span", { style: { width: `${Math.max(2, pct)}%`, background: pct > 85 ? "var(--bad)" : pct > 60 ? "var(--warn)" : "var(--accent)" } })), pct > 60 && h("p", { className: "muted small" }, "Browsers stop saving at about 5 MB. Lectures and problem sets are the big items: delete ones you have finished, or keep them in separate subjects."));
+      return h("div", { className: "store-meter" }, h("div", { className: "panel-row" }, h("span", { className: "small" }, "Estimated study-data storage"), h("strong", { className: "small" }, `${kb.toLocaleString()} KB across ${records} records`)), h("div", { className: "bar-sm" }, h("span", { style: { width: `${Math.max(2, pct)}%`, background: pct > 85 ? "var(--bad)" : pct > 60 ? "var(--warn)" : "var(--accent)" } })), pct > 60 && h("p", { className: "muted small" }, "Storage limits vary by browser. Export a complete backup before removing large items; this estimate does not include browser-managed caches."));
     })(), /* @__PURE__ */ React.createElement("p", { className: "muted" }, "To restore, paste this JSON into the Import tab. Keep a copy in Google Drive before big changes.")), tab === "prompt" && h(NotebookLMPrompts, { subject: active, toast, onImport: () => setTab("import") }));
   }
   /* ---------- dates, due dates and the study calendar ---------- */
@@ -4147,15 +4237,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const total = (subject.psets || []).flatMap(x => x.problems || []).filter(x => x.st === "miss" || x.st === "got");
     const recent = (subject.learningEvents||[]).filter(e=>e.date && daysUntil(e.date)>=-7 && daysUntil(e.date)<=0);
     const correct = recent.filter(x=>x.result==="correct").length;
-    const backup = () => {
-      const raw = localStorage.getItem(STORE_KEY);
-      if (!raw) { toast("No saved study data found"); return; }
-      const blob = new Blob([raw], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a"); a.href = url; a.download = "bsa-study-backup-" + today() + ".json";
-      document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
-      toast("Backup downloaded. Keep it somewhere safe.");
-    };
+    const backup = () => bsaDownloadUnifiedBackup(toast);
     const suggest = ranked.slice(0, 4);
     const share = suggest.length ? Math.max(10, Math.floor(Number(minutes || 60) / suggest.length)) : 0;
     return h("div", { className: "panel enhance" },
@@ -4236,9 +4318,63 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         h("button", { className: "btn", onClick: () => go("roadmap", { open: r.topic.id }) }, "Open"))),
       h("p", { className: "muted small" }, "Accuracy reflects recorded practice, not a validated mastery score. Topics without attempts are not assumed mastered."));
   }
+
+  // v106: Academic overview derived from existing subject records; no new grading data.
+  const BSA_HOME_PREF='bsa-home-preferences-v106';
+  function homePreferences(){try{const v=JSON.parse(localStorage.getItem(BSA_HOME_PREF)||'{}');return {compact:!!v.compact,showLife:v.showLife!==false,showInsights:v.showInsights!==false}}catch(e){return {compact:false,showLife:true,showInsights:true}}}
+  function AcademicCommandCenter({subject,go,update,toast}){
+    const [prefs,setPrefs]=useState(homePreferences);
+    const apply=(key,value)=>{const v={...prefs,[key]:value};setPrefs(v);try{localStorage.setItem(BSA_HOME_PREF,JSON.stringify(v))}catch(e){}document.documentElement.classList.toggle('bsa-compact-mode',v.compact)};
+    useEffect(()=>{document.documentElement.classList.toggle('bsa-compact-mode',prefs.compact)},[prefs.compact]);
+    const ranked=smartTopicStats(subject);
+    const due=(subject.cards||[]).filter(c=>c.srs&&c.srs.due&&c.srs.due<=today());
+    const open=(subject.mistakes||[]).filter(m=>m.status!=='Cleared');
+    const missed=(subject.psets||[]).flatMap(ps=>(ps.problems||[]).filter(p=>p.st==='miss'));
+    const attempts=(subject.psets||[]).flatMap(ps=>(ps.problems||[]).filter(p=>p.st==='got'||p.st==='miss'));
+    const strong=ranked.filter(r=>r.mastery==='Strong').length;
+    const weak=ranked.filter(r=>r.mastery==='Needs practice'||r.mistakes>0).length;
+    const assessed=ranked.filter(r=>r.accuracy!==null).length;
+    const psetPct=attempts.length?Math.round(100*(attempts.length-missed.length)/attempts.length):null;
+    const next=learningNextAction(subject,ranked);
+    const recommendations=ranked.slice(0,5);
+    const toCards=()=>{
+      const fresh=open.filter(m=>String(m.question||'').trim()&&!subject.cards.some(c=>norm(c.q)===norm(psPlain(m.question))));
+      const unique=[];const existing=new Set((subject.cards||[]).map(c=>norm(c.q)));
+      fresh.forEach(m=>{const q=psPlain(m.question);const k=norm(q);if(!existing.has(k)){existing.add(k);unique.push({id:uid('c'),topicId:m.topicId||null,q,a:psPlain(m.correct)||'(complete the answer)',tip:[m.trap&&psPlain(m.trap),m.wrong&&'Original answer: '+psPlain(m.wrong)].filter(Boolean).join(' — '),conf:null})}});
+      if(!unique.length){toast('No new cards to create. Existing matching flashcards were kept.');return}
+      if(!confirm('Create '+unique.length+' flashcards from unresolved mistakes? This will not change mistake statuses.'))return;
+      update(sb=>{sb.cards=Array.isArray(sb.cards)?[...unique,...sb.cards]:unique});
+      toast('Added '+unique.length+' mistake-based flashcards.');
+    };
+    return h('section',{className:'panel bsa-academic-command','aria-label':'Academic overview'},
+      h('div',{className:'bsa-command-head'},h('div',null,h('div',{className:'panel-kicker'},'ACADEMIC OVERVIEW'),h('h2',null,'Your next study moves'),h('p',{className:'muted small'},'Evidence from your existing flashcard reviews, problem attempts and mistakes—not a predicted exam grade.')),
+        h('details',{className:'bsa-home-options'},h('summary',null,'Customize Home'),h('label',null,h('input',{type:'checkbox',checked:prefs.compact,onChange:e=>apply('compact',e.target.checked)}),' Compact layout'),h('label',null,h('input',{type:'checkbox',checked:prefs.showLife,onChange:e=>apply('showLife',e.target.checked)}),' Show Study Life'),h('label',null,h('input',{type:'checkbox',checked:prefs.showInsights,onChange:e=>apply('showInsights',e.target.checked)}),' Show topic insights'))),
+      h('div',{className:'bsa-command-metrics'},
+        [['Due reviews',due.length,'practice'],['Open mistakes',open.length,'mistakes'],['Topics assessed',assessed+' / '+ranked.length,'roadmap'],['Problem accuracy',psetPct===null?'—':psetPct+'%','psets']].map(([name,value,tab])=>h('button',{key:name,className:'bsa-command-stat',onClick:()=>go(tab)},h('span',{className:'bsa-command-value'},value),h('span',{className:'muted small'},name)))),
+      next&&h('div',{className:'bsa-command-focus'},h('div',null,h('strong',null,'Suggested topic: '+next.topic.title),h('p',{className:'muted small'},next.reason)),h('button',{className:'btn primary',onClick:()=>go(next.kind)},'Study this topic')),
+      open.length>0&&h('div',{className:'bsa-command-batch'},h('span',{className:'muted small'},'Turn unresolved mistakes into review cards without removing them from your log.'),h('button',{className:'btn',onClick:toCards},'Create missing flashcards')),
+      prefs.showInsights&&h('details',{className:'bsa-topic-insights'},h('summary',null,'Topic mastery and weak spots · '+strong+' strong · '+weak+' need attention'),
+        recommendations.length?h('div',{className:'bsa-topic-list'},recommendations.map(r=>h('div',{className:'bsa-topic-row',key:r.topic.id},h('div',null,h('strong',null,r.topic.title),h('p',{className:'muted small'},r.mastery+' · '+(r.accuracy===null?'not yet assessed':r.accuracy+'% observed accuracy')+' · '+r.mistakes+' mistakes · '+r.dueCards+' due cards')),h('button',{className:'btn',onClick:()=>go('roadmap',{open:r.topic.id})},'View topic')))):h('p',{className:'muted'},'Add topics to see prioritized recommendations.')),
+      h('p',{className:'muted small'},'Completed academic activities continue using the existing XP and study-time rules. This panel does not award XP or modify history.')
+    );
+  }
+
   function HomeView({ subject, go, openEditor, update, settings, toast }) {
     const welcomeJohn=h("p",{className:"muted",style:{margin:"0 0 12px",fontWeight:600}},"Welcome back, John Angel 👋");
-    const lifeWidget=h(StudyLifeHomeWidget,{go});
+    const lifeWidget=homePreferences().showLife?h(StudyLifeHomeWidget,{go}):null;
+    const academicOverview=h(AcademicCommandCenter,{subject,go,update,toast});
+    const reviewDue=buildReview(subject,settings.newPerDay||10,settings.maxPerDay||0);
+    const activeMistakes=(subject.mistakes||[]).filter(m=>m.status!=="Cleared");
+    const dueCount=reviewDue.due.length+reviewDue.mist.length;
+    const pendingLecture=(subject.lectures||[]).find(l=>!l.done);
+    const nextStep=activeMistakes.length?{title:"Review your difficult questions",detail:activeMistakes.length+" unresolved mistakes to revisit",tab:"mistakes",label:"Review mistakes"}:
+      dueCount?{title:"Recall what you learned",detail:dueCount+" due cards and mistake reviews",tab:"practice",label:"Start review"}:
+      pendingLecture?{title:"Continue a lecture",detail:pendingLecture.title||"Lecture",tab:"lectures",label:"Open lectures"}:
+      {title:"Practice an accounting concept",detail:"Choose a problem set to check your understanding",tab:"psets",label:"Open problem sets"};
+    const recommendedNext=h("div",{className:"academic-next-step panel"},h("div",null,h("div",{className:"panel-kicker"},"RECOMMENDED NEXT"),h("h2",null,nextStep.title),h("p",{className:"muted"},nextStep.detail)),h("button",{className:"btn primary",onClick:()=>go(nextStep.tab)},nextStep.label));
+    const academicQuickActions=h("div",{className:"academic-quick-actions","aria-label":"Study actions"},
+      [["vault","Review flashcards","cards"],["psets","Practice problem sets","pset"],["lectures","Read lectures","lecture"],["toolkit","Accounting toolkit","book"]].map(([tab,label,icon])=>
+        h("button",{className:"academic-quick-action",key:tab,onClick:()=>go(tab)},h(Icon,{name:icon,size:20}),h("span",null,label),h("span",{"aria-hidden":true},"→"))));
     const [pm, setPm] = useState(null);
     const pmDue = pmPending(subject);
     const topics = studyTopics(subject);
@@ -4254,7 +4390,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const rated = subject.cards.filter((c) => c.conf).length;
     const recall = rated ? Math.round(subject.cards.filter((c) => c.conf === "known").length / rated * 100) : null;
     if (!topics.length) {
-      return /* @__PURE__ */ React.createElement("section", { className: "view" }, /* @__PURE__ */ welcomeJohn, React.createElement("div", { className: "hero" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h1", null, subject.name), subject.code && /* @__PURE__ */ React.createElement("p", { className: "muted" }, subject.code))), /* @__PURE__ */ React.createElement("div", { className: "empty big" }, /* @__PURE__ */ React.createElement(Icon, { name: "roadmap", size: 32 }), /* @__PURE__ */ React.createElement("h2", null, "Set up ", subject.name), /* @__PURE__ */ React.createElement("p", { className: "muted" }, "Add your syllabus topics one by one, or paste them as JSON from NotebookLM. Today’s plan appears once you have topics."), /* @__PURE__ */ React.createElement("div", { className: "row-center" }, /* @__PURE__ */ React.createElement("button", { className: "btn primary", onClick: () => go("roadmap", { add: true }) }, "Add a topic"), h("button", { className: "btn", onClick: () => go("data", { tab: "packs" }) }, "Browse starter packs"), /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: () => go("data") }, "Import data"))));
+      return /* @__PURE__ */ React.createElement("section", { className: "view bsa-v108-home" }, /* @__PURE__ */ welcomeJohn, h("div",{className:"bsa-v108-top-grid"},academicOverview,lifeWidget), academicQuickActions, React.createElement("div", { className: "hero" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h1", null, subject.name), subject.code && /* @__PURE__ */ React.createElement("p", { className: "muted" }, subject.code))), /* @__PURE__ */ React.createElement("div", { className: "empty big" }, /* @__PURE__ */ React.createElement(Icon, { name: "roadmap", size: 32 }), /* @__PURE__ */ React.createElement("h2", null, "Set up ", subject.name), /* @__PURE__ */ React.createElement("p", { className: "muted" }, "Add your syllabus topics one by one, or paste them as JSON from NotebookLM. Today’s plan appears once you have topics."), /* @__PURE__ */ React.createElement("div", { className: "row-center" }, /* @__PURE__ */ React.createElement("button", { className: "btn primary", onClick: () => go("roadmap", { add: true }) }, "Add a topic"), h("button", { className: "btn", onClick: () => go("data", { tab: "packs" }) }, "Browse starter packs"), /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: () => go("data") }, "Import data"))));
     }
     const done = current ? current.sub.filter((s) => s.done).length : 0;
     const planned = (subject.sessions || []).filter((s) => s.date === today() && !s.done).sort(byTime);
@@ -4337,7 +4473,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         actions: active.length ? [{ label: "Open mistake log", run: () => go("mistakes") }] : []
       }
     ].filter(Boolean);
-    return /* @__PURE__ */ React.createElement("section", { className: "view" }, pmDue && h("div", { className: "panel gc-wi-bar" }, h("p", null, h("strong", null, pmDue.title + " was " + fmtDay(pmDue.due, "long") + "."), " Two minutes now on what actually came up is worth more than an hour of guessing before the next one."), h("div", { className: "step-actions" }, h("button", { className: "btn primary", onClick: () => setPm(pmDue) }, "Record how it went"), h("button", { className: "btn ghost", onClick: () => update((s) => { const e = s.topics.find((x) => x.id === pmDue.id); if (e) e.pmAt = today(); }) }, "Skip"))), pm && h(ExamPostMortem, { subject, exam: pm, update, toast, onClose: () => setPm(null) }), welcomeJohn, lifeWidget, /* @__PURE__ */ React.createElement("div", { className: "hero" }, /* @__PURE__ */ React.createElement("div", { className: "hero-title" }, /* @__PURE__ */ React.createElement("p", { className: "muted" }, (/* @__PURE__ */ new Date()).toLocaleDateString(void 0, { weekday: "long", month: "long", day: "numeric" })), /* @__PURE__ */ React.createElement("h1", null, subject.name, subject.code ? /* @__PURE__ */ React.createElement("span", { className: "hero-code" }, " ", subject.code) : null), subject.school && /* @__PURE__ */ React.createElement("p", { className: "muted" }, subject.school)), /* @__PURE__ */ React.createElement("div", { className: "hero-figure" }, /* @__PURE__ */ React.createElement(Ring, { done: mastered, total: topics.length }), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "topics mastered"))), /* @__PURE__ */ React.createElement(Track, { subject, onJump: (id) => go("roadmap", { open: id }) }), h(StudyFlow, { subject, go, update, openEditor }), h(SmartScheduleBuilder,{subject,update,toast,go}), h("div",{className:"curriculum-shortcut"},h("div",null,h("strong",null,"Planning next semester?"),h("p",{className:"muted small"},"Browse the four-year prospectus and add future subjects when you need them.")),h("button",{className:"btn ghost",onClick:()=>go("curriculum")},"Open curriculum")), h(SmartStudyPanel, { subject, go }), h(StudyEnhancements, { subject, go, update, toast }), /* @__PURE__ */ React.createElement("div", { className: "home-grid" }, /* @__PURE__ */ React.createElement("div", { className: "panel plan" }, /* @__PURE__ */ React.createElement("h2", null, "Today’s plan"), /* @__PURE__ */ React.createElement("ol", { className: "steps" }, steps.map((s, i) => /* @__PURE__ */ React.createElement("li", { key: i, className: "step" }, /* @__PURE__ */ React.createElement("span", { className: "step-num", "aria-hidden": "true" }, i + 1), /* @__PURE__ */ React.createElement("div", { className: "step-body" }, /* @__PURE__ */ React.createElement("span", { className: "step-label" }, /* @__PURE__ */ React.createElement(Icon, { name: s.icon, size: 16 }), " ", s.label), /* @__PURE__ */ React.createElement("strong", { className: "step-title" }, s.title), s.detail && /* @__PURE__ */ React.createElement("span", { className: "muted step-detail" }, s.detail), s.chip && h("span", { className: "step-chip" }, h(DueChip, { t: s.chip })), s.actions.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "step-actions" }, s.actions.map((a) => /* @__PURE__ */ React.createElement("button", { key: a.label, className: `btn${a.primary ? " primary" : ""}`, onClick: a.run }, a.label)))))))), /* @__PURE__ */ React.createElement("div", { className: "side-col" }, nextExam && (() => {
+    return /* @__PURE__ */ React.createElement("section", { className: "view bsa-v108-home" }, pmDue && h("div", { className: "panel gc-wi-bar" }, h("p", null, h("strong", null, pmDue.title + " was " + fmtDay(pmDue.due, "long") + "."), " Two minutes now on what actually came up is worth more than an hour of guessing before the next one."), h("div", { className: "step-actions" }, h("button", { className: "btn primary", onClick: () => setPm(pmDue) }, "Record how it went"), h("button", { className: "btn ghost", onClick: () => update((s) => { const e = s.topics.find((x) => x.id === pmDue.id); if (e) e.pmAt = today(); }) }, "Skip"))), pm && h(ExamPostMortem, { subject, exam: pm, update, toast, onClose: () => setPm(null) }), welcomeJohn, h("div",{className:"bsa-v108-top-grid"},academicOverview,lifeWidget), academicQuickActions, /* @__PURE__ */ React.createElement("div", { className: "hero" }, /* @__PURE__ */ React.createElement("div", { className: "hero-title" }, /* @__PURE__ */ React.createElement("p", { className: "muted" }, (/* @__PURE__ */ new Date()).toLocaleDateString(void 0, { weekday: "long", month: "long", day: "numeric" })), /* @__PURE__ */ React.createElement("h1", null, subject.name, subject.code ? /* @__PURE__ */ React.createElement("span", { className: "hero-code" }, " ", subject.code) : null), subject.school && /* @__PURE__ */ React.createElement("p", { className: "muted" }, subject.school)), /* @__PURE__ */ React.createElement("div", { className: "hero-figure" }, /* @__PURE__ */ React.createElement(Ring, { done: mastered, total: topics.length }), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "topics mastered"))), /* @__PURE__ */ React.createElement(Track, { subject, onJump: (id) => go("roadmap", { open: id }) }), h(StudyFlow, { subject, go, update, openEditor }), h(SmartScheduleBuilder,{subject,update,toast,go}), h("div",{className:"curriculum-shortcut"},h("div",null,h("strong",null,"Planning next semester?"),h("p",{className:"muted small"},"Browse the four-year prospectus and add future subjects when you need them.")),h("button",{className:"btn ghost",onClick:()=>go("curriculum")},"Open curriculum")), h(SmartStudyPanel, { subject, go }), h(StudyEnhancements, { subject, go, update, toast }), /* @__PURE__ */ React.createElement("div", { className: "home-grid" }, /* @__PURE__ */ React.createElement("div", { className: "panel plan" }, /* @__PURE__ */ React.createElement("h2", null, "Today’s plan"), /* @__PURE__ */ React.createElement("ol", { className: "steps" }, steps.map((s, i) => /* @__PURE__ */ React.createElement("li", { key: i, className: "step" }, /* @__PURE__ */ React.createElement("span", { className: "step-num", "aria-hidden": "true" }, i + 1), /* @__PURE__ */ React.createElement("div", { className: "step-body" }, /* @__PURE__ */ React.createElement("span", { className: "step-label" }, /* @__PURE__ */ React.createElement(Icon, { name: s.icon, size: 16 }), " ", s.label), /* @__PURE__ */ React.createElement("strong", { className: "step-title" }, s.title), s.detail && /* @__PURE__ */ React.createElement("span", { className: "muted step-detail" }, s.detail), s.chip && h("span", { className: "step-chip" }, h(DueChip, { t: s.chip })), s.actions.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "step-actions" }, s.actions.map((a) => /* @__PURE__ */ React.createElement("button", { key: a.label, className: `btn${a.primary ? " primary" : ""}`, onClick: a.run }, a.label)))))))), /* @__PURE__ */ React.createElement("div", { className: "side-col" }, nextExam && (() => {
       const r = readiness(subject, nextExam);
       const covered = (nextExam.covers || []).map((id) => subject.topics.find((t) => t.id === id)).filter(Boolean);
       return /* @__PURE__ */ React.createElement("div", { className: "panel exam-panel" }, /* @__PURE__ */ React.createElement("span", { className: "muted" }, "Next exam, week ", nextExam.week), /* @__PURE__ */ React.createElement("h2", null, nextExam.title), nextExam.due && h("p", null, h(DueChip, { t: nextExam })), r.total > 0 && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "bar-lg" }, /* @__PURE__ */ React.createElement("span", { style: { width: `${r.done / r.total * 100}%` } })), /* @__PURE__ */ React.createElement("p", null, /* @__PURE__ */ React.createElement("strong", null, r.done, " of ", r.total), " topics ready"), /* @__PURE__ */ React.createElement("div", { className: "topic-chips" }, covered.map((t) => /* @__PURE__ */ React.createElement("button", { key: t.id, className: "tchip", "data-status": t.status, onClick: () => go("roadmap", { open: t.id }), title: `${t.title}: ${t.status}` }, /* @__PURE__ */ React.createElement("span", { className: "dot" }), t.code || t.standard || t.title)))), nextExam.scope && /* @__PURE__ */ React.createElement("p", { className: "muted small" }, "Covers ", nextExam.scope), h(ExamReadyMini, { subject, exam: nextExam, go }));
@@ -4546,6 +4682,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const rated = subject.cards.filter((c) => c.conf).length;
     const recall = rated ? Math.round(subject.cards.filter((c) => c.conf === "known").length / rated * 100) : null;
     const mName = (m) => itemTopic(subject, m);
+    const alreadyCarded=active.filter(m=>(subject.cards||[]).some(c=>norm(c.q)===norm(psPlain(m.question)))).length;
     // A mistake already is a flashcard: question, answer and the trap as the tip.
     // Clearing it removes it from retests forever, so this is how it stays in rotation.
     const toCard = (m) => {
@@ -4567,7 +4704,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     }, [subject.mistakes]);
     const maxWeak = ((_b = weak[0]) == null ? void 0 : _b[1]) || 1;
     const rows = subject.mistakes.filter((m) => (status === "all" || (status === "open" ? m.status !== "Cleared" : m.status === status)) && (topic === "all" || (topic === "" ? !m.topicId : m.topicId === topic)) && (!query || norm(`${m.question} ${m.wrong} ${m.correct} ${m.trap} ${mName(m)}`).includes(norm(query))));
-    return /* @__PURE__ */ React.createElement("section", { className: "view" }, /* @__PURE__ */ React.createElement("div", { className: "page-head" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h1", { className: "page-title" }, "Mistake log"), /* @__PURE__ */ React.createElement("p", { className: "muted" }, "Every miss you log here, with its trap, is one you’re less likely to repeat on the exam.")), /* @__PURE__ */ React.createElement("div", { className: "head-actions" }, /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: () => openEditor("quiz") }, "Log quiz score"), /* @__PURE__ */ React.createElement("button", { className: "btn primary", onClick: () => openEditor("mistake", null, { topicId: topic !== "all" && topic !== "" ? topic : null }) }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 16 }), " Log a mistake"))), /* @__PURE__ */ React.createElement("div", { className: "stats" }, /* @__PURE__ */ React.createElement("div", { className: "stat lead" }, /* @__PURE__ */ React.createElement("span", { className: "stat-label" }, "Accuracy rate"), /* @__PURE__ */ React.createElement("span", { className: "big-num" }, acc === null ? "—" : `${acc}%`), /* @__PURE__ */ React.createElement("span", { className: "muted" }, qz.length ? `${sumS} of ${sumI} items, ${qz.length} ${qz.length === 1 ? "quiz" : "quizzes"}` : "Log a quiz score to start")), /* @__PURE__ */ React.createElement("div", { className: "stat" }, /* @__PURE__ */ React.createElement("span", { className: "stat-label" }, "Active mistakes"), /* @__PURE__ */ React.createElement("span", { className: `big-num${active.length ? " bad-text" : ""}` }, active.length), /* @__PURE__ */ React.createElement("span", { className: "muted" }, cleared, " cleared")), /* @__PURE__ */ React.createElement("div", { className: "stat" }, /* @__PURE__ */ React.createElement("span", { className: "stat-label" }, "Flashcard recall"), /* @__PURE__ */ React.createElement("span", { className: "big-num" }, recall === null ? "—" : `${recall}%`), /* @__PURE__ */ React.createElement("span", { className: "muted" }, rated ? `${rated} cards rated` : "Rate cards in the vault")), /* @__PURE__ */ React.createElement("div", { className: "stat weak" }, /* @__PURE__ */ React.createElement("span", { className: "stat-label" }, "Weak spots"), weak.length ? /* @__PURE__ */ React.createElement("ul", null, weak.map(([k, n]) => /* @__PURE__ */ React.createElement("li", { key: k }, /* @__PURE__ */ React.createElement("span", { className: "wk-name" }, k), /* @__PURE__ */ React.createElement("span", { className: "bar" }, /* @__PURE__ */ React.createElement("span", { style: { width: `${n / maxWeak * 100}%` } })), /* @__PURE__ */ React.createElement("span", { className: "n" }, n)))) : /* @__PURE__ */ React.createElement("span", { className: "muted" }, "No active mistakes."))), /* @__PURE__ */ React.createElement("div", { className: "seg-filter", role: "group", "aria-label": "Filter by status" }, [["open", "Not cleared"], ["Active", "Active"], ["Reviewing", "Reviewing"], ["Cleared", "Cleared"], ["all", "All"]].map(([k, l]) => /* @__PURE__ */ React.createElement("button", { key: k, className: status === k ? "on" : "", "aria-pressed": status === k, onClick: () => setStatus(k) }, l))), /* @__PURE__ */ React.createElement("div", { className: "filters" }, /* @__PURE__ */ React.createElement("input", { className: "search", type: "search", placeholder: "Search the log", value: query, onChange: (e) => setQuery(e.target.value), "aria-label": "Search mistakes" }), /* @__PURE__ */ React.createElement(TopicSelect, { subject, value: topic, onChange: (v) => setTopic(v != null ? v : ""), allLabel: "All topics" })), rows.length ? /* @__PURE__ */ React.createElement("div", { className: "table-wrap" }, /* @__PURE__ */ React.createElement("table", { className: "mistakes" }, /* @__PURE__ */ React.createElement("thead", null, /* @__PURE__ */ React.createElement("tr", null, /* @__PURE__ */ React.createElement("th", { scope: "col" }, "Date"), /* @__PURE__ */ React.createElement("th", { scope: "col" }, "Topic / standard"), /* @__PURE__ */ React.createElement("th", { scope: "col" }, "Question"), /* @__PURE__ */ React.createElement("th", { scope: "col" }, "My wrong answer"), /* @__PURE__ */ React.createElement("th", { scope: "col" }, "Correct answer"), /* @__PURE__ */ React.createElement("th", { scope: "col" }, "Trap / concept breakdown"), /* @__PURE__ */ React.createElement("th", { scope: "col" }, "Status"), /* @__PURE__ */ React.createElement("th", { scope: "col" }, /* @__PURE__ */ React.createElement("span", { className: "sr" }, "Edit")))), /* @__PURE__ */ React.createElement("tbody", null, rows.map((m) => /* @__PURE__ */ React.createElement("tr", { key: m.id, "data-status": m.status }, /* @__PURE__ */ React.createElement("td", { className: "nowrap", "data-label": "Date" }, m.date), /* @__PURE__ */ React.createElement("td", { className: "nowrap", "data-label": "Topic" }, /* @__PURE__ */ React.createElement("span", { className: "std" }, mName(m))), /* @__PURE__ */ React.createElement("td", { className: "q", "data-label": "Question" }, m.question), /* @__PURE__ */ React.createElement("td", { className: "wrong", "data-label": "My wrong answer" }, m.wrong), /* @__PURE__ */ React.createElement("td", { className: "right", "data-label": "Correct answer" }, m.correct), /* @__PURE__ */ React.createElement("td", { "data-label": "Trap / concept breakdown" }, m.trap), /* @__PURE__ */ React.createElement("td", { "data-label": "Status" }, /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React.createElement("section", { className: "view" }, /* @__PURE__ */ React.createElement("div", { className: "page-head" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h1", { className: "page-title" }, "Mistake log"), /* @__PURE__ */ React.createElement("p", { className: "muted" }, "Every miss you log here can become a flashcard for spaced review. "+alreadyCarded+" unresolved mistakes already have matching cards.")), /* @__PURE__ */ React.createElement("div", { className: "head-actions" }, /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: () => openEditor("quiz") }, "Log quiz score"), /* @__PURE__ */ React.createElement("button", { className: "btn primary", onClick: () => openEditor("mistake", null, { topicId: topic !== "all" && topic !== "" ? topic : null }) }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 16 }), " Log a mistake"))), /* @__PURE__ */ React.createElement("div", { className: "stats" }, /* @__PURE__ */ React.createElement("div", { className: "stat lead" }, /* @__PURE__ */ React.createElement("span", { className: "stat-label" }, "Accuracy rate"), /* @__PURE__ */ React.createElement("span", { className: "big-num" }, acc === null ? "—" : `${acc}%`), /* @__PURE__ */ React.createElement("span", { className: "muted" }, qz.length ? `${sumS} of ${sumI} items, ${qz.length} ${qz.length === 1 ? "quiz" : "quizzes"}` : "Log a quiz score to start")), /* @__PURE__ */ React.createElement("div", { className: "stat" }, /* @__PURE__ */ React.createElement("span", { className: "stat-label" }, "Active mistakes"), /* @__PURE__ */ React.createElement("span", { className: `big-num${active.length ? " bad-text" : ""}` }, active.length), /* @__PURE__ */ React.createElement("span", { className: "muted" }, cleared, " cleared")), /* @__PURE__ */ React.createElement("div", { className: "stat" }, /* @__PURE__ */ React.createElement("span", { className: "stat-label" }, "Flashcard recall"), /* @__PURE__ */ React.createElement("span", { className: "big-num" }, recall === null ? "—" : `${recall}%`), /* @__PURE__ */ React.createElement("span", { className: "muted" }, rated ? `${rated} cards rated` : "Rate cards in the vault")), /* @__PURE__ */ React.createElement("div", { className: "stat weak" }, /* @__PURE__ */ React.createElement("span", { className: "stat-label" }, "Weak spots"), weak.length ? /* @__PURE__ */ React.createElement("ul", null, weak.map(([k, n]) => /* @__PURE__ */ React.createElement("li", { key: k }, /* @__PURE__ */ React.createElement("span", { className: "wk-name" }, k), /* @__PURE__ */ React.createElement("span", { className: "bar" }, /* @__PURE__ */ React.createElement("span", { style: { width: `${n / maxWeak * 100}%` } })), /* @__PURE__ */ React.createElement("span", { className: "n" }, n)))) : /* @__PURE__ */ React.createElement("span", { className: "muted" }, "No active mistakes."))), /* @__PURE__ */ React.createElement("div", { className: "seg-filter", role: "group", "aria-label": "Filter by status" }, [["open", "Not cleared"], ["Active", "Active"], ["Reviewing", "Reviewing"], ["Cleared", "Cleared"], ["all", "All"]].map(([k, l]) => /* @__PURE__ */ React.createElement("button", { key: k, className: status === k ? "on" : "", "aria-pressed": status === k, onClick: () => setStatus(k) }, l))), /* @__PURE__ */ React.createElement("div", { className: "filters" }, /* @__PURE__ */ React.createElement("input", { className: "search", type: "search", placeholder: "Search the log", value: query, onChange: (e) => setQuery(e.target.value), "aria-label": "Search mistakes" }), /* @__PURE__ */ React.createElement(TopicSelect, { subject, value: topic, onChange: (v) => setTopic(v != null ? v : ""), allLabel: "All topics" })), rows.length ? /* @__PURE__ */ React.createElement("div", { className: "table-wrap" }, /* @__PURE__ */ React.createElement("table", { className: "mistakes" }, /* @__PURE__ */ React.createElement("thead", null, /* @__PURE__ */ React.createElement("tr", null, /* @__PURE__ */ React.createElement("th", { scope: "col" }, "Date"), /* @__PURE__ */ React.createElement("th", { scope: "col" }, "Topic / standard"), /* @__PURE__ */ React.createElement("th", { scope: "col" }, "Question"), /* @__PURE__ */ React.createElement("th", { scope: "col" }, "My wrong answer"), /* @__PURE__ */ React.createElement("th", { scope: "col" }, "Correct answer"), /* @__PURE__ */ React.createElement("th", { scope: "col" }, "Trap / concept breakdown"), /* @__PURE__ */ React.createElement("th", { scope: "col" }, "Status"), /* @__PURE__ */ React.createElement("th", { scope: "col" }, /* @__PURE__ */ React.createElement("span", { className: "sr" }, "Edit")))), /* @__PURE__ */ React.createElement("tbody", null, rows.map((m) => /* @__PURE__ */ React.createElement("tr", { key: m.id, "data-status": m.status }, /* @__PURE__ */ React.createElement("td", { className: "nowrap", "data-label": "Date" }, m.date), /* @__PURE__ */ React.createElement("td", { className: "nowrap", "data-label": "Topic" }, /* @__PURE__ */ React.createElement("span", { className: "std" }, mName(m))), /* @__PURE__ */ React.createElement("td", { className: "q", "data-label": "Question" }, m.question), /* @__PURE__ */ React.createElement("td", { className: "wrong", "data-label": "My wrong answer" }, m.wrong), /* @__PURE__ */ React.createElement("td", { className: "right", "data-label": "Correct answer" }, m.correct), /* @__PURE__ */ React.createElement("td", { "data-label": "Trap / concept breakdown" }, m.trap), /* @__PURE__ */ React.createElement("td", { "data-label": "Status" }, /* @__PURE__ */ React.createElement(
       "select",
       {
         className: "status-select",
@@ -4601,7 +4738,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     return /* @__PURE__ */ React.createElement(Modal, { title: "Quick add", onClose }, /* @__PURE__ */ React.createElement("div", { className: "big-options" }, items.map(([k, ic, l, d]) => /* @__PURE__ */ React.createElement("button", { key: k, className: "big-option", onClick: () => onPick(k) }, /* @__PURE__ */ React.createElement(Icon, { name: ic, size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, l), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, d))))));
   }
   function MoreSheet({ onPick, onClose, settings, setSettings, go }) {
-    return /* @__PURE__ */ React.createElement(Modal, { title: "More", onClose }, /* @__PURE__ */ React.createElement("div", { className: "big-options" }, h("button", { className: "big-option", onClick: () => go("life") }, h("span", {style:{fontSize:24}},"🏡"), h("span",null,h("strong",null,"Study Life"),h("br",null),h("span",{className:"muted"},"Room, avatar, market, pets and town"))), h("button", { className: "big-option", onClick: () => go("calendar") }, h(Icon, {name:"calendar",size:22}),h("span",null,h("strong",null,"Calendar"))), h("button", { className: "big-option", onClick: () => go("ask") }, h(Icon, { name: "ask", size: 22 }), h("span", null, h("strong", null, "Ask"), h("br", null), h("span", { className: "muted" }, "A Gemini tutor that can see your roadmap, mistakes and grades"))), h("button", { className: "big-option", onClick: () => go("lectures") }, h(Icon, { name: "lecture", size: 22 }), h("span", null, h("strong", null, "Lectures"), h("br", null), h("span", { className: "muted" }, "Rules, treatments and traps for each topic"))), h("button", { className: "big-option", onClick: () => go("psets") }, h(Icon, { name: "pset", size: 22 }), h("span", null, h("strong", null, "Problem sets"), h("br", null), h("span", { className: "muted" }, "Problems by subtopic, with how to solve each one"))), h("button", { className: "big-option", onClick: () => go("class") }, h(Icon, { name: "subjects", size: 22 }), h("span", null, h("strong", null, "Class"), h("br", null), h("span", { className: "muted" }, "Timetable, attendance and what is due"))), h("button", { className: "big-option", onClick: () => go("grades") }, h(Icon, { name: "grade", size: 22 }), h("span", null, h("strong", null, "Grades"), h("br", null), h("span", { className: "muted" }, "Grade calculator, what-if, QPI summary and export"))), h("button", { className: "big-option", onClick: () => go("vault") }, h(Icon, { name: "cards", size: 22 }), h("span", null, h("strong", null, "Concept vault"), h("br", null), h("span", { className: "muted" }, "Browse, search and edit your flashcards"))), /* @__PURE__ */ React.createElement("button", { className: "big-option", onClick: () => onPick("subjects") }, /* @__PURE__ */ React.createElement(Icon, { name: "subjects", size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, "Subjects"), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "Add, rename or delete a subject"))), /* @__PURE__ */ React.createElement("button", { className: "big-option", onClick: () => onPick("data") }, /* @__PURE__ */ React.createElement(Icon, { name: "data", size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, "Import & export"), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "NotebookLM JSON, backups"))), /* @__PURE__ */ React.createElement("button", { className: "big-option", onClick: () => onPick("look") }, /* @__PURE__ */ React.createElement(Icon, { name: "look", size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, "Appearance"), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "Themes, text size, contrast")))), /* @__PURE__ */ React.createElement("p", { className: "field-label", style: { marginTop: "1rem" } }, "Quick theme"), /* @__PURE__ */ React.createElement(ThemeDots, { settings, setSettings }));
+    return /* @__PURE__ */ React.createElement(Modal, { title: "More", onClose }, /* @__PURE__ */ React.createElement("div", { className: "big-options" }, h("button", { className: "big-option", onClick: () => go("ask") }, h(Icon, { name: "ask", size: 22 }), h("span", null, h("strong", null, "Ask"), h("br", null), h("span", { className: "muted" }, "A Gemini tutor that can see your roadmap, mistakes and grades"))), h("button", { className: "big-option", onClick: () => go("lectures") }, h(Icon, { name: "lecture", size: 22 }), h("span", null, h("strong", null, "Lectures"), h("br", null), h("span", { className: "muted" }, "Rules, treatments and traps for each topic"))), h("button", { className: "big-option", onClick: () => go("psets") }, h(Icon, { name: "pset", size: 22 }), h("span", null, h("strong", null, "Problem sets"), h("br", null), h("span", { className: "muted" }, "Problems by subtopic, with how to solve each one"))), h("button", { className: "big-option", onClick: () => go("class") }, h(Icon, { name: "subjects", size: 22 }), h("span", null, h("strong", null, "Class"), h("br", null), h("span", { className: "muted" }, "Timetable, attendance and what is due"))), h("button", { className: "big-option", onClick: () => go("grades") }, h(Icon, { name: "grade", size: 22 }), h("span", null, h("strong", null, "Grades"), h("br", null), h("span", { className: "muted" }, "Grade calculator, what-if, QPI summary and export"))), h("button", { className: "big-option", onClick: () => go("vault") }, h(Icon, { name: "cards", size: 22 }), h("span", null, h("strong", null, "Concept vault"), h("br", null), h("span", { className: "muted" }, "Browse, search and edit your flashcards"))), /* @__PURE__ */ React.createElement("button", { className: "big-option", onClick: () => onPick("subjects") }, /* @__PURE__ */ React.createElement(Icon, { name: "subjects", size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, "Subjects"), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "Add, rename or delete a subject"))), /* @__PURE__ */ React.createElement("button", { className: "big-option", onClick: () => onPick("data") }, /* @__PURE__ */ React.createElement(Icon, { name: "data", size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, "Import & export"), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "NotebookLM JSON, backups"))), /* @__PURE__ */ React.createElement("button", { className: "big-option", onClick: () => onPick("look") }, /* @__PURE__ */ React.createElement(Icon, { name: "look", size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, "Appearance"), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "Themes, text size, contrast")))), /* @__PURE__ */ React.createElement("p", { className: "field-label", style: { marginTop: "1rem" } }, "Quick theme"), /* @__PURE__ */ React.createElement(ThemeDots, { settings, setSettings }));
   }
   /* =====================================================================
      Study features: spaced repetition, mistake retests, exam readiness,
@@ -10886,8 +11023,6 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const vectorShapes=pageList[page]?.shapes||[];
     const vectorRef=useRef([]), dragVector=useRef(null), penPath=useRef(null);
     const shapeUndo=useRef([]),shapeRedo=useRef([]);
-    const actionUndo=useRef([]),actionRedo=useRef([]),applyingAction=useRef(false);
-    const recordAction=action=>{if(applyingAction.current)return;actionUndo.current.push(action);if(actionUndo.current.length>45)actionUndo.current.shift();actionRedo.current=[];setRevision(v=>v+1)};
     const [shapeRevision,setShapeRevision]=useState(0);
     vectorRef.current=vectorShapes;
     const saveShapes=(fn,record=true)=>setPages(prev=>{
@@ -10895,7 +11030,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       const old=a[page]||{name:'Page '+(page+1),image:''};
       const before=old.shapes||[],after=fn(before);
       if(JSON.stringify(before)===JSON.stringify(after))return prev;
-      if(record)recordAction({kind:'shapes',before:JSON.parse(JSON.stringify(before)),after:JSON.parse(JSON.stringify(after))});
+      if(record){shapeUndo.current.push(JSON.parse(JSON.stringify(before)));if(shapeUndo.current.length>40)shapeUndo.current.shift();shapeRedo.current=[];setRevision(x=>x+1);}
       a[page]={...old,shapes:after,updated:Date.now(),created:old.created||Date.now()};
       setShapeRevision(n=>n+1);return a;
     });
@@ -10924,26 +11059,12 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     useEffect(()=>{if(!inkFullscreen)return;const handler=e=>{if(e.key==='Escape')setInkFullscreen(false)};window.addEventListener('keydown',handler);return()=>window.removeEventListener('keydown',handler)},[inkFullscreen]);
     const snapshot=()=>canvas.current?.toDataURL('image/png')||'';
     const repaint=(image,resetHistory=false)=>{const c=canvas.current;if(!c)return;const token=++restoreToken.current;const ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);const finish=()=>{if(resetHistory){history.current=[snapshot()];historyIndex.current=0;setRevision(x=>x+1)}};if(!image){finish();return}const im=new Image();im.onload=()=>{if(token!==restoreToken.current)return;ctx.drawImage(im,0,0,c.width,c.height);finish()};im.onerror=finish;im.src=image};
-    useEffect(()=>{setSelectedShape(null);shapeUndo.current=[];shapeRedo.current=[];actionUndo.current=[];actionRedo.current=[];setRevision(v=>v+1);setShapeRevision(n=>n+1);repaint(pageList[page]?.image||'',true)},[page,subject.id]);
+    useEffect(()=>{setSelectedShape(null);shapeUndo.current=[];shapeRedo.current=[];setShapeRevision(n=>n+1);repaint(pageList[page]?.image||'',true)},[page,subject.id]);
     useEffect(()=>{try{localStorage.setItem(key,JSON.stringify(pages))}catch(e){toast('Handwriting storage full. Export important pages as PNG or PDF.')}},[pages]);
     const save=(image=snapshot())=>{setPages(prev=>{const next=prev.length?prev.slice():[{name:'Page 1',image:''}];next[page]={...next[page],image,updated:Date.now(),created:next[page].created||Date.now()};return next})};
-    const checkpoint=()=>{const img=snapshot();const prior=history.current.slice(0,historyIndex.current+1);if(prior[prior.length-1]!==img){recordAction({kind:'raster',before:prior[prior.length-1]||'',after:img});prior.push(img);if(prior.length>31)prior.shift();history.current=prior;historyIndex.current=prior.length-1;setRevision(x=>x+1)}save(img)};
-    const applyInkAction=(action,side)=>{
-      if(!action)return;
-      applyingAction.current=true;
-      if(action.kind==='shapes'){
-        const shapes=JSON.parse(JSON.stringify(action[side]));
-        vectorRef.current=shapes;
-        setPages(prev=>{const next=prev.length?prev.slice():[{name:'Page 1',image:''}];next[page]={...next[page],shapes,updated:Date.now()};return next});
-        setSelectedShape(null);setShapeRevision(v=>v+1);
-      }else{
-        const img=action[side]||'';repaint(img);save(img);
-        history.current=[img];historyIndex.current=0;
-      }
-      applyingAction.current=false;setRevision(v=>v+1);
-    };
-    const undo=()=>{const a=actionUndo.current.pop();if(!a)return;actionRedo.current.push(a);applyInkAction(a,'before')};
-    const redo=()=>{const a=actionRedo.current.pop();if(!a)return;actionUndo.current.push(a);applyInkAction(a,'after')};
+    const checkpoint=()=>{const img=snapshot();const prior=history.current.slice(0,historyIndex.current+1);if(prior[prior.length-1]!==img){prior.push(img);if(prior.length>31)prior.shift();history.current=prior;historyIndex.current=prior.length-1;setRevision(x=>x+1)}save(img)};
+    const undo=()=>{if(shapeUndo.current.length){undoShape();setRevision(x=>x+1);return;}if(historyIndex.current<=0)return;historyIndex.current--;repaint(history.current[historyIndex.current]);save(history.current[historyIndex.current]);setRevision(x=>x+1)};
+    const redo=()=>{if(shapeRedo.current.length){redoShape();setRevision(x=>x+1);return;}if(historyIndex.current>=history.current.length-1)return;historyIndex.current++;repaint(history.current[historyIndex.current]);save(history.current[historyIndex.current]);setRevision(x=>x+1)};
     const coords=e=>{const r=canvas.current.getBoundingClientRect();return [(e.clientX-r.left)*canvas.current.width/r.width,(e.clientY-r.top)*canvas.current.height/r.height]};
     const clampZoom=n=>Math.min(400,Math.max(50,Math.round(n)));
     const zoomAt=(next,clientX,clientY)=>{
@@ -11120,7 +11241,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const printAllPages=async()=>{const w=window.open('','_blank');if(!w){toast('Allow pop-ups to print notebook');return}w.document.write('<p>Preparing notebook pages…</p>');const list=await Promise.all(pageList.map(async(p,i)=>({...p,image:await renderInkPage(p,i)})));const escInk=v=>String(v||'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));w.document.open();const body=list.map((p,i)=>'<section class="page"><header><h2>'+escInk(p.name||'Page '+(i+1))+'</h2>'+pdfProfileMarkup()+'<small>'+escInk(subject.name||subject.code||'')+' · '+(p.updated?new Date(p.updated).toLocaleString():'Not dated')+'</small></header>'+(p.image?'<img alt="Handwritten page '+(i+1)+'" src="'+p.image+'">':'<p class="empty">Blank page</p>')+'</section>').join('');w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Handwriting notebook</title><style>@page{size:A4;margin:14mm}*{box-sizing:border-box}body{font:12px Arial,sans-serif;color:#17252a;margin:0}.page{break-after:page;page-break-after:always}.page:last-child{break-after:auto;page-break-after:auto}header{border-bottom:2px solid #218566;padding-bottom:10px;margin-bottom:13px}header:before{content:"BSA STUDY DESK / HANDWRITING NOTEBOOK";display:block;font-size:9px;letter-spacing:1.5px;font-weight:700;color:#24765b;margin-bottom:8px}h2{font-size:19px;color:#173e32;margin:0 0 5px}small{color:#60766b}img{display:block;width:100%;max-height:245mm;object-fit:contain;object-position:top}.empty{color:#777}</style></head><body>'+body+'</body></html>');w.document.close();w.onload=()=>{const imgs=[...w.document.images];Promise.all(imgs.map(im=>im.complete?Promise.resolve():new Promise(resolve=>{im.onload=resolve;im.onerror=resolve}))).then(()=>w.print())}};
     return h('section',{className:'ink-panel'+(inkFullscreen?' ink-fullscreen':'')},h('div',{className:'ink-toolbar ink-heading'},h('strong',null,'Handwriting notebook'),h('span',{className:'muted small'},'Apple Pencil, stylus, finger or mouse · Auto-saved locally'),h('button',{className:'btn',onClick:()=>setInkSidebar(x=>!x)},inkSidebar?'Hide pages':'Show pages'),h('button',{className:'btn primary',onClick:()=>setInkFullscreen(x=>!x),title:'Distraction-free writing mode (Esc to exit)'},inkFullscreen?'⤢ Exit fullscreen':'⛶ Fullscreen'),h('select',{value:page,onChange:e=>setPage(Number(e.target.value))},pageList.map((p,i)=>h('option',{key:i,value:i},p.name))),h('button',{className:'btn',onClick:()=>{const name=prompt('Page name',pageList[page]?.name||'Page');if(name&&name.trim())setPages(prev=>{const a=prev.length?prev.slice():[{name:'Page 1',image:snapshot()}];a[page]={...a[page],name:name.trim(),updated:Date.now()};return a})}},'Rename page'),h('button',{className:'btn',onClick:()=>{const image=snapshot();setPages(prev=>{const next=prev.length?prev.slice():[{name:'Page 1',image:''}];next[page]={...next[page],image};return [...next,{name:'Page '+(next.length+1),image:'',created:Date.now(),updated:Date.now()}]});setPage(pageList.length)}},'+ Page'),h('button',{className:'btn',onClick:duplicatePage},'Duplicate'),h('button',{className:'btn',disabled:page===0,onClick:()=>movePage(-1),title:'Move current page earlier'},'↑ Move'),h('button',{className:'btn',disabled:page>=pageList.length-1,onClick:()=>movePage(1),title:'Move current page later'},'↓ Move')),
       h('div',{className:'ink-workspace'},inkSidebar&&h('aside',{className:'ink-page-sidebar'},h('strong',null,'My pages ('+pageList.length+')'),h('input',{type:'search',placeholder:'Search pages...',value:inkQuery,onChange:e=>setInkQuery(e.target.value),'aria-label':'Search handwritten pages'}),h('select',{value:inkSort,onChange:e=>setInkSort(e.target.value),'aria-label':'Sort pages'},h('option',{value:'recent'},'Recently modified'),h('option',{value:'oldest'},'Oldest modified'),h('option',{value:'name'},'Page name'),h('option',{value:'order'},'Page order')),h('div',{className:'ink-page-list'},pageList.map((pg,i)=>({pg,i})).filter(x=>(x.pg.name||'').toLowerCase().includes(inkQuery.toLowerCase())).sort((a,b)=>inkSort==='name'?(a.pg.name||'').localeCompare(b.pg.name||''):inkSort==='order'?a.i-b.i:inkSort==='oldest'?(a.pg.updated||0)-(b.pg.updated||0):(b.pg.updated||0)-(a.pg.updated||0)).map(({pg,i})=>h('button',{key:i,className:'ink-page-item'+(page===i?' selected':''),onClick:()=>setPage(i)},h('span',{className:'ink-page-index'},String(i+1)),h('span',{className:'ink-page-meta'},h('strong',null,pg.name||'Page '+(i+1)),h('small',null,pg.updated?'Modified '+new Date(pg.updated).toLocaleString():'Not yet saved')))))),h('div',{className:'ink-writing-area'},h('div',{className:'ink-page-caption'},h('strong',null,pageList[page]?.name||'Page '+(page+1)),h('span',{className:'muted small'},'Last modified: ',pageList[page]?.updated?new Date(pageList[page].updated).toLocaleString():'Not yet saved')),
-      h('div',{className:'ink-toolbar'},['select','pen','eraser','pixelEraser','line','doubleline','taccount','arrow','rectangle','ellipse'].map(t=>h('button',{key:t,className:'btn'+(tool===t?' primary':''),onClick:()=>setTool(t),'aria-pressed':tool===t},({select:'↖ Select / Move',pen:'✎ Pen',eraser:'⌫ Stroke eraser',pixelEraser:'◻ Pencil eraser (all ink)',line:'／ Line',doubleline:'═ Double line',taccount:'⊤ T-account',arrow:'→ Arrow',rectangle:'▭ Rectangle',ellipse:'◯ Ellipse'})[t])),h('button',{className:'btn',disabled:!selectedShape,onClick:()=>saveShapes(a=>a.map(sh=>sh.id===selectedShape?(sh.type==='stroke'?{...sh,points:(sh.points||[]).map(pt=>{const b=shapeBounds(sh);return [b.left+(pt[0]-b.left)*1.2,b.top+(pt[1]-b.top)*1.2]})}:{...sh,x2:sh.x+(sh.x2-sh.x)*1.2,y2:sh.y+(sh.y2-sh.y)*1.2}):sh))},'Enlarge shape'),h('button',{className:'btn',disabled:!selectedShape,onClick:()=>saveShapes(a=>a.map(sh=>sh.id===selectedShape?(sh.type==='stroke'?{...sh,points:(sh.points||[]).map(pt=>{const b=shapeBounds(sh);return [b.left+(pt[0]-b.left)*0.8,b.top+(pt[1]-b.top)*0.8]})}:{...sh,x2:sh.x+(sh.x2-sh.x)*0.8,y2:sh.y+(sh.y2-sh.y)*0.8}):sh))},'Shrink shape'),h('button',{className:'btn',disabled:!selectedShape,onClick:()=>{saveShapes(a=>a.filter(x=>x.id!==selectedShape));setSelectedShape(null)}},'Delete selection'),h('button',{className:'btn',disabled:!actionUndo.current.length,onClick:undo,title:'Undo last stroke or shape'},'↶ Undo'),h('button',{className:'btn',disabled:!actionRedo.current.length,onClick:redo,title:'Redo'},'↷ Redo')),
+      h('div',{className:'ink-toolbar'},['select','pen','eraser','pixelEraser','line','doubleline','taccount','arrow','rectangle','ellipse'].map(t=>h('button',{key:t,className:'btn'+(tool===t?' primary':''),onClick:()=>setTool(t),'aria-pressed':tool===t},({select:'↖ Select / Move',pen:'✎ Pen',eraser:'⌫ Stroke eraser',pixelEraser:'◻ Pencil eraser (all ink)',line:'／ Line',doubleline:'═ Double line',taccount:'⊤ T-account',arrow:'→ Arrow',rectangle:'▭ Rectangle',ellipse:'◯ Ellipse'})[t])),h('button',{className:'btn',disabled:!selectedShape,onClick:()=>saveShapes(a=>a.map(sh=>sh.id===selectedShape?(sh.type==='stroke'?{...sh,points:(sh.points||[]).map(pt=>{const b=shapeBounds(sh);return [b.left+(pt[0]-b.left)*1.2,b.top+(pt[1]-b.top)*1.2]})}:{...sh,x2:sh.x+(sh.x2-sh.x)*1.2,y2:sh.y+(sh.y2-sh.y)*1.2}):sh))},'Enlarge shape'),h('button',{className:'btn',disabled:!selectedShape,onClick:()=>saveShapes(a=>a.map(sh=>sh.id===selectedShape?(sh.type==='stroke'?{...sh,points:(sh.points||[]).map(pt=>{const b=shapeBounds(sh);return [b.left+(pt[0]-b.left)*0.8,b.top+(pt[1]-b.top)*0.8]})}:{...sh,x2:sh.x+(sh.x2-sh.x)*0.8,y2:sh.y+(sh.y2-sh.y)*0.8}):sh))},'Shrink shape'),h('button',{className:'btn',disabled:!selectedShape,onClick:()=>{saveShapes(a=>a.filter(x=>x.id!==selectedShape));setSelectedShape(null)}},'Delete selection'),h('button',{className:'btn',disabled:historyIndex.current<=0&&!shapeUndo.current.length,onClick:undo,title:'Undo last stroke or shape'},'↶ Undo'),h('button',{className:'btn',disabled:historyIndex.current>=history.current.length-1&&!shapeRedo.current.length,onClick:redo,title:'Redo'},'↷ Redo')),
       h('div',{className:'ink-toolbar'},['#183c33','#126dca','#bd3434','#111111'].map(c=>h('button',{key:c,className:'ink-swatch',style:{background:c,outline:pen===c&&tool!=='eraser'?'3px solid #83bba2':'none'},'aria-label':'Ink '+c,onClick:()=>{setPen(c);setTool('pen')}})),h('label',{style:{display:'inline-flex',alignItems:'center',gap:'8px'}},'Pen size ',h('input',{type:'range',min:1,max:24,step:1,value:size,onChange:e=>setSize(Number(e.target.value)),'aria-label':'Pen thickness',style:{width:'145px',accentColor:pen}}),h('output',{style:{minWidth:'42px',fontVariantNumeric:'tabular-nums'}},size+' px')),h('button',{className:'btn',onClick:()=>setSize(3)},'Reset pen size'),h('button',{className:'btn',onClick:()=>{if(confirm('Clear this handwritten page?')){repaint('');saveShapes(()=>[]);setSelectedShape(null);checkpoint()}}},'Clear page'),h('button',{className:'btn',onClick:exportPng},'Export PNG'),h('button',{className:'btn',onClick:print},'Print page / PDF'),h('button',{className:'btn',onClick:printAllPages},'Print all pages / PDF'),h('button',{className:'btn',onClick:exportNotebook},'Backup notebook'),h('label',{className:'btn',style:{cursor:'pointer'}},'Restore notebook',h('input',{type:'file',accept:'.json,application/json',style:{display:'none'},onChange:importNotebook})),h('button',{className:'btn danger ghost',onClick:()=>{if(!confirm('Delete this handwritten page? Export a backup first.'))return;const remaining=pageList.filter((_,i)=>i!==page);const next=remaining.length?remaining:[{name:'Page 1',image:'',created:Date.now(),updated:Date.now()}];setPages(next);setPage(0);repaint(next[0].image||'',true)}},'Delete page')),
       h('div',{className:'ink-toolbar'},h('span',{className:'muted small'},'✋ One finger or Pencil: write · 🤏 Two fingers: zoom and move · ✎ Pen: draw · ↖ Select: tap and drag'),h('label',{style:{display:'inline-flex',alignItems:'center',gap:'8px'}},'Zoom ',h('input',{type:'range',min:50,max:400,step:1,value:inkZoom,onChange:e=>zoomButton(Number(e.target.value)),'aria-label':'Paper zoom',style:{width:'120px'}}),h('output',null,inkZoom+'%')),h('button',{className:'btn',disabled:inkZoom<=50,onClick:()=>zoomButton(inkZoom-25)},'−'),h('button',{className:'btn',disabled:inkZoom>=400,onClick:()=>zoomButton(inkZoom+25)},'+'),h('button',{className:'btn',onClick:()=>zoomButton(100)},'Reset zoom'),h('label',null,'Paper style ',h('select',{value:paper,onChange:e=>setPaper(e.target.value)},[['plain','Plain'],['lined','Ruled'],['grid','Graph grid'],['dots','Dot grid']].map(([v,l])=>h('option',{value:v,key:v},l))))),
       h('div',{ref:inkViewport,className:'ink-scroll ink-paper-'+paper,style:{touchAction:'none',overscrollBehavior:'contain',minHeight:'45vh'}},h('div',{style:{position:'relative',width:(inkZoom*7.6)+'px',maxWidth:'none',margin:'0 auto'}},
@@ -11207,9 +11328,16 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
         // are structural metadata, not progress, grades, or private study records.
         const clean={id:x.id,name:x.name,code:x.code,school:'',textbook:false};
         clean.topics=(x.topics||[]).map(t=>({id:t.id,title:t.title,name:t.name,chapter:t.chapter,unit:t.unit,status:'Not started',done:false,sub:(t.sub||[]).map(v=>({id:v.id,title:v.title,name:v.name,done:false}))}));
-        clean.cards=(x.cards||[]).map(c=>JSON.parse(JSON.stringify(c)));
-        clean.lectures=(x.lectures||[]).map(l=>JSON.parse(JSON.stringify(l)));
-        clean.psets=(x.psets||[]).map(set=>JSON.parse(JSON.stringify(set)));
+        // Publish only teaching material. Personal attempt statuses, ratings,
+        // spaced-repetition dates and mistake-linked private answers stay private.
+        clean.cards=(x.cards||[]).map(c=>({id:c.id,topicId:c.topicId,q:c.q,a:c.a,
+          tip:String(c.tip||'').includes('You first answered:')?'':(c.tip||''),conf:null}));
+        clean.lectures=(x.lectures||[]).map(l=>({id:l.id,topicId:l.topicId,topicText:l.topicText,title:l.title,
+          source:l.source,summary:l.summary,sections:clone(l.sections||[]),terms:clone(l.terms||[]),checks:clone(l.checks||[]),done:false}));
+        clean.psets=(x.psets||[]).map(set=>({id:set.id,topicId:set.topicId,topicText:set.topicText,title:set.title,
+          source:set.source,intro:set.intro,problems:(set.problems||[]).map(p=>({id:p.id,no:p.no,title:p.title,
+          subtopic:p.subtopic,difficulty:p.difficulty,problem:p.problem,req:clone(p.req||[]),choices:clone(p.choices||[]),
+          answer:p.answer,approach:p.approach,solution:p.solution,trap:p.trap,source:p.source,st:''}))}));
         clean.quizzes=[];
         clean.mistakes=[];clean.sessions=[];clean.grades=[];
         return clean;
@@ -11224,7 +11352,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       if(!source||!source.includes('function App()'))throw Error('Could not read your personal dashboard HTML. Open your personal GitHub Pages site, then publish again.');
       const snapshot=sharedSnapshot();
       const safeJSON=JSON.stringify(snapshot).replace(/</g,'\\u003c').replace(/>/g,'\\u003e').replace(/&/g,'\\u0026');
-      const boot='<script>window.__BSA_SHARED_SNAPSHOT__='+safeJSON+';window.__BSA_READ_ONLY__=true;window.__BSA_SHARED_ALLOWED__=["vault","psets","lectures","toolkit"];(function(){const memory=new Map();const store={getItem:k=>memory.has(String(k))?memory.get(String(k)):null,setItem:(k,v)=>memory.set(String(k),String(v)),removeItem:k=>memory.delete(String(k)),clear:()=>memory.clear(),key:i=>Array.from(memory.keys())[i]||null,get length(){return memory.size}};try{Object.defineProperty(window,"localStorage",{configurable:true,value:store})}catch(e){}})();<'+'/script>';
+      const boot='<script>window.__BSA_SHARED_SNAPSHOT__='+safeJSON+';window.__BSA_READ_ONLY__=true;window.__BSA_SHARED_ALLOWED__=["vault","psets","lectures","toolkit"];(function(){const memory=new Map();const store={getItem:k=>memory.has(String(k))?memory.get(String(k)):null,setItem:(k,v)=>memory.set(String(k),String(v)),removeItem:k=>memory.delete(String(k)),clear:()=>memory.clear(),key:i=>Array.from(memory.keys())[i]||null,get length(){return memory.size}};try{Object.defineProperty(window,"localStorage",{configurable:true,value:store})}catch(e){throw Error("Shared data isolation unavailable; refusing to load read-only app") }})();<'+'/script>';
       const css='<style id="bsa-shared-style">.workspace-actions,.workspace-launcher{display:none!important;}.bsa-readonly-banner{position:fixed;right:12px;top:10px;z-index:999999;background:#175e45;color:white;padding:7px 12px;border-radius:99px;box-shadow:0 4px 14px #0003;font:700 12px system-ui;pointer-events:none}@media print{.bsa-readonly-banner{display:none!important}}</style>';
       {const pos=source.indexOf('</head>');if(pos<0)throw Error('Missing HTML head');source=source.slice(0,pos)+css+boot+source.slice(pos);}
       source=source.replace('<div id="root">','<div class="bsa-readonly-banner">BSA Study Desk · Read-only</div><div id="root">');
@@ -11387,30 +11515,51 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
   }
   /* v49: unified local study backup. Never export API keys or sync credentials. */
   const BSA_BACKUP_PREFIXES = ["bsa_", "bsa-"];
-  const BSA_BACKUP_EXCLUDE = /(?:api.?key|secret|token|credential|password|github|gemini|auth|session|sync.?config)/i;
+  const BSA_BACKUP_EXCLUDE = /(?:api.?key|secret|token|credential|password|github|gemini|auth|sync.?config|^bsa_gh_|^bsa_sync_|^bsa[_-].*(?:login[_-]?session|auth[_-]?session|session[_-]?token))/i;
+  const BSA_BACKUP_LOCAL_ONLY = /^(?:bsa_shared_|bsa-shared-|bsa_shared_v67_|bsa_shared_guest_|bsa_shared_personal_)/i;
+  const BSA_BACKUP_REQUIRE_JSON = new Set([STORE_KEY,'bsa-academic-progress-v1','bsa-study-life-v1','bsa-joy-v1']);
   function bsaBackupKeys() {
     const keys=[];
     for(let i=0;i<localStorage.length;i++){
       const k=localStorage.key(i);
-      if(k && BSA_BACKUP_PREFIXES.some(p=>k.startsWith(p)) && !BSA_BACKUP_EXCLUDE.test(k)) keys.push(k);
+      if(k && BSA_BACKUP_PREFIXES.some(p=>k.startsWith(p)) && !BSA_BACKUP_EXCLUDE.test(k) && !BSA_BACKUP_LOCAL_ONLY.test(k)) keys.push(k);
     }
     return keys.sort();
+  }
+  function bsaValidMainRecord(doc) {
+    if(!doc||typeof doc!=='object'||Array.isArray(doc)||!Array.isArray(doc.subjects)||!doc.subjects.length||doc.subjects.length>500)return false;
+    const ids=new Set();
+    for(const sub of doc.subjects){
+      if(!sub||typeof sub!=='object'||Array.isArray(sub)||typeof sub.id!=='string'||!sub.id.trim()||sub.id.length>=500||ids.has(sub.id)||typeof sub.name!=='string'||!sub.name.trim()||sub.name.length>=1000)return false;
+      ids.add(sub.id);
+      for(const field of ['topics','cards','mistakes','quizzes','sessions','lectures','psets'])if(sub[field]!==undefined&&!Array.isArray(sub[field]))return false;
+    }
+    return true;
+  }
+  function bsaBackupPreview(items) {
+    const d=JSON.parse(items[STORE_KEY]||'null');
+    if(!bsaValidMainRecord(d))throw Error('Main dashboard subjects are missing, duplicated or malformed. Backup cancelled.');
+    const kinds={subjects:d.subjects.length,flashcards:0,problemSets:0,lectures:0,sessionRecords:0};
+    d.subjects.forEach(x=>{kinds.flashcards+=(x.cards||[]).length;kinds.problemSets+=(x.psets||[]).length;kinds.lectures+=(x.lectures||[]).length;kinds.sessionRecords+=(x.sessions||[]).length});
+    return kinds;
   }
   function bsaDownloadUnifiedBackup(toast) {
     try {
       const items={};
       bsaBackupKeys().forEach(k=>{items[k]=localStorage.getItem(k)});
+      if(!items[STORE_KEY])throw Error("Main dashboard record is missing or excluded; do not rely on this as a complete backup.");
       /* Dashboard settings may include private configuration: export only study records. */
       if(items[STORE_KEY]) {
         try {
           const d=JSON.parse(items[STORE_KEY]);
           if(d && typeof d==='object') {delete d.settings;items[STORE_KEY]=JSON.stringify(d)}
-        } catch(e) {delete items[STORE_KEY]}
+        } catch(e) {throw Error("Main dashboard data is not valid JSON. Backup cancelled rather than saving an incomplete file.")}
       }
-      const bundle={format:'bsa-unified-study-backup',version:1,exportedAt:new Date().toISOString(),items};
+      const summary=bsaBackupPreview(items);
+      const bundle={format:'bsa-unified-study-backup',version:1,exportedAt:new Date().toISOString(),source:'BSA Study Desk personal dashboard',summary,items};
       const url=URL.createObjectURL(new Blob([JSON.stringify(bundle,null,2)],{type:'application/json'}));
       const a=document.createElement('a');a.href=url;a.download='BSA-Study-Desk-All-Study-Data-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);
-      toast('Study data backup downloaded. Keep it private.');
+      toast('Backup downloaded: '+summary.subjects+' subjects, '+summary.flashcards+' flashcards, '+Object.keys(items).length+' storage records. Keep it private.');
     } catch(e){toast('Backup failed: '+(e.message||'storage error'))}
   }
   async function bsaRestoreUnifiedBackup(event,toast) {
@@ -11423,13 +11572,26 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       const entries=Object.entries(bundle.items);
       if(!entries.length||entries.length>2000)throw Error('Backup is empty or has too many entries.');
       for(const [key,value] of entries){
-        if(!BSA_BACKUP_PREFIXES.some(p=>key.startsWith(p))||BSA_BACKUP_EXCLUDE.test(key)||typeof value!=='string')throw Error('Invalid or restricted backup entry.');
-        JSON.parse(value);
+        if(['__proto__','prototype','constructor'].includes(key)||!BSA_BACKUP_PREFIXES.some(p=>key.startsWith(p))||BSA_BACKUP_EXCLUDE.test(key)||BSA_BACKUP_LOCAL_ONLY.test(key)||typeof value!=='string')throw Error('Invalid or restricted backup entry.');
+        // Some legacy study values are plain text, not JSON; don't reject valid backups.
+        if(BSA_BACKUP_REQUIRE_JSON.has(key)){
+          let valueObj;
+          try{valueObj=JSON.parse(value)}catch(e){throw Error('Invalid JSON for '+key)}
+          if(!valueObj||typeof valueObj!=='object'||Array.isArray(valueObj))throw Error('Invalid record for '+key);
+          if(key===STORE_KEY&&!bsaValidMainRecord(valueObj))throw Error('Invalid, duplicate or malformed subjects in dashboard backup.');
+          if(key==='bsa-academic-progress-v1'){
+            if(!Array.isArray(valueObj.events)||valueObj.events.length>100000||!valueObj.events.every(e=>e&&typeof e==='object'&&!Array.isArray(e)&&typeof e.id==='string'&&e.id.length<1000&&typeof e.kind==='string'&&typeof e.day==='string'&&Number.isFinite(Number(e.xp))&&Number(e.xp)>=0))throw Error('Invalid academic progress events.');
+          }
+          if(key==='bsa-study-life-v1'&&(!Number.isFinite(Number(valueObj.spent??0))||Number(valueObj.spent??0)<0||!Array.isArray(valueObj.purchases??[])))throw Error('Invalid Study Life records.');
+        }
       }
-      const message='Restore '+entries.length+' study-data records from '+(bundle.exportedAt||'this backup')+'? This replaces matching local records. Export your current backup first. The page will reload.';
+      if(!bundle.items[STORE_KEY])throw Error('This backup is missing the main dashboard record. No data changed.');
+      const preview=bsaBackupPreview(bundle.items);
+      const message='Restore '+entries.length+' saved records from '+(bundle.exportedAt||'this backup')+'?\n\nContents: '+preview.subjects+' subjects, '+preview.flashcards+' flashcards, '+preview.problemSets+' problem sets, '+preview.lectures+' lectures, '+preview.sessionRecords+' session records.\n\nThis replaces matching records on this device. First export a backup of your current data.';
       if(!confirm(message))return;
       /* Check approximate storage quota before applying changes; rollback if write fails. */
       const originals=new Map(entries.map(([key])=>[key,localStorage.getItem(key)]));
+      // Keep a non-destructive in-memory copy for rollback if a write fails.
       try {for(const [key,value] of entries){
         if(key===STORE_KEY){const restored=JSON.parse(value);const current=JSON.parse(localStorage.getItem(key)||'{}');restored.settings=current.settings||restored.settings;localStorage.setItem(key,JSON.stringify(restored));}
         else localStorage.setItem(key,value);
@@ -11591,15 +11753,15 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
   /* v87: isolated progression ledger. No historical data is converted to XP. */
   const PROGRESS_KEY='bsa-academic-progress-v1';
   const ACADEMIC_RANKS=[['Beginner',0],['Learner',500],['Scholar',1500],['Analyst',3500],['Strategist',6500],['Master Scholar',10000]];
-  const readProgress=()=>{try{const x=JSON.parse(localStorage.getItem(PROGRESS_KEY)||'null');return x&&Array.isArray(x.events)?x:{events:[]};}catch(e){return {events:[]};}};
-  const progressTotal=p=>p.events.reduce((a,e)=>a+(Number(e.xp)||0),0);
+  const readProgress=()=>{try{const x=JSON.parse(localStorage.getItem(PROGRESS_KEY)||'null');return x&&Array.isArray(x.events)?{...x,events:x.events.filter(e=>e&&typeof e==='object'&&!Array.isArray(e)&&typeof e.id==='string'&&typeof e.kind==='string'&&Number.isFinite(Number(e.xp))&&Number(e.xp)>=0)}:{events:[]};}catch(e){return {events:[]};}};
+  const progressTotal=p=>p.events.reduce((a,e)=>a+(Number.isFinite(Number(e.xp))?Math.max(0,Number(e.xp)):0),0);
   const progressRank=x=>ACADEMIC_RANKS.reduce((a,r)=>x>=r[1]?r:a,ACADEMIC_RANKS[0]);
   function grantFocusXp(minutes,uniqueId){
     if(window.__BSA_READ_ONLY__||minutes<10)return;
     try{
       const p=readProgress(),day=new Date().toLocaleDateString('en-CA');
       if(p.events.some(e=>e.id===uniqueId))return;
-      const todayXp=p.events.filter(e=>e.day===day&&e.kind==='focus').reduce((a,e)=>a+e.xp,0);
+      const todayXp=p.events.filter(e=>e.day===day&&e.kind==='focus').reduce((a,e)=>a+Math.max(0,Number(e.xp)||0),0);
       const xp=Math.max(0,Math.min(100-todayXp,Math.floor(minutes/10)*10));
       if(!xp)return;
       p.events.push({id:uniqueId,day,kind:'focus',xp,minutes,at:Date.now()});
@@ -11614,7 +11776,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       const p=readProgress(),day=new Date().toLocaleDateString('en-CA');
       const eventId=kind+':'+id;
       if(p.events.some(e=>e.id===eventId))return;
-      const earned=p.events.filter(e=>e.day===day&&e.kind===kind).reduce((n,e)=>n+(Number(e.xp)||0),0);
+      const earned=p.events.filter(e=>e.day===day&&e.kind===kind).reduce((n,e)=>n+Math.max(0,Number(e.xp)||0),0);
       const xp=Math.min(amount,Math.max(0,dailyLimit-earned));
       if(xp<=0)return;
       p.events.push({id:eventId,day,kind,xp,at:Date.now()});
@@ -11715,7 +11877,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     useEffect(()=>{const t=setInterval(()=>setNow(Date.now()),60000);return()=>clearInterval(t)},[]);
     const life=readLife(),earned=lifeEarned(),balance=Math.max(0,earned-(Number(life.spent)||0));
     const pet=LIFE_CATALOG.find(x=>x.id===life.pet);
-    const care=(life.petCare||{})[life.pet];const state=lifePetStatus({...life,petFedAt:care?.fedAt||life.petFedAt},now);
+    const state=lifePetStatus(life,now);
     return h('div',{className:'life-home-widget'},
       h('div',{className:'life-home-character'},h(PixelScholar,{avatar:life.avatar}),h('span',null,pet?pet.emoji:'🌱')),
       h('div',{className:'life-home-copy'},h('strong',null,'Your Study Life'),h('p',null,'🪙 '+balance.toLocaleString()+' coins · '+(pet?(life.petName||pet.name)+' — '+state:'Adopt a companion')),
@@ -11734,100 +11896,69 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     {id:'hoodie',name:'Cozy Hoodie',cost:120,type:'outfit',emoji:'🧥'},
     {id:'glasses',name:'Round Glasses',cost:75,type:'outfit',emoji:'👓'},
     {id:'cap',name:'Study Cap',cost:90,type:'outfit',emoji:'🧢'},
-    {id:'earrings',name:'Silver Hoop Earrings',cost:60,type:'accessory',emoji:'🪩'},
-    {id:'studs',name:'Star Stud Earrings',cost:85,type:'accessory',emoji:'✨'},
-    {id:'necklace',name:'Silver Necklace',cost:95,type:'accessory',emoji:'📿'},
-    {id:'watch',name:'Digital Watch',cost:110,type:'accessory',emoji:'⌚'},
-    {id:'headphones',name:'Cozy Headphones',cost:140,type:'accessory',emoji:'🎧'},
-    {id:'scarf',name:'Warm Scarf',cost:125,type:'accessory',emoji:'🧣'},
     {id:'cat',name:'Mochi the Cat',cost:180,type:'pet',emoji:'🐈'},
     {id:'dog',name:'Biscuit the Dog',cost:230,type:'pet',emoji:'🐕'},
     {id:'bunny',name:'Luna the Bunny',cost:200,type:'pet',emoji:'🐇'},
     {id:'frog',name:'Pip the Frog',cost:150,type:'pet',emoji:'🐸'},
     {id:'food',name:'Pet Food',cost:20,type:'consumable',emoji:'🥣'}
   ];
-  const lifeDefault=()=>({purchases:[],spent:0,inventory:{food:0},equipped:['oak'],avatar:{skin:'medium',hair:'brown',style:'short',outfit:'uniform',accessory:'none',name:'My Scholar'},pet:null,petName:'',petFedAt:0,petRestAt:0,petCare:{},revivals:0,log:[]});
-  function readLife(){try{const v=JSON.parse(localStorage.getItem(LIFE_KEY)||'null');return v&&typeof v==='object'?{...lifeDefault(),...v,avatar:{...lifeDefault().avatar,...v.avatar},inventory:{...lifeDefault().inventory,...v.inventory},petCare:{...(v.petCare||{}),...(v.pet&&!v.petCare?.[v.pet]?{[v.pet]:{fedAt:Number(v.petFedAt)||Date.now(),name:v.petName||''}}:{})}}:lifeDefault()}catch(e){return lifeDefault()}}
+  const lifeDefault=()=>({purchases:[],spent:0,inventory:{food:0},equipped:['oak'],avatar:{skin:'medium',hair:'brown',style:'short',outfit:'uniform',accessory:'none',name:'My Scholar'},pet:null,petName:'',petFedAt:0,petRestAt:0,revivals:0,log:[],roomPositions:{},seasonalClaims:[],townPosition:{x:2,y:2}});
+  function readLife(){try{const v=JSON.parse(localStorage.getItem(LIFE_KEY)||'null');return v&&typeof v==='object'?{...lifeDefault(),...v,avatar:{...lifeDefault().avatar,...v.avatar},inventory:{...lifeDefault().inventory,...v.inventory}}:lifeDefault()}catch(e){return lifeDefault()}}
   function lifeEarned(){
     const p=readProgress();
     // Coins are derived from already capped, unique XP ledger events.
     // No coins can be created by games, refreshing, or opening Study Life.
-    return p.events.reduce((sum,e)=>sum+Math.max(0,Math.floor(Number(e.xp)||0))*2,0);
+    return p.events.reduce((sum,e)=>sum+(Number.isFinite(Number(e.xp))?Math.max(0,Math.floor(Number(e.xp)))*2:0),0);
   }
-
+  const PIXEL_SKIN={light:'#f7cba7',medium:'#c99572',tan:'#a66b4f',dark:'#704a3b'};
+  const PIXEL_HAIR={black:'#292535',brown:'#624334',blonde:'#d7b264',auburn:'#9e533f'};
   function PixelScholar({avatar={},pose='front'}){
-    const poses=['front','walk','back','happy'];
-    const safe=poses.includes(pose)?pose:'front';
-    const canvasRef=useRef(null);
-    const [missing,setMissing]=useState(false);
-    const skinColors={light:[255,215,181],medium:[236,166,123],tan:[193,123,83],dark:[126,76,57]};
-    const hairColors={black:[39,35,44],brown:[79,54,51],blonde:[190,144,76],auburn:[147,68,47]};
-    const shirtColors={uniform:[238,146,51],casual:[98,155,181],hoodie:[155,116,186]};
-    useEffect(()=>{
-      let cancelled=false;
-      const img=new Image();
-      img.onload=()=>{
-        if(cancelled)return;
-        const c=canvasRef.current;if(!c)return;
-        c.width=img.naturalWidth;c.height=img.naturalHeight;
-        const ctx=c.getContext('2d',{willReadFrequently:true});if(!ctx)return;
-        ctx.clearRect(0,0,c.width,c.height);
-        ctx.drawImage(img,0,0);
-        const data=ctx.getImageData(0,0,c.width,c.height),px=data.data;
-        const skin=skinColors[avatar.skin]||skinColors.medium;
-        const hair=hairColors[avatar.hair]||hairColors.brown;
-        const shirt=shirtColors[avatar.outfit]||shirtColors.uniform;
-        const w=c.width,h=c.height;
-        for(let y=0;y<h;y++)for(let x=0;x<w;x++){
-          const i=(y*w+x)*4,r=px[i],g=px[i+1],b=px[i+2],alpha=px[i+3];
-          if(alpha<60)continue;
-          let target=null,light=1;
-          // Keep outlines and small accessory details intact.
-          if(r>110&&r>g*1.17&&g>b*1.10&&y>h*.17&&y<h*.80&&!(g>95&&g<180&&b<105&&r>g*1.38)){
-            target=skin;light=Math.max(.57,Math.min(1.25,(r+g+b)/495));
-          }else if(y<h*.53&&r<155&&g<142&&b<147&&r>g*.86&&r<b*1.45&&r>22){
-            target=hair;light=Math.max(.5,Math.min(1.55,(r+g+b)/180));
-          }else if(y>h*.36&&y<h*.81&&r>105&&r>g*1.33&&g>b*1.12&&g>45){
-            target=shirt;light=Math.max(.52,Math.min(1.35,(r+g+b)/370));
-          }
-          if(target){px[i]=Math.min(255,target[0]*light);px[i+1]=Math.min(255,target[1]*light);px[i+2]=Math.min(255,target[2]*light)}
-        }
-        ctx.putImageData(data,0,0);
-        // Add silhouette variants without replacing the original detailed artwork.
-        if(safe!=='back'&&avatar.style!=='short'){
-          const col=hairColors[avatar.hair]||hairColors.brown;
-          ctx.fillStyle='rgb('+col.join(',')+')';
-          const rect=(x,y,wid,hei)=>ctx.fillRect(Math.round(x*w),Math.round(y*h),Math.round(wid*w),Math.round(hei*h));
-          if(avatar.style==='long'){rect(.19,.34,.075,.21);rect(.74,.34,.075,.21)}
-          if(avatar.style==='ponytail'){rect(.75,.26,.09,.22);rect(.81,.39,.07,.12)}
-          if(avatar.style==='curly'){for(const [x,y] of [[.22,.17],[.32,.12],[.43,.11],[.54,.12],[.67,.16],[.75,.24]]){ctx.beginPath();ctx.arc(x*w,y*h,w*.048,0,Math.PI*2);ctx.fill()}}
-        }
-        setMissing(false);
-      };
-      img.onerror=()=>{if(!cancelled)setMissing(true)};
-      img.src='./avatar-'+safe+'.png?v=104';
-      return()=>{cancelled=true;img.onload=null;img.onerror=null};
-    },[safe,avatar.skin,avatar.hair,avatar.style,avatar.outfit]);
-    return h('div',{className:'life-sprite-wrap',role:'img','aria-label':'Customizable pixel-art scholar '+safe+' pose'},
-      h('canvas',{ref:canvasRef,className:'life-sprite',style:{imageRendering:'pixelated'},'aria-hidden':'true'}),
-      missing&&h('span',{className:'sprite-load-error'},'Avatar image missing — upload all four avatar PNGs'),
-      avatar.accessory==='studs'&&h('span',{className:'life-sprite-accessory life-sprite-studs'},'✦'),
-      avatar.accessory==='necklace'&&h('span',{className:'life-sprite-accessory life-sprite-necklace'},'◆'),
-      avatar.accessory==='watch'&&h('span',{className:'life-sprite-accessory life-sprite-watch'},'⌚'),
-      avatar.accessory==='headphones'&&h('span',{className:'life-sprite-accessory life-sprite-headphones'},'🎧'),
-      avatar.accessory==='scarf'&&h('span',{className:'life-sprite-accessory life-sprite-scarf'},'🧣'),
-      avatar.accessory==='cap'&&h('span',{className:'life-sprite-accessory life-sprite-cap'},'🧢'));
+    const skin=PIXEL_SKIN[avatar.skin]||PIXEL_SKIN.medium;
+    const hair=PIXEL_HAIR[avatar.hair]||PIXEL_HAIR.brown;
+    const outfit=avatar.outfit==='hoodie'?'#a99bd7':avatar.outfit==='casual'?'#91c3b1':'#e8e6ee';
+    const happy=pose==='happy',back=pose==='back',moving=pose==='walk';
+    return h('div',{className:'life-sprite-wrap life-custom-sprite',role:'img','aria-label':(avatar.name||'Scholar')+' customized pixel avatar '+pose},
+      h('div',{className:'pixel-scholar '+(back?'pixel-back ':'')+(moving?'pixel-walk ':'')+(happy?'pixel-happy ':'')+'pixel-hair-'+(avatar.style||'short'),style:{'--pixel-skin':skin,'--pixel-hair':hair,'--pixel-shirt':outfit}},
+        h('span',{className:'pixel-hair'}),h('span',{className:'pixel-face'}),
+        !back&&h('span',{className:'pixel-eye left'}),!back&&h('span',{className:'pixel-eye right'}),
+        h('span',{className:'pixel-body'}),h('span',{className:'pixel-arm left'}),h('span',{className:'pixel-arm right'}),
+        h('span',{className:'pixel-leg left'}),h('span',{className:'pixel-leg right'}),
+        avatar.accessory==='glasses'&&!back&&h('span',{className:'pixel-glasses'},'▢▢'),
+        avatar.accessory==='cap'&&h('span',{className:'pixel-cap'})));
   }
+  const LIFE_MAP=[
+    ['bookstore',0,1],['cafe',4,0],['park',4,4],['petshop',0,4],['observatory',2,0]
+  ];
+  const LIFE_DECOR_POS=['left','center','right'];
+  function LifeTownMap({position,move,visit,unlocked,avatar,pet}){
+    const places=new Map(LIFE_MAP.map(([id,x,y])=>[x+','+y,id]));
+    const x=Math.min(4,Math.max(0,Number(position?.x)||0));
+    const y=Math.min(4,Math.max(0,Number(position?.y)||0));
+    const step=(dx,dy)=>move({x:Math.min(4,Math.max(0,x+dx)),y:Math.min(4,Math.max(0,y+dy))});
+    return h('div',{className:'life-map-wrap'},
+      h('div',{className:'life-map-grid',role:'group','aria-label':'Study Town map'},
+        ...Array.from({length:25},(_,i)=>{
+          const tx=i%5,ty=Math.floor(i/5),id=places.get(tx+','+ty),place=LIFE_TOWN.find(t=>t.id===id);
+          return h('button',{key:i,type:'button',className:'life-map-tile'+(x===tx&&y===ty?' player':'')+(id?' destination':''),title:place?place.name:'Walk here',onClick:()=>{if(x===tx&&y===ty&&place&&unlocked(place))visit(id);else move({x:tx,y:ty})}},
+             x===tx&&y===ty?h(PixelScholar,{avatar,pose:'front'}):place?(unlocked(place)?place.icon:'🔒'):(tx+ty)%3===0?'🌼':'·');
+        })),
+      h('div',{className:'life-map-controls'},
+        h('button',{type:'button',className:'btn',onClick:()=>step(0,-1),'aria-label':'Move up'},'↑'),
+        h('div',null,h('button',{type:'button',className:'btn',onClick:()=>step(-1,0),'aria-label':'Move left'},'←'),h('button',{type:'button',className:'btn',onClick:()=>step(0,1),'aria-label':'Move down'},'↓'),h('button',{type:'button',className:'btn',onClick:()=>step(1,0),'aria-label':'Move right'},'→'))),
+      h('p',{className:'muted small'},'Tap a tile or use the direction buttons to move. Tap a destination while standing on it to enter. Your pet '+(pet?'comes along.':'can join once adopted.')),
+      places.has(x+','+y)&&h('button',{className:'btn primary',disabled:!unlocked(LIFE_TOWN.find(t=>t.id===places.get(x+','+y))),onClick:()=>visit(places.get(x+','+y))},'Enter '+LIFE_TOWN.find(t=>t.id===places.get(x+','+y)).name));
+  }
+  function activeSeason(month){return month<3?'winter':month<6?'spring':month<9?'summer':'autumn'}
+
   function StudyLife(){
-    const [avatarPose,setAvatarPose]=useState('front'),[life,setLife]=useState(readLife),[placeVisit,setPlaceVisit]=useState(null),[tab,setTab]=useState('room'),[category,setCategory]=useState('all'),[tick,setTick]=useState(Date.now()),[xpRefresh,setXpRefresh]=useState(0),[notice,setNotice]=useState('');
+    const [petActivity,setPetActivity]=useState('rest'),[avatarPose,setAvatarPose]=useState('front'),[life,setLife]=useState(readLife),[placeVisit,setPlaceVisit]=useState(null),[tab,setTab]=useState('room'),[category,setCategory]=useState('all'),[tick,setTick]=useState(Date.now()),[xpRefresh,setXpRefresh]=useState(0),[notice,setNotice]=useState('');
     useEffect(()=>{const f=()=>setXpRefresh(v=>v+1);window.addEventListener('bsa-progress-updated',f);return()=>window.removeEventListener('bsa-progress-updated',f)},[]);
     useEffect(()=>{const id=setInterval(()=>setTick(Date.now()),60000);return()=>clearInterval(id)},[]);
     const save=fn=>setLife(old=>{const next=fn(old);try{localStorage.setItem(LIFE_KEY,JSON.stringify(next))}catch(e){setNotice('Could not save: browser storage is full.')}return next});
     const earned=lifeEarned(),balance=Math.max(0,earned-(Number(life.spent)||0));
     const owned=new Set(['oak',...(life.purchases||[])]);
     const pet=life.pet?LIFE_CATALOG.find(i=>i.id===life.pet):null;
-    const activeCare=pet?(life.petCare||{})[life.pet]||{}:{};
-    const elapsed=pet?Math.max(0,tick-(Number(activeCare.fedAt)||Number(life.petFedAt)||tick)):0;
+    const elapsed=pet?Math.max(0,tick-(Number(life.petFedAt)||tick)):0;
     const petState=!pet?'none':elapsed>=72*3600000?'passed':elapsed>=48*3600000?'weak':elapsed>=24*3600000?'hungry':'happy';
     const petLabel={none:'No pet yet',happy:'Happy & fed',hungry:'Hungry',weak:'Very hungry',passed:'Your pet has passed away'}[petState];
     const buy=item=>{
@@ -11840,61 +11971,82 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const equip=id=>save(old=>({...old,equipped:old.equipped.includes(id)?old.equipped.filter(x=>x!==id):[...old.equipped,id]}));
     const adopt=id=>{
       if(!owned.has(id))return;
-      save(old=>{const existing=(old.petCare||{})[id];const isNew=!existing&&old.pet!==id;const previous=old.pet===id?{fedAt:old.petFedAt,name:old.petName}:null;const care=existing||previous||{fedAt:Date.now(),name:LIFE_CATALOG.find(x=>x.id===id).name};return {...old,pet:id,petName:care.name||LIFE_CATALOG.find(x=>x.id===id).name,petFedAt:care.fedAt,petCare:{...(old.petCare||{}),[id]:care},petRestAt:0}});
+      save(old=>({...old,pet:id,petName:LIFE_CATALOG.find(x=>x.id===id).name,petFedAt:Date.now(),petRestAt:0}));
       setNotice('Your new companion has arrived!');
     };
     const feed=()=>{
       if(!pet||petState==='passed')return;
       if((life.inventory.food||0)<1){setNotice('Buy Pet Food at the Market first.');return}
-      save(old=>({...old,inventory:{...old.inventory,food:old.inventory.food-1},petFedAt:Date.now(),petCare:{...(old.petCare||{}),[old.pet]:{...((old.petCare||{})[old.pet]||{}),fedAt:Date.now(),name:old.petName}},log:[...(old.log||[]).slice(-49),{id:'feed-'+Date.now(),at:Date.now(),kind:'feed',item:old.pet,coins:0}]}));
+      save(old=>({...old,inventory:{...old.inventory,food:old.inventory.food-1},petFedAt:Date.now(),log:[...(old.log||[]).slice(-49),{id:'feed-'+Date.now(),at:Date.now(),kind:'feed',item:old.pet,coins:0}]}));
       setNotice('Your pet enjoyed its meal!');
     };
     const revive=()=>{
       if(petState!=='passed')return;
       if(balance<80){setNotice('You need 80 Study Coins to welcome your pet back.');return}
-      save(old=>({...old,spent:old.spent+80,petFedAt:Date.now(),petCare:{...(old.petCare||{}),[old.pet]:{...((old.petCare||{})[old.pet]||{}),fedAt:Date.now(),name:old.petName}},revivals:(old.revivals||0)+1,log:[...(old.log||[]).slice(-49),{id:'revive-'+Date.now(),at:Date.now(),kind:'revive',coins:-80}]}));
+      save(old=>({...old,spent:old.spent+80,petFedAt:Date.now(),revivals:(old.revivals||0)+1,log:[...(old.log||[]).slice(-49),{id:'revive-'+Date.now(),at:Date.now(),kind:'revive',coins:-80}]}));
       setNotice('Your companion is back and healthy!');
     };
     const updateAvatar=(key,value)=>save(old=>({...old,avatar:{...old.avatar,[key]:value}}));
+    const positionDecor=(id,where)=>save(old=>({...old,roomPositions:{...(old.roomPositions||{}),[id]:where}}));
+    const seasonNow=activeSeason(new Date().getMonth());
+    const claimSeason=id=>{
+      const season=LIFE_SEASONS.find(v=>v.id===id);
+      if(!season||id!==seasonNow||earned<season.need||(life.seasonalClaims||[]).includes(id))return;
+      save(old=>({...old,seasonalClaims:[...(old.seasonalClaims||[]),id]}));
+      setNotice(season.name+' keepsake added to your collection!');
+    };
     const avatarFace=life.avatar.skin==='light'?'🧑🏻':life.avatar.skin==='dark'?'🧑🏿':life.avatar.skin==='tan'?'🧑🏽':'🧑🏾';
     const ownedItems=LIFE_CATALOG.filter(i=>owned.has(i.id)&&i.type!=='consumable');
     return h('section',{className:'view life-page'},
       h('div',{className:'page-head'},h('div',null,h('h1',{className:'page-title'},'Study Life'),h('p',{className:'muted'},'Your cozy little world, powered by real study progress.'))),
-      h('div',{className:'life-game-launch'},h('div',null,h('strong',null,'🎮 Study Town — Standalone Game'),h('p',{className:'muted small'},'Explore a walkable town, care for pets, meet NPCs, garden, fish and decorate. Separate save; academic progress stays here.')),h('a',{className:'btn primary',href:'https://ghostbymegumiacorda.github.io/study-town/',target:'_blank',rel:'noopener noreferrer'},'Play Study Town ↗')),
       h('div',{className:'life-summary'},h('span',null,'🪙 ',h('strong',null,balance.toLocaleString()),' Study Coins'),h('span',null,'🎓 ',progressRank(progressTotal(readProgress()))[0]),h('span',null,'🐾 ',petLabel)),
-      h('div',{className:'joy-tabs'},[['room','My Room'],['avatar','Avatar'],['market','Cozy Market'],['pets','Pets'],['inventory','Inventory'],['town','Study Town'],['events','Events']].map(([id,label])=>h('button',{key:id,className:'btn '+(tab===id?'primary':''),onClick:()=>{setTab(id);setNotice('')}},label))),
+      h('div',{className:'joy-tabs'},[['room','My Room'],['avatar','Avatar'],['market','Cozy Market'],['pets','Pets'],['inventory','Inventory'],['town','Study Town'],['events','Events'],['garden','Garden & Quests']].map(([id,label])=>h('button',{key:id,className:'btn '+(tab===id?'primary':''),onClick:()=>{setTab(id);setNotice('')}},label))),
       notice&&h('p',{className:'life-notice',role:'status'},notice),
       tab==='room'&&h('div',{className:'panel life-panel'},
         h('h2',null,'Your Cozy Room'),
-        h('div',{className:'life-scene '+(new Date().getHours()>=18||new Date().getHours()<6?'life-night':'life-day')},h('div',{className:'life-scene-window'},'☁️ ☀️'),h('div',{className:'life-scene-shelf'},life.equipped.includes('shelf')?'📚 🪴':'📖'),h('div',{className:'life-scene-lamp'},life.equipped.includes('lamp')?'💡':''),h('div',{className:'life-scene-avatar'},h(PixelScholar,{avatar:life.avatar})),pet&&h('div',{className:'life-scene-pet'},petState==='passed'?'💤':pet.emoji),h('div',{className:'life-scene-desk'},'📖　☕'),h('div',{className:'life-scene-rug'},life.equipped.includes('rug')?'◯':''),h('div',{className:'life-scene-plants'},life.equipped.includes('plant')?'🪴':'')),
-        h('p',{className:'muted'},'Decorate your room using items from the market. Your avatar and pet live here.'),h('button',{className:'btn primary',onClick:()=>{setTab('town');setPlaceVisit(null)}},'Explore Study Town →'),
-        h('div',{className:'life-inventory-grid'},ownedItems.filter(i=>i.type==='furniture'||i.type==='decor').map(item=>h('button',{className:'life-item '+(life.equipped.includes(item.id)?'selected':''),key:item.id,onClick:()=>equip(item.id)},h('span',null,item.emoji),h('span',null,item.name),h('small',null,life.equipped.includes(item.id)?'Placed ✓':'Place'))))),
+        h('div',{className:'life-scene '+(new Date().getHours()>=18||new Date().getHours()<6?'life-night':'life-day')},h('div',{className:'life-scene-window'},'☁️ ☀️'),h('div',{className:'life-scene-shelf'},life.equipped.includes('shelf')?'📚 🪴':'📖'),h('div',{className:'life-scene-lamp life-place-'+(life.roomPositions?.lamp||'center')},life.equipped.includes('lamp')?'💡':''),h('div',{className:'life-scene-avatar'},h(PixelScholar,{avatar:life.avatar})),pet&&h('div',{className:'life-scene-pet'},petState==='passed'?'💤':pet.emoji),h('div',{className:'life-scene-desk',style:{left:life.deskPlacement==='left'?'6%':life.deskPlacement==='right'?'38%':'21%'}},'📖　☕'),h('div',{className:'life-scene-rug'},life.equipped.includes('rug')?'◯':''),h('div',{className:'life-scene-plants life-place-'+(life.roomPositions?.plant||'right')},life.equipped.includes('plant')?'🪴':'')),
+        h('p',{className:'muted'},'Decorate your room using items from the market. Your avatar and pet live here.'),h('div',{className:'life-room-layout'},h('label',null,'Desk location ',h('select',{value:life.deskPlacement||'center',onChange:e=>save(old=>({...old,deskPlacement:e.target.value}))},[['left','Left'],['center','Center'],['right','Right']].map(([id,label])=>h('option',{key:id,value:id},label))))),
+        h('div',{className:'life-inventory-grid'},ownedItems.filter(i=>i.type==='furniture'||i.type==='decor').map(item=>h('button',{className:'life-item '+(life.equipped.includes(item.id)?'selected':''),key:item.id,onClick:()=>equip(item.id)},h('span',null,item.emoji),h('span',null,item.name),h('small',null,life.equipped.includes(item.id)?'Placed ✓':'Place'))),h('div',{className:'life-place-options'},...['lamp','plant'].filter(id=>owned.has(id)&&life.equipped.includes(id)).map(id=>h('label',{key:id},(LIFE_CATALOG.find(i=>i.id===id)?.name||id)+' placement',h('select',{value:life.roomPositions?.[id]||(id==='plant'?'right':'center'),onChange:e=>positionDecor(id,e.target.value)},LIFE_DECOR_POS.map(v=>h('option',{key:v,value:v},v)))))))),
       tab==='avatar'&&h('div',{className:'panel life-panel'},h('h2',null,'My Avatar'),h('div',{className:'life-avatar-preview'},h('span',null,life.avatar.accessory==='glasses'?'👓':life.avatar.accessory==='cap'?'🧢':'✨'),h('div',null,h(PixelScholar,{avatar:life.avatar,pose:avatarPose})),h('span',null,life.avatar.outfit==='hoodie'?'🧥':life.avatar.outfit==='casual'?'👕':'🎓')),h('div',{className:'life-pose-picker'},[['front','Front'],['walk','Walking'],['back','Back'],['happy','Happy']].map(([id,label])=>h('button',{key:id,className:'btn '+(avatarPose===id?'primary':''),onClick:()=>setAvatarPose(id)},label))),h('div',{className:'life-options'},
         h('label',null,'Nickname',h('input',{className:'input',maxLength:24,value:life.avatar.name,onChange:e=>updateAvatar('name',e.target.value)})),
-        ...[['skin','Skin tone',['light','medium','tan','dark']],['hair','Hair color',['black','brown','blonde','auburn']],['style','Hairstyle',['short','long','curly','ponytail']],['outfit','Outfit',['uniform','casual',...(owned.has('hoodie')?['hoodie']:[])]],['accessory','Accessory',['none',...(owned.has('glasses')?['glasses']:[]),...(owned.has('cap')?['cap']:[]),...(owned.has('earrings')?['earrings']:[]),...(owned.has('studs')?['studs']:[]),...(owned.has('necklace')?['necklace']:[]),...(owned.has('watch')?['watch']:[]),...(owned.has('headphones')?['headphones']:[]),...(owned.has('scarf')?['scarf']:[])]]].map(([key,label,values])=>h('label',{key},label,h('select',{value:life.avatar[key],onChange:e=>updateAvatar(key,e.target.value)},values.map(v=>h('option',{key:v,value:v},v)))))),
-        h('p',{className:'muted small'},'Hair, skin tone, outfit colors and simple hairstyle silhouettes now update the sprite preview. Some details and accessories remain simplified.')),
-      tab==='market'&&h('div',{className:'panel life-panel'},h('h2',null,'Cozy Market'),h('p',{className:'muted'},'Earn 2 coins per eligible academic XP. No real-money purchases or game rewards.'),h('div',{className:'joy-tabs'},[['all','All'],['furniture','Furniture'],['decor','Decor'],['outfit','Clothing'],['pet','Pets'],['accessory','Accessories'],['consumable','Food']].map(([id,label])=>h('button',{className:'btn '+(category===id?'primary':''),key:id,onClick:()=>setCategory(id)},label))),h('div',{className:'life-inventory-grid'},LIFE_CATALOG.filter(i=>category==='all'||i.type===category).map(item=>h('div',{className:'life-item',key:item.id},h('span',{className:'life-item-emoji'},item.emoji),h('strong',null,item.name),h('span',null,'🪙 '+item.cost),h('button',{className:'btn',disabled:(item.type!=='consumable'&&owned.has(item.id))||balance<item.cost,onClick:()=>buy(item)},item.type!=='consumable'&&owned.has(item.id)?'Owned':balance<item.cost?'Not enough coins':'Buy'))))),
-      tab==='pets'&&h('div',{className:'panel life-panel'},h('h2',null,'My Companion'),pet?h('div',{className:'life-pet-card'},h('div',{className:'life-pet-emoji'},petState==='passed'?'🕯️':pet.emoji),h('strong',null,life.petName||pet.name),h('p',null,petLabel),h('p',{className:'muted small'},petState==='passed'?'Your companion can be revived for 80 Study Coins.':petState==='weak'?'Feed soon: your pet may pass away after 72 hours without food.':petState==='hungry'?'Your pet is hungry.':'Feed at least once every 24 hours to keep your pet happy.'),h('p',{className:'muted small'},'Pet food in inventory: '+(life.inventory.food||0)),h('p',{className:'muted small'},petState==='passed'?'Revive your pet whenever you are ready.':'Time until next hunger stage: '+Math.max(0,Math.ceil((24-(elapsed/3600000)%24)))+' hours'),h('button',{className:'btn',onClick:()=>{setCategory('consumable');setTab('market')}},'Buy food / stock up'),petState==='passed'?h('button',{className:'btn primary',onClick:revive,disabled:balance<80},'Revive · 80 coins'):h('button',{className:'btn primary',onClick:feed,disabled:life.inventory.food<1},'Feed Pet'),h('label',null,'Pet name',h('input',{className:'input',maxLength:24,value:life.petName,onChange:e=>save(old=>({...old,petName:e.target.value,petCare:{...(old.petCare||{}),[old.pet]:{...((old.petCare||{})[old.pet]||{}),fedAt:old.petFedAt,name:e.target.value}}}))}))):h('p',{className:'muted'},'Visit the Cozy Market to adopt your first pet.'),h('h3',null,'Adopted pets'),h('div',{className:'life-inventory-grid'},LIFE_CATALOG.filter(i=>i.type==='pet'&&owned.has(i.id)).map(i=>h('button',{className:'life-item',key:i.id,onClick:()=>adopt(i.id)},i.emoji,' ',i.name,life.pet===i.id?' · Active':' · Choose'))),h('p',{className:'muted small'},'Pet care is optional. Your pet can pass away after 72 hours without feeding, but can always be revived. No academic XP, grades or study history are lost.')),
+        ...[['skin','Skin tone',['light','medium','tan','dark']],['hair','Hair color',['black','brown','blonde','auburn']],['style','Hairstyle',['short','long','curly','ponytail']],['outfit','Outfit',['uniform','casual',...(owned.has('hoodie')?['hoodie']:[])]],['accessory','Accessory',['none',...(owned.has('glasses')?['glasses']:[]),...(owned.has('cap')?['cap']:[])]]].map(([key,label,values])=>h('label',{key},label,h('select',{value:life.avatar[key],onChange:e=>updateAvatar(key,e.target.value)},values.map(v=>h('option',{key:v,value:v},v)))))),
+        h('p',{className:'muted small'},'Your character now responds to skin tone, hair color, hairstyle, outfits and owned accessories. Poses are previewed above; customization is saved locally.')),
+      tab==='market'&&h('div',{className:'panel life-panel'},h('h2',null,'Cozy Market'),h('p',{className:'muted'},'Earn 2 coins per eligible academic XP. No real-money purchases or game rewards.'),h('div',{className:'joy-tabs'},[['all','All'],['furniture','Furniture'],['decor','Decor'],['outfit','Clothing'],['pet','Pets'],['consumable','Food']].map(([id,label])=>h('button',{className:'btn '+(category===id?'primary':''),key:id,onClick:()=>setCategory(id)},label))),h('div',{className:'life-inventory-grid'},LIFE_CATALOG.filter(i=>category==='all'||i.type===category).map(item=>h('div',{className:'life-item',key:item.id},h('span',{className:'life-item-emoji'},item.emoji),h('strong',null,item.name),h('span',null,'🪙 '+item.cost),h('button',{className:'btn',disabled:(item.type!=='consumable'&&owned.has(item.id))||balance<item.cost,onClick:()=>buy(item)},item.type!=='consumable'&&owned.has(item.id)?'Owned':balance<item.cost?'Not enough coins':'Buy'))))),
+      tab==='pets'&&h('div',{className:'panel life-panel'},h('h2',null,'My Companion'),pet?h('div',{className:'life-pet-card'},h('div',{className:'life-pet-emoji'},petState==='passed'?'🕯️':pet.emoji),h('strong',null,life.petName||pet.name),h('p',null,petLabel),h('p',{className:'muted small'},petState==='passed'?'Your companion can be revived for 80 Study Coins.':petState==='weak'?'Feed soon: your pet may pass away after 72 hours without food.':petState==='hungry'?'Your pet is hungry.':'Feed at least once every 24 hours to keep your pet happy.'),h('p',{className:'muted small'},'Pet food in inventory: '+(life.inventory.food||0)),h('div',{className:'life-pet-actions'},[['rest','😴 Rest'],['play','🧶 Play'],['pet','💗 Pet']].map(([id,label])=>h('button',{className:'btn',key:id,disabled:petState==='passed',onClick:()=>{setPetActivity(id);setNotice(id==='play'?'Your companion is playing!':id==='pet'?'Your companion feels loved!':'Your companion is resting.')}},label))),h('p',{className:'muted small'},'Current activity: '+petActivity+' · Interactions do not replace feeding or use coins.'),h('p',{className:'muted small'},petState==='passed'?'Revive your pet whenever you are ready.':'Time until next hunger stage: '+Math.max(0,Math.ceil((24-(elapsed/3600000)%24)))+' hours'),h('button',{className:'btn',onClick:()=>{setCategory('consumable');setTab('market')}},'Buy food / stock up'),petState==='passed'?h('button',{className:'btn primary',onClick:revive,disabled:balance<80},'Revive · 80 coins'):h('button',{className:'btn primary',onClick:feed,disabled:life.inventory.food<1},'Feed Pet'),h('label',null,'Pet name',h('input',{className:'input',maxLength:24,value:life.petName,onChange:e=>save(old=>({...old,petName:e.target.value}))}))):h('p',{className:'muted'},'Visit the Cozy Market to adopt your first pet.'),h('h3',null,'Adopted pets'),h('div',{className:'life-inventory-grid'},LIFE_CATALOG.filter(i=>i.type==='pet'&&owned.has(i.id)).map(i=>h('button',{className:'life-item',key:i.id,onClick:()=>adopt(i.id)},i.emoji,' ',i.name,life.pet===i.id?' · Active':' · Choose'))),h('p',{className:'muted small'},'Pet care is optional. Your pet can pass away after 72 hours without feeding, but can always be revived. No academic XP, grades or study history are lost.')),
 
+      tab==='garden'&&h(JoyHub,{go:()=>{window.dispatchEvent(new CustomEvent('bsa-life-navigation',{detail:'joy'}))}}),
       tab==='town'&&h('div',{className:'panel life-panel'},
-        h('h2',null,'Study Town'),
-        h('p',{className:'muted'},'Tap Visit to enter a location scene, then Back to town to return. More locations unlock through lifetime Study Coins; visits are free.'),
-        placeVisit&&h('div',{className:'life-place-scene'},h('button',{className:'btn',onClick:()=>setPlaceVisit(null)},'← Back to town'),h('div',{className:'life-place-art life-destination-'+placeVisit},h('div',{className:'life-place-backdrop'},placeVisit==='bookstore'?'📚 📚 📚':placeVisit==='cafe'?'☕ 🥐 ☕':placeVisit==='park'?'🌳 🌷 🌳':placeVisit==='petshop'?'🐈 🐕 🐇':'🌙 ✨ ⭐'),h('div',{className:'life-place-characters'},h(PixelScholar,{avatar:life.avatar,pose:'front'}),life.pet?(LIFE_CATALOG.find(p=>p.id===life.pet)?.emoji||'🐾'):'')),h('h3',null,LIFE_TOWN.find(p=>p.id===placeVisit)?.name),h('p',{className:'muted'},LIFE_TOWN.find(p=>p.id===placeVisit)?.desc)),!placeVisit&&h('div',{className:'life-town-grid'},LIFE_TOWN.map(place=>{
-          const unlocked=earned>=place.need;
-          return h('div',{className:'life-town-place'+(unlocked?'':' locked'),key:place.id},
-            h('div',{className:'life-town-emoji'},unlocked?place.icon:'🔒'),
-            h('strong',null,place.name),h('p',{className:'muted small'},unlocked?place.desc:'Unlock at '+place.need+' lifetime coins'),
-            h('button',{className:'btn',disabled:!unlocked,onClick:()=>{setPlaceVisit(place.id);setNotice('')}},unlocked?'Visit':'Locked'));
+        h('h2',null,'Explore Study Town'),
+        h('p',{className:'muted'},'Move your character across the town. Locations unlock through lifetime academic coins earned—not game play.'),
+        h(LifeTownMap,{position:life.townPosition||{x:2,y:2},avatar:life.avatar,pet:life.pet,
+          move:p=>save(old=>({...old,townPosition:p})),
+          unlocked:place=>earned>=place.need,
+          visit:id=>{if(earned>=LIFE_TOWN.find(p=>p.id===id).need){setPlaceVisit(id);setNotice('')}}}),
+        placeVisit&&h('div',{className:'life-place-scene'},
+          h('button',{className:'btn',onClick:()=>setPlaceVisit(null)},'Close location'),
+          h('div',{className:'life-place-art'},LIFE_TOWN.find(p=>p.id===placeVisit)?.icon,' ',h(PixelScholar,{avatar:life.avatar,pose:'happy'}),life.pet?' '+(LIFE_CATALOG.find(p=>p.id===life.pet)?.emoji||'🐾'):''),
+          h('h3',null,LIFE_TOWN.find(p=>p.id===placeVisit)?.name),
+          h('p',{className:'muted'},LIFE_TOWN.find(p=>p.id===placeVisit)?.desc)),
+        h('div',{className:'life-town-grid'},LIFE_TOWN.map(place=>{
+          const open=earned>=place.need;
+          return h('div',{className:'life-town-place'+(open?'':' locked'),key:place.id},
+            h('div',{className:'life-town-emoji'},open?place.icon:'🔒'),
+            h('strong',null,place.name),h('p',{className:'muted small'},open?place.desc:'Unlock at '+place.need+' lifetime coins'),
+            h('button',{className:'btn',disabled:!open,onClick:()=>{setPlaceVisit(place.id);setNotice('')}},open?'Visit':'Locked'));
         }))),
       tab==='events'&&h('div',{className:'panel life-panel'},
-        h('h2',null,'Seasonal Collections'),
-        h('p',{className:'muted'},'Collect seasonal keepsakes through your academic progress. No daily pressure or missed-day penalties.'),
-        h('div',{className:'life-town-grid'},LIFE_SEASONS.map(item=>h('div',{className:'life-town-place',key:item.id},
-          h('div',{className:'life-town-emoji'},earned>=item.need?item.icon:'🔒'),
-          h('strong',null,item.name),
-          h('p',{className:'muted small'},earned>=item.need?'Unlocked in your collection':'Unlock at '+item.need+' lifetime coins'))))),
-      tab==='inventory'&&h('div',{className:'panel life-panel'},h('h2',null,'Collection & Inventory'),h('p',{className:'muted'},ownedItems.length+' items unlocked · '+(life.inventory.food||0)+' pet food'),h('div',{className:'life-inventory-grid'},ownedItems.map(i=>h('div',{className:'life-item',key:i.id},h('span',{className:'life-item-emoji'},i.emoji),h('strong',null,i.name))),h('div',{className:'life-item'},'🥣 Pet Food × '+(life.inventory.food||0))),h('h3',null,'Coin history'),h('p',{className:'muted small'},'Earned: '+earned+' · Spent: '+life.spent+' · Available: '+balance),h('div',{className:'life-log'},(life.log||[]).slice(-10).reverse().map(e=>h('div',{key:e.id},new Date(e.at).toLocaleString()+' · '+e.kind+' '+(e.item||'')+' · '+e.coins+' coins')))),
-      h('p',{className:'muted small'},'Study Life is separate from study-time totals and academic XP. All purchases and pet care are virtual.')
+        h('h2',null,'Seasonal Events & Keepsakes'),
+        h('p',{className:'muted'},'Current season: '+(LIFE_SEASONS.find(x=>x.id===seasonNow)?.name||seasonNow)+'. Earn the required academic coins, then claim the seasonal keepsake. Previous claims remain saved.'),
+        h('div',{className:'life-town-grid'},LIFE_SEASONS.map(item=>{
+          const claimed=(life.seasonalClaims||[]).includes(item.id),active=item.id===seasonNow,eligible=earned>=item.need;
+          return h('div',{className:'life-town-place',key:item.id},
+            h('div',{className:'life-town-emoji'},claimed?item.icon:active?item.icon:'🔒'),
+            h('strong',null,item.name),
+            h('p',{className:'muted small'},claimed?'Collected ✓':active?(eligible?'Ready to collect':'Requires '+item.need+' lifetime coins'):'Returns in its season'),
+            h('button',{className:'btn',disabled:claimed||!active||!eligible,onClick:()=>claimSeason(item.id)},claimed?'Collected':active?'Claim keepsake':'Not in season'));
+        }))),
+      tab==='inventory'&&h('div',{className:'panel life-panel'},h('h2',null,'Collection & Inventory'),h('p',{className:'muted'},ownedItems.length+' items unlocked · '+(life.inventory.food||0)+' pet food'),h('div',{className:'life-inventory-grid'},ownedItems.map(i=>h('div',{className:'life-item',key:i.id},h('span',{className:'life-item-emoji'},i.emoji),h('strong',null,i.name))),h('div',{className:'life-item'},'🥣 Pet Food × '+(life.inventory.food||0))),h('h3',null,'Seasonal keepsakes'),h('p',{className:'muted'},(life.seasonalClaims||[]).length?(life.seasonalClaims||[]).map(id=>LIFE_SEASONS.find(x=>x.id===id)?.icon+' '+(LIFE_SEASONS.find(x=>x.id===id)?.name||id)).join(' · '):'None collected yet'),h('h3',null,'Coin history'),h('p',{className:'muted small'},'Earned: '+earned+' · Spent: '+life.spent+' · Available: '+balance),h('div',{className:'life-log'},(life.log||[]).slice(-10).reverse().map(e=>h('div',{key:e.id},new Date(e.at).toLocaleString()+' · '+e.kind+' '+(e.item||'')+' · '+e.coins+' coins')))),
+      h('p',{className:'muted small'},'Study Life is separate from recorded focus time and academic XP. Coin totals are derived from eligible XP entries; historic records are not automatically reconstructed.')
     );
   }
 
@@ -12016,15 +12168,16 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
   function StudyTimeAudit({data}) {
     const rows=data.subjects.map(sub=>{
       const days=(sub.days||[]).filter(d=>d&&Number(d.mins)>0);
-      const minutes=days.reduce((n,d)=>n+Math.max(0,Number(d.mins)||0),0);
-      return {name:sub.code||sub.name,days:days.length,minutes};
+      const minutes=days.reduce((n,d)=>n+(Number.isFinite(Number(d.mins))?Math.max(0,Number(d.mins)):0),0);
+      const sessionMinutes=(sub.sessions||[]).filter(x=>x&&x.done&&Number(x.mins)>0).reduce((n,x)=>n+(Number.isFinite(Number(x.mins))?Math.max(0,Number(x.mins)):0),0);
+      return {name:sub.code||sub.name,days:days.length,minutes,sessionMinutes,difference:minutes-sessionMinutes};
     }).filter(x=>x.minutes>0);
     const total=rows.reduce((n,x)=>n+x.minutes,0);
     return h("div",{className:"panel study-audit"},
-      h("h2",null,"Recorded study-time audit"),
-      h("p",{className:"muted"},"These are the saved daily study minutes, not independently verified active study time. Earlier inaccurate entries cannot be reconstructed automatically."),
+      h("h2",null,"Recorded focus-time audit"),
+      h("p",{className:"muted"},"These are saved daily focus minutes, not independently verified studying. Completed-session records are a cross-check only: Pomodoro rounds and manual entries can differ, so differences do not automatically indicate an error. Earlier inaccurate time cannot be reconstructed."),
       h("div",{className:"study-audit-total"},h("strong",null,Math.floor(total/60)+"h "+String(total%60).padStart(2,"0")+"m"),h("span",null,"across "+rows.length+" subjects")),
-      rows.length?h("div",{className:"study-audit-rows"},rows.map(r=>h("div",{key:r.name,className:"study-audit-row"},h("span",null,r.name),h("span",null,Math.floor(r.minutes/60)+"h "+String(r.minutes%60).padStart(2,"0")+"m · "+r.days+" days")))):h("p",{className:"muted"},"No recorded study minutes."),
+      rows.length?h("div",{className:"study-audit-rows"},rows.map(r=>h("div",{key:r.name,className:"study-audit-row"},h("span",null,r.name),h("span",null,Math.floor(r.minutes/60)+"h "+String(r.minutes%60).padStart(2,"0")+"m · "+r.days+" days"),h("small",{className:"muted"},"Recorded session entries: "+Math.round(r.sessionMinutes)+"m · Difference: "+Math.round(r.difference)+"m")))):h("p",{className:"muted"},"No recorded study minutes."),
       h("p",{className:"muted small"},"Export a backup before resetting. XP and quiz history are stored separately.")
     );
   }
@@ -12041,6 +12194,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
   function App() {
     const [data, setData] = useState(() => loadLocal() || buildDefault());
     const [nav, setNav] = useState({ tab: "home", opts: {}, key: 0 });
+    useEffect(()=>{const handler=e=>{if(e.detail==='joy')setNav(v=>({tab:'joy',opts:{},key:v.key+1}))};window.addEventListener('bsa-life-navigation',handler);return()=>window.removeEventListener('bsa-life-navigation',handler)},[]);
     const [modal, setModal] = useState(null);
     const [navSearch, setNavSearch] = useState("");
     const [collapsedNav, setCollapsedNav] = useState({});
@@ -12150,7 +12304,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       try {
         const qs = new URLSearchParams(location.search);
         const want = qs.get("go");
-        const okTabs = ["curriculum", "home", "break", "stats-clean", "practice", "roadmap", "calendar", "vault", "mistakes", "grades", "lectures", "psets", "class", "toolkit", "howto"];
+        const okTabs = ["curriculum", "home", "break", "life", "achievements", "stats-clean", "practice", "roadmap", "calendar", "vault", "mistakes", "grades", "lectures", "psets", "class", "toolkit", "howto"];
         if (want && okTabs.includes(want)) {
           setNav({ tab: want, opts: want === "practice" ? { start: "review" } : {}, key: 1 });
           history.replaceState(null, "", location.pathname);
@@ -12240,7 +12394,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       ["home", "Today", "home"],
       ["break", "Break Corner", "home"],
       ["achievements", "Academic Progress", "grade"],
-      ["stats-clean", "Study-time reset", "grade"],
+      ["stats-clean", "Study-time audit", "grade"],
       ["curriculum", "Curriculum", "book"],
       ["practice", "Practice", "bolt", reviewCount],
       ["roadmap", "Roadmap", "roadmap"],
@@ -12253,14 +12407,14 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       ["class", "Class", "subjects", (subject.tasks || []).filter((t) => !t.done && t.due && daysUntil(t.due) <= 3).length],
       ["ask", "Ask", "ask"],
       ["toolkit", "Study Toolkit", "book"],
-      ["life", "Study Life", "look"], ["joy", "My Study Space", "look"], ["personalize", "Personalization Corner", "look"], ["howto", "How-To Corner", "book"]
+      ["life", "Study Life", "look"], ["personalize", "Personalization Corner", "look"], ["howto", "How-To Corner", "book"]
     ];
     const navGroups = [
-      {name:"Home", items:["home","break","life","joy","curriculum","howto","personalize"]},
-      {name:"Learn", items:["roadmap","lectures","vault","toolkit"]},
-      {name:"Practice", items:["practice","psets","ask"]},
-      {name:"Progress", items:["achievements","mistakes","grades","stats-clean"]},
-      {name:"Plan & organize", items:["calendar","class"]}
+      {name:"Study", items:["home","vault","psets","lectures","practice"]},
+      {name:"Tools", items:["toolkit","roadmap","ask","curriculum","howto"]},
+      {name:"Progress", items:["stats-clean","mistakes","grades","achievements"]},
+      {name:"Plan", items:["calendar","class"]},
+      {name:"Your space", items:["life","break","personalize"]}
     ];
     const filteredNavGroups = navGroups.map(group=>({
       ...group,
@@ -12289,21 +12443,8 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     return /* @__PURE__ */ React.createElement("div", { className: "shell" }, /* @__PURE__ */ React.createElement("aside", { className: "rail", "aria-label": "Main" }, /* @__PURE__ */ React.createElement("div", { className: "brand" }, /* @__PURE__ */ React.createElement("span", { className: "brand-mark", "aria-hidden": "true" }, "Σ"), /* @__PURE__ */ React.createElement("span", null, "BSA Study Desk")), /* @__PURE__ */ React.createElement("div", { className: "rail-subject" }, /* @__PURE__ */ React.createElement("span", { className: "rail-label" }, "Subject"), subjectPicker("subj"), /* @__PURE__ */ React.createElement("button", { className: "link-btn", onClick: () => setModal("subjects") }, "+ Add new subject")), h("div",{className:"rail-nav-wrap"},h("label",{className:"nav-search-label",htmlFor:"desk-nav-search"},"Find a tool"),h("input",{id:"desk-nav-search",className:"nav-search",type:"search",placeholder:"Search tools…",value:navSearch,onChange:e=>setNavSearch(e.target.value),"aria-label":"Search dashboard tools"}),h("nav",{className:"rail-nav","aria-label":"Study Desk sections"},filteredNavGroups.map(group=>h("section",{className:"nav-group",key:group.name},h("button",{className:"nav-group-heading",type:"button","aria-expanded":navSearch?true:!collapsedNav[group.name],onClick:()=>setCollapsedNav(prev=>({...prev,[group.name]:!prev[group.name]}))},h("span",null,group.name),h("span",{className:"nav-chevron","aria-hidden":"true"},navSearch||!collapsedNav[group.name]?"⌄":"›")),(navSearch||!collapsedNav[group.name])?h("div",{className:"nav-group-links"},group.tabs.map(([k,l,ic,n])=>h("button",{key:k,className:nav.tab===k?"on":"","aria-current":nav.tab===k?"page":undefined,onClick:()=>go(k)},h(Icon,{name:ic}),h("span",null,l),n?h("span",{className:"n"},n):null))):null)))), /* @__PURE__ */ React.createElement("div", { className: "rail-tools" }, /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("data") }, /* @__PURE__ */ React.createElement(Icon, { name: "data", size: 18 }), " Import & export"), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("look") }, /* @__PURE__ */ React.createElement(Icon, { name: "look", size: 18 }), " Appearance"), /* @__PURE__ */ React.createElement(ThemeDots, { settings: data.settings, setSettings })), React.createElement(SyncBadge, { onOpen: openSync })), /* @__PURE__ */ React.createElement("header", { className: "mobilebar" }, /* @__PURE__ */ React.createElement("span", { className: "brand-mark", "aria-hidden": "true" }, "Σ"), subjectPicker("subj-m"), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal(syncAlert ? "sync" : "data"), "aria-label": syncAlert ? "Import, export and sync (needs attention)" : "Import and export", "data-sync": syncAlert }, /* @__PURE__ */ React.createElement(Icon, { name: "data" })), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal("look"), "aria-label": "Appearance" }, /* @__PURE__ */ React.createElement(Icon, { name: "look" }))), /* @__PURE__ */ React.createElement("main", { className: "content" },
       h("div",{className:"workspace-topbar"},
         h("div",{className:"workspace-context"},h("span",{className:"workspace-eyebrow"},"STUDY DESK"),h("strong",null,(tabs.find(t=>t[0]===nav.tab)||[null,"Today"])[1]),h("span",{className:"workspace-subject"},subject.code||subject.name)),
-        h("div",{className:"workspace-actions"},h("button",{className:"btn ghost",onClick:()=>setModal("quick")},"Add material"),h("button",{className:"btn primary",onClick:()=>go("ask")},"Ask tutor"))),
-      nav.tab==="home"&&h("section",{className:"home-redesign","aria-label":"Study dashboard"},
-        h("div",{className:"home-welcome"},
-          h("div",{className:"home-welcome-copy"},h("span",{className:"home-kicker"},"YOUR WORKSPACE"),h("h1",null,"Let's study today."),h("p",null,"Review, practice, and build mastery — one step at a time.")),
-          h("span",{className:"home-today"},new Date().toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric",year:"numeric"}))),
-        h("button",{className:"home-academic-link",onClick:()=>go("achievements")},h("span",null,"ACADEMIC PROGRESS"),h("strong",null,progressRank(progressTotal(readProgress()))[0]+" · "+progressTotal(readProgress())+" XP"),h("span",null,"View achievements →")),
-        h("div",{className:"home-section-heading"},h("div",null,h("h2",null,"Study Hub"),h("p",null,"Your core study materials, all in one place."))),
-        h("div",{className:"home-study-grid"},[
-          ["vault","Flashcards","Review key concepts","cards"],
-          ["psets","Problem Sets","Practice accounting problems","pset"],
-          ["lectures","Lectures","Read and review lessons","lecture"],
-          ["toolkit","Study Toolkit","Calculators and study tools","book"]
-        ].map(([key,label,desc,ico])=>h("button",{key,className:"home-study-card",onClick:()=>go(key)},h(Icon,{name:ico,size:24}),h("strong",null,label),h("span",null,desc),h("span",{className:"home-card-arrow","aria-hidden":"true"},"→")))),
-        h("div",{className:"home-shortcuts"},h("div",null,h("strong",null,"Quick actions"),h("p",null,"Get back to your work.")),h("div",{className:"home-shortcut-buttons"},h("button",{onClick:()=>go("practice")},"Practice"),h("button",{onClick:()=>go("calendar")},"Calendar"),h("button",{onClick:()=>go("break")},"Take a break"),h("button",{onClick:()=>go("achievements")},"Academic rank")))),
-      nav.tab === "break" && h(BreakCorner), nav.tab === "joy" && h(JoyHub,{go}), nav.tab === "life" && h(StudyLife), nav.tab === "achievements" && h(AcademicProgress,{go}), nav.tab === "stats-clean" && h(StatsFreshStart,{data,update,toast}), nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), nav.tab === "home" && /* @__PURE__ */ React.createElement(HomeView, { ...viewProps }), nav.tab === "practice" && h(PracticeView, { ...viewProps, data }), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(CalendarView, { ...viewProps }), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(PsView, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })), /* @__PURE__ */ React.createElement("nav", { className: "bottom-nav", "aria-label": "Sections" }, tabs.filter(x=>["home","practice","roadmap"].includes(x[0])).map(([k, l, ic]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), /* @__PURE__ */ React.createElement("span", null, l))), /* @__PURE__ */ React.createElement("button", { className: "fab", onClick: () => setModal("quick"), "aria-label": "Quick add" }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 24 })), [tabs.find(x=>x[0]==="life"), tabs.find(x=>x[0]==="mistakes")].map(([k, l, ic, n]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement("span", { className: "ico-wrap" }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), k === "mistakes" && n ? /* @__PURE__ */ React.createElement("span", { className: "badge" }, n) : null), /* @__PURE__ */ React.createElement("span", null, k === "life" ? "Study Life" : "Mistakes"))), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("more") }, /* @__PURE__ */ React.createElement(Icon, { name: "more" }), /* @__PURE__ */ React.createElement("span", null, "More"))), /* @__PURE__ */ React.createElement("div", { className: `toast${msg ? " show" : ""}`, role: "status", "aria-live": "polite" }, msg), h(FocusBar, { data, update, toast }), modal === "quick" && /* @__PURE__ */ React.createElement(QuickAdd, { onClose: () => setModal(null), onPick: (k) => {
+        h("div",{className:"workspace-actions"},h("button",{className:"btn ghost",onClick:()=>setModal("quick")},"Quick add"),h("button",{className:"btn primary",onClick:()=>go("ask")},"Ask tutor"))),
+      nav.tab === "break" && h(BreakCorner), nav.tab === "joy" && h(JoyHub,{go}), nav.tab === "life" && h(StudyLife), nav.tab === "achievements" && h(AcademicProgress,{go}), nav.tab === "stats-clean" && h(StatsFreshStart,{data,update,toast}), nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), nav.tab === "home" && /* @__PURE__ */ React.createElement(HomeView, { ...viewProps }), nav.tab === "practice" && h(PracticeView, { ...viewProps, data }), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(CalendarView, { ...viewProps }), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(PsView, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })), /* @__PURE__ */ React.createElement("nav", { className: "bottom-nav", "aria-label": "Sections" }, tabs.filter(x=>["home","practice","roadmap"].includes(x[0])).map(([k, l, ic]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), /* @__PURE__ */ React.createElement("span", null, l))), /* @__PURE__ */ React.createElement("button", { className: "fab", onClick: () => setModal("quick"), "aria-label": "Quick add" }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 24 })), [tabs.find(x=>x[0]==="calendar"), tabs.find(x=>x[0]==="mistakes")].map(([k, l, ic, n]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement("span", { className: "ico-wrap" }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), k === "mistakes" && n ? /* @__PURE__ */ React.createElement("span", { className: "badge" }, n) : null), /* @__PURE__ */ React.createElement("span", null, k === "calendar" ? "Calendar" : "Mistakes"))), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("more") }, /* @__PURE__ */ React.createElement(Icon, { name: "more" }), /* @__PURE__ */ React.createElement("span", null, "More"))), /* @__PURE__ */ React.createElement("div", { className: `toast${msg ? " show" : ""}`, role: "status", "aria-live": "polite" }, msg), h(FocusBar, { data, update, toast }), modal === "quick" && /* @__PURE__ */ React.createElement(QuickAdd, { onClose: () => setModal(null), onPick: (k) => {
       if (k === "grade") {
         setModal(null);
         go("grades", { gtab: "scores" });
@@ -12395,7 +12536,33 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       }
     }));
   }
-  ReactDOM.createRoot(document.getElementById("root")).render(/* @__PURE__ */ React.createElement(App, null));
+  function bsaDownloadSafeDiagnostics(error) {
+    try {
+      const keys=bsaBackupKeys();
+      const report={app:'BSA Study Desk',build:'v105',time:new Date().toISOString(),
+        page:location.pathname,online:navigator.onLine,
+        userAgent:navigator.userAgent,
+        studyStorageKeyCount:keys.length,
+        mainDashboardRecordPresent:localStorage.getItem(STORE_KEY)!==null,
+        academicProgressRecordPresent:localStorage.getItem(PROGRESS_KEY)!==null,
+        error:String(error&&error.message||'Unknown display error').slice(0,600)};
+      const u=URL.createObjectURL(new Blob([JSON.stringify(report,null,2)],{type:'application/json'}));
+      const a=document.createElement('a');a.href=u;a.download='BSA-Desk-Diagnostics-v105.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),5000);
+    } catch(e){alert('Diagnostic export unavailable: '+String(e.message||e))}
+  }
+  class DashboardBoundary extends React.Component {
+    constructor(props){super(props);this.state={error:null}}
+    static getDerivedStateFromError(error){return {error}}
+    componentDidCatch(error,info){console.error('BSA Study Desk render failed',error,info)}
+    render(){if(!this.state.error)return this.props.children;return React.createElement('div',{className:'dashboard-recovery',role:'alert'},
+      React.createElement('h1',null,'Study Desk encountered a display error'),
+      React.createElement('p',null,'Your saved study data has not been cleared. You can download a full backup before troubleshooting.'),
+      React.createElement('button',{className:'btn primary',onClick:()=>bsaDownloadUnifiedBackup(msg=>alert(msg))},'Download study-data backup'),
+      React.createElement('button',{className:'btn',onClick:()=>location.reload()},'Reload dashboard'),
+      React.createElement('button',{className:'btn',onClick:()=>bsaDownloadSafeDiagnostics(this.state.error)},'Download safe error report'),
+      React.createElement('details',null,React.createElement('summary',null,'Technical details'),React.createElement('pre',null,String(this.state.error&&this.state.error.message||'Unknown render error'))));}
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(DashboardBoundary,null,React.createElement(App,null)));
   if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
     window.addEventListener("load", () => {
       navigator.serviceWorker.register("./sw.js").catch(() => {

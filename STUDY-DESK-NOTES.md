@@ -95,46 +95,96 @@ Still pending: verified XP rewards for flashcards, quizzes, and problem sets; fu
 - Academic data, XP, coins, pet records and study-time logic are unchanged.
 - JavaScript syntax checked; not device/browser tested.
 
-## v100 — Ear piercings and accessories
-- Added silver hoop ear piercings to all four pixel avatar poses.
-- Six new purchasable accessories in Cozy Market, with avatar selection and simple visual overlays.
-- Existing study progress and purchases preserved; no live device testing.
+## v100 — Academic dashboard stability and workflow repair
+- Removed duplicate decorative Home dashboard layer; retained original subject-aware HomeView.
+- Added four immediate academic action cards to Home (flashcards, problem sets, lectures, accounting toolkit).
+- Reorganized sidebar sections: Study Life/Break Corner under Personal, garden and quests accessible via Study Life. No saved tabs or data deleted.
+- Fixed misleading Home 'full backup' action to invoke unified study-data export. Added explicit complete backup button and scope warning to Import & Export.
+- Wrapped the main application in a recoverable React error boundary with a backup download action; added an explanatory fallback when React CDN files fail to load.
+- Updated offline service-worker cache version to v100 and prevented deletion of unrelated site caches.
+- Study-time audit remains non-destructive. Earlier totals cannot be retroactively verified; no study minutes, XP or grades were edited.
+- Based on the latest available v99 source; retained avatar sprite assets.
+- Passed Node JavaScript parsing and ZIP integrity. NOT verified in a browser or on iPad; no claims of runtime correctness.
 
-## v101 — App-style interface polish
-- Modernized buttons, controls, focus states, spacing, cards, market, inventory, pets, and town.
-- Improved phone layout for Study Life cards and horizontally scrolling tab chips.
-- Purely visual CSS changes: no data migration, XP, coins, handwriting, or study-time logic changes.
-- JavaScript syntax checked; no live device/browser test performed.
+## v101 — Academic Stabilization and Audit
+- Removed redundant My Study Space rail entry; original Study Life tab still links to garden and quests. Stored data remains untouched.
+- Home includes a priority recommendation selected from unresolved mistakes, due reviews, unfinished lectures, and practice sets.
+- Unified backup now excludes visitor-only shared notes and accepts legacy plain-text study keys, while validating core JSON records before restoring. A failed write triggers rollback of touched keys.
+- Time audit now reports saved daily minutes versus completed session minutes; differences can legitimately come from Pomodoro rounds or manual records. Historical minutes are never rewritten automatically.
+- XP and derived coin totals ignore negative/non-finite legacy records without altering history.
+- Small-screen layout fixes for review panels, tables, and responsive touch canvases; reduced-motion styling.
+- Updated service-worker cache version to v101, with application scope isolation.
+- No changes to academic scores, saved time, subjects, pet status, unlocked items or purchase history.
+- Real-browser smoke tests recorded separately. iPad/Apple Pencil hardware testing is not possible here; browser emulation is not equivalent.
 
-## v102 — Phone navigation, avatar assets, and destination scenes
-- Dedicated Study Life shortcut in mobile bottom navigation; Calendar remains in More.
-- Study Life and Calendar shortcuts in More menu.
-- Avatar sprite URLs versioned to avoid old cached assets; visible missing-file warning instead of silent fallback.
-- Updated service worker cache version and pre-cached all four avatar sprites.
-- Study Town Visit opens distinct destination scene and hides town cards until Back to town.
-- Room offers an Explore Study Town shortcut.
-- No academic records or Study Life data reset. Syntax checked, not device tested.
+- Read-only publisher snapshot now strips private flashcard recall ratings, lecture completion, problem attempts, their review timestamps, and mistake-derived personal answer notes. Shared localStorage isolation now fails closed.
+- Browser-test limitation: Chromium launches, but both local HTTP and file navigation are blocked by this execution environment (`ERR_BLOCKED_BY_ADMINISTRATOR`). This release does NOT claim end-to-end browser or iPad validation.
+- Follow-up security fix: Unified backup explicitly excludes GitHub sync credential keys (`bsa_gh_*`) and sync metadata (`bsa_sync_*`); verified in Node unit tests. See QA-REPORT.md.
 
-## v103 — Stability repair
-- Unified ink action undo/redo history for raster checkpoints and vector shape edits. Histories reset when switching pages.
-- Per-pet feeding timestamps, names, and care state; switching pets no longer resets the feeding clock. Migrates the current active pet's existing timestamp without deleting old records.
-- Avatar assets now use v103 URLs to reduce stale-image caching.
-- Offline cache version bumped; service worker only removes caches belonging to Study Desk, not other applications.
-- Study Town instructions clarified.
-- JavaScript syntax checked and ZIP integrity verified; no live browser/iPad/phone tests.
-- Known limitations: appearance customization still does not recolor sprite PNGs; Study Town remains scene-based, not a walkable world; handwritten canvas gesture behavior needs real-device testing.
+## v102 — Reliability follow-up
+- Home: Study Life companion widget now renders consistently on both populated and blank-subject Home paths.
+- The subject-transfer JSON no longer includes global settings, XP ledger, coins or Study Life; it may still contain sensitive subject-level notes, grades and attempts, so keep it private. Complete backup still captures all eligible study-data keys.
+- Unified restore now validates XP event structure, disallows negative XP, and rejects malformed Study Life spend/inventory fields before writing data.
+- Progress display ignores malformed events without modifying the saved ledger; coins remain derived from eligible XP, not games.
+- Updated deep-link allowlist to include Study Life and Academic Achievements.
+- Service-worker caches now use the repository URL scope in the cache name. New releases remove caches in the same scope family only; historical cache names are intentionally not purged across repositories.
+- No historical recorded study minutes or grades were changed.
+- Code and representative malformed-progress checks passed; no live browser/iPad validation possible here.
 
-## v104 — Working avatar controls
-- Replaced fixed `<img>` sprite rendering with a canvas that loads the four existing original avatar PNG files and applies appearance changes directly on the artwork.
-- Skin tone, hair color and shirt color change through recoloring; hairstyle choices apply simple silhouette variants. Pose buttons still select original sprites.
-- Existing accessories remain supported as overlays, including the cap.
-- The changes appear in Avatar, Study Room, Study Town and the Home Study Life widget, all using the same PixelScholar component.
-- Avatar choices continue to save in the existing `bsa-study-life-v1` data. No data reset or migration.
-- The hairstyle silhouettes are simplified and recoloring may affect neighboring pixels; not equivalent to fully hand-drawn alternate sprites.
-- Updated service-worker cache version to v104. Full browser/device verification not performed.
+## v103 — Data protection and diagnostics
+- Excludes ALL shared-publisher local keys from complete personal study backups.
+- Prevents a successful-looking unified backup when the main document is missing or malformed.
+- Validates restored subjects before modifying any storage.
+- Adds a minimal, privacy-aware crash diagnostic export with app version, key counts and error message; no study notes, passwords, or GitHub credentials.
+- Avoids non-finite minute totals in the study-time audit.
+- Bumps offline cache version.
+- NOTE: No live device testing or account-sync integration testing; verification report included.
 
-## v105 — Study Town standalone launcher
-- Adds a Study Town game launcher to the existing Study Life page.
-- Opens the separate GitHub Pages repository at /study-town/.
-- No academic data, coin economy, handwriting or subject logic modified.
-- The separate game uses its own Town Tickets and local save.
+## v104 — Backup integrity follow-up
+- Backup key filter no longer indiscriminately excludes all study-session keys. Auth/login session keys remain excluded.
+- Complete backup validates main subjects, rejects duplicate subject IDs and malformed major academic collections.
+- Backup JSON now includes a summary of subjects, flashcards, problem sets, lectures and session records.
+- Restore requires a main dashboard record and shows a content preview before confirmation.
+- No academic record is reset or modified by this release.
+- Live browser, GitHub sync and hardware interaction tests still require the actual environment.
+
+## v105 — Legacy Import Safety and Honest Storage Meter
+- Complete unified backups are explicitly rejected by the older subject import screen; the user is directed to Study Toolkit → Restore all study data.
+- The old subject backup Replace path validates subject IDs and optional XP/Study Life payloads before replacing subjects, and attempts to roll back optional localStorage writes on failure.
+- Separated optional progress and room records from the main imported dashboard state. Existing optional records remain unchanged when not present in the import.
+- Added a non-destructive “Check backup contents” control to Import & Export.
+- Storage meter estimates all eligible study-data localStorage keys, not just the main dashboard; wording no longer claims every browser has a fixed 5 MB quota.
+- Updated diagnostics release label and service worker version.
+- Live browser/device and real-record restore tests remain pending.
+
+## v106 — Consolidated Dashboard & Study Life workflows
+- Consolidated subject-level Academic Overview on Home with due reviews, unresolved mistakes, assessed topic count and observed problem-set accuracy.
+- Uses the existing smartTopicStats and learningNextAction ranking to list prioritized weak topics and deep-link to topic Roadmap records.
+- Adds a confirmed batch action to turn unresolved mistakes into flashcards; deduplicates by normalized question, keeps mistake history and avoids overwriting grades.
+- Added persistent Home presentation preferences (compact layout, show/hide Study Life, show/hide topic insights) in a separate localStorage key.
+- Improves mistake-log guidance with a count of matching existing flashcards.
+- In Study Life, added non-rewarding pet activities (pet, play, rest) and a left/center/right furniture layout option saved alongside the room state.
+- Adds responsive/touch-friendly presentation rules without rewriting existing handwriting or timing data.
+- No data migrations or resets. Existing academic progress, study sessions, pets and inventory remain stored in their previous keys.
+- These changes complete the actionable dashboard workflow set from the agreed development list in one package. Advanced sprite recoloring, fully walkable town, and externally scheduled seasonal events were not implemented as fully functioning simulations; those are separate, larger product features, not represented as repaired.
+- Syntax checked and static markers verified. Live GitHub, cross-browser, iPad and Apple Pencil tests were not performed; no claim of end-to-end verification.
+
+
+## v107 — Consolidated Study Life completion and UI polish
+- Avatar: real CSS-based pixel avatar responds to skin tone, hair color, hairstyle, outfit and owned accessories (with walking/back/happy previews); original PNG assets retained.
+- Study Town: walkable/tappable 5×5 town map with directional controls, unlocked location entry, persistent avatar position.
+- Room: lamp and plant position selectors; persisted placement; existing desk placement and equipment retained.
+- Seasonal events: calendar-season-specific claim button and persistent collectible claims, using existing academic coin thresholds. No remote scheduling or real-money rewards.
+- Inventory: displays collected seasonal keepsakes.
+- UI: larger touch targets, focus indicators, mobile town layout, reduced-motion handling.
+- Academic XP, study-time data, coin balances, purchases, pet feeding and data keys preserved unchanged.
+- These are local app features, not a networked multiplayer or 3D animated world.
+
+## v108 — Visual Makeover
+- Redesigned desktop and responsive visual hierarchy: lavender/mint accents, card styling, balanced white space, and cleaner typography.
+- Reorganized sidebar under Study, Tools, Progress, Plan, and Your Space without removing routes.
+- Home now pairs academic priorities with a compact Study Life summary.
+- Simplified four academic quick-action tiles, toned down overly dense panels, and collapsed detailed topic insights until requested.
+- Existing themes remain selectable. Updated light/lavender skin styling only.
+- No changes to saved study data, XP, time, coins, pet status, or backups.
+- JavaScript syntax checks only; browser and device rendering not verified.
