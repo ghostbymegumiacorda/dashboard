@@ -2194,6 +2194,22 @@ body{background:var(--bg)!important;}
 }
 @media(max-width:520px){.bsa-v108-top-grid>.life-home-widget{padding:15px!important;}}
 </style>
+<style id="bsa-v128-ipad-safe-area">
+/* iPad Home Screen PWA: let the dashboard paint into the bottom inset,
+   while keeping interactive content above the home indicator. */
+@supports (padding: env(safe-area-inset-bottom)) {
+  html, body, #root { background:var(--bg)!important; }
+  .shell { background:var(--bg)!important; }
+  .shell > .rail { padding-bottom:calc(13px + env(safe-area-inset-bottom,0px))!important; }
+  .shell > .content { padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))!important; }
+  @media (max-width:899px) {
+    .shell > .content { padding-bottom:calc(85px + env(safe-area-inset-bottom,0px))!important; }
+  }
+}
+/* On iPadOS the viewport can exclude the system gesture strip.
+   Match the strip's background to the app without changing scroll heights. */
+html { background:var(--bg)!important; }
+</style>
 </head>
 <body>
 <div id="root"><p class="boot">Opening your study desk… If this doesn’t load, connect to the internet once so the app can save itself for offline use.</p></div>
