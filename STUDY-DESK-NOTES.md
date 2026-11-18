@@ -105,3 +105,30 @@ Still pending: verified XP rewards for flashcards, quizzes, and problem sets; fu
 - Improved phone layout for Study Life cards and horizontally scrolling tab chips.
 - Purely visual CSS changes: no data migration, XP, coins, handwriting, or study-time logic changes.
 - JavaScript syntax checked; no live device/browser test performed.
+
+## v102 — Phone navigation, avatar assets, and destination scenes
+- Dedicated Study Life shortcut in mobile bottom navigation; Calendar remains in More.
+- Study Life and Calendar shortcuts in More menu.
+- Avatar sprite URLs versioned to avoid old cached assets; visible missing-file warning instead of silent fallback.
+- Updated service worker cache version and pre-cached all four avatar sprites.
+- Study Town Visit opens distinct destination scene and hides town cards until Back to town.
+- Room offers an Explore Study Town shortcut.
+- No academic records or Study Life data reset. Syntax checked, not device tested.
+
+## v103 — Stability repair
+- Unified ink action undo/redo history for raster checkpoints and vector shape edits. Histories reset when switching pages.
+- Per-pet feeding timestamps, names, and care state; switching pets no longer resets the feeding clock. Migrates the current active pet's existing timestamp without deleting old records.
+- Avatar assets now use v103 URLs to reduce stale-image caching.
+- Offline cache version bumped; service worker only removes caches belonging to Study Desk, not other applications.
+- Study Town instructions clarified.
+- JavaScript syntax checked and ZIP integrity verified; no live browser/iPad/phone tests.
+- Known limitations: appearance customization still does not recolor sprite PNGs; Study Town remains scene-based, not a walkable world; handwritten canvas gesture behavior needs real-device testing.
+
+## v104 — Working avatar controls
+- Replaced fixed `<img>` sprite rendering with a canvas that loads the four existing original avatar PNG files and applies appearance changes directly on the artwork.
+- Skin tone, hair color and shirt color change through recoloring; hairstyle choices apply simple silhouette variants. Pose buttons still select original sprites.
+- Existing accessories remain supported as overlays, including the cap.
+- The changes appear in Avatar, Study Room, Study Town and the Home Study Life widget, all using the same PixelScholar component.
+- Avatar choices continue to save in the existing `bsa-study-life-v1` data. No data reset or migration.
+- The hairstyle silhouettes are simplified and recoloring may affect neighboring pixels; not equivalent to fully hand-drawn alternate sprites.
+- Updated service-worker cache version to v104. Full browser/device verification not performed.

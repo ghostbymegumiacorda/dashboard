@@ -2,9 +2,9 @@
    Keeps a copy of the app on each device so it opens without internet.
    Your study data is NOT stored here; it lives in the browser's storage and in your GitHub data repo.
    If you change this file later, bump VERSION so every device picks up the new copy. */
-const VERSION = "study-desk-v65-pen-slider-dashboard-guide";
+const VERSION = "study-desk-v104-avatar-customizer";
 const SCOPE = self.registration.scope;               // e.g. https://you.github.io/bsa-dashboard/
-const SHELL = ["index.html", "manifest.json", "icon-192.png", "icon-512.png", "icon-maskable-512.png", "apple-touch-icon.png", "favicon.png"];
+const SHELL = ["index.html", "manifest.json", "icon-192.png", "icon-512.png", "icon-maskable-512.png", "apple-touch-icon.png", "favicon.png", "avatar-front.png", "avatar-walk.png", "avatar-back.png", "avatar-happy.png"];
 const CDN = [
   "https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js",
   "https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"
@@ -29,7 +29,7 @@ self.addEventListener("install", (event) => {
 
 self.addEventListener("activate", (event) => {
   event.waitUntil((async () => {
-    for (const key of await caches.keys()) if (key !== VERSION) await caches.delete(key);
+    for (const key of await caches.keys()) if (key.startsWith("study-desk-") && key !== VERSION) await caches.delete(key);
     await self.clients.claim();
   })());
 });
