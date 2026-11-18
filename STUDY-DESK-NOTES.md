@@ -77,3 +77,31 @@ Still pending: verified XP rewards for flashcards, quizzes, and problem sets; fu
 - Fix Home render crash in v96: declare `lifeWidget` before rendering it.
 - Does not reset or migrate any user data.
 - JavaScript syntax checked; no live browser test performed.
+
+## v98 Mobile, handwriting and Study Life repairs
+- Mobile feature tabs scroll horizontally instead of clipping. Sidebar navigation scrolls on smaller screens.
+- Handwriting defaults to direct finger/stylus drawing; two-finger pinch and movement operate without a pan toggle.
+- Handwriting undo/redo buttons now cover vector strokes and raster history (vector history takes precedence); separate shape undo buttons removed.
+- Notebook toolbar and paper layout visually refined.
+- Replaced Study Life's emoji human avatar with a lightweight customizable CSS pixel student.
+- Study Town locations now open their own simple illustrated scene with return navigation rather than only a toast.
+- No academic records, XP, or study time intentionally changed. No live mobile or Apple Pencil verification; export backups before deploying.
+
+## v99 — Illustrated pixel-art avatar update
+- Replaced CSS block avatar with four original illustrated pixel-art sprites (front, walking, back, happy), inspired by the user-provided style reference.
+- Added pose picker to avatar preview and sprite integration in Study Room and Home widget.
+- Existing avatar appearance settings remain stored but do not recolor the fixed illustrated sprites yet.
+- New PNG assets must be uploaded beside index.html.
+- Academic data, XP, coins, pet records and study-time logic are unchanged.
+- JavaScript syntax checked; not device/browser tested.
+
+## v100 — Ear piercings and accessories
+- Added silver hoop ear piercings to all four pixel avatar poses.
+- Six new purchasable accessories in Cozy Market, with avatar selection and simple visual overlays.
+- Existing study progress and purchases preserved; no live device testing.
+
+## v101 — App-style interface polish
+- Modernized buttons, controls, focus states, spacing, cards, market, inventory, pets, and town.
+- Improved phone layout for Study Life cards and horizontally scrolling tab chips.
+- Purely visual CSS changes: no data migration, XP, coins, handwriting, or study-time logic changes.
+- JavaScript syntax checked; no live device/browser test performed.
