@@ -9367,7 +9367,7 @@ ${c.kindHint}` }
        1. The key must come from aistudio.google.com/apikey. Google AI Plus and
           Google One are subscriptions to the Gemini APP, not to this API.
        2. A key with an HTTP referrer or IP restriction returns 403 from a browser.
-          Leave it unrestricted; it never leaves this device.
+          Treat browser API keys as exposed credentials; prefer a restricted key or secure proxy.
        3. Model names are retired and renamed constantly. Nothing here hardcodes one:
           we ask the key which models it can actually run, and remember the choice.
        4. Newer models stream internal reasoning parts marked `thought`. Those must
@@ -9386,10 +9386,11 @@ ${c.kindHint}` }
     const m = (j.error && j.error.message) || resp.statusText || "";
     if (resp.status === 400 && /api[_ ]?key|API_KEY/i.test(m)) return new Error("Google didn’t accept that key. Make sure it came from aistudio.google.com/apikey and was pasted whole, with no spaces.");
     if (resp.status === 400) return new Error("Google rejected the request: " + m);
-    if (resp.status === 401 || resp.status === 403) return new Error("Google refused the key (" + resp.status + "). Two usual causes: the key has a website or IP restriction on it (remove the restriction), or the Generative Language API isn’t enabled on that project. " + m);
+    if (resp.status === 401 || resp.status === 403) return new Error("Google refused the key (" + resp.status + "). Possible causes include key restrictions, missing API permissions, or a disabled Generative Language API. Check the project configuration rather than removing restrictions blindly. " + m);
     if (resp.status === 404) return new Error("That model isn’t available to this key any more. Tap Change model and pick another from the list.");
     if (resp.status === 429) return new Error("You’ve hit Google’s rate limit for now. Wait a minute, or switch to a Flash model, which has a much higher free allowance.");
-    if (resp.status >= 500) return new Error("Google’s servers had a problem. Try again in a moment.");
+    if (resp.status === 503) return new Error("Gemini is temporarily unavailable (HTTP 503). The app retried automatically. Google says this usually means server overload. Try another available model or wait and retry. " + m);
+    if (resp.status >= 500) return new Error("Gemini server error (HTTP " + resp.status + "): " + m);
     return new Error("Gemini error " + resp.status + ": " + m);
   }
   function gemNetErr(e) {
@@ -9432,10 +9433,30 @@ ${c.kindHint}` }
     };
     const url = GEM.base + "/models/" + encodeURIComponent(model) + ":streamGenerateContent?alt=sse&key=" + encodeURIComponent(key);
     let resp;
-    try {
-      resp = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal });
-    } catch (e) { throw gemNetErr(e); }
-    if (!resp.ok) throw await gemErr(resp);
+    // A 503 is server overload, not an invalid key. Retry only transient failures,
+    // with bounded exponential backoff; never retry aborted requests.
+    for (let attempt = 0; attempt < 3; attempt++) {
+      if (signal && signal.aborted) throw new DOMException("Aborted", "AbortError");
+      try {
+        resp = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal });
+      } catch (e) {
+        if (e && e.name === "AbortError") throw e;
+        if (attempt === 2) throw gemNetErr(e);
+        resp = null;
+      }
+      if (resp && resp.ok) break;
+      if (resp && ![408, 429, 500, 502, 503, 504].includes(resp.status)) throw await gemErr(resp);
+      if (attempt === 2) {
+        if (resp) throw await gemErr(resp);
+        throw new Error("Network connection failed after retries.");
+      }
+      const delay = Math.min(6000, 1000 * Math.pow(2, attempt)) + Math.floor(Math.random() * 350);
+      await new Promise((resolve, reject) => {
+        const timer = setTimeout(() => { if (signal) signal.removeEventListener("abort", cancel); resolve(); }, delay);
+        const cancel = () => { clearTimeout(timer); reject(new DOMException("Aborted", "AbortError")); };
+        if (signal) signal.addEventListener("abort", cancel, { once: true });
+      });
+    }
     let got = false, stopped = "";
     const eat = (chunk) => {
       for (const line of chunk.split("\n")) {
@@ -9587,7 +9608,7 @@ ${c.kindHint}` }
         h("ol", null,
           h("li", null, "Open ", h("a", { href: "https://aistudio.google.com/apikey", target: "_blank", rel: "noopener noreferrer" }, "aistudio.google.com/apikey"), " and sign in with your Google account."),
           h("li", null, "Create an API key. If it asks for a project, let it make one."),
-          h("li", null, h("strong", null, "Do not add a website or IP restriction."), " Restricted keys are refused from a browser with a 403. The key is stored on this device only and never goes to your GitHub repo."),
+          h("li", null, h("strong", null, "Protect your API key."), " This browser-based app sends the key directly to Google. Local storage is not a secure vault; for stronger protection, use a backend proxy and restrict your key where supported."),
           h("li", null, "Copy it and paste it below.")
         ),
         h(Field, { label: "API key" }, h("input", { type: "password", value: key, placeholder: "AIza…", autoComplete: "off", autoCapitalize: "none", autoCorrect: "off", spellCheck: false, onChange: (e) => { setKey(e.target.value); setModels([]); setErr(""); } })),
