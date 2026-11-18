@@ -2160,6 +2160,20 @@ html,body,#root{max-width:100%;overflow-x:clip}
 }
 @media (max-width:570px){.ai-wrap .ask-context-grid{grid-template-columns:minmax(0,1fr)!important}.ai-wrap .ask-context-grid label{overflow:visible!important}}
 </style>
+<style id="bsa-v124-ipad-bottom-fix">
+/* Keep the dashboard background continuous through the iPad Safari bottom safe area. */
+html,body,#root{background:var(--surface)!important;}
+@media (min-width:900px){
+  .shell{height:100vh!important;height:100dvh!important;min-height:100dvh!important;}
+  .shell>.rail{height:100%!important;max-height:none!important;padding-bottom:max(13px,env(safe-area-inset-bottom,0px))!important;}
+  .shell>.content{height:100%!important;min-height:0!important;padding-bottom:max(24px,env(safe-area-inset-bottom,0px))!important;}
+  .shell>.content:has(>.ai-wrap){height:100%!important;padding-bottom:0!important;}
+}
+@media (max-width:899px){
+  html,body,#root{background:var(--bg)!important;min-height:100dvh;}
+  .shell>.content{padding-bottom:calc(6rem + env(safe-area-inset-bottom,0px))!important;}
+}
+</style>
 </head>
 <body>
 <div id="root"><p class="boot">Opening your study desk… If this doesn’t load, connect to the internet once so the app can save itself for offline use.</p></div>
