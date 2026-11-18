@@ -132,3 +132,9 @@ Still pending: verified XP rewards for flashcards, quizzes, and problem sets; fu
 - Avatar choices continue to save in the existing `bsa-study-life-v1` data. No data reset or migration.
 - The hairstyle silhouettes are simplified and recoloring may affect neighboring pixels; not equivalent to fully hand-drawn alternate sprites.
 - Updated service-worker cache version to v104. Full browser/device verification not performed.
+
+## v105 — Study Town standalone launcher
+- Adds a Study Town game launcher to the existing Study Life page.
+- Opens the separate GitHub Pages repository at /study-town/.
+- No academic data, coin economy, handwriting or subject logic modified.
+- The separate game uses its own Town Tickets and local save.
