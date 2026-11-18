@@ -376,3 +376,243 @@ Added Notes (local browser storage, export Markdown and print/PDF), calculator, 
 - Retains v31 print formatting and curriculum grouping changes.
 - No new PDF export for quizzes or Concept Vault in this release.
 - Do not clear site data. Back up before deployment.
+
+## v33 — Toolkit Plus (2026-11-18)
+- Added handwriting canvas for touch, Apple Pencil, stylus, and mouse. Each subject has multiple local pages; pages can be exported as PNG or printed to PDF. Canvas is freehand, not text recognition.
+- Added a curated, searchable formula library with worked accounting examples, plus user formulas.
+- Added Classmate Publisher: select subjects and categories (lectures, cards, problem sets, typed notes), optionally include answers, then download a self-contained, static HTML handout or print it as PDF. It excludes grades, API keys, chat history, and mastery statistics. This is **not live role-based permission control**: previously distributed copies cannot be revoked.
+- Added a Toolkit-only JSON export for local notes, formulas, attempts, and handwriting pages. This is export-only; there is no automated restore/sync for those records yet.
+- Improved shared print styles and Toolkit PDF typography; printing still depends on the browser and has not been visually verified in every case.
+- Existing local storage keys and primary data were not reset.
+
+
+## v34: Print Markdown formatting
+- Render Markdown tables, bold text and lists in Classmate Publisher exports and Toolkit print views using the existing safe parser.
+- Refine table and page-break print CSS.
+- This is **not** live account-based classmate permissions; that requires an authenticated backend.
+
+
+## v35: Handwriting tools
+- Added pen/eraser, straight line, arrow, rectangle, and ellipse drawing modes.
+- Added per-page undo and redo (up to 30 recent changes); snapshots saved after each completed stroke or shape.
+- Preserved the existing `bsa_ink_v33_<subjectId>` storage key and PNG/PDF export.
+- Undo/redo history is session-only; completed page images persist locally.
+- Account-based classmate sharing remains unimplemented; Supabase/Firebase are possible external backends with usage-limited free plans.
+
+## v36 — Sharing and Study Toolkit improvements
+- Share Dashboard exports a **separate navigable read-only HTML snapshot** with a single general permission profile (selected subjects, selected material types, answers on/off). Publish that HTML to your existing GitHub Pages repository to get a shareable link. This is not authenticated access control and cannot revoke downloaded copies. Only explicitly selected content is included; review before publishing.
+- Classmate export now includes a quizzes option (where quiz question data uses the expected fields), alongside lectures, flashcards, problem sets and typed notes.
+- Handwriting adds page renaming, paper guide styles and Ctrl/Cmd+Z shortcuts in addition to existing shapes and undo/redo. Export important notes separately.
+- Toolkit adds a T-account builder using the Worksheet's account rows; it is a visual summary, not a full posting engine.
+- Printable Toolkit and handout materials use a consistent sans-serif print typeface; Markdown tables and bold are parsed through the existing Markdown renderer. Dedicated export buttons on every existing quiz and flashcard screen are not yet implemented.
+- Back up existing data before deploying. This release was syntax/ZIP checked but not browser-tested on a physical iPad.
+
+
+## v37 additions
+- Handwriting: T-account and double-line tools; page-name search and modified timestamps for newly saved pages. Existing image-backed pages remain compatible.
+- Mistake Notebook, Smart Review Queue, Exam Simulator, Accounting Practice Workspace, and Mastery Tracker are available under Study Toolkit.
+- Review records use localStorage key `bsa_retention_v37`; journal practice uses `bsa_journal_v37_<subject-id>`.
+- Exam grading uses exact text comparison, not semantic equivalence. Mastery reflects self-reported review ratings.
+- Sharing and PDF print formatting remain from v36; not all individual quiz screens have dedicated PDF export buttons.
+- Handwriting remains image-backed (not editable individual vector strokes); undo/redo applies within the current session.
+
+
+## v38 — Stability and exports
+- Exam grading normalizes case, whitespace, trailing punctuation, peso signs, commas and equivalent numeric values; paraphrases still need manual review.
+- Review Queue and Exam Simulator have dedicated printable/PDF sheets with escaped Markdown rendering and A4 layout.
+- Handwriting pages can be backed up/restored as JSON; page deletion added. Existing PNG/PDF and undo/redo retained.
+- This does NOT implement editable vector stroke history, comprehensive cross-device sync, or automatic detection of all quiz errors. These remain pending.
+
+## v39 review integration
+- Import subject flashcards into the spaced review queue without duplicating exact question text.
+- Save incorrect Exam Simulator responses as scheduled mistake-review entries.
+- Print accounting journal practice to PDF via browser print.
+- Remaining work: editable vector handwriting, comprehensive PDF buttons, automatic integration across all quiz/problem-set workflows, cross-device synchronization, and live iPad/browser testing.
+
+
+## v40 transaction journal
+- General Journal now stores individually dated, described, balanced transactions per subject in localStorage (bsa_toolkit_transactions_v40_<subjectId>).
+- Saved transactions can be edited/deleted, exported as JSON, and printed. T-account ledger summarizes saved entries only.
+- Existing v37 separate accounting practice journal remains unchanged.
+
+
+## v41 Review and printing integration
+- Smart Review Queue: import all subject flashcards, problem-set questions, and assisted/incorrect Solve & Review attempts. Duplicate questions are skipped.
+- Exam Simulator: printable blank exam, as well as existing results printout.
+- Mistake Notebook: printable corrected mistakes and CSV export.
+- General Journal printout uses a real Markdown table per dated transaction instead of pipe-delimited prose.
+- Still pending: fully editable handwriting strokes, automatic event-driven mistake capture from every legacy quiz, secure automatic cross-device sync, per-screen PDF exports, full browser/iPad regression tests.
+
+## v42
+- Handwriting notebook: print a single page or the entire subject notebook to paginated A4 PDF, including page titles and last-modified timestamps.
+- Existing v41 tools retained. Full backlog (editable vector strokes, cloud sync, comprehensive PDF coverage, real-device tests) remains incomplete.
+
+## v43 — Handwriting page organization and fullscreen
+- Searchable, sortable page sidebar (recent, oldest, name, original order), with selected page and modified timestamps.
+- Fullscreen writing mode and Escape to exit, with sidebar hide/show.
+- Existing per-page local storage, exports, tools and backups retained.
+- Canvas still stores flattened images, not editable vector strokes.
+
+
+## v44 notebook maintenance
+- Duplicate a handwriting page while preserving its current canvas snapshot.
+- Move handwriting pages up or down in original order.
+- Wait for notebook images to load before triggering multi-page printing.
+- Constrain single-page printing to A4 printable height.
+- No changes to existing localStorage keys or previous page images.
+- Outstanding: vector-editable strokes, universal quiz interception, automatic cross-device sync, and physical iPad testing.
+
+## v45 — Concept Vault PDF exports
+- Added two dedicated Concept Vault print actions for the currently filtered cards: questions-only and questions with answer key.
+- A4 layout with Markdown rendering and table support; no data migration.
+- Remaining work: editable ink objects, other per-screen exports, broader auto-mistake capture, cross-device sync, and device regression tests.
+
+
+## v46 — Lecture review queue integration
+- Smart Review Queue can import each lecture's self-check questions, skipping existing identical prompts per subject.
+- Review PDF printing prevents splitting table rows and repeats table headers on printed pages.
+- Hardened numeric journal parsing against non-finite input.
+- Local-only storage and previous features retained.
+
+## v47 automatic exam review
+- Missed answers are automatically imported into the Smart Review Queue when the exam is submitted or the timer expires. Duplicate questions are skipped.
+- Auto grading remains exact/normalized and may flag equivalent conceptual paraphrases; review them manually.
+- No change to saved notebook image format or sharing architecture.
+
+## v48 Journal portability and individual PDF exports
+- Per-transaction print/PDF action in saved General Journal entries.
+- Export journal as spreadsheet-friendly CSV with UTF-8 BOM.
+- Restore subject journal from validated JSON backup (confirmation required, no silent overwrite).
+- No new hosting service. Editable handwriting strokes and cross-device sync remain pending.
+
+
+## v49 — Unified study-data backup and restore
+
+Study Toolkit now offers **Backup all study data** and **Restore all study data**. The backup includes the dashboard subject records, handwritten pages, typed notes, review queues, journal entries, formulas, and other local `bsa_` / `bsa-` study records. It intentionally excludes dashboard settings, API keys, GitHub sync credentials, and authentication data. Restoration validates the file and requests confirmation before replacing matching local records, preserving existing dashboard settings. Keep the JSON backup private and export your current data before restoring. Cross-device use is manual export/import, not automatic synchronization.
+
+## v50 — Mock Exam PDF
+- Added dedicated questions-only and answer-key PDF printing to the Mock Exam result screen.
+- Printed answer keys include responses, correct answers, explanations and traps where available.
+- Questions-only print includes space for handwritten answers.
+- Use the browser Print dialog to save as PDF.
+
+## v51 — Problem-set PDF controls
+- Problem-set toolbar: Print filtered and Filtered answer key use the active All / Not tried / Missed / Got it filter.
+- Each problem now has PDF and PDF + key controls, printing only that problem.
+- Existing full-set print controls are unchanged.
+- No localStorage schema changes.
+
+## v52 — Toolkit PDF coverage
+- Mistake Notebook can print saved mistakes with solutions and learning points.
+- Mastery Tracker can print a subject-by-topic mastery report.
+- Both exports use the existing browser print/Save as PDF flow and do not change saved data.
+
+## v53 — Automatic computation mistake capture
+- Incorrect answers in Practice → Computation drills are saved immediately in the Mistake Notebook.
+- Saved record includes question, attempted answer, correct answer, worked steps, and topic where available.
+- Duplicate active mistakes from the same drill are suppressed.
+- Existing study data schema and prior exports remain compatible.
+
+## v54 — Filtered formula PDF
+- Formula Library now has a Print matching formulas / PDF button.
+- The PDF includes only formulas matching the current search and their available usage steps and worked examples.
+- Existing per-formula and complete-library printing remains intact.
+
+## v55 — Consolidated review and accounting safety
+- StudySession flashcards marked Again and problems marked incorrect now create deduplicated Mistake Notebook records immediately.
+- Accounting Practice Workspace validates negative/invalid amounts, missing account names, double-sided lines and debit/credit totals.
+- Balancing is explicitly described as arithmetic validation, not proof of correct classification.
+- No destructive migration of handwriting pages. Full vector editing is still pending.
+- Physical iPad testing has not been performed.
+
+## v56 — Non-destructive editable shape layer (partial)
+- Newly created line, double-line, T-account, arrow, rectangle and ellipse shapes are stored as vector objects per notebook page.
+- Select mode permits moving and deleting new shape objects after saving.
+- Legacy raster handwriting is preserved and remains non-selectable.
+- Individual page PNG and PDF exports composite the current page's vector shapes.
+- The all-pages print path composites only the currently open page's vector objects; other pages retain their saved raster snapshots. Full notebook-wide vector rendering is pending.
+- Pen strokes remain raster and cannot be individually selected.
+- Browser/iPad runtime testing remains outstanding.
+
+## v57 — Notebook shape handling fixes
+- Print all pages now composites saved vector shapes for every notebook page, not just the active page.
+- Clear page removes both raster ink and vector shapes after confirmation.
+- Select-mode drag pointer capture moved to the SVG parent to follow pointer movements.
+- Enlarge and Shrink actions resize the selected vector shape.
+- Legacy raster ink is preserved. Vector pen strokes and vector undo/redo are still pending.
+- Syntax checked; no physical iPad test.
+
+## v58 — Vector shape undo/redo
+- Added separate Undo shape and Redo shape buttons for newly created vector objects.
+- Shape edits (add, move, resize, delete) can be reversed during the current page editing session.
+- Dragging records one undo checkpoint instead of one per pointer movement.
+- Shape history resets on page or subject change; saved shapes persist.
+- Existing raster pen strokes and legacy drawings are preserved.
+- Full vector pen strokes and device runtime tests remain pending.
+
+## v59 — Consolidated handwriting upgrade
+- New pen strokes are stored as editable vector paths, not permanently flattened into raster snapshots.
+- Select/move, enlarge/shrink, delete and vector undo/redo work with newly drawn pen strokes and shapes.
+- PNG/PDF export composites raster legacy content and new vector strokes/shapes on all pages.
+- Notebook import validates vector shape arrays, preserving legacy PNG backups.
+- Print-all resets its loading placeholder before writing the final document.
+- Existing raster handwriting remains readable but not individually editable.
+- No physical iPad test; this build requires real-device validation before replacing a production copy.
+
+## v60 — Consolidated accounting checks
+- Journal editor rejects malformed, negative and >2-decimal amounts before saving.
+- Restored journal entries now require exactly one debit or credit per line and cent-precision amounts.
+- Saved transactions are audited individually; problematic transaction numbers are shown in the journal.
+- T-account ledger adds an unadjusted trial balance summary, with printable and CSV versions.
+- Trial balance is arithmetic only: no account-type inference or adjusting-entry correctness claim.
+- Browser and iPad interaction tests are still outstanding.
+
+## v61 — Accounting audit safety and reliability
+- Invalid saved transactions no longer silently contribute to the T-account ledger or trial balance.
+- The ledger explicitly states included/excluded transaction counts and warns that arithmetic balance is not classification verification.
+- Each invalid saved transaction displays a review warning.
+- Local-storage journal loading rejects non-array/corrupted saved data instead of crashing.
+- Trial balance CSV line endings corrected.
+- Static syntax and ZIP checks performed; interactive browser and physical iPad tests not performed.
+
+## v62 — Mock exam mistake deduplication
+- Repeated misses of the same question and correct answer update the existing active mistake instead of adding another identical active entry.
+- Repeat misses are counted, and the most recent wrong answer and date are retained.
+- The notebook select tool labels the deletion action clearly for new strokes and shapes.
+- Raster eraser does not erase vector objects directly; select the object and use Erase selected stroke / shape.
+- Syntax and archive checks only; browser/iPad interaction tests are still pending.
+
+## v63 — Consolidated feature release
+- Eraser removes whole editable vector objects under the pointer as well as raster ink.
+- Handwriting canvas disables touch scrolling while drawing.
+- Per-subject 10-column accounting worksheet with account rows, totals, adjusted-TB reconciliation, validation warnings, CSV and printable report.
+- Existing v62 study and mistake tracking features retained. Complete quiz-mode integration not independently audited.
+- Legacy raster handwriting remains non-editable. Physical iPad/browser runtime testing not completed.
+
+## v64 — How-To Corner and handwriting zoom
+- New searchable How-To Corner in sidebar and home quick links with navigation shortcuts.
+- Guides cover handwriting, zoom, PDFs, accounting tools, review, and backups.
+- Handwriting zoom supports 50–300%, plus/minus, reset. Zoom changes on-screen display only, not exported resolution.
+- Paper area scrolls to pan around zoomed notes.
+- Browser/iPad runtime behavior still needs testing.
+
+## v65 — Pen size slider and AI Dashboard Guide
+- Handwriting pen size is now a 1–24 px slider with live numeric value and reset.
+- Existing Gemini-powered Ask page adds Dashboard Guide mode with a fixed, versioned navigation map; the AI can answer questions about where to find features.
+- How-To Corner includes a shortcut to Ask in Dashboard Guide mode.
+- Gemini connection/API key is required; no AI service is bundled, and no private notes are sent in Dashboard Guide mode.
+- The dashboard guide cannot inspect live UI or take actions; it may be mistaken about unsupported details.
+- Syntax and ZIP integrity checked, browser/iPad behavior not physically tested.
+
+## v66 — Personalization
+- Home page now greets John Angel, including when no topics are configured.
+- Dashboard Guide AI is told the preferred name John Angel.
+- No study data was modified.
+
+## v67 — Shared Website Permission Manager
+- Share Dashboard includes permission switches for public materials, print/PDF, private browser notes, personal flashcards, and practice scratchpad.
+- Export Shared Dashboard now downloads index.html for the separate `bsa-study-desk-shared` GitHub Pages repository.
+- Open Shared Dashboard website link targets https://ghostbymegumiacorda.github.io/bsa-study-desk-shared/.
+- Switch changes require re-export and redeployment. GitHub Pages is static hosting, so switches do not remotely revoke content or synchronize.
+- Classmate notes, cards, and practice scratchpad are stored only in their own browser localStorage.
+- Shared submissions are disabled without secure authentication/backend. Public material should be reviewed before publishing.
