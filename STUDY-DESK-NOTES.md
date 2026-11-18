@@ -188,3 +188,50 @@ Still pending: verified XP rewards for flashcards, quizzes, and problem sets; fu
 - Existing themes remain selectable. Updated light/lavender skin styling only.
 - No changes to saved study data, XP, time, coins, pet status, or backups.
 - JavaScript syntax checks only; browser and device rendering not verified.
+
+
+## v109 — Avatar restoration hotfix
+- Restored the original illustrated pixel avatar art as the default appearance in Home, Study Room, Avatar preview, and Study Town.
+- Kept editable CSS character via explicit Original avatar / Custom character toggle in Study Life > Avatar.
+- Enlarged the avatar showcase in the new v108 Home card and retained existing pet status/coins.
+- Kept all existing saved avatar colors, outfits, purchases and progress; the original art is selectable without deleting customization data.
+- No localStorage migration or reset. Existing data preserved.
+- Node syntax and ZIP checks passed; browser runtime and iPad display not tested.
+
+## v110 — Spacious app-style UI makeover
+- Replaced the compact v108/v109 visual treatment with a more spacious, full-height app workspace: persistent desktop rail, independently scrolling content area, sticky app header, larger cards and touch targets.
+- Improved sidebar hierarchy, active states, subject selector, footer controls, and Home dashboard spacing.
+- Kept the original illustrated avatar sprite prominent in the Study Life Home card; included all four sprite assets.
+- Added tablet/phone layout overrides while retaining the mobile header and bottom navigation.
+- Updated PWA theme/background colors and added icon assets for install surfaces.
+- Bumped service worker cache version to v110-spacious-app-ui.
+- No academic records, XP, coins, study-time history, avatar selections, pets, or purchases intentionally modified.
+- All inline JS and service worker syntax checks passed; manifest JSON and ZIP integrity passed.
+- Live browser, GitHub Pages, installed PWA, and iPad/Apple Pencil behavior remain unverified.
+
+## v111 — Consistent application UI + print layout
+- Replaced v110's oversized, hardcoded pastel shell with a slim 224px theme-aware app rail (210px on mid-size desktops), shorter nav items, compact selector, and subtler panels. Default collapsed Plan/Your space nav groups are expandable.
+- Workspace follows selected appearance skin (`--surface`, `--bg`, `--accent`, etc.), including dark themes; no forced white cards or lavender sidebar.
+- Better alignment between the shell and original academic content; restrained Home top cards; original pixel avatar retained.
+- PDF design tokens changed from inconsistent green to a coordinated neutral/lavender document style, with consistent A4 typography and table breaks for exports using the shared print system.
+- Generic print and review-sheet windows now display browser guidance to turn off Chrome/Edge Headers and footers; browser-controlled URL/date text cannot reliably be suppressed by page CSS alone.
+- Study records, XP, timestamps, avatar assets, pets, and user appearance preferences are not migrated or modified.
+- Syntax checks and ZIP integrity checked; real-browser/iPad visual rendering not verified.
+
+
+## v112 – Print quality, Study Life retention, and targeted optimization
+- Preserves the approved v111 layout and appearance themes.
+- Adds a shared, A4 print-document style: consistent headings, tables, column wrapping, page-break safeguards, and low-ink backgrounds.
+- Updates PDF/print output from flashcards, problem sets/exams, grade reports, and study sheets; retains handwriting and accounting export paths.
+- Removes generated hyperlink URL annotations through print CSS and removes the notebook-page saved timestamp from the printed header.
+- Browser-controlled URL/title/date/time print headers/footers require unchecking **Headers and footers** in Chrome/Edge > More settings. Web page CSS cannot reliably override this browser setting.
+- Study Life route, XP/coin separation, original avatar assets, market, pets and room remain unchanged.
+- Optimizes reduced-motion handling and image sizing without rewriting study data.
+- This is not a fully tested native-PDF generator; exports still use browser Print / Save as PDF.
+
+## v113 — Restore separate Study Town launcher
+- Restored prominent standalone Study Town link on Home's Study Life card and the Study Life page.
+- Linked to the existing separately deployed GitHub Pages game: https://ghostbymegumiacorda.github.io/study-town/
+- Built-in Study Town tile map remains under Study Life → Study Town and is distinct from the separate game.
+- Game requires a separate GitHub Pages deployment; linked site availability was not verified. Its save is separate from dashboard academic progress.
+- No changes to academic XP, subjects, study time, or Study Life storage.

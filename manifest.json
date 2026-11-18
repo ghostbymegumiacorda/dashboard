@@ -18,8 +18,8 @@
     "education",
     "productivity"
   ],
-  "background_color": "#0d1320",
-  "theme_color": "#0d1320",
+  "background_color": "#f7f5fb",
+  "theme_color": "#f7f5fb",
   "share_target": {
     "action": "./",
     "method": "GET",
