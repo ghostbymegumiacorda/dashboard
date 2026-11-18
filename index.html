@@ -2133,6 +2133,33 @@ html,body,#root{max-width:100%;overflow-x:clip}
 }
 @media(prefers-reduced-motion:reduce){.ai-wrap .ai-log{scroll-behavior:auto!important}}
 </style>
+<style id="bsa-v122-ask-layout-correction">
+/* Fix source/model select collisions and use the full desktop work area. */
+@media (min-width:900px){
+ .shell>.content:has(>.ai-wrap){height:100dvh!important;min-height:0!important;padding-bottom:0!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}
+ .shell>.content:has(>.ai-wrap)>.workspace-topbar{flex:0 0 auto!important}
+ .shell>.content>.ai-wrap{flex:1 1 0!important;min-height:0!important;height:auto!important;max-height:none!important;overflow:hidden!important;width:100%!important;max-width:1480px!important;padding:10px clamp(12px,1.4vw,24px) 8px!important;gap:7px!important;box-sizing:border-box!important}
+ .shell>.content>.ai-wrap .ai-log{flex:1 1 0!important;min-height:0!important;max-height:none!important;overflow-y:auto!important}
+}
+.ai-wrap .ask-context-details{max-width:100%;min-width:0}
+.ai-wrap .ask-context-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important;align-items:end!important;min-width:0!important;width:100%!important;box-sizing:border-box!important}
+.ai-wrap .ask-context-grid label{display:flex!important;flex-direction:column!important;min-width:0!important;width:100%!important;max-width:100%!important;overflow:hidden!important;gap:6px!important}
+.ai-wrap .ask-context-grid select{display:block!important;min-width:0!important;width:100%!important;max-width:100%!important;box-sizing:border-box!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;height:40px!important;padding:0 30px 0 11px!important;line-height:40px!important;appearance:auto!important}
+.ai-wrap .ask-composer{flex:0 0 auto!important;min-height:0!important;height:auto!important;padding:7px 10px!important;margin:0!important;gap:0!important}
+.ai-wrap .ask-composer .ai-row{min-height:0!important;margin:0!important;gap:8px!important}
+.ai-wrap .ask-composer textarea{min-height:42px!important;height:42px!important;max-height:120px!important;padding:10px 12px!important;margin:0!important}
+.ai-wrap .ask-composer .ai-row .btn{height:42px!important;min-height:42px!important;align-self:center!important}
+.ai-wrap .ask-prompts-details{margin:0!important;padding:0!important;min-height:0!important}
+.ai-wrap .ask-prompts-details>summary{font-size:.72rem!important;padding:3px 4px 0!important;line-height:1.3!important}
+.ai-wrap .ask-prompts-details:not([open]){height:auto!important}
+.ai-wrap .ai-log{min-width:0!important}
+@media (min-width:900px) and (max-width:1160px){.ai-wrap .ask-context-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media (max-width:899px){
+ .ai-wrap .ask-context-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .ai-wrap .ask-composer{height:auto!important;min-height:0!important;padding-bottom:7px!important}
+}
+@media (max-width:570px){.ai-wrap .ask-context-grid{grid-template-columns:minmax(0,1fr)!important}.ai-wrap .ask-context-grid label{overflow:visible!important}}
+</style>
 </head>
 <body>
 <div id="root"><p class="boot">Opening your study desk… If this doesn’t load, connect to the internet once so the app can save itself for offline use.</p></div>
