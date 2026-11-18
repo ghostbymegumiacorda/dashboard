@@ -2021,26 +2021,52 @@ html,body,#root{max-width:100%;overflow-x:clip}
 }
 @media(prefers-reduced-motion:reduce){.ai-wrap .ai-log{scroll-behavior:auto!important}}
 </style>
-<style id="bsa-v119-ask-layout">
-/* One compact action row in the Ask header; no duplicate composer toolbar. */
-.ai-wrap .page-head{align-items:center;gap:12px}
-.ai-wrap .ask-header-actions{display:flex;align-items:center;flex-wrap:wrap;gap:5px}
-.ai-wrap .ask-header-actions .btn{padding:7px 10px;font-size:.78rem;white-space:nowrap}
-.ai-wrap .ask-more{position:relative}
-.ai-wrap .ask-more summary{cursor:pointer;list-style:none}
-.ai-wrap .ask-more summary::-webkit-details-marker{display:none}
-.ai-wrap .ask-more-menu{position:absolute;right:0;top:calc(100% + 5px);z-index:30;min-width:175px;padding:6px;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:var(--lift)}
-.ai-wrap .ask-more-menu .btn{width:100%;text-align:left}
-.ai-wrap .ai-bar{padding:9px 11px!important}
-.ai-wrap .ai-chips{margin:0 0 7px!important}
-.ai-wrap .ai-row textarea{min-height:54px;max-height:145px}
-.ai-wrap .ai-bar>p{margin-top:5px!important;font-size:.72rem}
-.ai-wrap .ai-log{padding-top:12px}
-@media(max-width:650px){
- .ai-wrap .page-head{align-items:flex-start}
- .ai-wrap .ask-header-actions{width:100%;justify-content:flex-start}
- .ai-wrap .ask-header-actions .btn{font-size:.75rem}
+<style id="bsa-v120-ask-workspace">
+/* One flexible Ask pane: minimal chrome, full-size chat. */
+@media(min-width:900px){
+ .shell>.content:has(>.ai-wrap){display:flex!important;flex-direction:column}
+ .shell>.content:has(>.ai-wrap)>.workspace-topbar{flex-shrink:0}
+ .shell>.content>.ai-wrap{height:auto!important;min-height:0!important;max-height:none!important;flex:1 1 auto!important;margin:0 auto!important;padding:12px 0 12px!important;gap:7px!important;width:100%;max-width:1220px!important;overflow:hidden!important;}
+ .shell>.content>.ai-wrap .ai-log{flex:1 1 0!important;min-height:0!important;max-height:none!important;overflow-y:auto!important;padding:8px 8px 14px!important}
+ .shell>.content>.ai-wrap .ai-bar{position:relative!important;bottom:auto!important;flex-shrink:0!important}
 }
+.ai-wrap.ask-view,.ai-wrap{--ask-min:0}
+.ai-wrap .ask-compact-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0!important;padding:0!important;flex-shrink:0}
+.ai-wrap .ask-title-group{display:flex;align-items:baseline;gap:12px;min-width:0}
+.ai-wrap .ask-compact-head h1{font-size:clamp(1.12rem,1.6vw,1.35rem)!important;margin:0!important;line-height:1.4}
+.ai-wrap .ask-help-text{font-size:.75rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ai-wrap .ask-header-actions{display:flex;align-items:center;flex-wrap:nowrap;gap:5px}
+.ai-wrap .ask-header-actions .btn{padding:5px 9px!important;font-size:.76rem!important;line-height:1.2;min-height:30px}
+.ai-wrap .ask-more{position:relative}
+.ai-wrap .ask-more>summary{list-style:none;cursor:pointer}
+.ai-wrap .ask-more>summary::-webkit-details-marker{display:none}
+.ai-wrap .ask-more-menu{position:absolute;right:0;top:calc(100% + 6px);z-index:35;width:190px;display:flex;flex-direction:column;gap:4px;background:var(--surface);padding:6px;border:1px solid var(--line);border-radius:10px;box-shadow:var(--lift)}
+.ai-wrap .ask-more-menu .btn{text-align:left;width:100%}
+.ai-wrap .ask-context-details{flex-shrink:0;border:1px solid var(--line);border-radius:9px;background:var(--surface);padding:4px 9px;font-size:.78rem}
+.ai-wrap .ask-context-details>summary{cursor:pointer;list-style:none;padding:2px 1px;line-height:1.5}
+.ai-wrap .ask-context-details>summary::-webkit-details-marker{display:none}
+.ai-wrap .ask-context-details>summary:after{content:'⌄';float:right;color:var(--muted);margin-left:10px}
+.ai-wrap .ask-context-label{font-weight:650}
+.ai-wrap .ask-context-hint{color:var(--muted)}
+.ai-wrap .ask-context-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:8px;padding:9px 0 5px}
+.ai-wrap .ask-context-grid label{display:flex;flex-direction:column;gap:4px;min-width:0;font-size:.76rem;font-weight:600}
+.ai-wrap .ask-context-grid select{width:100%;max-width:100%;min-width:0;padding:7px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--text)}
+.ai-wrap .ai-log{margin:0!important;background:transparent!important;border:0!important;scrollbar-width:thin;overflow-wrap:anywhere}
+.ai-wrap .ai-msg{max-width:min(100%,62rem)!important}
+.ai-wrap .ai-body{line-height:1.55}
+.ai-wrap .ask-composer{padding:7px 9px!important;border-radius:12px!important;margin:0!important;gap:3px!important;box-shadow:none!important;background:var(--surface)!important}
+.ai-wrap .ask-composer .ai-row{align-items:center!important}
+.ai-wrap .ask-composer textarea{height:42px!important;min-height:42px!important;max-height:115px!important;padding:10px 11px!important;resize:vertical!important;line-height:1.4!important;box-sizing:border-box!important}
+.ai-wrap .ask-composer .btn{min-height:40px!important;align-self:center!important}
+.ai-wrap .ask-prompts-details>summary{cursor:pointer;color:var(--muted);font-size:.7rem;line-height:1.25;list-style:none;padding:2px 3px}
+.ai-wrap .ask-prompts-details>summary::-webkit-details-marker{display:none}
+.ai-wrap .ask-prompts-details[open] .ai-chips{display:flex;flex-wrap:wrap;padding:6px 0 1px}
+@media(max-width:899px){
+ .shell>.content>.ai-wrap{height:auto!important;max-height:none!important;padding:8px 0 16px!important;gap:7px!important}
+ .ai-wrap .ai-log{min-height:48dvh!important;max-height:65dvh!important;overflow-y:auto!important}
+ .ai-wrap .ask-composer{position:relative!important;bottom:auto!important;z-index:1!important}
+}
+@media(max-width:560px){.ai-wrap .ask-help-text{display:none}.ai-wrap .ask-compact-head{align-items:center!important}.ai-wrap .ask-header-actions .btn{font-size:.7rem!important;padding:5px 6px!important}.ai-wrap .ask-composer textarea{height:44px!important;min-height:44px!important}}
 </style>
 </head>
 <body>
@@ -11231,33 +11257,46 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     return h(
       "section",
       { className: "view ai-wrap", ref: topRef },
-      h("div", { className: "page-head" }, h("div", null, h("h1", { className: "page-title" }, "Ask"), h("p", { className: "muted" }, "Ask about lessons, general questions, or how to navigate Study Desk. Dashboard Guide knows the app layout.")), h("div", { className: "head-actions ask-header-actions" }, msgs.length > 0 && h("button", { className: "btn ghost", onClick: () => { stick.current = false; logRef.current?.scrollTo({top:0,behavior:"smooth"}); }, title:"Jump to the first message" }, "↑ Top"), msgs.length > 0 && h("button", { className: "btn ghost", onClick: () => { stick.current = true; logRef.current?.scrollTo({top:logRef.current.scrollHeight,behavior:"smooth"}); }, title:"Jump to the newest message" }, "↓ Latest"), msgs.length > 0 && h("details", { className:"ask-more" }, h("summary", { className:"btn ghost", title:"Conversation options" }, "⋯"), h("div", { className:"ask-more-menu" }, h("button", { className:"btn danger ghost", disabled:busy, onClick:clear }, "Clear conversation"))), h("button", { className: "btn ghost", onClick: () => setSetup(true) }, ready ? "Key & model" : "Connect"))),
-      ready && h("div", { className: "ai-ctx ai-switches" },
-        h("label", { className: "field-label", htmlFor: "ask-mode" }, "Tutor mode"),
-        h("select", { id: "ask-mode", value: mode, disabled: busy, onChange: e => changeMode(e.target.value) },
-          h("option", { value: "sources" }, "Focused · sources only"),
-          h("option", { value: "general" }, "General · open questions"),h("option", { value: "dashboard" }, "Dashboard Guide · how to use this app")),
-        h("label", { className: "field-label", htmlFor: "ask-model" }, "Model"),
-        h("select", { id: "ask-model", value: selectedModel, disabled: busy, onChange: e => changeModel(e.target.value) },
-          !availableModels.some(m => m.id === selectedModel) && h("option", { value: selectedModel }, selectedModel || "Select model"),
-          GEM_CHAT_CHOICES.filter(([id]) => availableModels.some(m => m.id === id)).map(([id, label]) => h("option", { key: id, value: id }, label)),
-          availableModels.filter(m => !GEM_CHAT_CHOICES.some(([id]) => id === m.id) && /flash/i.test(m.id) && !/preview|exp|image|tts|live|audio/i.test(m.id)).map(m => h("option", { key: m.id, value: m.id }, m.name || m.id))),
-        modelError && h("span", { className: "muted small", title: modelError }, "Model list unavailable; existing model retained"),
-        h("span", { className: "muted small" }, mode === "sources" ? "Answers only from saved lecture/problem-set content." : mode === "dashboard" ? "Sends app navigation guide and your question to Gemini; not your private notes." : "No dashboard context sent to Gemini.")),
+      h("div", { className: "page-head ask-compact-head" },
+        h("div", { className: "ask-title-group" }, h("h1", { className: "page-title" }, "Ask Tutor"), h("span", { className: "ask-help-text" }, "Ask, understand, practice.")),
+        h("div", { className: "ask-header-actions" },
+          msgs.length > 0 && h("button", { className: "btn ghost", onClick: () => { stick.current = true; logRef.current?.scrollTo({top:logRef.current.scrollHeight,behavior:"smooth"}); }, title: "Jump to newest message" }, "↓ Latest"),
+          h("details", { className: "ask-more" },
+            h("summary", { className: "btn ghost", title: "Conversation options" }, "⋯ Options"),
+            h("div", { className: "ask-more-menu" },
+              msgs.length > 0 && h("button", { className: "btn ghost", onClick: () => { stick.current = false; logRef.current?.scrollTo({top:0,behavior:"smooth"}); } }, "↑ First message"),
+              msgs.length > 0 && h("button", { className: "btn danger ghost", disabled: busy, onClick: clear }, "Clear conversation"),
+              h("button", { className: "btn ghost", onClick: () => setSetup(true) }, ready ? "API key & model" : "Connect Gemini")
+            )
+          )
+        )
+      ),
+      ready && h("details", { className: "ask-context-details" },
+        h("summary", { title: "Change model, tutor mode, and source" },
+          h("span", { className: "ask-context-label" }, mode === "sources" ? "📚 Saved sources" : mode === "dashboard" ? "🧭 Dashboard guide" : "💬 General questions"),
+          h("span", { className: "ask-context-hint" }, " · Change context")),
+        h("div", { className: "ask-context-grid" },
+          h("label", null, "Tutor mode", h("select", { value: mode, disabled: busy, onChange: e => changeMode(e.target.value) },
+            h("option", { value: "sources" }, "Focused · saved sources"),
+            h("option", { value: "general" }, "General questions"),
+            h("option", { value: "dashboard" }, "Dashboard Guide"))),
+          h("label", null, "Model", h("select", { value: selectedModel, disabled: busy, onChange: e => changeModel(e.target.value) },
+            !availableModels.some(m => m.id === selectedModel) && h("option", { value: selectedModel }, selectedModel || "Select model"),
+            GEM_CHAT_CHOICES.filter(([id]) => availableModels.some(m => m.id === id)).map(([id,label]) => h("option", { key:id, value:id }, label)),
+            availableModels.filter(m => !GEM_CHAT_CHOICES.some(([id]) => id === m.id) && /flash/i.test(m.id) && !/preview|exp|image|tts|live|audio/i.test(m.id)).map(m => h("option", { key:m.id, value:m.id }, m.name || m.id)))),
+          mode === "sources" && (lectures.length > 0 || psets.length > 0) && h("label", null, "Use source", h("select", { value:focus ? focus.kind+":"+focus.id : "", onChange:e => { const v=e.target.value;setFocus(v?{kind:v.split(":")[0],id:v.split(":").slice(1).join(":")}:null); } },
+            h("option", {value:""}, "All saved lectures & problem sets"),
+            lectures.length>0 && h("optgroup", {label:"Lectures"}, lectures.map(l=>h("option", {key:l.id,value:"lecture:"+l.id},drShort(l.title,46)))),
+            psets.length>0 && h("optgroup", {label:"Problem sets"}, psets.map(x=>h("option", {key:x.id,value:"pset:"+x.id},drShort(x.title,46))))))
+        ),
+        modelError && h("span", {className:"muted small"}, "Model list unavailable; existing model retained")
+      ),
       !ready ? h("div", { className: "empty big" },
         h(Icon, { name: "ask", size: 32 }),
         h("h2", null, "Connect Gemini to start"),
         h("p", { className: "muted", style: { maxWidth: "36rem" } }, "One free API key from Google AI Studio. Your Google AI Plus subscription is for the Gemini app and won’t work here — the API is separate, and its free tier is plenty for this."),
         h("button", { className: "btn primary", onClick: () => setSetup(true) }, "Connect Gemini")
       ) : h(React.Fragment, null,
-        mode === "sources" && (lectures.length > 0 || psets.length > 0) && h("div", { className: "ai-ctx" },
-          h("span", null, "Looking at:"),
-          h("select", { value: focus ? focus.kind + ":" + focus.id : "", onChange: (e) => { const v = e.target.value; setFocus(v ? { kind: v.split(":")[0], id: v.split(":").slice(1).join(":") } : null); } },
-            h("option", { value: "" }, "Saved lectures & problem sets"),
-            lectures.length > 0 && h("optgroup", { label: "Lectures" }, lectures.map((l) => h("option", { key: l.id, value: "lecture:" + l.id }, drShort(l.title, 46)))),
-            psets.length > 0 && h("optgroup", { label: "Problem sets" }, psets.map((s) => h("option", { key: s.id, value: "pset:" + s.id }, drShort(s.title, 46))))),
-          focusLabel && h("span", { className: "small" }, "the full text goes with every question")
-        ),
         msgs.length === 0 && h("div", { className: "empty" }, h("p", { className: "muted" }, "Ask anything, or start with one of these.")),
         h("div", { className: "ai-log", ref: logRef, onScroll: onChatScroll, role:"log", "aria-label":"Tutor conversation", "aria-live":"polite" }, msgs.slice(-60).map((m, i) => {
           const live = busy && i === Math.min(msgs.length, 60) - 1 && m.role === "ai";
@@ -11275,13 +11314,14 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
               )
             ));
         }), h("div", { ref: endRef })),
-        h("div", { className: "ai-bar" },
-          mode === "sources" && h("div", { className: "ai-chips" }, [["Summarize source", "Summarize the selected source and identify the main rules, using only its contents."], ["Quiz from source", "Quiz me one question at a time using only the selected source."], ["Explain a problem", "Explain a worked problem from the selected source step by step."]].map(([label, prompt]) => h("button", { key: label, className: "chip", disabled: busy, onClick: () => ask(prompt) }, label))),
+        h("div", { className: "ai-bar ask-composer" },
           h("div", { className: "ai-row" },
-            h("textarea", { ref: boxRef, rows: 2, value: text, placeholder: mode === "sources" ? "Ask about your saved sources…" : "Ask anything…", onChange: (e) => setText(e.target.value), onKeyDown: (e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); ask(text); } } }),
-            busy ? h("button", { className: "btn danger ghost", onClick: () => { if (abort.current) abort.current.abort(); } }, "Stop")
-                 : h("button", { className: "btn primary", disabled: !text.trim(), onClick: () => ask(text) }, "Send")),
-          h("p", { className: "muted small", style: { margin: 0 } }, "Ctrl or Cmd + Enter sends. Gemini can be wrong — check anything that contradicts your book, and log what you get wrong in the Mistake log.")
+            h("textarea", { ref:boxRef, rows:1, value:text, "aria-label":"Message to tutor", placeholder: mode === "sources" ? "Ask about a lecture or problem…" : "Ask your question…", onChange:e=>setText(e.target.value), onKeyDown:e=>{ if(e.key==="Enter" && (e.metaKey||e.ctrlKey)){e.preventDefault();ask(text);} } }),
+            busy ? h("button", { className:"btn danger ghost", onClick:()=>{if(abort.current)abort.current.abort();}}, "Stop")
+                 : h("button", {className:"btn primary",disabled:!text.trim(),onClick:()=>ask(text)}, "Send")),
+          mode === "sources" && h("details", { className:"ask-prompts-details" },
+            h("summary", null, "Suggested prompts"),
+            h("div", { className:"ai-chips" }, [["Summarize source", "Summarize the selected source and identify the main rules, using only its contents."],["Quiz from source", "Quiz me one question at a time using only the selected source."],["Explain a problem", "Explain a worked problem from the selected source step by step."]].map(([label,prompt])=>h("button", { key:label,className:"chip",disabled:busy,onClick:()=>ask(prompt) }, label))))
         )
       ),
       setup && h(GemSetup, { toast, onClose: () => setSetup(false), onDone: () => { setSetup(false); setReady(gemReady()); setSelectedModel(gemModel()); } })
