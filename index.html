@@ -11430,7 +11430,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       if(publishBusy)return;
       if(!githubToken.trim()){setPublishStatus('Enter a fine-grained GitHub token with Contents: Read and write access to the shared repository.');return}
       if(!allowed.length){setPublishStatus('Select at least one subject.');return}
-      if(!window.confirm('Publish ONLY Quizzes, Flashcards, Problem Sets, Lectures and built-in Study Toolkit in read-only mode?'))return;
+      if(!window.confirm('Publish the same study interface with Flashcards, Quizzes, Problem Sets, Lectures and Study Toolkit? Classmates can save their own practice locally; their changes never sync to your account.'))return;
       setPublishBusy(true);setPublishStatus('Connecting to GitHub…');
       try{
         const headers={'Authorization':'Bearer '+githubToken.trim(),'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'};
@@ -11442,7 +11442,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
         let binary='';for(let i=0;i<utf8.length;i+=16384)binary+=String.fromCharCode(...utf8.subarray(i,i+16384));
         const content=btoa(binary);
         setPublishStatus('Uploading shared website to GitHub…');
-        const response=await fetch(githubEndpoint,{method:'PUT',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({message:'Publish isolated read-only BSA Study Library (five sections)',content,...(sha?{sha}:{})})});
+        const response=await fetch(githubEndpoint,{method:'PUT',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({message:'Publish one-way isolated shared BSA Study Desk',content,...(sha?{sha}:{})})});
         if(!response.ok){const err=await response.text();throw Error('GitHub publish failed ('+response.status+'): '+err.slice(0,260))}
         const timestamp=new Date().toLocaleString();
         setLastPublish(timestamp);setPublishStatus('Published to GitHub at '+timestamp+'. GitHub Pages may take a few minutes to update.');toast('Shared website published to GitHub');
@@ -11467,7 +11467,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
         // Publish only the three approved material collections. Navigation topics
         // are structural metadata, not progress, grades, or private study records.
         const clean={id:x.id,name:x.name,code:x.code,school:'',textbook:false};
-        clean.topics=(x.topics||[]).map(t=>({id:t.id,title:t.title,name:t.name,chapter:t.chapter,unit:t.unit,status:'Not started',done:false,sub:(t.sub||[]).map(v=>({id:v.id,title:v.title,name:v.name,done:false}))}));
+        clean.topics=(x.topics||[]).map(t=>({id:t.id,kind:t.kind||'topic',week:t.week,code:t.code,title:t.title,standard:t.standard,scope:t.scope,covers:clone(t.covers||[]),status:'Not started',done:false,sub:(t.sub||[]).map(v=>({id:v.id,t:v.t,title:v.title,p:v.p,done:false,s:false}))}));
         // Publish only teaching material. Personal attempt statuses, ratings,
         // spaced-repetition dates and mistake-linked private answers stay private.
         clean.cards=(x.cards||[]).map(c=>({id:c.id,topicId:c.topicId,q:c.q,a:c.a,
@@ -11484,9 +11484,96 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       });
       return {version:1,updatedAt:Date.now(),activeId:subjects[0]?.id||'',settings:{...DEFAULT_SETTINGS},subjects};
     };
-    // Publish a fully isolated, allowlisted HTML library rather than modifying a copy
-    // of the personal dashboard. The exported page has no app storage or write APIs.
-    const makeFullSharedHtml=async()=>safeSharedHtml();
+    // Same React dashboard and study logic, but all classmate state lives in a
+    // private namespace. The publisher owns teaching content; classmates own
+    // their independent ratings, quiz attempts and progress.
+    const makeFullSharedHtml=async()=>{
+      const snapshot=sharedSnapshot();
+      // Only source scripts and static styles are copied. NEVER serialize the
+      // rendered DOM: it could contain the owner's private information.
+      const scripts=[...document.scripts];
+      const appScript=scripts.filter(x=>!x.src).sort((a,b)=>b.textContent.length-a.textContent.length)[0];
+      if(!appScript||appScript.textContent.length<100000)throw Error('Main dashboard code unavailable');
+      const checkScript=scripts.filter(x=>!x.src&&x!==appScript).map(x=>x.textContent).join('\n');
+      const styles=[...document.querySelectorAll('style')].map(x=>x.outerHTML).join('\n');
+      const bootSnapshot=JSON.stringify(snapshot).replace(/</g,'\\u003c').replace(/>/g,'\\u003e');
+      const boot=`window.__BSA_SHARED_MODE__=true;
+const published=${bootSnapshot};
+const raw=window.localStorage;
+const prefix='bsa_shared_classmate_v115:';
+const mainKey='bsa-study-dashboard:v1';
+const localCopy=()=>{try{return JSON.parse(raw.getItem(prefix+mainKey)||'null')}catch(e){return null}};
+function mergePublished(){
+ const old=localCopy();
+ const doc=JSON.parse(JSON.stringify(published));
+ if(!old||!Array.isArray(old.subjects))return doc;
+ for(const sub of doc.subjects){
+  const prev=old.subjects.find(x=>x.id===sub.id);if(!prev)continue;
+  // Review status is local; questions, answers and teaching material are owner-controlled.
+  const keys=['conf','due','last','interval','ease','reps','streak','seen','rating','lastReviewed','nextReview'];
+  for(const c of sub.cards||[]){const was=(prev.cards||[]).find(x=>x.id===c.id);if(was)for(const k of keys)if(Object.prototype.hasOwnProperty.call(was,k))c[k]=was[k]}
+  for(const set of sub.psets||[]){const was=(prev.psets||[]).find(x=>x.id===set.id);if(!was)continue;
+   for(const pr of set.problems||[]){const oldPr=(was.problems||[]).find(x=>x.id===pr.id);if(oldPr)for(const k of ['st','attempts','lastAttempt'])if(Object.prototype.hasOwnProperty.call(oldPr,k))pr[k]=oldPr[k]}}
+  sub.mistakes=Array.isArray(prev.mistakes)?prev.mistakes:[];
+  sub.sessions=Array.isArray(prev.sessions)?prev.sessions:[];
+  sub.quizzes=Array.isArray(prev.quizzes)?prev.quizzes:[];
+ }
+ if(old.activeId&&doc.subjects.some(s=>s.id===old.activeId))doc.activeId=old.activeId;
+ // Appearance is personal to the classmate; never inherit the owner's settings.
+ if(old.settings&&typeof old.settings==='object')doc.settings={...doc.settings,...old.settings};
+ return doc;
+}
+const scoped={
+ getItem(key){key=String(key);if(key===mainKey)return JSON.stringify(mergePublished());return raw.getItem(prefix+key)},
+ setItem(key,value){raw.setItem(prefix+String(key),String(value))},
+ removeItem(key){raw.removeItem(prefix+String(key))},
+ clear(){for(const k of Object.keys(raw))if(k.startsWith(prefix))raw.removeItem(k)},
+ key(i){return Object.keys(raw).filter(k=>k.startsWith(prefix))[i]?.slice(prefix.length)||null},
+ get length(){return Object.keys(raw).filter(k=>k.startsWith(prefix)).length}
+};
+window.__BSA_SHARED_STORAGE__=scoped;
+window.__BSA_READ_ONLY__=true;
+`;
+      // Use the original application code, not a separately rebuilt study library.
+      let app=appScript.textContent;
+      app=app.replace('(() => {','(() => {\n  const localStorage = window.__BSA_SHARED_STORAGE__;\n  const sessionStorage = window.__BSA_SHARED_STORAGE__;',1);
+      // Hide authoring/navigation features but keep exactly the study components.
+      const oldGroups=`{name:"Study", items:["home","vault","psets","lectures","practice"]},
+      {name:"Tools", items:["toolkit","roadmap","ask","curriculum","howto"]},
+      {name:"Progress", items:["stats-clean","mistakes","grades","achievements"]},
+      {name:"Plan", items:["calendar","class"]},
+      {name:"Your space", items:["life","break","personalize"]}`;
+      const newGroups=`{name:"Study",items:["home","vault","practice","psets","lectures"]},
+      {name:"Reference",items:["toolkit"]}`;
+      if(!app.includes(oldGroups))throw Error('Shared dashboard navigation compatibility check failed');
+      app=app.replace(oldGroups,newGroups);
+      app=app.replace('["share","Classmate sharing"],','');
+      app=app.replace('if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {','if (!window.__BSA_SHARED_MODE__ && "serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {');
+      // Prevent owner-only tools and account controls from being displayed in shared Home.
+      const cssExtra=`<style id="shared-study-view">
+       .rail-tools,.rail-footer,.sync-badge,.sync-bar,.rail-search,.study-life-card,.life-home-widget,
+       [data-personal-only],.backup-guidance,.dashboard-settings,.share-panel{display:none!important}
+       .shell{min-height:100vh}
+       .shared-ribbon{padding:10px 18px;background:var(--surface-2,#eeeaf8);color:var(--text,#282636);font-size:13px;border-bottom:1px solid var(--line,#ddd)}
+       button[data-shared-authoring]{display:none!important}
+      </style>`;
+      // A well-defined editable authoring-action blocklist, without interfering
+      // with Check, Flip, Submit, Review, Next or Start actions.
+      const readonlyControls=`<script>(function(){
+       const re=/^(add (?:subject|card|flashcard|lecture|problem|question|topic)|new (?:subject|flashcard|lecture|problem|topic)|edit(?: subject| card| lecture| problem| topic)?|delete(?: .*)?|remove(?: .*)?|import(?: .*)?|sync(?: .*)?|publish(?: .*)?|share dashboard|restore(?: .*)?|clear all|reset all|quick add)$/i;
+       function mask(){document.querySelectorAll('button').forEach(b=>{if(re.test((b.textContent||'').trim())){b.hidden=true;b.disabled=true;b.setAttribute('data-shared-authoring','')}})}
+       const mo=new MutationObserver(mask);mo.observe(document.getElementById('root'),{subtree:true,childList:true});mask();
+      })();<`+'/script>';
+      const head=`<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>BSA Study Desk · Shared</title>${styles}${cssExtra}`;
+      // Script text is constructed from trusted bundled app source and a
+      // JSON-escaped allowlisted snapshot. No live DOM or GitHub token included.
+      return '<!doctype html><html lang="en"><head>'+head+'</head><body><div class="shared-ribbon">Shared BSA Study Desk · Your reviews and quiz attempts stay on this device · Materials update when the owner republishes</div><div id="root"></div>'+
+       '<script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"><'+'/script>'+
+       '<script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"><'+'/script>'+
+       '<script>'+boot+'<'+'/script>'+
+       '<script>'+checkScript+'<'+'/script>'+
+       '<script>'+app+'<'+'/script>'+readonlyControls+'</body></html>';
+    };
     const safeSharedHtml=()=>{
       const selected=data.subjects.filter(sub=>allowed.includes(sub.id));
       const blocks=[];
@@ -11509,27 +11596,27 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       const js=`const buttons=[...document.querySelectorAll('[data-subject]')].filter(x=>x.tagName==='BUTTON');const sections=[...document.querySelectorAll('.collection')];let active='all';let kind='all';function render(){sections.forEach(el=>{el.hidden=(active!=='all'&&el.dataset.subject!==active&&el.dataset.subject!=='toolkit')||(kind!=='all'&&el.dataset.kind!==kind)});buttons.forEach(b=>b.classList.toggle('active',b.dataset.subject===active));document.querySelectorAll('[data-kind-filter]').forEach(b=>b.classList.toggle('active',b.dataset.kindFilter===kind))}buttons.forEach(b=>b.addEventListener('click',()=>{active=b.dataset.subject;render()}));document.querySelectorAll('[data-kind-filter]').forEach(b=>b.addEventListener('click',()=>{kind=b.dataset.kindFilter;render()}));render();`;
       return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>BSA Study Desk · Study Library</title><style>'+css+'</style></head><body><div class="shell"><aside><h1>Σ BSA Study Desk</h1><p>Study Library · Read-only</p><button data-subject="all" class="active">All subjects</button>'+nav+'</aside><main><header><h1>Study Library</h1><p>Flashcards, quizzes, problem sets, lectures and a built-in accounting toolkit. Read-only.</p><div class="toolbar"><button class="secondary" data-kind-filter="all">All materials</button><button class="secondary" data-kind-filter="flashcards">Flashcards</button><button class="secondary" data-kind-filter="lectures">Lectures</button><button class="secondary" data-kind-filter="quizzes">Quizzes</button><button class="secondary" data-kind-filter="problems">Problem sets</button><button class="secondary" data-kind-filter="toolkit">Study Toolkit</button>'+(permissions.download?'<button onclick="window.print()">Print / Save PDF</button>':'')+'</div></header>'+(blocks.join('')||'<div class="empty">No published materials yet.</div>')+'</main></div><script>'+js+'<'+'/script></body></html>';
     };
-    const downloadDashboard=async()=>{if(!allowed.length){toast('Select subjects first');return}try{const blob=new Blob([await makeFullSharedHtml()],{type:'text/html;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='index.html';a.click();setTimeout(()=>URL.revokeObjectURL(url),4000);toast('Read-only study library downloaded.')}catch(e){toast('Export failed: '+e.message)}};
+    const downloadDashboard=async()=>{if(!allowed.length){toast('Select subjects first');return}try{const blob=new Blob([await makeFullSharedHtml()],{type:'text/html;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='index.html';a.click();setTimeout(()=>URL.revokeObjectURL(url),4000);toast('Isolated study dashboard downloaded.')}catch(e){toast('Export failed: '+e.message)}};
     const download=()=>{if(!allowed.length||!Object.values(kinds).some(Boolean)){toast('Select at least one subject and material type');return}const blob=new Blob([html()],{type:'text/html;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='BSA-Classmate-Library.html';a.click();setTimeout(()=>URL.revokeObjectURL(url),4000);toast('Read-only handout downloaded. Review the file before sharing.')};
-    return h('section',{className:'toolkit-panel share-panel'},h('h2',null,'Share Dashboard'),h('p',{className:'muted'},'Publish a separate, read-only Study Library: Quizzes, Flashcards, Problem Sets, Lectures and built-in Study Toolkit. The personal dashboard, Study Life, grades, history and editing controls are not exported.'),
+    return h('section',{className:'toolkit-panel share-panel'},h('h2',null,'Share Dashboard'),h('p',{className:'muted'},'Publish a study-only copy of this dashboard: the SAME flashcards, quizzes/practice, problem sets, lectures and Study Toolkit. Your updates flow to classmates only when you publish. Their ratings and answers stay locally on their devices, never sync back.'),
       h('h3',null,'Permission Manager — shared website export'),
       h('p',{className:'muted small'},'Switches affect the next published shared website. Press Publish to update GitHub; changes are not instantaneous and are not secure access controls.'),
-      h('p',{className:'muted small'},'Published site: five-section read-only Study Library. No personal records, account settings, or access to your main dashboard storage.'),
+      h('p',{className:'muted small'},'Published site: same study interfaces, five sections only. Separate storage keeps classmate progress isolated from your main dashboard, even when opened on the same browser.'),
       h('div',{className:'toolkit-actions'},h('a',{className:'btn',href:sharedUrl,target:'_blank',rel:'noopener noreferrer'},'Open Shared Dashboard website ↗')),
       h('p',{className:'muted small'},'Create the bsa-study-desk-shared GitHub repository and enable GitHub Pages from the main branch/root to activate the link.'),      h('h3',null,'Publish updates directly to GitHub'),
       h('p',{className:'muted small'},'Use a fine-grained token restricted to the shared repository with Contents: Read and write. The token is not saved or included in published files.'),
       h('label',null,'GitHub token (not saved)',h('input',{type:'password',value:githubToken,autoComplete:'off',spellCheck:false,placeholder:'github_pat_…',onChange:e=>setGithubToken(e.target.value),style:{display:'block',width:'100%',maxWidth:'540px',padding:'10px',margin:'8px 0'}})),
-      h('div',{className:'toolkit-actions'},h('button',{className:'btn primary',disabled:publishBusy,onClick:publishGithub},publishBusy?'Publishing…':'Publish Read-only Dashboard'),h('button',{className:'btn',onClick:()=>setGithubToken('')},'Clear token'),h('a',{className:'btn',href:'https://github.com/settings/personal-access-tokens/new',target:'_blank',rel:'noopener noreferrer'},'Create limited token ↗')),
+      h('div',{className:'toolkit-actions'},h('button',{className:'btn primary',disabled:publishBusy,onClick:publishGithub},publishBusy?'Publishing…':'Publish Shared Study Dashboard'),h('button',{className:'btn',onClick:()=>setGithubToken('')},'Clear token'),h('a',{className:'btn',href:'https://github.com/settings/personal-access-tokens/new',target:'_blank',rel:'noopener noreferrer'},'Create limited token ↗')),
       publishStatus&&h('p',{role:'status',className:'muted small'},publishStatus),
       h('p',{className:'muted small'},'Updates are published when you press Publish. The shared website changes after GitHub Pages redeploys; no HTML download needed. Create the shared repository and enable GitHub Pages from the main branch/root first.'),
 
       h('h3',null,'1. Allowed subjects'),h('div',{className:'share-options'},data.subjects.map(sub=>h('label',{key:sub.id},h('input',{type:'checkbox',checked:allowed.includes(sub.id),onChange:e=>setAllowed(p=>e.target.checked?[...p,sub.id]:p.filter(x=>x!==sub.id))}),sub.code||sub.name,' · ',sub.name))),
       h('h3',null,'2. Included materials'),h('p',null,'Quizzes · Flashcards · Problem Sets · Lectures · Study Toolkit (built-in formula reference)' ),
-      h('label',{className:'share-toggle'},h('input',{type:'checkbox',checked:showAnswers,onChange:e=>setShowAnswers(e.target.checked)}),'Include answers and solutions'),
-      h('p',{className:'muted small'},'Only content from selected subjects and built-in accounting formulas is included. No grades, attempt history, flashcard ratings, private notes, custom notebook pages, coins, pets or account settings.'),
-      h('div',{className:'toolkit-actions'},h('button',{className:'btn primary',onClick:downloadDashboard},'Export read-only Study Library'),h('button',{className:'btn',onClick:()=>setPreview(v=>!v)},preview?'Hide preview':'Preview selected content'),h('button',{className:'btn',onClick:()=>{const w=window.open('','_blank');if(!w){toast('Allow pop-ups to print');return}w.document.write(html());w.document.close();w.focus();setTimeout(()=>w.print(),500)}},'Print selected materials / PDF')),
+      h('label',{className:'share-toggle'},h('input',{type:'checkbox',checked:showAnswers,onChange:e=>setShowAnswers(e.target.checked)}),'Include answers in printable handouts (interactive study view always includes its normal answer checking)'),
+      h('p',{className:'muted small'},'Only selected teaching materials are published. Classmates can review and complete practice using their own local progress. No personal grades, attempts, ratings, notes, pets, coins, or account settings are copied.'),
+      h('div',{className:'toolkit-actions'},h('button',{className:'btn primary',onClick:downloadDashboard},'Export shared dashboard HTML'),h('button',{className:'btn',onClick:()=>setPreview(v=>!v)},preview?'Hide preview':'Preview selected content'),h('button',{className:'btn',onClick:()=>{const w=window.open('','_blank');if(!w){toast('Allow pop-ups to print');return}w.document.write(html());w.document.close();w.focus();setTimeout(()=>w.print(),500)}},'Print selected materials / PDF')),
       preview&&h('div',{className:'share-preview'},h('strong',null,allowed.length+' subject(s) selected'),h('p',null,Object.entries(kinds).filter(([k,v])=>v).map(([k])=>k).join(', ')),h('p',null,'Answers: '+(showAnswers?'Included':'Hidden'))),
-      h('p',{className:'muted small'},'Sharing is PUBLIC, not authenticated access control. Only selected content is embedded. To share a link, publish the exported HTML file alongside your GitHub Pages site; anyone with its URL can access or copy it. Regenerate and republish to change permissions; old downloads cannot be revoked.'));
+      h('p',{className:'muted small'},'Sharing is PUBLIC, not authenticated access control. Publishing replaces the shared website with selected material. Classmates keep independent practice results in their own browser storage; updates to your materials appear after you press Publish and GitHub Pages refreshes. Older downloads cannot be revoked.'));
   }
   /* v31: safer toolkit and printable A4 study materials and independent practice log. Local storage only. */
   /* v37: offline-first review tools. All new records stay in localStorage. */
