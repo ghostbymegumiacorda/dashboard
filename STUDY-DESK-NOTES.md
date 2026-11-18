@@ -686,3 +686,18 @@ Study Toolkit now offers **Backup all study data** and **Restore all study data*
 - The public website has subject navigation, Lectures / Quizzes / Problem sets filters, and optional Print / Save PDF.
 - Publish again from the PERSONAL dashboard using GitHub token to replace the existing shared index.html. Old shared website remains online until this new version is published.
 - This release does not modify or remove any records already saved by the previous shared website. Back up the personal dashboard and check URLs if data appears in both.
+
+## v77 — Handwriting eraser and shape rendering fixes
+- Pencil eraser removes editable vector strokes under the eraser and also clears older raster ink using destination-out, not white paint.
+- Stroke eraser removes touched sections of vector strokes, and removes whole geometric shapes.
+- Shapes render their live preview on a separate transparent canvas with requestAnimationFrame; no full-canvas getImageData/putImageData per move.
+- New pen strokes draw to a temporary canvas and are stored only as editable vectors; existing pages remain compatible.
+- Undo shape snapshots are captured once at eraser pointer-down.
+- Back up handwriting before upgrading. Browser/iPad physical testing not completed.
+
+## v78 — Full navigation, read-only published dashboard
+- Publishing uses the full personal dashboard HTML shell rather than the simplified study library.
+- Published snapshot includes selected subjects with lectures, quizzes and problem sets ONLY; no grades, notes, flashcards, private settings, sessions or mistakes.
+- Central document mutations, editor opening and settings updates are blocked in read-only mode; edit-only buttons are intercepted while reading/navigation and PDF buttons remain available.
+- The public site is rebuilt when Publish is clicked. It is not an authenticated permissions system; any data deliberately published is public.
+- IMPORTANT: interactive iPad and GitHub Pages browser tests are not completed. Test in a private/incognito browser and verify no changes to the personal dashboard.

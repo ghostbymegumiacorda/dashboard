@@ -10429,7 +10429,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
   }
   /* v35: handwriting with per-page undo/redo and geometric shape tools. */
   function InkPad({subject,toast}) {
-    const canvas=useRef(null), drawing=useRef(false), last=useRef(null), origin=useRef(null), before=useRef(null), history=useRef([]), historyIndex=useRef(0), restoreToken=useRef(0);
+    const canvas=useRef(null), previewCanvas=useRef(null), drawFrame=useRef(0), pendingPoint=useRef(null), drawing=useRef(false), last=useRef(null), origin=useRef(null), before=useRef(null), history=useRef([]), historyIndex=useRef(0), restoreToken=useRef(0);
     const key='bsa_ink_v33_'+subject.id;
     const [pages,setPages]=useState(()=>{try{const v=JSON.parse(localStorage.getItem(key)||'[]');return Array.isArray(v)?v:[]}catch(e){return []}});
     const [paper,setPaper]=useState('lined');const [inkQuery,setInkQuery]=useState('');const [inkSort,setInkSort]=useState('recent');const [inkFullscreen,setInkFullscreen]=useState(false);
@@ -10547,7 +10547,10 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     },[fingerDraw,tool]);
     const zoomButton=next=>{const vp=inkViewport.current;if(!vp){setInkZoom(clampZoom(next));return}const r=vp.getBoundingClientRect();zoomAt(next,r.left+r.width/2,r.top+r.height/2)};
 
-    const drawShape=(p)=>{const c=canvas.current,ctx=c.getContext('2d'),[x,y]=origin.current,[px,py]=p;ctx.strokeStyle=pen;ctx.fillStyle=pen;ctx.lineWidth=size;ctx.lineJoin='round';ctx.lineCap='round';ctx.beginPath();if(tool==='line'||tool==='arrow'){ctx.moveTo(x,y);ctx.lineTo(px,py);ctx.stroke();if(tool==='arrow'){const angle=Math.atan2(py-y,px-x),head=Math.max(12,size*5);ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(px-head*Math.cos(angle-Math.PI/6),py-head*Math.sin(angle-Math.PI/6));ctx.moveTo(px,py);ctx.lineTo(px-head*Math.cos(angle+Math.PI/6),py-head*Math.sin(angle+Math.PI/6));ctx.stroke()}}else if(tool==='doubleline'){const gap=Math.max(5,size*2);ctx.moveTo(x,y);ctx.lineTo(px,py);ctx.moveTo(x,y+gap);ctx.lineTo(px,py+gap);ctx.stroke()}else if(tool==='taccount'){const mid=(x+px)/2;ctx.moveTo(x,y);ctx.lineTo(px,y);ctx.moveTo(mid,y);ctx.lineTo(mid,py);ctx.stroke()}else if(tool==='rectangle'){ctx.strokeRect(x,y,px-x,py-y)}else if(tool==='ellipse'){ctx.ellipse((x+px)/2,(y+py)/2,Math.max(.1,Math.abs(px-x)/2),Math.max(.1,Math.abs(py-y)/2),0,0,Math.PI*2);ctx.stroke()}};
+    const drawShape=(p)=>{const c=previewCanvas.current,ctx=c.getContext('2d'),[x,y]=origin.current,[px,py]=p;ctx.strokeStyle=pen;ctx.fillStyle=pen;ctx.lineWidth=size;ctx.lineJoin='round';ctx.lineCap='round';ctx.beginPath();if(tool==='line'||tool==='arrow'){ctx.moveTo(x,y);ctx.lineTo(px,py);ctx.stroke();if(tool==='arrow'){const angle=Math.atan2(py-y,px-x),head=Math.max(12,size*5);ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(px-head*Math.cos(angle-Math.PI/6),py-head*Math.sin(angle-Math.PI/6));ctx.moveTo(px,py);ctx.lineTo(px-head*Math.cos(angle+Math.PI/6),py-head*Math.sin(angle+Math.PI/6));ctx.stroke()}}else if(tool==='doubleline'){const gap=Math.max(5,size*2);ctx.moveTo(x,y);ctx.lineTo(px,py);ctx.moveTo(x,y+gap);ctx.lineTo(px,py+gap);ctx.stroke()}else if(tool==='taccount'){const mid=(x+px)/2;ctx.moveTo(x,y);ctx.lineTo(px,y);ctx.moveTo(mid,y);ctx.lineTo(mid,py);ctx.stroke()}else if(tool==='rectangle'){ctx.strokeRect(x,y,px-x,py-y)}else if(tool==='ellipse'){ctx.ellipse((x+px)/2,(y+py)/2,Math.max(.1,Math.abs(px-x)/2),Math.max(.1,Math.abs(py-y)/2),0,0,Math.PI*2);ctx.stroke()}};
+    const clearPreview=()=>{const c=previewCanvas.current;if(c)c.getContext('2d').clearRect(0,0,c.width,c.height)};
+    const previewAt=pt=>{pendingPoint.current=pt;if(drawFrame.current)return;drawFrame.current=requestAnimationFrame(()=>{drawFrame.current=0;if(!drawing.current||!pendingPoint.current)return;clearPreview();drawShape(pendingPoint.current)})};
+    useEffect(()=>()=>{if(drawFrame.current)cancelAnimationFrame(drawFrame.current)},[]);
     const pointSegmentDistance=(p,a,b)=>{const dx=b[0]-a[0],dy=b[1]-a[1],len=dx*dx+dy*dy;if(!len)return Math.hypot(p[0]-a[0],p[1]-a[1]);const t=Math.max(0,Math.min(1,((p[0]-a[0])*dx+(p[1]-a[1])*dy)/len));return Math.hypot(p[0]-a[0]-t*dx,p[1]-a[1]-t*dy)};
     const vectorHit=(sh,pt,pad=13)=>{
       const tolerance=pad+(sh.width||3)/2;
@@ -10560,17 +10563,94 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       return pt[0]>=bounds.left-tolerance&&pt[0]<=bounds.left+bounds.width+tolerance&&pt[1]>=bounds.top-tolerance&&pt[1]<=bounds.top+bounds.height+tolerance;
     };
     const selectAt=pt=>{const found=[...(vectorRef.current||[])].reverse().find(sh=>vectorHit(sh,pt,17));setSelectedShape(found?.id||null);return found};
-    const eraseVectorAt=pt=>{const found=[...(vectorRef.current||[])].reverse().find(sh=>vectorHit(sh,pt,18));if(found){saveShapes(a=>a.filter(sh=>sh.id!==found.id));setSelectedShape(null)}};
+    const eraserRadius=17;
+    const eraseVectorAt=pt=>{
+      // Remove only the portions of editable pen strokes under the eraser.
+      // Geometry tools remain individually removable objects.
+      const original=vectorRef.current||[];
+      let changed=false;
+      const updated=[];
+      for(const sh of original){
+        if(sh.type!=='stroke'){
+          if(vectorHit(sh,pt,eraserRadius)){changed=true;continue}
+          updated.push(sh);continue;
+        }
+        const points=sh.points||[];
+        if(!vectorHit(sh,pt,eraserRadius)){updated.push(sh);continue}
+        changed=true;
+        const r=eraserRadius+(sh.width||3)/2;
+        // Subdivide long segments so an eraser can split a stroke accurately.
+        const dense=[];
+        for(let i=0;i<points.length;i++){
+          if(i){const a=points[i-1],b=points[i],steps=Math.min(200,Math.max(1,Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/4)));
+            for(let k=1;k<steps;k++)dense.push([a[0]+(b[0]-a[0])*k/steps,a[1]+(b[1]-a[1])*k/steps]);}
+          dense.push(points[i]);
+        }
+        let segment=[];let part=0;
+        const flush=()=>{if(segment.length>=2)updated.push({...sh,id:uid('stroke'),points:segment});segment=[]};
+        for(const point of dense){
+          if(Math.hypot(point[0]-pt[0],point[1]-pt[1])<=r){flush();}
+          else segment.push(point);
+        }
+        flush();
+      }
+      if(changed){vectorRef.current=updated;saveShapes(()=>updated,false);setSelectedShape(null)}
+    };
+    const eraseRasterAt=(a,b)=>{const ctx=canvas.current.getContext('2d');ctx.save();ctx.globalCompositeOperation='destination-out';ctx.strokeStyle='rgba(0,0,0,1)';ctx.fillStyle='rgba(0,0,0,1)';ctx.lineWidth=28;ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();ctx.beginPath();ctx.arc(b[0],b[1],14,0,Math.PI*2);ctx.fill();ctx.restore()};
 
-    const down=e=>{if(tool==='select')return;if(e.pointerType==='touch'&&!fingerDraw)return;if(e.pointerType==='touch'&&e.isPrimary===false)return;e.preventDefault();const c=canvas.current;c.setPointerCapture(e.pointerId);drawing.current=true;last.current=coords(e);origin.current=last.current;if(tool==='eraser'){eraseVectorAt(last.current);return}const ctx=c.getContext('2d');if(tool==='pen'){penPath.current=[last.current];before.current=ctx.getImageData(0,0,c.width,c.height)}if(tool!=='pen'&&tool!=='eraser'&&tool!=='pixelEraser'){before.current=ctx.getImageData(0,0,c.width,c.height);return}ctx.beginPath();ctx.arc(last.current[0],last.current[1],(tool==='eraser'||tool==='pixelEraser'?24:size)/2,0,Math.PI*2);ctx.fillStyle=(tool==='eraser'||tool==='pixelEraser')?'#fff':pen;ctx.fill()};
-    const move=e=>{if((e.pointerType==='touch'&&!fingerDraw)||tool==='select'||!drawing.current)return;e.preventDefault();const p=coords(e),ctx=canvas.current.getContext('2d');if(tool==='eraser'){eraseVectorAt(p);last.current=p;return}if(tool!=='pen'&&tool!=='eraser'&&tool!=='pixelEraser'){if(before.current)ctx.putImageData(before.current,0,0);drawShape(p);return}ctx.strokeStyle=(tool==='eraser'||tool==='pixelEraser')?'#fff':pen;ctx.lineWidth=(tool==='eraser'||tool==='pixelEraser')?24:size;ctx.lineJoin='round';ctx.lineCap='round';ctx.beginPath();ctx.moveTo(...last.current);ctx.lineTo(...p);ctx.stroke();if(tool==='pen'&&penPath.current)penPath.current.push(p);last.current=p};
-    const up=e=>{if((e.pointerType==='touch'&&!fingerDraw)||tool==='select'||!drawing.current)return;if(tool==='eraser'){drawing.current=false;return}if(tool!=='pen'&&tool!=='eraser'&&tool!=='pixelEraser'){
-      const pt=coords(e),ctx=canvas.current.getContext('2d');
-      if(before.current)ctx.putImageData(before.current,0,0);
-      const [x,y]=origin.current;
+    const down=e=>{
+      if(tool==='select')return;
+      if(e.pointerType==='touch'&&!fingerDraw)return;
+      if(e.pointerType==='touch'&&e.isPrimary===false)return;
+      e.preventDefault();const c=canvas.current;c.setPointerCapture(e.pointerId);
+      drawing.current=true;last.current=coords(e);origin.current=last.current;
+      if(tool==='eraser'||tool==='pixelEraser'){
+        shapeUndo.current.push(JSON.parse(JSON.stringify(vectorRef.current)));if(shapeUndo.current.length>40)shapeUndo.current.shift();shapeRedo.current=[];
+        // One eraser handles editable vector ink; pixel mode also removes old raster ink.
+        eraseVectorAt(last.current);
+        if(tool==='pixelEraser')eraseRasterAt(last.current,last.current);
+        return;
+      }
+      if(tool==='pen'){
+        penPath.current=[last.current];
+        // Vector ink is drawn on the temporary layer, never burned into the paper.
+        clearPreview();return;
+      }
+      clearPreview();
+    };
+    const move=e=>{
+      if((e.pointerType==='touch'&&!fingerDraw)||tool==='select'||!drawing.current)return;
+      e.preventDefault();const pt=coords(e);
+      if(tool==='eraser'||tool==='pixelEraser'){
+        // Sample along the pointer path so quick Pencil gestures don't skip ink.
+        const a=last.current||pt,steps=Math.max(1,Math.ceil(Math.hypot(pt[0]-a[0],pt[1]-a[1])/12));
+        for(let i=1;i<=steps;i++)eraseVectorAt([a[0]+(pt[0]-a[0])*i/steps,a[1]+(pt[1]-a[1])*i/steps]);
+        if(tool==='pixelEraser')eraseRasterAt(a,pt);
+      }else if(tool==='pen'){
+        if(penPath.current)penPath.current.push(pt);
+        const ctx=previewCanvas.current?.getContext('2d');
+        if(ctx){ctx.strokeStyle=pen;ctx.lineWidth=size;ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();ctx.moveTo(...last.current);ctx.lineTo(...pt);ctx.stroke()}
+      }else previewAt(pt);
+      last.current=pt;
+    };
+    const up=e=>{
+      if((e.pointerType==='touch'&&!fingerDraw)||tool==='select'||!drawing.current)return;
+      drawing.current=false;
+      if(drawFrame.current){cancelAnimationFrame(drawFrame.current);drawFrame.current=0}
+      if(tool==='eraser'||tool==='pixelEraser'){
+        if(tool==='pixelEraser')checkpoint();
+        clearPreview();return;
+      }
+      if(tool==='pen'){
+        const pts=penPath.current||[];
+        if(pts.length===1)pts.push([pts[0][0]+0.1,pts[0][1]+0.1]);
+        if(pts.length>=2)saveShapes(a=>[...a,{id:uid('stroke'),type:'stroke',points:pts,color:pen,width:size}]);
+        penPath.current=null;clearPreview();return;
+      }
+      const pt=coords(e),[x,y]=origin.current;
       if(Math.hypot(pt[0]-x,pt[1]-y)>3)saveShapes(a=>[...a,{id:uid('shape'),type:tool,x,y,x2:pt[0],y2:pt[1],color:pen,width:size}]);
-      drawing.current=false;before.current=null;return;
-    }if(tool==='pen'&&penPath.current){const ctx=canvas.current.getContext('2d');if(before.current)ctx.putImageData(before.current,0,0);const pts=penPath.current;if(pts.length===1)pts.push([pts[0][0]+0.1,pts[0][1]+0.1]);saveShapes(a=>[...a,{id:uid('stroke'),type:'stroke',points:pts,color:pen,width:size}]);penPath.current=null;drawing.current=false;before.current=null;return;}drawing.current=false;before.current=null;checkpoint()};
+      clearPreview();
+    };
     useEffect(()=>{const handler=e=>{if(!(e.ctrlKey||e.metaKey)||e.key.toLowerCase()!=='z')return;if(e.target.closest('input,textarea,[contenteditable]'))return;e.preventDefault();if(e.shiftKey)redo();else undo()};window.addEventListener('keydown',handler);return()=>window.removeEventListener('keydown',handler)});
     const duplicatePage=()=>{const current=pageList[page];const copy={...current,image:snapshot(),name:(current.name||'Page '+(page+1))+' (copy)',created:Date.now(),updated:Date.now()};setPages(prev=>{const list=prev.length?prev.slice():[current];list.splice(page+1,0,copy);return list});setPage(page+1);toast('Page duplicated')};
     const movePage=(direction)=>{const target=page+direction;if(target<0||target>=pageList.length)return;const image=snapshot();setPages(prev=>{const list=prev.length?prev.slice():pageList.slice();list[page]={...list[page],image};[list[page],list[target]]=[list[target],list[page]];return list});setPage(target)};
@@ -10582,11 +10662,12 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const printAllPages=async()=>{const w=window.open('','_blank');if(!w){toast('Allow pop-ups to print notebook');return}w.document.write('<p>Preparing notebook pages…</p>');const list=await Promise.all(pageList.map(async(p,i)=>({...p,image:await renderInkPage(p,i)})));const escInk=v=>String(v||'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));w.document.open();const body=list.map((p,i)=>'<section class="page"><header><h2>'+escInk(p.name||'Page '+(i+1))+'</h2>'+pdfProfileMarkup()+'<small>'+escInk(subject.name||subject.code||'')+' · '+(p.updated?new Date(p.updated).toLocaleString():'Not dated')+'</small></header>'+(p.image?'<img alt="Handwritten page '+(i+1)+'" src="'+p.image+'">':'<p class="empty">Blank page</p>')+'</section>').join('');w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Handwriting notebook</title><style>@page{size:A4;margin:14mm}*{box-sizing:border-box}body{font:12px Arial,sans-serif;color:#17252a;margin:0}.page{break-after:page;page-break-after:always}.page:last-child{break-after:auto;page-break-after:auto}header{border-bottom:2px solid #218566;padding-bottom:10px;margin-bottom:13px}header:before{content:"BSA STUDY DESK / HANDWRITING NOTEBOOK";display:block;font-size:9px;letter-spacing:1.5px;font-weight:700;color:#24765b;margin-bottom:8px}h2{font-size:19px;color:#173e32;margin:0 0 5px}small{color:#60766b}img{display:block;width:100%;max-height:245mm;object-fit:contain;object-position:top}.empty{color:#777}</style></head><body>'+body+'</body></html>');w.document.close();w.onload=()=>{const imgs=[...w.document.images];Promise.all(imgs.map(im=>im.complete?Promise.resolve():new Promise(resolve=>{im.onload=resolve;im.onerror=resolve}))).then(()=>w.print())}};
     return h('section',{className:'ink-panel'+(inkFullscreen?' ink-fullscreen':'')},h('div',{className:'ink-toolbar ink-heading'},h('strong',null,'Handwriting notebook'),h('span',{className:'muted small'},'Apple Pencil, stylus, finger or mouse · Auto-saved locally'),h('button',{className:'btn',onClick:()=>setInkSidebar(x=>!x)},inkSidebar?'Hide pages':'Show pages'),h('button',{className:'btn primary',onClick:()=>setInkFullscreen(x=>!x),title:'Distraction-free writing mode (Esc to exit)'},inkFullscreen?'⤢ Exit fullscreen':'⛶ Fullscreen'),h('select',{value:page,onChange:e=>setPage(Number(e.target.value))},pageList.map((p,i)=>h('option',{key:i,value:i},p.name))),h('button',{className:'btn',onClick:()=>{const name=prompt('Page name',pageList[page]?.name||'Page');if(name&&name.trim())setPages(prev=>{const a=prev.length?prev.slice():[{name:'Page 1',image:snapshot()}];a[page]={...a[page],name:name.trim(),updated:Date.now()};return a})}},'Rename page'),h('button',{className:'btn',onClick:()=>{const image=snapshot();setPages(prev=>{const next=prev.length?prev.slice():[{name:'Page 1',image:''}];next[page]={...next[page],image};return [...next,{name:'Page '+(next.length+1),image:'',created:Date.now(),updated:Date.now()}]});setPage(pageList.length)}},'+ Page'),h('button',{className:'btn',onClick:duplicatePage},'Duplicate'),h('button',{className:'btn',disabled:page===0,onClick:()=>movePage(-1),title:'Move current page earlier'},'↑ Move'),h('button',{className:'btn',disabled:page>=pageList.length-1,onClick:()=>movePage(1),title:'Move current page later'},'↓ Move')),
       h('div',{className:'ink-workspace'},inkSidebar&&h('aside',{className:'ink-page-sidebar'},h('strong',null,'My pages ('+pageList.length+')'),h('input',{type:'search',placeholder:'Search pages...',value:inkQuery,onChange:e=>setInkQuery(e.target.value),'aria-label':'Search handwritten pages'}),h('select',{value:inkSort,onChange:e=>setInkSort(e.target.value),'aria-label':'Sort pages'},h('option',{value:'recent'},'Recently modified'),h('option',{value:'oldest'},'Oldest modified'),h('option',{value:'name'},'Page name'),h('option',{value:'order'},'Page order')),h('div',{className:'ink-page-list'},pageList.map((pg,i)=>({pg,i})).filter(x=>(x.pg.name||'').toLowerCase().includes(inkQuery.toLowerCase())).sort((a,b)=>inkSort==='name'?(a.pg.name||'').localeCompare(b.pg.name||''):inkSort==='order'?a.i-b.i:inkSort==='oldest'?(a.pg.updated||0)-(b.pg.updated||0):(b.pg.updated||0)-(a.pg.updated||0)).map(({pg,i})=>h('button',{key:i,className:'ink-page-item'+(page===i?' selected':''),onClick:()=>setPage(i)},h('span',{className:'ink-page-index'},String(i+1)),h('span',{className:'ink-page-meta'},h('strong',null,pg.name||'Page '+(i+1)),h('small',null,pg.updated?'Modified '+new Date(pg.updated).toLocaleString():'Not yet saved')))))),h('div',{className:'ink-writing-area'},h('div',{className:'ink-page-caption'},h('strong',null,pageList[page]?.name||'Page '+(page+1)),h('span',{className:'muted small'},'Last modified: ',pageList[page]?.updated?new Date(pageList[page].updated).toLocaleString():'Not yet saved')),
-      h('div',{className:'ink-toolbar'},['select','pen','eraser','pixelEraser','line','doubleline','taccount','arrow','rectangle','ellipse'].map(t=>h('button',{key:t,className:'btn'+(tool===t?' primary':''),onClick:()=>setTool(t),'aria-pressed':tool===t},({select:'↖ Select / Move',pen:'✎ Pen',eraser:'⌫ Stroke eraser',pixelEraser:'◻ Pencil eraser',line:'／ Line',doubleline:'═ Double line',taccount:'⊤ T-account',arrow:'→ Arrow',rectangle:'▭ Rectangle',ellipse:'◯ Ellipse'})[t])),h('button',{className:'btn',disabled:!shapeUndo.current.length,onClick:undoShape},'Undo shape'),h('button',{className:'btn',disabled:!shapeRedo.current.length,onClick:redoShape},'Redo shape'),h('button',{className:'btn',disabled:!selectedShape,onClick:()=>saveShapes(a=>a.map(sh=>sh.id===selectedShape?(sh.type==='stroke'?{...sh,points:(sh.points||[]).map(pt=>{const b=shapeBounds(sh);return [b.left+(pt[0]-b.left)*1.2,b.top+(pt[1]-b.top)*1.2]})}:{...sh,x2:sh.x+(sh.x2-sh.x)*1.2,y2:sh.y+(sh.y2-sh.y)*1.2}):sh))},'Enlarge shape'),h('button',{className:'btn',disabled:!selectedShape,onClick:()=>saveShapes(a=>a.map(sh=>sh.id===selectedShape?(sh.type==='stroke'?{...sh,points:(sh.points||[]).map(pt=>{const b=shapeBounds(sh);return [b.left+(pt[0]-b.left)*0.8,b.top+(pt[1]-b.top)*0.8]})}:{...sh,x2:sh.x+(sh.x2-sh.x)*0.8,y2:sh.y+(sh.y2-sh.y)*0.8}):sh))},'Shrink shape'),h('button',{className:'btn',disabled:!selectedShape,onClick:()=>{saveShapes(a=>a.filter(x=>x.id!==selectedShape));setSelectedShape(null)}},'Delete selection'),h('button',{className:'btn',disabled:historyIndex.current<=0,onClick:undo,title:'Undo last stroke or shape'},'↶ Undo'),h('button',{className:'btn',disabled:historyIndex.current>=history.current.length-1,onClick:redo,title:'Redo'},'↷ Redo')),
+      h('div',{className:'ink-toolbar'},['select','pen','eraser','pixelEraser','line','doubleline','taccount','arrow','rectangle','ellipse'].map(t=>h('button',{key:t,className:'btn'+(tool===t?' primary':''),onClick:()=>setTool(t),'aria-pressed':tool===t},({select:'↖ Select / Move',pen:'✎ Pen',eraser:'⌫ Stroke eraser',pixelEraser:'◻ Pencil eraser (all ink)',line:'／ Line',doubleline:'═ Double line',taccount:'⊤ T-account',arrow:'→ Arrow',rectangle:'▭ Rectangle',ellipse:'◯ Ellipse'})[t])),h('button',{className:'btn',disabled:!shapeUndo.current.length,onClick:undoShape},'Undo shape'),h('button',{className:'btn',disabled:!shapeRedo.current.length,onClick:redoShape},'Redo shape'),h('button',{className:'btn',disabled:!selectedShape,onClick:()=>saveShapes(a=>a.map(sh=>sh.id===selectedShape?(sh.type==='stroke'?{...sh,points:(sh.points||[]).map(pt=>{const b=shapeBounds(sh);return [b.left+(pt[0]-b.left)*1.2,b.top+(pt[1]-b.top)*1.2]})}:{...sh,x2:sh.x+(sh.x2-sh.x)*1.2,y2:sh.y+(sh.y2-sh.y)*1.2}):sh))},'Enlarge shape'),h('button',{className:'btn',disabled:!selectedShape,onClick:()=>saveShapes(a=>a.map(sh=>sh.id===selectedShape?(sh.type==='stroke'?{...sh,points:(sh.points||[]).map(pt=>{const b=shapeBounds(sh);return [b.left+(pt[0]-b.left)*0.8,b.top+(pt[1]-b.top)*0.8]})}:{...sh,x2:sh.x+(sh.x2-sh.x)*0.8,y2:sh.y+(sh.y2-sh.y)*0.8}):sh))},'Shrink shape'),h('button',{className:'btn',disabled:!selectedShape,onClick:()=>{saveShapes(a=>a.filter(x=>x.id!==selectedShape));setSelectedShape(null)}},'Delete selection'),h('button',{className:'btn',disabled:historyIndex.current<=0,onClick:undo,title:'Undo last stroke or shape'},'↶ Undo'),h('button',{className:'btn',disabled:historyIndex.current>=history.current.length-1,onClick:redo,title:'Redo'},'↷ Redo')),
       h('div',{className:'ink-toolbar'},['#183c33','#126dca','#bd3434','#111111'].map(c=>h('button',{key:c,className:'ink-swatch',style:{background:c,outline:pen===c&&tool!=='eraser'?'3px solid #83bba2':'none'},'aria-label':'Ink '+c,onClick:()=>{setPen(c);setTool('pen')}})),h('label',{style:{display:'inline-flex',alignItems:'center',gap:'8px'}},'Pen size ',h('input',{type:'range',min:1,max:24,step:1,value:size,onChange:e=>setSize(Number(e.target.value)),'aria-label':'Pen thickness',style:{width:'145px',accentColor:pen}}),h('output',{style:{minWidth:'42px',fontVariantNumeric:'tabular-nums'}},size+' px')),h('button',{className:'btn',onClick:()=>setSize(3)},'Reset pen size'),h('button',{className:'btn',onClick:()=>{if(confirm('Clear this handwritten page?')){repaint('');saveShapes(()=>[]);setSelectedShape(null);checkpoint()}}},'Clear page'),h('button',{className:'btn',onClick:exportPng},'Export PNG'),h('button',{className:'btn',onClick:print},'Print page / PDF'),h('button',{className:'btn',onClick:printAllPages},'Print all pages / PDF'),h('button',{className:'btn',onClick:exportNotebook},'Backup notebook'),h('label',{className:'btn',style:{cursor:'pointer'}},'Restore notebook',h('input',{type:'file',accept:'.json,application/json',style:{display:'none'},onChange:importNotebook})),h('button',{className:'btn danger ghost',onClick:()=>{if(!confirm('Delete this handwritten page? Export a backup first.'))return;const remaining=pageList.filter((_,i)=>i!==page);const next=remaining.length?remaining:[{name:'Page 1',image:'',created:Date.now(),updated:Date.now()}];setPages(next);setPage(0);repaint(next[0].image||'',true)}},'Delete page')),
       h('div',{className:'ink-toolbar'},h('span',{className:'muted small'},'✋ One finger: move paper · 🤏 Two fingers: zoom · ✎ Pencil: write · ↖ Select: tap and drag'),h('label',{style:{display:'inline-flex',alignItems:'center',gap:'8px'}},'Zoom ',h('input',{type:'range',min:50,max:400,step:1,value:inkZoom,onChange:e=>zoomButton(Number(e.target.value)),'aria-label':'Paper zoom',style:{width:'120px'}}),h('output',null,inkZoom+'%')),h('button',{className:'btn',disabled:inkZoom<=50,onClick:()=>zoomButton(inkZoom-25)},'−'),h('button',{className:'btn',disabled:inkZoom>=400,onClick:()=>zoomButton(inkZoom+25)},'+'),h('button',{className:'btn',onClick:()=>zoomButton(100)},'Reset zoom'),h('label',{className:'check'},h('input',{type:'checkbox',checked:fingerDraw,onChange:e=>setFingerDraw(e.target.checked)}),'Finger draws (off = pan)'),h('label',null,'Paper style ',h('select',{value:paper,onChange:e=>setPaper(e.target.value)},[['plain','Plain'],['lined','Ruled'],['grid','Graph grid'],['dots','Dot grid']].map(([v,l])=>h('option',{value:v,key:v},l))))),
       h('div',{ref:inkViewport,className:'ink-scroll ink-paper-'+paper,style:{touchAction:'none',overscrollBehavior:'contain',minHeight:'45vh'}},h('div',{style:{position:'relative',width:(inkZoom*7.6)+'px',maxWidth:'none',margin:'0 auto'}},
       h('canvas',{ref:canvas,width:1100,height:1500,className:'ink-canvas',style:{display:'block',width:'100%',touchAction:'none'},onPointerDown:down,onPointerMove:move,onPointerUp:up,onPointerCancel:up}),
+      h('canvas',{ref:previewCanvas,width:1100,height:1500,'aria-hidden':true,style:{position:'absolute',inset:0,width:'100%',height:'100%',pointerEvents:'none',touchAction:'none'}}),
       h('svg',{viewBox:'0 0 1100 1500',preserveAspectRatio:'none',style:{position:'absolute',inset:0,width:'100%',height:'100%',pointerEvents:tool==='select'?'auto':'none',touchAction:'none'},
         onPointerDown:e=>{if(tool!=='select'||e.target!==e.currentTarget)return;const r=e.currentTarget.getBoundingClientRect();selectAt([(e.clientX-r.left)*1100/r.width,(e.clientY-r.top)*1500/r.height])},
         onPointerMove:e=>{if(!dragVector.current)return;e.preventDefault();const r=e.currentTarget.getBoundingClientRect(),x=(e.clientX-r.left)*1100/r.width,y=(e.clientY-r.top)*1500/r.height;const d=dragVector.current;const dx=x-d.x,dy=y-d.y;dragVector.current={...d,x,y};saveShapes(a=>a.map(sh=>sh.id===d.id?(sh.type==='stroke'?{...sh,points:(sh.points||[]).map(pt=>[pt[0]+dx,pt[1]+dy])}:{...sh,x:sh.x+dx,x2:sh.x2+dx,y:sh.y+dy,y2:sh.y2+dy}):sh),false)},
@@ -10630,7 +10711,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       if(publishBusy)return;
       if(!githubToken.trim()){setPublishStatus('Enter a fine-grained GitHub token with Contents: Read and write access to the shared repository.');return}
       if(!allowed.length||!Object.values(kinds).some(Boolean)){setPublishStatus('Select at least one subject and material type.');return}
-      if(!window.confirm('Replace the PUBLIC shared website with a read-only Study Library containing ONLY lectures, quizzes and problem sets? Review the materials first.'))return;
+      if(!window.confirm('Publish the FULL BSA Study Desk interface in read-only mode, with ONLY selected lectures, quizzes and problem sets? Review the materials first.'))return;
       setPublishBusy(true);setPublishStatus('Connecting to GitHub…');
       try{
         const headers={'Authorization':'Bearer '+githubToken.trim(),'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'};
@@ -10638,11 +10719,11 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
         let sha;
         if(existing.ok){const result=await existing.json();sha=result.sha}
         else if(existing.status!==404){const err=await existing.text();throw Error('GitHub read failed ('+existing.status+'): '+err.slice(0,220))}
-        const utf8=new TextEncoder().encode(safeSharedHtml());
+        const utf8=new TextEncoder().encode(await makeFullSharedHtml());
         let binary='';for(let i=0;i<utf8.length;i+=16384)binary+=String.fromCharCode(...utf8.subarray(i,i+16384));
         const content=btoa(binary);
         setPublishStatus('Uploading shared website to GitHub…');
-        const response=await fetch(githubEndpoint,{method:'PUT',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({message:'Publish read-only Study Library (lectures, quizzes, problem sets)',content,...(sha?{sha}:{})})});
+        const response=await fetch(githubEndpoint,{method:'PUT',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({message:'Publish full BSA Study Desk (read-only lectures, quizzes, problem sets)',content,...(sha?{sha}:{})})});
         if(!response.ok){const err=await response.text();throw Error('GitHub publish failed ('+response.status+'): '+err.slice(0,260))}
         const timestamp=new Date().toLocaleString();
         setLastPublish(timestamp);setPublishStatus('Published to GitHub at '+timestamp+'. GitHub Pages may take a few minutes to update.');toast('Shared website published to GitHub');
@@ -10664,41 +10745,47 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     // Full-interface export: the same app shell, with a sanitized, published snapshot.
     const sharedSnapshot=()=>{
       const subjects=data.subjects.filter(x=>allowed.includes(x.id)).map(x=>{
-        const clean={id:x.id,name:x.name,code:x.code,school:x.school,textbook:!!x.textbook};
-        clean.topics=(x.topics||[]).map(t=>({...t,status:'Not started',done:false,sub:(t.sub||[]).map(v=>({...v,done:false}))}));
-        clean.cards=kinds.cards?(x.cards||[]).map(c=>({id:c.id,topicId:c.topicId,q:c.q,a:showAnswers?c.a:'',tip:showAnswers?c.tip:'',conf:null})):[];
-        clean.lectures=kinds.lectures?(x.lectures||[]).map(l=>JSON.parse(JSON.stringify(l))):[];
-        clean.psets=kinds.problems?(x.psets||[]).map(set=>JSON.parse(JSON.stringify(set))):[];
-        clean.quizzes=kinds.quizzes?(x.quizzes||[]).map(q=>JSON.parse(JSON.stringify(q))):[];
+        // Publish only the three approved material collections. Navigation topics
+        // are structural metadata, not progress, grades, or private study records.
+        const clean={id:x.id,name:x.name,code:x.code,school:'',textbook:false};
+        clean.topics=(x.topics||[]).map(t=>({id:t.id,title:t.title,name:t.name,chapter:t.chapter,unit:t.unit,status:'Not started',done:false,sub:(t.sub||[]).map(v=>({id:v.id,title:v.title,name:v.name,done:false}))}));
+        clean.cards=[];
+        clean.lectures=(x.lectures||[]).map(l=>JSON.parse(JSON.stringify(l)));
+        clean.psets=(x.psets||[]).map(set=>JSON.parse(JSON.stringify(set)));
+        clean.quizzes=(x.quizzes||[]).map(q=>JSON.parse(JSON.stringify(q)));
         clean.mistakes=[];clean.sessions=[];clean.grades=[];
         return clean;
       });
-      return {version:1,updatedAt:Date.now(),activeId:subjects[0]?.id||'cfas',settings:{...DEFAULT_SETTINGS,skin:data.settings?.skin||'emerald'},subjects};
+      return {version:1,updatedAt:Date.now(),activeId:subjects[0]?.id||'',settings:{...DEFAULT_SETTINGS},subjects};
     };
     const makeFullSharedHtml=async()=>{
+      // Use the exact personal dashboard HTML as the public shell, preserving
+      // all component layouts, routes, button placement and reading behavior.
       let source='';
       try{const r=await fetch(location.href.split('#')[0],{cache:'no-store'});if(r.ok)source=await r.text()}catch(e){}
-      if(!source||!source.includes('function App()'))throw Error('Could not load the dashboard source. Open your published personal GitHub Pages website before exporting.');
-      // Prevent recursive self-publishing: the public version never exposes GitHub publishing.
+      if(!source||!source.includes('function App()'))throw Error('Could not read your personal dashboard HTML. Open your personal GitHub Pages site, then publish again.');
       const snapshot=sharedSnapshot();
       const safeJSON=JSON.stringify(snapshot).replace(/</g,'\\u003c').replace(/>/g,'\\u003e').replace(/&/g,'\\u0026');
       const boot='<script>window.__BSA_SHARED_SNAPSHOT__='+safeJSON+';window.__BSA_READ_ONLY__=true;<'+'/script>';
-      const style='<style id="bsa-shared-mode">.bsa-readonly-banner{position:fixed;right:12px;top:10px;z-index:999999;background:#175e45;color:white;padding:7px 12px;border-radius:99px;box-shadow:0 4px 14px #0003;font:700 12px system-ui;pointer-events:none}@media print{.bsa-readonly-banner{display:none!important}}</style>';
-      source=source.replace('</head>',style+boot+'</head>');
+      const css='<style id="bsa-shared-style">.bsa-readonly-banner{position:fixed;right:12px;top:10px;z-index:999999;background:#175e45;color:white;padding:7px 12px;border-radius:99px;box-shadow:0 4px 14px #0003;font:700 12px system-ui;pointer-events:none}@media print{.bsa-readonly-banner{display:none!important}}</style>';
+      source=source.replace('</head>',css+boot+'</head>');
       source=source.replace('<div id="root"></div>','<div class="bsa-readonly-banner">BSA Study Desk · Read-only</div><div id="root"></div>');
-      source=source.replace('const [data, setData] = useState(() => loadLocal() || buildDefault());','const [data, setData] = useState(() => window.__BSA_SHARED_SNAPSHOT__ || loadLocal() || buildDefault());');
-      source=source.replace('const update = useCallback((fn, whole) => {','const update = useCallback((fn, whole) => { if(window.__BSA_READ_ONLY__)return;');
-      source=source.replace('const replaceAll = (incoming) => {','const replaceAll = (incoming) => { if(window.__BSA_READ_ONLY__)return;');
-      source=source.replace('const openEditor = (type, item = null, defaults = {}) => {','const openEditor = (type, item = null, defaults = {}) => { if(window.__BSA_READ_ONLY__)return;');
-      source=source.replace('localStorage.setItem(STORE_KEY, JSON.stringify(data));','if(!window.__BSA_READ_ONLY__)localStorage.setItem(STORE_KEY, JSON.stringify(data));');
-      source=source.replace('const setSettings = (st) => {','const setSettings = (st) => { if(window.__BSA_READ_ONLY__)return;');
-      // Do not expose personal publishing tools on the public website.
-      source=source.replace('nav.tab === "toolkit" && h(ToolkitErrorBoundary', 'nav.tab === "toolkit" && h(ToolkitErrorBoundary');
-      source=source.replace('["share","Classmate sharing"],','');
-      source=source.replace(/Classmate Study Desk/g,'BSA Study Desk').replace(/Classmate Library/g,'Study Library').replace(/Classmate sharing/g,'Sharing').replace(/classmate tools/g,'study tools').replace(/classmates/g,'visitors');
+      const changes=[
+        ['const [data, setData] = useState(() => loadLocal() || buildDefault());','const [data, setData] = useState(() => window.__BSA_SHARED_SNAPSHOT__ || loadLocal() || buildDefault());'],
+        ['const update = useCallback((fn, whole) => {','const update = useCallback((fn, whole) => { if(window.__BSA_READ_ONLY__)return;'],
+        ['const replaceAll = (incoming) => {','const replaceAll = (incoming) => { if(window.__BSA_READ_ONLY__)return;'],
+        ['const openEditor = (type, item = null, defaults = {}) => {','const openEditor = (type, item = null, defaults = {}) => { if(window.__BSA_READ_ONLY__)return;'],
+        ['const setSettings = (st) => {','const setSettings = (st) => { if(window.__BSA_READ_ONLY__)return;'],
+        ['localStorage.setItem(STORE_KEY, JSON.stringify(data));','if(!window.__BSA_READ_ONLY__)localStorage.setItem(STORE_KEY, JSON.stringify(data));'],
+        ['if (tab === "data") {','if(window.__BSA_READ_ONLY__ && (tab === "data" || tab === "share"))return; if (tab === "data") {']
+      ];
+      for(const [from,to] of changes){if(!source.includes(from))throw Error('Read-only compatibility check failed: '+from.slice(0,65));source=source.replace(from,to)}
+      // Keep the full navigation and visible buttons. All core document
+      // mutations are blocked, and edit-only controls are disabled on capture.
+      const guard='<script>(function(){if(!window.__BSA_READ_ONLY__)return;const forbidden=/^(add|new|create|edit|delete|remove|rename|duplicate|reset|clear|import|upload|save changes|change appearance|add subject|add topic|add lecture|add problem|add quiz|manage|reorder|publish|sync now|restore|apply theme|customize appearance)/i;document.addEventListener("click",function(e){const el=e.target.closest("button,[role=button]");if(!el)return;const label=(el.getAttribute("aria-label")||el.innerText||el.title||"").trim();if(forbidden.test(label)){e.preventDefault();e.stopImmediatePropagation();}},true);document.addEventListener("submit",function(e){e.preventDefault();e.stopImmediatePropagation()},true)})();<'+'/script>';
+      source=source.replace('</body>',guard+'</body>');
+      source=source.replace(/Classmate Study Desk/g,'BSA Study Desk').replace(/Classmate Library/g,'Study Library').replace(/Classmate sharing/g,'Sharing').replace(/classmates/g,'visitors');
       source=source.replace('<title>BSA Study Desk</title>','<title>BSA Study Desk · Read-only</title>');
-      // Exclude the publishing panel itself from the public UI; keep all study navigation.
-      source=source.replace('if (tab === "data") {','if (window.__BSA_READ_ONLY__ && (tab === "share" || tab === "data")) return; if (tab === "data") {');
       return source;
     };
     const safeSharedHtml=()=>{
@@ -10719,7 +10806,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       const js=`const buttons=[...document.querySelectorAll('[data-subject]')].filter(x=>x.tagName==='BUTTON');const sections=[...document.querySelectorAll('.collection')];let active='all';let kind='all';function render(){sections.forEach(el=>{el.hidden=(active!=='all'&&el.dataset.subject!==active)||(kind!=='all'&&el.dataset.kind!==kind)});buttons.forEach(b=>b.classList.toggle('active',b.dataset.subject===active));document.querySelectorAll('[data-kind-filter]').forEach(b=>b.classList.toggle('active',b.dataset.kindFilter===kind))}buttons.forEach(b=>b.addEventListener('click',()=>{active=b.dataset.subject;render()}));document.querySelectorAll('[data-kind-filter]').forEach(b=>b.addEventListener('click',()=>{kind=b.dataset.kindFilter;render()}));render();`;
       return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>BSA Study Desk · Study Library</title><style>'+css+'</style></head><body><div class="shell"><aside><h1>Σ BSA Study Desk</h1><p>Study Library · Read-only</p><button data-subject="all" class="active">All subjects</button>'+nav+'</aside><main><header><h1>Study Library</h1><p>Lectures, quizzes and problem sets</p><div class="toolbar"><button class="secondary" data-kind-filter="all">All materials</button><button class="secondary" data-kind-filter="lectures">Lectures</button><button class="secondary" data-kind-filter="quizzes">Quizzes</button><button class="secondary" data-kind-filter="problems">Problem sets</button>'+(permissions.download?'<button onclick="window.print()">Print / Save PDF</button>':'')+'</div></header>'+(blocks.join('')||'<div class="empty">No published materials yet.</div>')+'</main></div><script>'+js+'<'+'/script></body></html>';
     };
-    const downloadDashboard=async()=>{if(!allowed.length||!Object.values(kinds).some(Boolean)){toast('Select subjects and materials first');return}const blob=new Blob([safeSharedHtml()],{type:'text/html;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='index.html';a.click();setTimeout(()=>URL.revokeObjectURL(url),4000);toast('Shared dashboard downloaded. Review before publishing.')};
+    const downloadDashboard=async()=>{if(!allowed.length){toast('Select subjects first');return}try{const blob=new Blob([await makeFullSharedHtml()],{type:'text/html;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='index.html';a.click();setTimeout(()=>URL.revokeObjectURL(url),4000);toast('Full read-only dashboard downloaded.')}catch(e){toast('Export failed: '+e.message)}};
     const download=()=>{if(!allowed.length||!Object.values(kinds).some(Boolean)){toast('Select at least one subject and material type');return}const blob=new Blob([html()],{type:'text/html;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='BSA-Classmate-Library.html';a.click();setTimeout(()=>URL.revokeObjectURL(url),4000);toast('Read-only handout downloaded. Review the file before sharing.')};
     return h('section',{className:'toolkit-panel share-panel'},h('h2',null,'Share Dashboard'),h('p',{className:'muted'},'Publish only lectures, quizzes and problem sets in a separate read-only Study Library. Subject management, personal settings and other data are never exported.'),
       h('h3',null,'Permission Manager — shared website export'),
