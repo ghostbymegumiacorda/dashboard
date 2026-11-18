@@ -210,8 +210,8 @@ kbd { font-family: var(--body); font-size: .72em; border: 1px solid currentColor
 .rail-tools { margin-top: auto; display: flex; flex-direction: column; gap: .15rem; border-top: 1px solid var(--line); padding-top: .8rem; }
 .rail-tools > button { display: flex; align-items: center; gap: .6rem; border: 0; background: none; padding: .5rem .75rem; border-radius: var(--r-sm); cursor: pointer; color: var(--muted); font-weight: 700; font-size: .92rem; text-align: left; }
 .rail-tools > button:hover { background: var(--surface-2); color: var(--text); }
-.theme-dots { display: flex; flex-wrap: wrap; gap: .5rem; padding: .5rem .75rem; }
-.theme-dots button { width: 1.6rem; height: 1.6rem; border-radius: 50%; cursor: pointer; border: 2px solid var(--line); background: linear-gradient(135deg, var(--a) 0 50%, var(--b) 50% 100%); padding: 0; }
+.theme-dots { display: flex; flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: .2rem; padding: .5rem .35rem; width: 100%; min-width: 0; }
+.theme-dots button { flex: 0 0 1.45rem; width: 1.45rem; height: 1.45rem; border-radius: 50%; cursor: pointer; border: 2px solid var(--line); background: linear-gradient(135deg, var(--a) 0 50%, var(--b) 50% 100%); padding: 0; }
 .theme-dots button.on { border-color: var(--text); box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent); }
 .save-note { display: flex; align-items: center; gap: .35rem; font-size: .78rem; color: var(--muted); padding: 0 .4rem; margin: 0; }
 .save-note .ico { color: var(--ok); }
@@ -659,8 +659,8 @@ tbody tr:last-child td { border-bottom: 0; }
 [data-mode="light"] .hero-code { color: var(--accent-2); }
 .ring-num { display: flex; align-items: center; justify-content: center; gap: 1px; line-height: 1; }
 .ring-num small { margin-top: .5em; }
-.theme-dots { gap: .4rem; }
-.theme-dots button { width: 1.35rem; height: 1.35rem; }
+.theme-dots { gap: .15rem; }
+.theme-dots button { flex-basis: 1.35rem; width: 1.35rem; height: 1.35rem; }
 @media (max-width: 899px) { .shell { align-content: start; } }
 
 /* ---------- study sessions ---------- */
@@ -1295,6 +1295,32 @@ input.gc-name.big { font-family: var(--display); font-size: 1.1rem; }
 .ai-lab-question strong,.ai-lab-result strong{display:block;margin-bottom:.5rem}
 .ai-practice textarea{min-height:9rem}
 .ai-practice .row-center{justify-content:flex-start}
+
+/* Concept Vault: safe multi-select and duplicate cleanup */
+.vault-bulk-tools { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:12px 0; }
+.vault-select-card { display:flex; gap:12px; align-items:flex-start; padding:15px; border:1px solid var(--line, #b7cfbf); border-radius:12px; background:var(--card, #fff); cursor:pointer; min-width:0; }
+.vault-select-card.is-selected { outline:2px solid #087e52; }
+.vault-select-card input { flex:none; width:18px; height:18px; margin-top:2px; accent-color:#087e52; }
+.vault-select-content { display:flex; flex-direction:column; gap:7px; overflow-wrap:anywhere; min-width:0; }
+.vault-select-content > span { opacity:.8; white-space:pre-wrap; }
+.vault-delete-confirm { border:1px solid #b84c42; border-radius:12px; padding:14px; margin:12px 0; display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+.vault-delete-confirm p { flex-basis:100%; margin:0; }
+
+/* v22: clear navigation, improved responsive spacing and curriculum */
+.rail-nav {display:flex;flex-direction:column;gap:.18rem;overflow-y:auto;scrollbar-width:thin}
+.rail-nav button {min-height:2.55rem;transition:background .16s ease,border-color .16s ease}
+.rail-nav button:nth-child(2),.rail-nav button:nth-child(4),.rail-nav button:nth-child(8) {margin-top:.65rem;border-top:1px solid var(--line);padding-top:.65rem}
+.curriculum-shortcut {display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1rem 1.2rem;border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);margin:1rem 0}
+.curriculum-shortcut p {margin:.3rem 0 0}
+.curriculum-summary {display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1rem}
+.curriculum-summary strong {display:block;font-size:1.5rem}
+.curriculum-summary span {display:block}
+.curriculum-list {display:grid;gap:.5rem;margin:1rem 0}
+.curriculum-course {display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.85rem;border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface-2)}
+.curriculum-course-main {min-width:0}
+.curriculum-course-main p {margin:.3rem 0 0}
+.curriculum-course .btn {flex-shrink:0}
+@media(max-width:650px){.curriculum-shortcut,.curriculum-course {align-items:stretch;flex-direction:column}.curriculum-course .btn {align-self:flex-start}.curriculum-summary {flex-wrap:wrap}}
 </style>
 </head>
 <body>
@@ -1645,9 +1671,13 @@ input.gc-name.big { font-family: var(--display); font-size: 1.1rem; }
     { id: "matcha", name: "Matcha", sub: "Soft green tea", dots: ["#eef3e6", "#3f6b0c", "#93520f"] },
     { id: "peach", name: "Peach", sub: "Warm peach with teal", dots: ["#fff3ea", "#0f766e", "#b4400c"] },
     { id: "sky", name: "Sky", sub: "Airy light blue", dots: ["#edf5fb", "#0369a1", "#a1470a"] },
+    { id: "paper", name: "Study Paper", sub: "Soft ivory and ink", dots: ["#f7f3e9", "#365b7a", "#b27738"] },
+    { id: "forest", name: "Forest Night", sub: "Deep evergreen", dots: ["#101e1a", "#8bd9a3", "#d7b36b"] },
+    { id: "midnight", name: "Midnight Blue", sub: "Low-glare navy", dots: ["#10182d", "#91b6ff", "#ffc28b"] },
+    { id: "sand", name: "Warm Sand", sub: "Calm beige", dots: ["#f4eadc", "#926337", "#3b7d78"] },
     { id: "custom", name: "Custom", sub: "Pick your own colors", dots: ["#101828", "#7c9cff", "#ffb547"] }
   ];
-  const DEFAULT_SETTINGS = { skin: "slate", fontScale: 1, contrast: false, comfort: false, calm: false, newPerDay: 10, maxPerDay: 120, speakRate: 1, pomoOn: false, pomoWork: 25, pomoBreak: 5, pomoLong: 15, remindAt: "" };
+  const DEFAULT_SETTINGS = { favoriteSkins: ["slate","ateneo","emerald","light","lamplight","oled","sunset"], skin: "slate", fontScale: 1, contrast: false, comfort: false, calm: false, newPerDay: 10, maxPerDay: 120, speakRate: 1, pomoOn: false, pomoWork: 25, pomoBreak: 5, pomoLong: 15, remindAt: "" };
   function buildCfas() {
     return {
       id: "cfas",
@@ -2229,7 +2259,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
      - Offline edits are counted and kept; they upload as soon as a connection is back. */
   const GH_KEYS = { user: "bsa_gh_user", repo: "bsa_gh_repo", token: "bsa_gh_key", path: "bsa_gh_path" };
   const SYNC_META_KEY = "bsa_sync_meta";
-  const COLLS = ["topics", "cards", "mistakes", "quizzes", "sessions", "days", "lectures", "psets", "classes", "attend", "tasks", "aiAttempts"];
+  const COLLS = ["topics", "cards", "mistakes", "quizzes", "sessions", "days", "lectures", "psets", "classes", "attend", "tasks", "aiAttempts", "learningEvents"];
   const TOMB_DAYS = 120;
   const POLL_MS = 3e4;
   const lsGet = (k) => {
@@ -3465,7 +3495,8 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     );
   }
   function ThemeDots({ settings, setSettings }) {
-    return /* @__PURE__ */ React.createElement("div", { className: "theme-dots", role: "group", "aria-label": "Theme" }, SKINS.map((s) => /* @__PURE__ */ React.createElement(
+    const favorites = (Array.isArray(settings.favoriteSkins) ? settings.favoriteSkins : DEFAULT_SETTINGS.favoriteSkins).filter(id => SKINS.some(s => s.id === id)).slice(0, 7);
+    return /* @__PURE__ */ React.createElement("div", { className: "theme-dots", role: "group", "aria-label": "Favorite themes" }, favorites.map(id => SKINS.find(s => s.id === id)).filter(Boolean).map((s) => /* @__PURE__ */ React.createElement(
       "button",
       {
         key: s.id,
@@ -3494,6 +3525,49 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const r = 30, c = 2 * Math.PI * r, p = total ? done / total : 0;
     return /* @__PURE__ */ React.createElement("div", { className: "ring", "aria-label": `${done} of ${total} topics mastered` }, /* @__PURE__ */ React.createElement("svg", { viewBox: "0 0 72 72", width: "88", height: "88", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("circle", { cx: "36", cy: "36", r, className: "ring-bg" }), /* @__PURE__ */ React.createElement("circle", { cx: "36", cy: "36", r, className: "ring-fg", strokeDasharray: `${c * p} ${c}`, transform: "rotate(-90 36 36)", style: { opacity: p ? 1 : 0 } })), /* @__PURE__ */ React.createElement("span", { className: "ring-num" }, done, /* @__PURE__ */ React.createElement("small", null, "/", total)));
   }
+  /* Unified, subject-neutral learning evidence. Events merge item-by-item across devices. */
+  function learningCapture(before, after, timestamp) {
+    if (!before || !after) return;
+    const prev = new Map((before.subjects || []).map(x => [x.id, x]));
+    for (const sub of after.subjects || []) {
+      const old = prev.get(sub.id);
+      if (!old) continue;
+      if (!Array.isArray(sub.learningEvents)) sub.learningEvents = [];
+      const oldCards = new Map((old.cards || []).map(x => [x.id, x]));
+      for (const card of sub.cards || []) {
+        const was = oldCards.get(card.id);
+        if (!was || !card.srs || !card.srs.last) continue;
+        const changed = JSON.stringify(was.srs || null) !== JSON.stringify(card.srs);
+        if (!changed) continue;
+        const rating = card.conf || "";
+        sub.learningEvents.push({id:uid("le"),topicId:card.topicId||"",kind:"flashcard",sourceId:card.id, result:rating === "known" ? "correct" : rating === "again" ? "incorrect" : "partial",assisted:false,at:timestamp,date:today(),note:"Spaced repetition review"});
+      }
+      const oldSets = new Map((old.psets || []).map(x => [x.id,x]));
+      for (const set of sub.psets || []) {
+        const beforeSet = oldSets.get(set.id);
+        if (!beforeSet) continue;
+        const oldProblems = new Map((beforeSet.problems || []).map(x => [x.id,x]));
+        for (const problem of set.problems || []) {
+          const was = oldProblems.get(problem.id);
+          if (!was || was.st === problem.st || !["got","miss"].includes(problem.st)) continue;
+          sub.learningEvents.push({id:uid("le"),topicId:problem.topicId||set.topicId||"",kind:"problem",sourceId:problem.id,result:problem.st === "got" ? "correct" : "incorrect",assisted:false,at:timestamp,date:today(),note:set.title||"Problem set"});
+        }
+      }
+    }
+  }
+  function learningEvidence(sub, topicId) {
+    const events = (sub.learningEvents||[]).filter(e=>e.topicId===topicId);
+    const ai = (sub.aiAttempts||[]).filter(a=>a.topicId===topicId && ["correct","incorrect","partial"].includes(a.verdict)).map(a=>({id:a.id,kind:"ai",result:a.verdict,at:a.at||0,assisted:true}));
+    return events.concat(ai).sort((a,b)=>(b.at||0)-(a.at||0));
+  }
+  function learningNextAction(sub, ranked) {
+    if (!ranked.length) return null;
+    const first = ranked[0];
+    const t = first.topic;
+    const hasLecture = (sub.lectures||[]).some(l=>l.topicId===t.id);
+    const hasProblems = (sub.psets||[]).some(p=>p.topicId===t.id);
+    return {topic:t, kind:first.accuracy===null && hasLecture ? "lectures" : first.mistakes ? "mistakes" : first.dueCards ? "practice" : hasProblems ? "psets" : "practice",reason:first.accuracy===null?"Build first evidence":first.mistakes?"Revisit recorded mistakes":first.dueCards?"Review due flashcards":"Strengthen with another attempt"};
+  }
   /* Study intelligence: derived from existing records; no new synced schema. */
   function smartTopicStats(subject) {
     const exam = focusExam(subject);
@@ -3508,8 +3582,16 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       const mistakes = (subject.mistakes || []).filter(m => m.topicId === t.id && m.status !== "Cleared");
       const ai = (subject.aiAttempts || []).filter(a => a.topicId === t.id && (a.verdict === "correct" || a.verdict === "incorrect" || a.verdict === "partial"));
       const aiCorrect = ai.filter(a => a.verdict === "correct").length;
-      const observations = rated.length + attempted.length + ai.length;
-      const accuracy = observations ? Math.round(100 * (known + correct + aiCorrect) / observations) : null;
+      const evidence = learningEvidence(subject,t.id);
+      const hasCardEvents = evidence.some(e=>e.kind==="flashcard");
+      const hasProblemEvents = evidence.some(e=>e.kind==="problem");
+      const legacyCount = (hasCardEvents?0:rated.length) + (hasProblemEvents?0:attempted.length);
+      const legacyCorrect = (hasCardEvents?0:known) + (hasProblemEvents?0:correct);
+      const recent = evidence.slice(0,30);
+      const evidenceWeight = recent.reduce((sum,e)=>sum+(e.assisted?0.5:1),0);
+      const evidenceCorrect = recent.reduce((sum,e)=>sum+(e.result==="correct"?1:e.result==="partial"?0.4:0)*(e.assisted?0.5:1),0);
+      const observations = legacyCount + evidenceWeight;
+      const accuracy = observations ? Math.round(100 * (legacyCorrect + evidenceCorrect) / observations) : null;
       const mastery = accuracy === null ? (t.status === "Mastered" ? "Marked mastered (unverified)" : "Not assessed") : accuracy >= 80 && !mistakes.length ? "Strong" : accuracy >= 55 ? "Developing" : "Needs practice";
       const dueCards = cards.filter(c => c.srs && c.srs.due && c.srs.due <= today()).length;
       const days = exam && exam.due ? daysUntil(exam.due) : null;
@@ -3529,7 +3611,14 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       ["taccount", "T-account challenge", "Give beginning balance and 3 to 5 transactions affecting one account. Ask for the correct T-account postings and ending balance."],
       ["custom", "Custom challenge", "Create a problem matching the student's custom instructions, with an unambiguous requested answer."]
     ];
-    const [mode, setMode] = useState("journal");
+    const accounting = /account|cfas|financial reporting|far\b|aec\b|bookkeep/i.test(subject.name+" "+(subject.code||""));
+    if (!accounting) modes.splice(0,modes.length,
+      ["concept","Concept application","Create a scenario that tests application rather than memorization."],
+      ["quiz","Short-answer challenge","Write one unambiguous short-answer question tied to the topic."],
+      ["case","Case study","Create a realistic case requiring reasoning, with a clearly stated task."],
+      ["analysis","Analyze an argument","Present a claim or interpretation to evaluate using evidence."],
+      ["custom","Custom challenge","Follow the student's instructions and chosen subject." ]);
+    const [mode, setMode] = useState(accounting?"journal":"concept");
     const [topicId, setTopicId] = useState(initialTopicId || "");
     const [level, setLevel] = useState("Intermediate");
     const [custom, setCustom] = useState("");
@@ -3552,12 +3641,12 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       if (action === "grade" && !answer.trim()) { setError("Write your answer before checking it."); return; }
       setError(""); setBusy(action);
       const ctrl = new AbortController(); controller.current = ctrl;
-      const context = "You are a careful accounting professor helping a first-year BSA student. Subject: " + subject.name + ". Topic: " + (topic ? topic.title : "general accounting") + ". Difficulty: " + level + ". Use Philippine peso amounts and PFRS terminology where relevant. Be precise, avoid ambiguous transactions, and double-check calculations. Plain text with light markdown; never return JSON.";
+      const context = "You are a careful tutor for the student's selected subject. Subject: " + subject.name + ". Topic: " + (topic ? topic.title : "general subject material") + ". Difficulty: " + level + ". Adapt terminology, problem type, and grading to THIS subject, not accounting unless relevant. Be precise, avoid ambiguous questions, and double-check calculations where applicable. Plain text with light markdown; never return JSON.";
       let instruction;
       if (action === "new") instruction = "Create ONE fresh original exercise. Mode: " + choice[1] + ". " + choice[2] + (custom.trim() ? " Student preference: " + custom.slice(0, 500) : "") + ". Give ONLY the problem statement and required output. Do NOT include the answer, solution, hints, or grading rubric. Vary numbers and scenario.";
       else if (action === "hint") instruction = "Here is the problem:\n" + question + "\nGive ONE useful scaffolded hint, without revealing the final answer or entire journal entry. Previous hint: " + hint;
       else if (action === "solution") instruction = "Here is the problem:\n" + question + "\nProvide a complete verified model answer, including calculations and accounting reasoning. Explicitly say if the problem is underspecified.";
-      else instruction = "Problem:\n" + question + "\nStudent answer:\n" + answer + "\nAssess the student's accounting answer, not merely whether debits equal credits. Check account names, debit/credit directions, amounts, timing and reasoning as applicable. Allow equivalent account names and formats. Start with VERDICT: Correct / Partially correct / Incorrect / Cannot determine. Then identify precisely what is right and wrong, show calculations and the correct solution, and give one short next-step study tip. If the original question is ambiguous, say so rather than inventing facts. Do not claim you have saved a grade.";
+      else instruction = "Problem:\n" + question + "\nStudent answer:\n" + answer + "\nAssess the student's answer against the question and subject, not superficial formatting. For accounting check accounts, directions, amounts and timing when applicable; for other subjects check factual accuracy, reasoning and completeness. Allow equivalent account names and formats. Start with VERDICT: Correct / Partially correct / Incorrect / Cannot determine. Then identify precisely what is right and wrong, show calculations and the correct solution, and give one short next-step study tip. If the original question is ambiguous, say so rather than inventing facts. Do not claim you have saved a grade.";
       let result = "";
       try {
         await gemSend({ key:gemKey(), model:gemModel(), system:context, turns:[{role:"me",text:instruction}], signal:ctrl.signal, onText:t => { result += t; if (action === "new") setQuestion(result); else if (action === "hint") setHint(result); else setFeedback(result); } });
@@ -3609,8 +3698,8 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const aiHistory = subject.aiAttempts || [];
     const missed = (subject.psets || []).flatMap(x => x.problems || []).filter(x => x.st === "miss");
     const total = (subject.psets || []).flatMap(x => x.problems || []).filter(x => x.st === "miss" || x.st === "got");
-    const recent = total.filter(x => x.at && daysUntil(x.at) >= -7 && daysUntil(x.at) <= 0);
-    const correct = recent.filter(x => x.st === "got").length;
+    const recent = (subject.learningEvents||[]).filter(e=>e.date && daysUntil(e.date)>=-7 && daysUntil(e.date)<=0);
+    const correct = recent.filter(x=>x.result==="correct").length;
     const backup = () => {
       const raw = localStorage.getItem(STORE_KEY);
       if (!raw) { toast("No saved study data found"); return; }
@@ -3623,8 +3712,8 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const suggest = ranked.slice(0, 4);
     const share = suggest.length ? Math.max(10, Math.floor(Number(minutes || 60) / suggest.length)) : 0;
     return h("div", { className: "panel enhance" },
-      h("div", { className: "smart-head" }, h("div", null, h("h2", null, "Study tools"), h("p", { className: "muted small" }, "AI-powered accounting challenges, exam planning, analytics and backups."))),
-      h("div", { className: "enhance-tabs" }, [["exam","Exam plan"],["account","Accounting"],["analytics","Insights"],["backup","Backup"]].map(([k,label]) => h("button", { key:k, className:"chip"+(pane===k?" on":""), onClick:()=>setPane(k), "aria-pressed":pane===k },label))),
+      h("div", { className: "smart-head" }, h("div", null, h("h2", null, "Study tools"), h("p", { className: "muted small" }, "Subject-aware AI challenges, connected study evidence, exam planning and backups."))),
+      h("div", { className: "enhance-tabs" }, [["exam","Exam plan"],["account","AI practice"],["analytics","Insights"],["backup","Backup"]].map(([k,label]) => h("button", { key:k, className:"chip"+(pane===k?" on":""), onClick:()=>setPane(k), "aria-pressed":pane===k },label))),
       pane === "exam" && h("div", { className:"enhance-body" },
         h("p", null, exam ? h("strong", null, exam.title, due === null ? " · date not set" : " · " + due + " days remaining") : "Add an exam in Roadmap to enable exam countdowns."),
         h("label", { className:"field" }, h("span", { className:"field-label" }, "Study minutes available"), h("input", { type:"number", min:15, max:480, value:minutes, onChange:e=>setMinutes(e.target.value) })),
@@ -3635,24 +3724,65 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       pane === "account" && h(AiPracticeLab, {subject, toast, update, initialTopicId:practiceTopic}),
       pane === "analytics" && h("div",{className:"enhance-body"},
         h("div",{className:"grid-2"},
-          h("div",{className:"stat"},h("span",{className:"stat-label"},"Recorded problems (last 7 days)"),h("span",{className:"big-num"},recent.length)),
-          h("div",{className:"stat"},h("span",{className:"stat-label"},"Latest recorded accuracy"),h("span",{className:"big-num"},recent.length?Math.round(correct/recent.length*100)+"%":"—")),
+          h("div",{className:"stat"},h("span",{className:"stat-label"},"Recorded reviews and problems (7 days)"),h("span",{className:"big-num"},recent.length)),
+          h("div",{className:"stat"},h("span",{className:"stat-label"},"7-day independent accuracy"),h("span",{className:"big-num"},recent.length?Math.round(correct/recent.length*100)+"%":"—")),
           h("div",{className:"stat"},h("span",{className:"stat-label"},"Missed problems"),h("span",{className:"big-num"},missed.length)),
           h("div",{className:"stat"},h("span",{className:"stat-label"},"Flashcards due"),h("span",{className:"big-num"},dueCount)),
           h("div",{className:"stat"},h("span",{className:"stat-label"},"Saved AI attempts"),h("span",{className:"big-num"},aiHistory.length))),
         aiHistory.length > 0 && h("div",{className:"ai-lab-result"},h("strong",null,"Recent AI practice"), h("ol",null,aiHistory.slice(-5).reverse().map(a=>h("li",{key:a.id},(subject.topics||[]).find(t=>t.id===a.topicId)?.title || "General", " · ",a.verdict," · ",a.date)))),
-        h("p",{className:"muted small"},"Accuracy uses each problem's latest saved result, not a complete history of attempts. No recorded results means insufficient data.")),
+        h("p",{className:"muted small"},"Seven-day results use timestamped review and problem events; AI-graded attempts are separately marked provisional. Historical activity before this upgrade may not have event records.")),
       pane === "backup" && h("div",{className:"enhance-body"},
         h("p",null,"Download a complete JSON snapshot of your current local study data before deploying an update."),
         h("button",{className:"btn primary",onClick:backup},"Download full backup"),
         h("p",{className:"muted small"},"This is a manual backup, not automatic version history. The existing Data import can be used for restoration; check the import preview before replacing any data."))
     );
   }
+  /* StudyFlow: subject-neutral guided loop. Progress is derived from synced records;
+     the only explicit checkpoint is the learner's own "reviewed" event. */
+  function StudyFlow({ subject, go, update, openEditor }) {
+    const ranked = smartTopicStats(subject);
+    const [chosen, setChosen] = useState("");
+    const [details, setDetails] = useState(false);
+    const current = ranked.find(r=>r.topic.id===chosen) || ranked[0];
+    if (!current) return null;
+    const topic = current.topic;
+    const events = (subject.learningEvents||[]).filter(e=>e.topicId===topic.id).sort((a,b)=>(b.at||0)-(a.at||0));
+    const lesson = events.find(e=>e.kind==="lesson" && e.result==="reviewed");
+    const evidence = learningEvidence(subject,topic.id);
+    const attempts = evidence.filter(e=>e.kind==="problem"||e.kind==="ai"||e.kind==="flashcard");
+    const latestAttempt = attempts[0];
+    const hasLecture = (subject.lectures||[]).some(l=>l.topicId===topic.id);
+    const hasProblems = (subject.psets||[]).some(p=>p.topicId===topic.id || (p.problems||[]).some(x=>x.topicId===topic.id));
+    const cards = (subject.cards||[]).filter(c=>c.topicId===topic.id);
+    const openMistakes = (subject.mistakes||[]).filter(m=>m.topicId===topic.id && m.status!=="Cleared");
+    const reviewAfter = lesson ? attempts.find(e=>(e.at||0)>(lesson.at||0)) : null;
+    const lastBad = attempts.find(e=>e.result==="incorrect"||e.result==="partial");
+    const recovered = lastBad && attempts.some(e=>e.result==="correct" && (e.at||0)>(lastBad.at||0));
+    const needsCorrection = openMistakes.length>0 || (!!lastBad && !recovered);
+    const due = cards.filter(c=>c.srs && c.srs.due && c.srs.due<=today()).length;
+    const steps = [
+      {title:"Learn or refresh", done:!!lesson, detail:lesson?"Concept review recorded":"Read your materials, then confirm you reviewed the topic", action:hasLecture?"Open lecture":"Open topic", run:()=>go(hasLecture?"lectures":"roadmap",hasLecture?{}:{open:topic.id})},
+      {title:"Practice active recall", done:!!reviewAfter, detail:reviewAfter?"Practice recorded after review":"Try flashcards, a problem set, or AI practice",action:hasProblems?"Open problem set":cards.length?"Review flashcards":"AI practice",run:()=>go(hasProblems?"psets":cards.length?"vault":"home",cards.length?{topic:topic.id,drill:true}:{})},
+      {title:"Correct weaknesses",done:!needsCorrection && !!reviewAfter,detail:needsCorrection?`${openMistakes.length} open mistake(s); correct and retry` : reviewAfter?"No unresolved weaknesses detected":"Unlocks after practice",action:needsCorrection?"Review mistakes":"See topic",run:()=>go(needsCorrection?"mistakes":"roadmap",{topic:topic.id,open:topic.id})},
+      {title:"Reassess and space reviews",done:!!reviewAfter && !needsCorrection && (current.accuracy||0)>=80 && due===0,detail:due?`${due} flashcard(s) due`:current.accuracy===null?"More evidence needed":`Observed accuracy ${current.accuracy}% · ${current.mastery}`,action:cards.length?"Review cards":"Practice again",run:()=>go(cards.length?"vault":"home",cards.length?{topic:topic.id,drill:true}:{})}
+    ];
+    const next = steps.findIndex(x=>!x.done);
+    return h("section",{className:"panel smart-study", "aria-label":"Adaptive StudyFlow"},
+      h("div",{className:"smart-head"},h("div",null,h("h2",null,"Adaptive StudyFlow"),h("p",{className:"muted small"},"One guided loop: learn → practice → correct → reassess. Updates from your saved study activity.")),h("button",{className:"btn ghost",onClick:()=>setDetails(!details)},details?"Compact view":"Show all steps")),
+      h("label",{className:"field"},h("span",{className:"field-label"},"Study topic"),h("select",{value:topic.id,onChange:e=>setChosen(e.target.value)},ranked.map(r=>h("option",{key:r.topic.id,value:r.topic.id},r.topic.title+(r.accuracy===null?" · not assessed":" · "+r.accuracy+"%"))))),
+      h("p",{className:"muted small"},"Suggested because: ",current.mistakes?current.mistakes+" open mistakes · ":"",current.dueCards?current.dueCards+" due cards · ":"",current.relevant?"upcoming exam · ":"",current.mastery,". Recommendations are estimates, not official grades."),
+      h("div",{className:"row-center"},h("strong",null,steps.filter(x=>x.done).length," / 4 checkpoints"),h("span",{className:"muted small"},"Auto-updated as you study")),
+      steps.map((step,i)=>(details||i===next||next===-1) && h("div",{key:i,className:"smart-item",style:{opacity:step.done?.7:1}},h("span",{className:"smart-rank"},step.done?"✓":i+1),h("div",{className:"smart-info"},h("strong",null,step.title),h("span",{className:"muted small"},step.detail)),h("button",{className:"btn"+(i===next?" primary":""),onClick:step.run},step.action))),
+      !lesson && h("button",{className:"btn",onClick:()=>update(s=>{if(!Array.isArray(s.learningEvents))s.learningEvents=[];s.learningEvents.push({id:uid("le"),topicId:topic.id,kind:"lesson",result:"reviewed",assisted:false,at:Date.now(),date:today(),note:"Learner confirmed concept review"});})},"I've reviewed this concept"),
+      h("div",{className:"row-center"},h("button",{className:"btn ghost",onClick:()=>openEditor("session",null,{topicId:topic.id})},"Schedule study session"),h("button",{className:"btn ghost",onClick:()=>go("home")},"AI practice in Study Tools")),
+      h("p",{className:"muted small"},"StudyFlow uses recorded outcomes. Opening a page alone does not prove learning; review confirmation is self-reported. AI grading remains provisional."));
+  }
   function SmartStudyPanel({ subject, go }) {
     const ranked = smartTopicStats(subject);
     if (!ranked.length) return null;
     return h("div", { className: "panel smart-study" },
       h("div", { className: "smart-head" }, h("div", null, h("h2", null, "Smart study priorities"), h("p", { className: "muted small" }, "Based on recorded answers, open mistakes, due cards and upcoming exams.")), h("button", { className: "btn ghost", onClick: () => go("practice") }, "Practice")),
+      learningNextAction(subject,ranked) && h("div",{className:"ai-lab-result"},h("strong",null,"Recommended next step: ",learningNextAction(subject,ranked).topic.title),h("p",{className:"muted small"},learningNextAction(subject,ranked).reason),h("button",{className:"btn primary",onClick:()=>go(learningNextAction(subject,ranked).kind)},"Open recommended activity")),
       ranked.slice(0, 4).map((r,i) => h("div", { key: r.topic.id, className: "smart-item" },
         h("span", { className: "smart-rank" }, i+1),
         h("div", { className: "smart-info" }, h("strong", null, r.topic.title), h("span", { className: "muted small" }, r.mastery, " · ", r.accuracy === null ? "No scored attempts" : r.accuracy + "% observed accuracy", r.mistakes ? " · " + r.mistakes + " open mistakes" : "", r.dueCards ? " · " + r.dueCards + " cards due" : "", r.relevant ? " · Next exam" : "")),
@@ -3758,7 +3888,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         actions: active.length ? [{ label: "Open mistake log", run: () => go("mistakes") }] : []
       }
     ].filter(Boolean);
-    return /* @__PURE__ */ React.createElement("section", { className: "view" }, pmDue && h("div", { className: "panel gc-wi-bar" }, h("p", null, h("strong", null, pmDue.title + " was " + fmtDay(pmDue.due, "long") + "."), " Two minutes now on what actually came up is worth more than an hour of guessing before the next one."), h("div", { className: "step-actions" }, h("button", { className: "btn primary", onClick: () => setPm(pmDue) }, "Record how it went"), h("button", { className: "btn ghost", onClick: () => update((s) => { const e = s.topics.find((x) => x.id === pmDue.id); if (e) e.pmAt = today(); }) }, "Skip"))), pm && h(ExamPostMortem, { subject, exam: pm, update, toast, onClose: () => setPm(null) }), /* @__PURE__ */ React.createElement("div", { className: "hero" }, /* @__PURE__ */ React.createElement("div", { className: "hero-title" }, /* @__PURE__ */ React.createElement("p", { className: "muted" }, (/* @__PURE__ */ new Date()).toLocaleDateString(void 0, { weekday: "long", month: "long", day: "numeric" })), /* @__PURE__ */ React.createElement("h1", null, subject.name, subject.code ? /* @__PURE__ */ React.createElement("span", { className: "hero-code" }, " ", subject.code) : null), subject.school && /* @__PURE__ */ React.createElement("p", { className: "muted" }, subject.school)), /* @__PURE__ */ React.createElement("div", { className: "hero-figure" }, /* @__PURE__ */ React.createElement(Ring, { done: mastered, total: topics.length }), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "topics mastered"))), /* @__PURE__ */ React.createElement(Track, { subject, onJump: (id) => go("roadmap", { open: id }) }), h(SmartStudyPanel, { subject, go }), h(StudyEnhancements, { subject, go, update, toast }), /* @__PURE__ */ React.createElement("div", { className: "home-grid" }, /* @__PURE__ */ React.createElement("div", { className: "panel plan" }, /* @__PURE__ */ React.createElement("h2", null, "Today’s plan"), /* @__PURE__ */ React.createElement("ol", { className: "steps" }, steps.map((s, i) => /* @__PURE__ */ React.createElement("li", { key: i, className: "step" }, /* @__PURE__ */ React.createElement("span", { className: "step-num", "aria-hidden": "true" }, i + 1), /* @__PURE__ */ React.createElement("div", { className: "step-body" }, /* @__PURE__ */ React.createElement("span", { className: "step-label" }, /* @__PURE__ */ React.createElement(Icon, { name: s.icon, size: 16 }), " ", s.label), /* @__PURE__ */ React.createElement("strong", { className: "step-title" }, s.title), s.detail && /* @__PURE__ */ React.createElement("span", { className: "muted step-detail" }, s.detail), s.chip && h("span", { className: "step-chip" }, h(DueChip, { t: s.chip })), s.actions.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "step-actions" }, s.actions.map((a) => /* @__PURE__ */ React.createElement("button", { key: a.label, className: `btn${a.primary ? " primary" : ""}`, onClick: a.run }, a.label)))))))), /* @__PURE__ */ React.createElement("div", { className: "side-col" }, nextExam && (() => {
+    return /* @__PURE__ */ React.createElement("section", { className: "view" }, pmDue && h("div", { className: "panel gc-wi-bar" }, h("p", null, h("strong", null, pmDue.title + " was " + fmtDay(pmDue.due, "long") + "."), " Two minutes now on what actually came up is worth more than an hour of guessing before the next one."), h("div", { className: "step-actions" }, h("button", { className: "btn primary", onClick: () => setPm(pmDue) }, "Record how it went"), h("button", { className: "btn ghost", onClick: () => update((s) => { const e = s.topics.find((x) => x.id === pmDue.id); if (e) e.pmAt = today(); }) }, "Skip"))), pm && h(ExamPostMortem, { subject, exam: pm, update, toast, onClose: () => setPm(null) }), /* @__PURE__ */ React.createElement("div", { className: "hero" }, /* @__PURE__ */ React.createElement("div", { className: "hero-title" }, /* @__PURE__ */ React.createElement("p", { className: "muted" }, (/* @__PURE__ */ new Date()).toLocaleDateString(void 0, { weekday: "long", month: "long", day: "numeric" })), /* @__PURE__ */ React.createElement("h1", null, subject.name, subject.code ? /* @__PURE__ */ React.createElement("span", { className: "hero-code" }, " ", subject.code) : null), subject.school && /* @__PURE__ */ React.createElement("p", { className: "muted" }, subject.school)), /* @__PURE__ */ React.createElement("div", { className: "hero-figure" }, /* @__PURE__ */ React.createElement(Ring, { done: mastered, total: topics.length }), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "topics mastered"))), /* @__PURE__ */ React.createElement(Track, { subject, onJump: (id) => go("roadmap", { open: id }) }), h(StudyFlow, { subject, go, update, openEditor }), h(SmartScheduleBuilder,{subject,update,toast,go}), h("div",{className:"curriculum-shortcut"},h("div",null,h("strong",null,"Planning next semester?"),h("p",{className:"muted small"},"Browse the four-year prospectus and add future subjects when you need them.")),h("button",{className:"btn ghost",onClick:()=>go("curriculum")},"Open curriculum")), h(SmartStudyPanel, { subject, go }), h(StudyEnhancements, { subject, go, update, toast }), /* @__PURE__ */ React.createElement("div", { className: "home-grid" }, /* @__PURE__ */ React.createElement("div", { className: "panel plan" }, /* @__PURE__ */ React.createElement("h2", null, "Today’s plan"), /* @__PURE__ */ React.createElement("ol", { className: "steps" }, steps.map((s, i) => /* @__PURE__ */ React.createElement("li", { key: i, className: "step" }, /* @__PURE__ */ React.createElement("span", { className: "step-num", "aria-hidden": "true" }, i + 1), /* @__PURE__ */ React.createElement("div", { className: "step-body" }, /* @__PURE__ */ React.createElement("span", { className: "step-label" }, /* @__PURE__ */ React.createElement(Icon, { name: s.icon, size: 16 }), " ", s.label), /* @__PURE__ */ React.createElement("strong", { className: "step-title" }, s.title), s.detail && /* @__PURE__ */ React.createElement("span", { className: "muted step-detail" }, s.detail), s.chip && h("span", { className: "step-chip" }, h(DueChip, { t: s.chip })), s.actions.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "step-actions" }, s.actions.map((a) => /* @__PURE__ */ React.createElement("button", { key: a.label, className: `btn${a.primary ? " primary" : ""}`, onClick: a.run }, a.label)))))))), /* @__PURE__ */ React.createElement("div", { className: "side-col" }, nextExam && (() => {
       const r = readiness(subject, nextExam);
       const covered = (nextExam.covers || []).map((id) => subject.topics.find((t) => t.id === id)).filter(Boolean);
       return /* @__PURE__ */ React.createElement("div", { className: "panel exam-panel" }, /* @__PURE__ */ React.createElement("span", { className: "muted" }, "Next exam, week ", nextExam.week), /* @__PURE__ */ React.createElement("h2", null, nextExam.title), nextExam.due && h("p", null, h(DueChip, { t: nextExam })), r.total > 0 && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "bar-lg" }, /* @__PURE__ */ React.createElement("span", { style: { width: `${r.done / r.total * 100}%` } })), /* @__PURE__ */ React.createElement("p", null, /* @__PURE__ */ React.createElement("strong", null, r.done, " of ", r.total), " topics ready"), /* @__PURE__ */ React.createElement("div", { className: "topic-chips" }, covered.map((t) => /* @__PURE__ */ React.createElement("button", { key: t.id, className: "tchip", "data-status": t.status, onClick: () => go("roadmap", { open: t.id }), title: `${t.title}: ${t.status}` }, /* @__PURE__ */ React.createElement("span", { className: "dot" }), t.code || t.standard || t.title)))), nextExam.scope && /* @__PURE__ */ React.createElement("p", { className: "muted small" }, "Covers ", nextExam.scope), h(ExamReadyMini, { subject, exam: nextExam, go }));
@@ -3880,8 +4010,31 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const [conf, setConf] = useState((_b = init.conf) != null ? _b : "all");
     const [query, setQuery] = useState("");
     const [drill, setDrill] = useState(!!init.drill);
+    const [selectMode, setSelectMode] = useState(false);
+    const [selected, setSelected] = useState([]);
+    const [duplicatesOnly, setDuplicatesOnly] = useState(false);
+    const [confirmDelete, setConfirmDelete] = useState(false);
+    const normalizedPair = (c) => `${norm(c.q || "").trim().replace(/\s+/g, " ")}\u0000${norm(c.a || "").trim().replace(/\s+/g, " ")}`;
+    const duplicateIds = (() => {
+      const seen = new Map(), duplicates = new Set();
+      for (const c of subject.cards) {
+        const key = normalizedPair(c);
+        if (seen.has(key)) duplicates.add(c.id);
+        else seen.set(key, c.id);
+      }
+      return duplicates;
+    })();
+    const toggleSelected = (id) => setSelected((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
+    const leaveSelection = () => { setSelectMode(false); setSelected([]); setConfirmDelete(false); };
+    const deleteSelected = () => {
+      const ids = new Set(selected.filter((id) => subject.cards.some((c) => c.id === id)));
+      if (!ids.size) { leaveSelection(); return; }
+      update((sub) => { sub.cards = sub.cards.filter((c) => !ids.has(c.id)); });
+      toast(`Deleted ${ids.size} flashcard${ids.size === 1 ? "" : "s"}`);
+      leaveSelection();
+    };
     const match = (c) => (topic === "all" || (topic === "" ? !c.topicId : c.topicId === topic)) && (conf === "all" || (conf === "new" ? !c.conf : c.conf === conf)) && (!query || norm(`${c.q} ${c.a} ${c.tip}`).includes(norm(query)));
-    const list = subject.cards.filter(match);
+    const list = subject.cards.filter((c) => match(c) && (!duplicatesOnly || duplicateIds.has(c.id)));
     const rate = (id, v) => update((s) => {
       if (v) gradeCardIn(s, id, v === "known" ? "good" : "again");
       else {
@@ -3895,7 +4048,25 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const topicCounts = studyTopics(subject).map((t) => ({ t, n: subject.cards.filter((c) => c.topicId === t.id).length })).filter((x) => x.n);
     const unsorted = subject.cards.filter((c) => !c.topicId).length;
     if (drill && list.length) return /* @__PURE__ */ React.createElement("section", { className: "view" }, h(StudySession, { subject, update, toast, settings, items: shuffle(list).map((c) => ({ kind: "card", id: c.id })), title: "Flashcard drill", onExit: () => setDrill(false) }));
-    return /* @__PURE__ */ React.createElement("section", { className: "view" }, /* @__PURE__ */ React.createElement("div", { className: "page-head" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h1", { className: "page-title" }, "Concept vault"), /* @__PURE__ */ React.createElement("p", { className: "muted" }, "Tap a card to flip it. Drill runs through the cards you’ve filtered, one at a time.")), /* @__PURE__ */ React.createElement("div", { className: "head-actions" }, /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: () => openEditor("card", null, { topicId: topic !== "all" && topic !== "" ? topic : null }) }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 16 }), " Add card"), /* @__PURE__ */ React.createElement("button", { className: "btn primary", disabled: !list.length, onClick: () => setDrill(true) }, "Drill ", list.length, " card", list.length === 1 ? "" : "s"))), /* @__PURE__ */ React.createElement("div", { className: "seg-filter", role: "group", "aria-label": "Filter by confidence" }, [["all", "All", subject.cards.length], ["again", "Review again", again], ["new", "New", fresh], ["known", "Known", known]].map(([k, l, n]) => /* @__PURE__ */ React.createElement("button", { key: k, className: conf === k ? "on" : "", "aria-pressed": conf === k, "data-conf": k, onClick: () => setConf(k) }, l, " ", /* @__PURE__ */ React.createElement("span", { className: "n" }, n)))), /* @__PURE__ */ React.createElement("div", { className: "chip-scroll", role: "group", "aria-label": "Filter by topic" }, /* @__PURE__ */ React.createElement("button", { className: `chip${topic === "all" ? " on" : ""}`, onClick: () => setTopic("all") }, "All topics"), topicCounts.map(({ t, n }) => /* @__PURE__ */ React.createElement("button", { key: t.id, className: `chip${topic === t.id ? " on" : ""}`, onClick: () => setTopic(t.id), title: t.title }, t.code || t.title.slice(0, 18), " ", /* @__PURE__ */ React.createElement("span", { className: "n" }, n))), unsorted > 0 && /* @__PURE__ */ React.createElement("button", { className: `chip${topic === "" ? " on" : ""}`, onClick: () => setTopic("") }, "Unsorted ", /* @__PURE__ */ React.createElement("span", { className: "n" }, unsorted))), /* @__PURE__ */ React.createElement("input", { className: "search", type: "search", placeholder: "Search questions and answers", value: query, onChange: (e) => setQuery(e.target.value), "aria-label": "Search flashcards" }), list.length ? /* @__PURE__ */ React.createElement("div", { className: "cards" }, list.map((c) => /* @__PURE__ */ React.createElement(FlipCard, { key: c.id, subject, card: c, onRate: rate, onEdit: (card) => openEditor("card", card) }))) : /* @__PURE__ */ React.createElement("div", { className: "empty" }, /* @__PURE__ */ React.createElement("p", null, subject.cards.length ? "No cards match these filters." : "No flashcards yet."), /* @__PURE__ */ React.createElement("p", { className: "muted" }, subject.cards.length ? "Pick “All” or another topic." : "Add one, or paste a batch from NotebookLM through Import data.")));
+    return /* @__PURE__ */ React.createElement("section", { className: "view" }, /* @__PURE__ */ React.createElement("div", { className: "page-head" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h1", { className: "page-title" }, "Concept vault"), /* @__PURE__ */ React.createElement("p", { className: "muted" }, "Tap a card to flip it. Drill runs through the cards you’ve filtered, one at a time.")), /* @__PURE__ */ React.createElement("div", { className: "head-actions" }, /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: () => openEditor("card", null, { topicId: topic !== "all" && topic !== "" ? topic : null }) }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 16 }), " Add card"), /* @__PURE__ */ React.createElement("button", { className: selectMode ? "btn primary" : "btn", onClick: () => selectMode ? leaveSelection() : setSelectMode(true) }, selectMode ? "Cancel selection" : "Select cards"), /* @__PURE__ */ React.createElement("button", { className: "btn primary", disabled: !list.length, onClick: () => setDrill(true) }, "Drill ", list.length, " card", list.length === 1 ? "" : "s"))), /* @__PURE__ */ React.createElement("div", { className: "seg-filter", role: "group", "aria-label": "Filter by confidence" }, [["all", "All", subject.cards.length], ["again", "Review again", again], ["new", "New", fresh], ["known", "Known", known]].map(([k, l, n]) => /* @__PURE__ */ React.createElement("button", { key: k, className: conf === k ? "on" : "", "aria-pressed": conf === k, "data-conf": k, onClick: () => setConf(k) }, l, " ", /* @__PURE__ */ React.createElement("span", { className: "n" }, n)))), /* @__PURE__ */ React.createElement("div", { className: "chip-scroll", role: "group", "aria-label": "Filter by topic" }, /* @__PURE__ */ React.createElement("button", { className: `chip${topic === "all" ? " on" : ""}`, onClick: () => setTopic("all") }, "All topics"), topicCounts.map(({ t, n }) => /* @__PURE__ */ React.createElement("button", { key: t.id, className: `chip${topic === t.id ? " on" : ""}`, onClick: () => setTopic(t.id), title: t.title }, t.code || t.title.slice(0, 18), " ", /* @__PURE__ */ React.createElement("span", { className: "n" }, n))), unsorted > 0 && /* @__PURE__ */ React.createElement("button", { className: `chip${topic === "" ? " on" : ""}`, onClick: () => setTopic("") }, "Unsorted ", /* @__PURE__ */ React.createElement("span", { className: "n" }, unsorted))), /* @__PURE__ */ React.createElement("input", { className: "search", type: "search", placeholder: "Search questions and answers", value: query, onChange: (e) => setQuery(e.target.value), "aria-label": "Search flashcards" }), /* @__PURE__ */ React.createElement("div", { className: "vault-bulk-tools" },
+      /* @__PURE__ */ React.createElement("button", { className: duplicatesOnly ? "btn primary" : "btn", onClick: () => { setDuplicatesOnly((v) => !v); setSelected([]); } }, duplicatesOnly ? "Show all cards" : `Show duplicates (${duplicateIds.size})`),
+      selectMode && /* @__PURE__ */ React.createElement(React.Fragment, null,
+        /* @__PURE__ */ React.createElement("span", { className: "muted" }, `${selected.length} selected`),
+        /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: () => setSelected((prev) => [...new Set([...prev, ...list.map((c) => c.id)])]) }, "Select visible"),
+        /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: () => setSelected([]) }, "Deselect all"),
+        /* @__PURE__ */ React.createElement("button", { className: "btn danger", disabled: !selected.length, onClick: () => setConfirmDelete(true) }, `Delete selected (${selected.length})`)
+      )
+    ),
+    confirmDelete && /* @__PURE__ */ React.createElement("div", { className: "vault-delete-confirm", role: "alertdialog", "aria-label": "Confirm flashcard deletion" },
+      /* @__PURE__ */ React.createElement("strong", null, `Delete ${selected.length} selected flashcard${selected.length === 1 ? "" : "s"}?`),
+      /* @__PURE__ */ React.createElement("p", null, "This removes the selected cards and their review scheduling. Make a backup first if you may need them later."),
+      /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: () => setConfirmDelete(false) }, "Keep cards"),
+      /* @__PURE__ */ React.createElement("button", { className: "btn danger", onClick: deleteSelected }, "Yes, delete selected")
+    ),
+    list.length ? /* @__PURE__ */ React.createElement("div", { className: "cards" }, list.map((c) => selectMode ? /* @__PURE__ */ React.createElement("label", { key: c.id, className: `vault-select-card${selected.includes(c.id) ? " is-selected" : ""}` },
+      /* @__PURE__ */ React.createElement("input", { type: "checkbox", checked: selected.includes(c.id), onChange: () => toggleSelected(c.id), "aria-label": `Select ${c.q}` }),
+      /* @__PURE__ */ React.createElement("span", { className: "vault-select-content" }, /* @__PURE__ */ React.createElement("strong", null, c.q), /* @__PURE__ */ React.createElement("span", null, c.a))
+    ) : /* @__PURE__ */ React.createElement(FlipCard, { key: c.id, subject, card: c, onRate: rate, onEdit: (card) => openEditor("card", card) }))) : /* @__PURE__ */ React.createElement("div", { className: "empty" }, /* @__PURE__ */ React.createElement("p", null, subject.cards.length ? "No cards match these filters." : "No flashcards yet."), /* @__PURE__ */ React.createElement("p", { className: "muted" }, subject.cards.length ? "Pick “All” or another topic." : "Add one, or paste a batch from NotebookLM through Import data.")));
   }
   function MistakesView({ subject, update, toast, openEditor, init }) {
     var _a, _b;
@@ -5598,6 +5769,10 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
   const rgba = (hx, a) => `rgba(${hexToRgb(hx).join(",")},${a})`;
   const isHex = (v) => /^#[0-9a-f]{6}$/i.test(v || "");
   const PAL = {
+    paper: ["#f7f3e9", "#fffdf7", "#2d3439", "#365b7a", "#b27738"],
+    forest: ["#101e1a", "#192a23", "#e7f3e8", "#8bd9a3", "#d7b36b"],
+    midnight: ["#10182d", "#192441", "#e9f0ff", "#91b6ff", "#ffc28b"],
+    sand: ["#f4eadc", "#fffaf2", "#3d3025", "#926337", "#3b7d78"],
     slate: ["#0d1320", "#141c2e", "#e8edf8", "#3fe0ff", "#ff5cc0"],
     ateneo: ["#061733", "#0c2350", "#f4f6fb", "#f6c343", "#8cc2ff"],
     emerald: ["#e8f1ea", "#fbfdfb", "#0f2a1e", "#0d7a4c", "#9a6a12"],
@@ -5709,6 +5884,18 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     return h(
       Modal,
       { title: "Appearance", onClose, wide: true },
+      h("div", { className: "theme-group" },
+        h("span", { className: "field-label" }, "Sidebar favorites — choose exactly 7"),
+        h("p", { className: "muted small" }, "Only these seven themes appear in the sidebar. All themes remain available below."),
+        h("div", { className: "theme-grid" }, SKINS.map(s => {
+          const favs = Array.isArray(settings.favoriteSkins) ? settings.favoriteSkins : DEFAULT_SETTINGS.favoriteSkins;
+          const checked = favs.includes(s.id);
+          return h("label", { key: s.id, className: "check" }, h("input", { type: "checkbox", checked, disabled: !checked && favs.length >= 7, onChange: e => {
+            const next = e.target.checked ? [...favs, s.id] : favs.filter(id => id !== s.id);
+            set("favoriteSkins", next);
+          }}), h("span", null, s.name));
+        }))
+      ),
       groups.map(([g, list]) => h("div", { key: g, className: "theme-group" }, h("span", { className: "field-label" }, `${g} themes`), h("div", { className: "theme-grid" }, list.map(tile)))),
       h("div", { className: "theme-group" }, h("span", { className: "field-label" }, "Make your own"), h("div", { className: "theme-grid" }, tile(SKINS.find((s) => s.id === "custom")))),
       settings.skin === "custom" && h(CustomThemeEditor, { settings, setSettings }),
@@ -8999,6 +9186,92 @@ ${c.kindHint}` }
     return best;
   }
 
+
+  /* v23: explicitly triggered, source-grounded generation. Never called on mount. */
+  function LecturePracticeGenerator({ subject, lecture, update, toast, go }) {
+    const [kind,setKind]=useState("mixed"), [count,setCount]=useState(5), [level,setLevel]=useState("adaptive");
+    const [busy,setBusy]=useState(false), [error,setError]=useState(""), [preview,setPreview]=useState(null);
+    const abort=useRef(null);
+    useEffect(()=>()=>{if(abort.current)abort.current.abort();},[]);
+    const existing=(subject.psets||[]).filter(p=>p.generatedFromLectureId===lecture.id);
+    async function generate(){
+      if(busy)return;
+      if(!gemReady()){setError("Set up your Gemini API key and model in Ask first.");return;}
+      const source=lxText(lecture);
+      if(source.trim().length<100){setError("This lecture needs more source material before generating reliable questions.");return;}
+      setBusy(true);setError("");setPreview(null);
+      const ctrl=new AbortController();abort.current=ctrl;
+      let raw="";
+      const difficulty=level==="adaptive"?(smartTopicStats(subject).find(r=>r.topic.id===lecture.topicId)?.accuracy??null):null;
+      const system="You create study exercises exclusively from the supplied lecture. Do not introduce facts, examples requiring external facts, or citations not in the source. If source is insufficient, return an empty problems array. Output ONLY valid JSON with a problems array. Each item must contain problem (question text), answer (correct answer), solution (brief source-grounded explanation), title, and optionally choices (array of strings), requirements (array of strings), difficulty. Keep questions unambiguous. Avoid duplicate questions. Subject: "+subject.name+". Lecture: "+lecture.title+".";
+      const instruction="Make "+count+" "+kind+" questions. Difficulty: "+level+(difficulty===null?"":", observed accuracy "+difficulty+"% (not an official grade)")+". For multiple-choice include choices and make the answer clearly identify the correct choice. For oral recitation use short answer. For problem solving only use sufficient numbers and facts from the lecture. Source material follows (truncated if too long):\n\n"+source.slice(0,26000);
+      try{
+        await gemSend({key:gemKey(),model:gemModel(),system,turns:[{role:"me",text:instruction}],signal:ctrl.signal,onText:t=>{raw+=t;}});
+        const clean=raw.replace(/^```(?:json)?\s*/i,"").replace(/```\s*$/,"").trim();
+        const match=clean.match(/\{[\s\S]*\}/);
+        if(!match)throw new Error("Gemini did not return structured questions. Nothing was saved; please try again.");
+        const obj=JSON.parse(match[0]);
+        if(!Array.isArray(obj.problems))throw new Error("The response has no problems array.");
+        const problems=obj.problems.slice(0,count).map((p,i)=>psNormProblem(p,i,lecture.title)).filter(p=>p&&p.answer.trim()&&p.solution.trim());
+        if(!problems.length)throw new Error("The lecture did not provide enough information for verified questions. Nothing was saved.");
+        setPreview(problems);
+        try{const key="study-desk-ai-usage-v23";const old=JSON.parse(localStorage.getItem(key)||"{}");localStorage.setItem(key,JSON.stringify({...old,lectureGenerations:(old.lectureGenerations||0)+1,lastGeneration:Date.now()}));}catch(e){}
+      }catch(e){if(e.name!=="AbortError")setError(e.message||"Generation failed. Nothing was saved.");}
+      finally{setBusy(false);abort.current=null;}
+    }
+    function save(){if(!preview||!preview.length)return;
+      const id=uid("ps");
+      update(s=>{if(!Array.isArray(s.psets))s.psets=[];s.psets.push({id,topicId:lecture.topicId||null,topicText:lecture.title,title:lecture.title+" — generated practice",source:"AI draft from saved lecture: "+lecture.title,intro:"AI-generated; check answers against the lecture before relying on them.",problems:preview.map(p=>({...p,id:uid("pp")})),added:today(),generatedFromLectureId:lecture.id});});
+      setPreview(null);toast("Practice saved to Problem sets. Reuse it without AI requests.");go("psets",{open:id});
+    }
+    return h("div",{className:"panel",style:{marginTop:"1rem"}},
+      h("h2",null,"Generate practice from this lecture"),
+      h("p",{className:"muted small"},"Only runs Gemini when you press Generate. Preview before saving; saved sets can be reused offline. Source-limited AI answers still need checking."),
+      h("div",{className:"grid-2"},
+        h(Field,{label:"Question type"},h("select",{value:kind,onChange:e=>setKind(e.target.value)},[["mixed","Mixed"],["multiple-choice","Multiple choice"],["short-answer / oral recitation","Oral recitation"],["problem-solving / application","Problem solving / application"]].map(([v,t])=>h("option",{value:v,key:v},t)))),
+        h(Field,{label:"Questions"},h("select",{value:count,onChange:e=>setCount(Number(e.target.value))},[5,10,15].map(n=>h("option",{value:n,key:n},n)))),
+        h(Field,{label:"Difficulty"},h("select",{value:level,onChange:e=>setLevel(e.target.value)},["adaptive","beginner","intermediate","advanced"].map(n=>h("option",{value:n,key:n},n))))),
+      h("div",{className:"row-center"},h("button",{className:"btn primary",disabled:busy,onClick:generate},busy?"Generating…":"Generate questions (uses Gemini)"),busy&&h("button",{className:"btn",onClick:()=>abort.current?.abort()},"Cancel"),existing.length>0&&h("span",{className:"muted small"},existing.length," saved set(s) from this lecture")),
+      error&&h("p",{className:"error",role:"alert"},error),
+      preview&&h("div",{className:"ai-lab-result"},h("h3",null,"Preview · ",preview.length," questions"),preview.map((p,i)=>h("details",{key:i,style:{marginBottom:".7rem"}},h("summary",null,(i+1)+". "+p.title),h(PsMd,{text:p.problem}),p.choices.length>0&&h("ol",null,p.choices.map((c,j)=>h("li",{key:j},c))),h("strong",null,"Answer"),h(PsMd,{text:p.answer}),h("strong",null,"Explanation"),h(PsMd,{text:p.solution}))),h("div",{className:"row-center"},h("button",{className:"btn primary",onClick:save},"Save to Problem sets"),h("button",{className:"btn ghost",onClick:()=>setPreview(null)},"Discard preview"))));
+  }
+  /* v23: deterministic local scheduling. Never makes a network or AI request. */
+  function SmartScheduleBuilder({subject,update,toast,go}){
+    const [days,setDays]=useState(7),[daily,setDaily]=useState(60),[start,setStart]=useState(today()),[preview,setPreview]=useState([]);
+    const [avoid,setAvoid]=useState(true);
+    const ranked=smartTopicStats(subject).filter(r=>r.topic.kind!=="exam");
+    function build(){
+      if(!ISO_RE.test(start)){toast("Choose a valid starting date.");return;}
+      if(!ranked.length){toast("Add topics first to make a schedule.");return;}
+      const out=[];const existing=subject.sessions||[];
+      for(let d=0;d<days;d++){
+        const date=addDays(start,d);
+        const planned=existing.filter(s=>s.date===date&&!s.done).reduce((n,s)=>n+(Number(s.mins)||0),0);
+        let remaining=avoid?Math.max(0,daily-planned):daily;
+        let slot=0;
+        while(remaining>=15&&slot<3){
+          const r=ranked[(d*2+slot)%ranked.length];
+          const mins=Math.min(remaining,slot===0?Math.min(30,daily):25);
+          const due=(subject.cards||[]).filter(c=>c.topicId===r.topic.id&&c.srs?.due&&c.srs.due<=date).length;
+          out.push({date,time:"",mins,topicId:r.topic.id,note:(due?"Review "+due+" due flashcards; ":"")+(r.mistakes?"Correct mistakes; ":"")+"StudyFlow: learn → practice → reassess",done:false});
+          remaining-=mins;slot++;
+        }
+      }
+      setPreview(out);
+    }
+    function save(){if(!preview.length)return;
+      update(s=>{if(!Array.isArray(s.sessions))s.sessions=[];for(const p of preview)s.sessions.push({...p,id:uid("ss"),source:"local-smart-schedule"});});
+      toast("Saved "+preview.length+" sessions to Calendar. No AI used.");setPreview([]);go("calendar");
+    }
+    return h("section",{className:"panel smart-study","aria-label":"Smart Schedule"},
+      h("div",{className:"smart-head"},h("div",null,h("h2",null,"Smart Schedule"),h("p",{className:"muted small"},"Plan locally from weak topics, mistakes and due reviews. Zero Gemini requests."))),
+      h("div",{className:"grid-2"},h(Field,{label:"Start date"},h("input",{type:"date",value:start,onChange:e=>setStart(e.target.value)})),h(Field,{label:"Days"},h("select",{value:days,onChange:e=>setDays(Number(e.target.value))},[3,7,14].map(n=>h("option",{key:n,value:n},n)))),h(Field,{label:"Minutes per day"},h("select",{value:daily,onChange:e=>setDaily(Number(e.target.value))},[25,45,60,90,120].map(n=>h("option",{key:n,value:n},n))))),
+      h("label",{className:"check"},h("input",{type:"checkbox",checked:avoid,onChange:e=>setAvoid(e.target.checked)}),h("span",null,"Respect existing unfinished sessions (recommended)")),
+      h("div",{className:"row-center"},h("button",{className:"btn primary",onClick:build},"Generate schedule (no AI)"),h("button",{className:"btn ghost",onClick:()=>go("calendar")},"Open calendar")),
+      preview.length>0&&h("div",{className:"ai-lab-result"},h("strong",null,preview.length," proposed sessions"),h("p",{className:"muted small"},"Preview only. No calendar changes until you save. Edit sessions in Calendar afterward."),h("ol",null,preview.map((p,i)=>h("li",{key:i},p.date," · ",(subject.topics||[]).find(t=>t.id===p.topicId)?.title||"Topic"," · ",p.mins," min"))),h("div",{className:"row-center"},h("button",{className:"btn primary",onClick:save},"Save schedule to Calendar"),h("button",{className:"btn ghost",onClick:()=>setPreview([])},"Discard"))),
+      h("p",{className:"muted small"},"This is a rule-based suggestion, not a claim about your availability. No times are assigned; adjust sessions to your actual timetable. Generating a second schedule may add more sessions, so review the preview first."));
+  }
+
   function LxView({ subject, update, toast, go, init }) {
     const lectures = subject.lectures || [];
     const [open, setOpen] = useState(init && init.open || null);
@@ -9078,6 +9351,7 @@ ${c.kindHint}` }
             h("button", { className: "btn primary", onClick: () => { set((x) => { x.rv = lxStudied(x, false); }); toast("Re-skimmed. Next look in " + plural(LX_STEPS[Math.min(LX_STEPS.length - 1, ((l.rv && l.rv.n) || 0) + 1)], "day") + "."); } }, "Still solid"),
             h("button", { className: "btn bad", onClick: () => { set((x) => { x.rv = lxStudied(x, true); }); toast("Back in 3 days."); } }, "Shaky, show me sooner"))
         : h("button", { className: `btn${l.done ? "" : " primary"}`, onClick: () => { const was = l.done; set((x) => { x.done = !was; x.rv = was ? null : lxStudied(x, false); }); toast(was ? "Marked as not studied" : "Studied. It comes back in 3 days for a quick re-skim."); } }, l.done ? "Studied ✓ (undo)" : "Mark as studied")),
+      h(LecturePracticeGenerator,{subject,lecture:l,update,toast,go}),
       h("div", { className: "lx-foot panel", style: { marginTop: "-.4rem" } }, l.terms.length > 0 && h("button", { className: "btn", onClick: addCards }, `Make ${l.terms.length} flashcards`), cloze.length > 0 && h("button", { className: "btn", onClick: addCloze, title: "One card per bolded rule, with the rule blanked out" }, `Make ${cloze.length} cloze cards`), h("button", { className: "btn", onClick: () => go("ask", { focus: { kind: "lecture", id: l.id } }) }, h(Icon, { name: "ask", size: 16 }), " Ask about this lecture"), h("button", { className: "btn", onClick: () => go("nlm", { pid: "pset", topicId: l.topicId || "" }) }, "Problem set prompt for this topic"), h("button", { className: "btn ghost", onClick: async () => toast(await copyText(lxText(l)) ? "Lecture copied. Paste it into NotebookLM as a source" : "Couldn’t copy") }, "Copy as text"), h("button", { className: "btn ghost", onClick: onEdit }, "Edit"))
     );
   }
@@ -9590,7 +9864,7 @@ ${c.kindHint}` }
       setBusy(true);
       gemListModels(key.trim()).then((ms) => {
         setModels(ms);
-        setModel((cur) => (cur && ms.some((m) => m.id === cur)) ? cur : ms[0].id);
+        setModel((cur) => (cur && ms.some((m) => m.id === cur)) ? cur : (ms.find(m => m.id === "gemini-3.5-flash-lite") || ms[0]).id);
         setBusy(false);
       }).catch((e) => { setErr(e.message); setBusy(false); });
     };
@@ -9616,15 +9890,53 @@ ${c.kindHint}` }
         models.length > 0 && h(React.Fragment, null,
           h("p", { className: "bk-note" }, "The key works. " + plural(models.length, "model") + " available."),
           h(Field, { label: "Model", hint: "Flash models are fast and have the most generous free allowance. Pro is slower but stronger on hard computations." },
-            h("select", { value: model, onChange: (e) => setModel(e.target.value) }, models.map((m) => h("option", { key: m.id, value: m.id }, m.name ? m.name + " — " + m.id : m.id))))
+            h("select", { value: model, onChange: (e) => setModel(e.target.value) }, models.filter(m => /flash/i.test(m.id) && !/preview|exp|image|tts|live|audio/i.test(m.id)).map((m) => h("option", { key: m.id, value: m.id }, m.name ? m.name + " — " + m.id : m.id))))
         )
       )
     );
   }
 
+  // The model catalog is checked against the key, then narrowed to current text-chat choices.
+  // Listing a model does not guarantee quota or generation permission.
+  const GEM_CHAT_CHOICES = [
+    ["gemini-3.5-flash-lite", "3.5 Flash-Lite · recommended for Free Tier"],
+    ["gemini-3.8-flash", "3.8 Flash · advanced"],
+    ["gemini-3.1-flash-lite", "3.1 Flash-Lite · alternative"],
+    ["gemini-3.6-flash", "3.6 Flash · legacy"],
+    ["gemini-3.7-flash", "3.7 Flash · legacy"]
+  ];
+  function gemSourceSystem(subject, focus) {
+    const lectures = subject.lectures || [], sets = subject.psets || [];
+    let source = "";
+    if (focus && focus.kind === "lecture") {
+      const l = lectures.find(x => x.id === focus.id);
+      if (l) source = "LECTURE: " + l.title + "\n" + lxText(l).slice(0, 22000);
+    } else if (focus && focus.kind === "pset") {
+      const set = sets.find(x => x.id === focus.id);
+      if (set) source = "PROBLEM SET: " + set.title + "\n" + (set.problems || []).slice(0, 30).map(p => "Problem " + p.no + ": " + psPlain(p.problem).slice(0, 1300) + "\nAnswer: " + psPlain(p.answer).slice(0, 500) + "\nSolution: " + psPlain(p.solution || "").slice(0, 1200)).join("\n\n");
+    }
+    if (!source) source = "SAVED DASHBOARD MATERIALS (not a full textbook):\n" +
+      lectures.slice(0, 8).map(l => "LECTURE: " + l.title + "\n" + lxText(l).slice(0, 2500)).join("\n\n") +
+      "\n" + sets.slice(0, 5).map(set => "SET: " + set.title + "\n" + (set.problems || []).slice(0, 5).map(p => psPlain(p.problem).slice(0, 500) + " Answer: " + psPlain(p.answer).slice(0, 250)).join("\n")).join("\n");
+    return "You are a strictly source-grounded study tutor. Answer ONLY from the SOURCE MATERIAL below, not from general knowledge, training data, or the student's unrelated dashboard statistics. Do not invent citations, standards, explanations, or missing details. If the sources do not establish an answer, clearly say 'I can't verify that from the selected sources.' Cite the lecture title or problem number when possible. You may reason through arithmetic from supplied numbers, but identify it as a calculation. If there are no substantive sources, explain that the user must select or import a lecture or problem set.\n\nSOURCE MATERIAL:\n" + (source.trim() || "No source content is available.");
+  }
+  function gemGeneralSystem() {
+    return "You are a helpful general-purpose assistant. Answer the user's question directly. You are not restricted to accounting or the study dashboard. Do not claim access to private study records or uploaded sources unless they were explicitly included. Be accurate, acknowledge uncertainty, and use clear explanations.";
+  }
   function AskView({ subject, toast, go, init, settings }) {
-    const CHAT = "bsa_chat_" + subject.id;
+    const [mode, setMode] = useState(() => localPref("askMode") === "general" ? "general" : "sources");
+    const CHAT = "bsa_chat_" + subject.id + "_" + mode;
     const [msgs, setMsgs] = useState(() => { try { return JSON.parse(lsGet(CHAT) || "[]") || []; } catch (e) { return []; } });
+    const [selectedModel, setSelectedModel] = useState(gemModel);
+    const [availableModels, setAvailableModels] = useState([]);
+    const [modelError, setModelError] = useState("");
+    useEffect(() => {
+      let live = true;
+      if (gemKey()) gemListModels(gemKey()).then(ms => { if (live) setAvailableModels(ms); }).catch(e => { if (live) setModelError(e.message); });
+      return () => { live = false; };
+    }, [ready]);
+    const changeMode = (next) => { if (busy || next === mode) return; lsSet(CHAT, JSON.stringify(msgs.slice(-60))); const nextChat = "bsa_chat_" + subject.id + "_" + next; try { setMsgs(JSON.parse(lsGet(nextChat) || "[]") || []); } catch(e) { setMsgs([]); } setMode(next); setLocalPref("askMode", next); setCollapsed({}); };
+    const changeModel = (id) => { if (!id || busy) return; lsSet(GEM.m, id); setSelectedModel(id); toast("Model switched to " + id); };
     const [text, setText] = useState("");
     const [busy, setBusy] = useState(false);
     const [setup, setSetup] = useState(false);
@@ -9660,7 +9972,7 @@ ${c.kindHint}` }
       abort.current = ctrl;
       let acc = "";
       gemSend({
-        key: gemKey(), model: gemModel(), system: gemSystem(subject, focus), turns: history, signal: ctrl.signal,
+        key: gemKey(), model: selectedModel, system: mode === "sources" ? gemSourceSystem(subject, focus) : gemGeneralSystem(), turns: history, signal: ctrl.signal,
         onText: (t) => {
           acc += t;
           setMsgs((v) => v.map((m) => m.id === reply.id ? { ...m, text: acc } : m));
@@ -9686,17 +9998,29 @@ ${c.kindHint}` }
     return h(
       "section",
       { className: "view ai-wrap", ref: topRef },
-      h("div", { className: "page-head" }, h("div", null, h("h1", { className: "page-title" }, "Ask"), h("p", { className: "muted" }, "A tutor that can already see your roadmap, your mistake log, your flashcard memory and your grades. You never have to explain your situation.")), h("div", { className: "head-actions" }, msgs.length > 0 && h("button", { className: "btn ghost", onClick: clear }, "Clear chat"), h("button", { className: "btn ghost", onClick: () => setSetup(true) }, ready ? "Key & model" : "Connect"))),
+      h("div", { className: "page-head" }, h("div", null, h("h1", { className: "page-title" }, "Ask"), h("p", { className: "muted" }, "Choose source-grounded tutoring or general questions. Switch models without reopening API settings.")), h("div", { className: "head-actions" }, msgs.length > 0 && h("button", { className: "btn ghost", onClick: clear }, "Clear chat"), h("button", { className: "btn ghost", onClick: () => setSetup(true) }, ready ? "Key & model" : "Connect"))),
+      ready && h("div", { className: "ai-ctx ai-switches" },
+        h("label", { className: "field-label", htmlFor: "ask-mode" }, "Tutor mode"),
+        h("select", { id: "ask-mode", value: mode, disabled: busy, onChange: e => changeMode(e.target.value) },
+          h("option", { value: "sources" }, "Focused · sources only"),
+          h("option", { value: "general" }, "General · open questions")),
+        h("label", { className: "field-label", htmlFor: "ask-model" }, "Model"),
+        h("select", { id: "ask-model", value: selectedModel, disabled: busy, onChange: e => changeModel(e.target.value) },
+          !availableModels.some(m => m.id === selectedModel) && h("option", { value: selectedModel }, selectedModel || "Select model"),
+          GEM_CHAT_CHOICES.filter(([id]) => availableModels.some(m => m.id === id)).map(([id, label]) => h("option", { key: id, value: id }, label)),
+          availableModels.filter(m => !GEM_CHAT_CHOICES.some(([id]) => id === m.id) && /flash/i.test(m.id) && !/preview|exp|image|tts|live|audio/i.test(m.id)).map(m => h("option", { key: m.id, value: m.id }, m.name || m.id))),
+        modelError && h("span", { className: "muted small", title: modelError }, "Model list unavailable; existing model retained"),
+        h("span", { className: "muted small" }, mode === "sources" ? "Answers only from saved lecture/problem-set content." : "No dashboard context sent to Gemini.")),
       !ready ? h("div", { className: "empty big" },
         h(Icon, { name: "ask", size: 32 }),
         h("h2", null, "Connect Gemini to start"),
         h("p", { className: "muted", style: { maxWidth: "36rem" } }, "One free API key from Google AI Studio. Your Google AI Plus subscription is for the Gemini app and won’t work here — the API is separate, and its free tier is plenty for this."),
         h("button", { className: "btn primary", onClick: () => setSetup(true) }, "Connect Gemini")
       ) : h(React.Fragment, null,
-        (lectures.length > 0 || psets.length > 0) && h("div", { className: "ai-ctx" },
+        mode === "sources" && (lectures.length > 0 || psets.length > 0) && h("div", { className: "ai-ctx" },
           h("span", null, "Looking at:"),
           h("select", { value: focus ? focus.kind + ":" + focus.id : "", onChange: (e) => { const v = e.target.value; setFocus(v ? { kind: v.split(":")[0], id: v.split(":").slice(1).join(":") } : null); } },
-            h("option", { value: "" }, "My whole dashboard"),
+            h("option", { value: "" }, "Saved lectures & problem sets"),
             lectures.length > 0 && h("optgroup", { label: "Lectures" }, lectures.map((l) => h("option", { key: l.id, value: "lecture:" + l.id }, drShort(l.title, 46)))),
             psets.length > 0 && h("optgroup", { label: "Problem sets" }, psets.map((s) => h("option", { key: s.id, value: "pset:" + s.id }, drShort(s.title, 46))))),
           focusLabel && h("span", { className: "small" }, "the full text goes with every question")
@@ -9725,15 +10049,15 @@ ${c.kindHint}` }
             msgs.length > 0 && h("button", { className: "btn ghost", onClick: () => { stick.current = false; topRef.current && topRef.current.scrollIntoView({ behavior: "smooth", block: "start" }); } }, "↑ Top"),
             msgs.length > 0 && h("button", { className: "btn ghost", onClick: () => { stick.current = true; endRef.current && endRef.current.scrollIntoView({ behavior: "smooth", block: "end" }); } }, "↓ Latest"),
             msgs.length > 0 && h("button", { className: "btn danger ghost", disabled: busy, onClick: clear, title: "Clear this conversation without scrolling to the top" }, "Clear chat")),
-          h("div", { className: "ai-chips" }, GEM_CHIPS.map(([label, prompt]) => h("button", { key: label, className: "chip", disabled: busy, onClick: () => ask(prompt) }, label))),
+          mode === "sources" && h("div", { className: "ai-chips" }, [["Summarize source", "Summarize the selected source and identify the main rules, using only its contents."], ["Quiz from source", "Quiz me one question at a time using only the selected source."], ["Explain a problem", "Explain a worked problem from the selected source step by step."]].map(([label, prompt]) => h("button", { key: label, className: "chip", disabled: busy, onClick: () => ask(prompt) }, label))),
           h("div", { className: "ai-row" },
-            h("textarea", { ref: boxRef, rows: 2, value: text, placeholder: "Ask about anything in " + subject.name + "…", onChange: (e) => setText(e.target.value), onKeyDown: (e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); ask(text); } } }),
+            h("textarea", { ref: boxRef, rows: 2, value: text, placeholder: mode === "sources" ? "Ask about your saved sources…" : "Ask anything…", onChange: (e) => setText(e.target.value), onKeyDown: (e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); ask(text); } } }),
             busy ? h("button", { className: "btn danger ghost", onClick: () => { if (abort.current) abort.current.abort(); } }, "Stop")
                  : h("button", { className: "btn primary", disabled: !text.trim(), onClick: () => ask(text) }, "Send")),
           h("p", { className: "muted small", style: { margin: 0 } }, "Ctrl or Cmd + Enter sends. Gemini can be wrong — check anything that contradicts your book, and log what you get wrong in the Mistake log.")
         )
       ),
-      setup && h(GemSetup, { toast, onClose: () => setSetup(false), onDone: () => { setSetup(false); setReady(gemReady()); } })
+      setup && h(GemSetup, { toast, onClose: () => setSetup(false), onDone: () => { setSetup(false); setReady(gemReady()); setSelectedModel(gemModel()); } })
     );
   }
 
@@ -9761,6 +10085,36 @@ ${c.kindHint}` }
     } catch (e) { wakeLock = null; }
   }
 
+
+  /* Prospectus reference: BS Accountancy, effective SY 2025–2026. This is a
+     template only; learners may add any subject and edit their own course list. */
+  const PROSPECTUS = [{"term": "Year 1 · Semester 1", "courses": [{"code": "AEC 11", "name": "Conceptual Framework and Accounting Standards", "units": 3}, {"code": "AEC 12", "name": "Financial Accounting and Reporting", "units": 3}, {"code": "AEC 23", "name": "Financial Markets", "units": 3}, {"code": "AEC 15", "name": "Managerial Economics", "units": 3}, {"code": "GE 16", "name": "Mathematics in the Modern World", "units": 3}, {"code": "Theo 1", "name": "Introduction to Christian Theology", "units": 3}, {"code": "GE 13", "name": "Readings in Philippine History", "units": 3}, {"code": "NSTP 1", "name": "National Service Training Program 1", "units": 3}, {"code": "PATH-FIT 1", "name": "Movement Competency Training", "units": 2}]}, {"term": "Year 1 · Semester 2", "courses": [{"code": "AEC 22", "name": "Intermediate Accounting 1", "units": 3}, {"code": "Acc El 1", "name": "Accounting Professional Elective 1", "units": 3}, {"code": "XFP 1", "name": "Xavier Ateneo Formation Program", "units": 3}, {"code": "GE 12", "name": "Purposive Communication", "units": 3}, {"code": "GE 19", "name": "Science, Technology and Society", "units": 3}, {"code": "GE 18", "name": "Understanding the Self", "units": 3}, {"code": "IDE 10.2", "name": "Peace Studies and Social Justice", "units": 3}, {"code": "NSTP 2", "name": "National Service Training Program 2", "units": 3}, {"code": "PATH-FIT 2", "name": "Fitness Training", "units": 2}]}, {"term": "Year 1 · Summer", "courses": [{"code": "AEC 24", "name": "Management Science", "units": 3}, {"code": "Acc El 2", "name": "Accounting Professional Elective 2", "units": 3}]}, {"term": "Year 2 · Semester 1", "courses": [{"code": "AEC 13", "name": "Financial Management", "units": 3}, {"code": "AEC 21", "name": "Cost Accounting and Control", "units": 3}, {"code": "AEC 32", "name": "Intermediate Accounting 2", "units": 3}, {"code": "AEC 55", "name": "Law on Obligations and Contracts", "units": 3}, {"code": "GE 11", "name": "Art Appreciation", "units": 3}, {"code": "GE 15", "name": "Ethics", "units": 3}, {"code": "GE 17", "name": "The Contemporary World", "units": 3}, {"code": "IDE 20", "name": "Interdisciplinary Elective 2", "units": 3}, {"code": "PATH-FIT 3", "name": "Menu of Dance, Sports, Martial Arts, Group Exercise, Outdoor and Adventure Activities", "units": 2}]}, {"term": "Year 2 · Semester 2", "courses": [{"code": "AEC 41", "name": "Accounting Information System", "units": 3}, {"code": "AEC 42", "name": "Intermediate Accounting 3", "units": 3}, {"code": "AEC 43", "name": "Auditing and Assurance Principles", "units": 3}, {"code": "AEC 44", "name": "Strategic Cost Management", "units": 3}, {"code": "AEC 65", "name": "Business Laws and Regulations", "units": 3}, {"code": "BA 24", "name": "Operations Management (TQM)", "units": 3}, {"code": "GE 14", "name": "Life and Works of Rizal", "units": 3}, {"code": "IDE 30.1", "name": "Gender, Culture and Society", "units": 3}, {"code": "PATH-FIT 4", "name": "Menu of Dance, Sports, Martial Arts, Group Exercise, Outdoor and Adventure Activities", "units": 2}]}, {"term": "Year 2 · Summer", "courses": [{"code": "AEC 14", "name": "Economic Development", "units": 3}, {"code": "AEC 35", "name": "International Business and Trade", "units": 3}, {"code": "Philo 25", "name": "Philosophy of Religion", "units": 3}]}, {"term": "Year 3 · Semester 1", "courses": [{"code": "AEC 51", "name": "Statistical Analysis with Software Application", "units": 3}, {"code": "AEC 52", "name": "Income Taxation", "units": 3}, {"code": "AEC 54", "name": "Auditing and Assurance: Concepts and Applications 1", "units": 3}, {"code": "AEC 45", "name": "Regulatory Framework and Legal Issues in Business", "units": 3}, {"code": "AEC 53", "name": "Strategic Business Analysis", "units": 3}, {"code": "AEC 56", "name": "Accounting for Special Transactions", "units": 3}, {"code": "AEC 57", "name": "Accounting for Business Combinations", "units": 3}, {"code": "AEC 31", "name": "IT Application Tools in Business", "units": 3}, {"code": "AEC 61", "name": "Accounting Research Methods", "units": 3}]}, {"term": "Year 3 · Semester 2", "courses": [{"code": "AEC 33", "name": "Governance, Business Ethics, Risk Management and Internal Control", "units": 3}, {"code": "AEC 34", "name": "Accounting for Government and Non Profit Organizations", "units": 3}, {"code": "AEC 62", "name": "Business Taxation", "units": 3}, {"code": "AEC 64", "name": "Auditing and Assurance: Concepts and Applications 2", "units": 3}, {"code": "Acc El 3", "name": "Accounting Professional Elective 3", "units": 3}, {"code": "AEC 63", "name": "Auditing in a CIS Environment", "units": 3}, {"code": "AEC 66", "name": "Auditing and Assurance: Specialized Industries", "units": 3}, {"code": "AEC 71", "name": "Accounting Research", "units": 3}, {"code": "Theo 2", "name": "Faith in Action", "units": 3}]}, {"term": "Year 4 · Semester 1", "courses": [{"code": "LOA 1", "name": "Accountancy Learning Outcomes Appraisal 1", "units": 2}, {"code": "LOA 2", "name": "Accountancy Learning Outcomes Appraisal 2", "units": 2}, {"code": "LOA 3", "name": "Accountancy Learning Outcomes Appraisal 3", "units": 2}, {"code": "LOA 4", "name": "Accountancy Learning Outcomes Appraisal 4", "units": 2}, {"code": "LOA 5", "name": "Accountancy Learning Outcomes Appraisal 5", "units": 2}, {"code": "LOA 6", "name": "Accountancy Learning Outcomes Appraisal 6", "units": 2}, {"code": "Acc El 4", "name": "Accounting Professional Elective 4", "units": 3}, {"code": "BA 23", "name": "Strategic Management", "units": 3}]}, {"term": "Year 4 · Semester 2", "courses": [{"code": "AEC 72", "name": "Accounting Internship (400 hours)", "units": 6}]}];
+  const COURSE_PREREQS = {"NSTP 2":["NSTP 1"],"PATH-FIT 2":["PATH-FIT 1"],"PATH-FIT 3":["PATH-FIT 2"],"PATH-FIT 4":["PATH-FIT 3"],"Theo 2":["Theo 1"],"AEC 72":["All core/major/elective, BA and LOA courses"]};
+  function CurriculumView({data, update, toast, go}) {
+    const [term,setTerm] = useState(PROSPECTUS[0].term);
+    const [query,setQuery] = useState("");
+    const [statuses,setStatuses] = useState({});
+    const current = PROSPECTUS.find(x=>x.term===term) || PROSPECTUS[0];
+    const existing = new Map(data.subjects.filter(x=>x.code).map(x=>[x.code.trim().toLowerCase(),x]));
+    const all = PROSPECTUS.flatMap(x=>x.courses.map(c=>({...c,term:x.term})));
+    const visible = query.trim() ? all.filter(c=>(c.code+" "+c.name+" "+c.term).toLowerCase().includes(query.toLowerCase())) : current.courses.map(c=>({...c,term}));
+    const enroll = (courses) => {
+      const missing = courses.filter(c=>!existing.has(c.code.toLowerCase()));
+      if(!missing.length){toast("All selected courses already exist in Subjects");return;}
+      update(null,d=>{
+        missing.forEach(c=>d.subjects.push({id:uid("subj"),name:c.name,code:c.code,school:"Xavier University – Ateneo de Cagayan",curriculumTerm:c.term,units:c.units,topics:[],cards:[],mistakes:[],quizzes:[],sessions:[]}));
+      });
+      toast(missing.length+" course"+(missing.length===1?"":"s")+" added. Open Subjects to begin studying.");
+    };
+    const count=all.filter(c=>existing.has(c.code.toLowerCase())).length;
+    return h("section",{className:"view curriculum-view"},
+      h("div",{className:"hero"},h("div",{className:"hero-title"},h("p",{className:"muted"},"Flexible four-year course map"),h("h1",null,"Curriculum planner"),h("p",{className:"muted"},"BS Accountancy prospectus · Effective SY 2025–2026. Use this as a reference, not a limit on future subjects."))),
+      h("div",{className:"panel"},h("div",{className:"curriculum-summary"},h("div",null,h("strong",null,count+" / "+all.length),h("span",{className:"muted small"},"Prospectus courses added to Study Desk")),h("button",{className:"btn ghost",onClick:()=>go("home")},"Back to StudyFlow")),
+      h("div",{className:"grid-2"},h("label",null,h("span",{className:"field-label"},"Academic term"),h("select",{value:term,onChange:e=>{setTerm(e.target.value);setQuery("");}},PROSPECTUS.map(t=>h("option",{key:t.term,value:t.term},t.term)))),h("label",null,h("span",{className:"field-label"},"Find a course in any year"),h("input",{value:query,onChange:e=>setQuery(e.target.value),placeholder:"Search code, name or year"}))),
+      h("div",{className:"curriculum-list"},visible.map(c=>{const found=existing.get(c.code.toLowerCase());const prereq=COURSE_PREREQS[c.code];return h("div",{className:"curriculum-course",key:c.code},h("div",{className:"curriculum-course-main"},h("strong",null,c.code," · ",c.name),h("p",{className:"muted small"},c.term," · ",c.units," units",prereq?" · Prerequisite: "+prereq.join(", "):"")),found?h("button",{className:"btn ghost",onClick:()=>{update(null,d=>{d.activeId=found.id});go("home");}},"Open subject"):h("button",{className:"btn primary",onClick:()=>enroll([c])},"Add subject"));})),
+      !query.trim()&&h("div",{className:"row-end"},h("button",{className:"btn",onClick:()=>enroll(current.courses.map(c=>({...c,term})))},"Add missing courses from this term")),
+      h("p",{className:"muted small"},"Adding a course creates an empty subject; it does not invent syllabi, lecture topics or grades. Prerequisites are shown for reference, not enforced. You can still add any course manually.")));
+  }
   function App() {
     const [data, setData] = useState(() => loadLocal() || buildDefault());
     const [nav, setNav] = useState({ tab: "home", opts: {}, key: 0 });
@@ -9809,6 +10163,7 @@ ${c.kindHint}` }
           fn(s, n);
         }
         if (whole) whole(n);
+        learningCapture(d, n, now);
         stampChanges(d, n, now);
         n.updatedAt = now;
         return n;
@@ -9870,7 +10225,7 @@ ${c.kindHint}` }
       try {
         const qs = new URLSearchParams(location.search);
         const want = qs.get("go");
-        const okTabs = ["home", "practice", "roadmap", "calendar", "vault", "mistakes", "grades", "lectures", "psets", "class"];
+        const okTabs = ["curriculum", "home", "practice", "roadmap", "calendar", "vault", "mistakes", "grades", "lectures", "psets", "class"];
         if (want && okTabs.includes(want)) {
           setNav({ tab: want, opts: want === "practice" ? { start: "review" } : {}, key: 1 });
           history.replaceState(null, "", location.pathname);
@@ -9958,6 +10313,7 @@ ${c.kindHint}` }
     useEffect(() => { setBadge(reviewCount); }, [reviewCount]);
     const tabs = [
       ["home", "Today", "home"],
+      ["curriculum", "Curriculum", "book"],
       ["practice", "Practice", "bolt", reviewCount],
       ["roadmap", "Roadmap", "roadmap"],
       ["calendar", "Calendar", "calendar"],
@@ -9984,7 +10340,7 @@ ${c.kindHint}` }
     };
     const viewProps = { key: `${subject.id}-${nav.key}`, subject, update, toast, go, openEditor, init: nav.opts, settings: data.settings, setSettings };
     const subjectPicker = (id) => /* @__PURE__ */ React.createElement("select", { id, className: "subject-select", value: data.activeId, onChange: (e) => switchSubject(e.target.value), "aria-label": "Active subject" }, data.subjects.map((s) => /* @__PURE__ */ React.createElement("option", { key: s.id, value: s.id }, s.name, s.code ? ` (${s.code})` : "")));
-    return /* @__PURE__ */ React.createElement("div", { className: "shell" }, /* @__PURE__ */ React.createElement("aside", { className: "rail", "aria-label": "Main" }, /* @__PURE__ */ React.createElement("div", { className: "brand" }, /* @__PURE__ */ React.createElement("span", { className: "brand-mark", "aria-hidden": "true" }, "Σ"), /* @__PURE__ */ React.createElement("span", null, "BSA Study Desk")), /* @__PURE__ */ React.createElement("div", { className: "rail-subject" }, /* @__PURE__ */ React.createElement("span", { className: "rail-label" }, "Subject"), subjectPicker("subj"), /* @__PURE__ */ React.createElement("button", { className: "link-btn", onClick: () => setModal("subjects") }, "+ Add new subject")), /* @__PURE__ */ React.createElement("nav", { className: "rail-nav" }, tabs.map(([k, l, ic, n]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), /* @__PURE__ */ React.createElement("span", null, l), n ? /* @__PURE__ */ React.createElement("span", { className: "n" }, n) : null))), /* @__PURE__ */ React.createElement("button", { className: "btn primary quick-btn", onClick: () => setModal("quick") }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 18 }), " Quick add"), /* @__PURE__ */ React.createElement("div", { className: "rail-tools" }, /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("data") }, /* @__PURE__ */ React.createElement(Icon, { name: "data", size: 18 }), " Import & export"), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("look") }, /* @__PURE__ */ React.createElement(Icon, { name: "look", size: 18 }), " Appearance"), /* @__PURE__ */ React.createElement(ThemeDots, { settings: data.settings, setSettings })), React.createElement(SyncBadge, { onOpen: openSync })), /* @__PURE__ */ React.createElement("header", { className: "mobilebar" }, /* @__PURE__ */ React.createElement("span", { className: "brand-mark", "aria-hidden": "true" }, "Σ"), subjectPicker("subj-m"), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal(syncAlert ? "sync" : "data"), "aria-label": syncAlert ? "Import, export and sync (needs attention)" : "Import and export", "data-sync": syncAlert }, /* @__PURE__ */ React.createElement(Icon, { name: "data" })), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal("look"), "aria-label": "Appearance" }, /* @__PURE__ */ React.createElement(Icon, { name: "look" }))), /* @__PURE__ */ React.createElement("main", { className: "content" }, nav.tab === "home" && /* @__PURE__ */ React.createElement(HomeView, { ...viewProps }), nav.tab === "practice" && h(PracticeView, { ...viewProps, data }), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(CalendarView, { ...viewProps }), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(PsView, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })), /* @__PURE__ */ React.createElement("nav", { className: "bottom-nav", "aria-label": "Sections" }, tabs.slice(0, 3).map(([k, l, ic]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), /* @__PURE__ */ React.createElement("span", null, l))), /* @__PURE__ */ React.createElement("button", { className: "fab", onClick: () => setModal("quick"), "aria-label": "Quick add" }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 24 })), [tabs[3], tabs[5]].map(([k, l, ic, n]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement("span", { className: "ico-wrap" }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), k === "mistakes" && n ? /* @__PURE__ */ React.createElement("span", { className: "badge" }, n) : null), /* @__PURE__ */ React.createElement("span", null, k === "calendar" ? "Calendar" : "Mistakes"))), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("more") }, /* @__PURE__ */ React.createElement(Icon, { name: "more" }), /* @__PURE__ */ React.createElement("span", null, "More"))), /* @__PURE__ */ React.createElement("div", { className: `toast${msg ? " show" : ""}`, role: "status", "aria-live": "polite" }, msg), h(FocusBar, { data, update, toast }), modal === "quick" && /* @__PURE__ */ React.createElement(QuickAdd, { onClose: () => setModal(null), onPick: (k) => {
+    return /* @__PURE__ */ React.createElement("div", { className: "shell" }, /* @__PURE__ */ React.createElement("aside", { className: "rail", "aria-label": "Main" }, /* @__PURE__ */ React.createElement("div", { className: "brand" }, /* @__PURE__ */ React.createElement("span", { className: "brand-mark", "aria-hidden": "true" }, "Σ"), /* @__PURE__ */ React.createElement("span", null, "BSA Study Desk")), /* @__PURE__ */ React.createElement("div", { className: "rail-subject" }, /* @__PURE__ */ React.createElement("span", { className: "rail-label" }, "Subject"), subjectPicker("subj"), /* @__PURE__ */ React.createElement("button", { className: "link-btn", onClick: () => setModal("subjects") }, "+ Add new subject")), /* @__PURE__ */ React.createElement("nav", { className: "rail-nav" }, tabs.map(([k, l, ic, n]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), /* @__PURE__ */ React.createElement("span", null, l), n ? /* @__PURE__ */ React.createElement("span", { className: "n" }, n) : null))), /* @__PURE__ */ React.createElement("button", { className: "btn primary quick-btn", onClick: () => setModal("quick") }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 18 }), " Quick add"), /* @__PURE__ */ React.createElement("div", { className: "rail-tools" }, /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("data") }, /* @__PURE__ */ React.createElement(Icon, { name: "data", size: 18 }), " Import & export"), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("look") }, /* @__PURE__ */ React.createElement(Icon, { name: "look", size: 18 }), " Appearance"), /* @__PURE__ */ React.createElement(ThemeDots, { settings: data.settings, setSettings })), React.createElement(SyncBadge, { onOpen: openSync })), /* @__PURE__ */ React.createElement("header", { className: "mobilebar" }, /* @__PURE__ */ React.createElement("span", { className: "brand-mark", "aria-hidden": "true" }, "Σ"), subjectPicker("subj-m"), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal(syncAlert ? "sync" : "data"), "aria-label": syncAlert ? "Import, export and sync (needs attention)" : "Import and export", "data-sync": syncAlert }, /* @__PURE__ */ React.createElement(Icon, { name: "data" })), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal("look"), "aria-label": "Appearance" }, /* @__PURE__ */ React.createElement(Icon, { name: "look" }))), /* @__PURE__ */ React.createElement("main", { className: "content" }, nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), nav.tab === "home" && /* @__PURE__ */ React.createElement(HomeView, { ...viewProps }), nav.tab === "practice" && h(PracticeView, { ...viewProps, data }), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(CalendarView, { ...viewProps }), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(PsView, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })), /* @__PURE__ */ React.createElement("nav", { className: "bottom-nav", "aria-label": "Sections" }, tabs.filter(x=>["home","practice","roadmap"].includes(x[0])).map(([k, l, ic]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), /* @__PURE__ */ React.createElement("span", null, l))), /* @__PURE__ */ React.createElement("button", { className: "fab", onClick: () => setModal("quick"), "aria-label": "Quick add" }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 24 })), [tabs.find(x=>x[0]==="calendar"), tabs.find(x=>x[0]==="mistakes")].map(([k, l, ic, n]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement("span", { className: "ico-wrap" }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), k === "mistakes" && n ? /* @__PURE__ */ React.createElement("span", { className: "badge" }, n) : null), /* @__PURE__ */ React.createElement("span", null, k === "calendar" ? "Calendar" : "Mistakes"))), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("more") }, /* @__PURE__ */ React.createElement(Icon, { name: "more" }), /* @__PURE__ */ React.createElement("span", null, "More"))), /* @__PURE__ */ React.createElement("div", { className: `toast${msg ? " show" : ""}`, role: "status", "aria-live": "polite" }, msg), h(FocusBar, { data, update, toast }), modal === "quick" && /* @__PURE__ */ React.createElement(QuickAdd, { onClose: () => setModal(null), onPick: (k) => {
       if (k === "grade") {
         setModal(null);
         go("grades", { gtab: "scores" });
