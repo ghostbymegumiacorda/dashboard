@@ -2169,7 +2169,7 @@ html,body,#root{max-width:100%;overflow-x:clip}
 html,body,#root{margin:0!important;padding:0!important;width:100%!important;height:100%!important;min-height:0!important;overflow:hidden!important;}
 *,*::before,*::after{box-sizing:border-box;}
 body{background:var(--bg)!important;}
-.shell{display:grid!important;grid-template-columns:var(--app-rail,224px) minmax(0,1fr)!important;width:100%!important;height:100vh!important;height:100dvh!important;min-height:0!important;max-height:100dvh!important;overflow:hidden!important;}
+.shell{display:grid!important;grid-template-columns:var(--app-rail,224px) minmax(0,1fr)!important;width:100%!important;height:var(--bsa-viewport-height,100dvh)!important;min-height:0!important;max-height:var(--bsa-viewport-height,100dvh)!important;overflow:hidden!important;}
 .shell>.rail{min-width:0!important;min-height:0!important;height:100%!important;max-height:100%!important;overflow:hidden!important;}
 .shell>.content{min-width:0!important;min-height:0!important;height:100%!important;max-height:100%!important;overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;padding-bottom:max(24px,env(safe-area-inset-bottom,0px))!important;}
 .shell>.content>*{min-width:0;max-width:100%;}
@@ -2186,7 +2186,7 @@ body{background:var(--bg)!important;}
 @media(max-width:1199px){.bsa-v108-top-grid{grid-template-columns:minmax(0,1fr)!important;}.bsa-v108-top-grid>.life-home-widget{min-height:0!important;}}
 /* Respect existing mobile navigation; do not create an inaccessible desktop sidebar. */
 @media(max-width:899px){
- .shell{display:block!important;height:100dvh!important;min-height:0!important;overflow:hidden!important;}
+ .shell{display:block!important;height:var(--bsa-viewport-height,100dvh)!important;min-height:0!important;overflow:hidden!important;}
  .shell>.rail{display:none!important;}
  .shell>.content{height:100%!important;min-height:0!important;max-height:100%!important;overflow-y:auto!important;overflow-x:hidden!important;padding-bottom:max(85px,calc(24px + env(safe-area-inset-bottom,0px)))!important;}
  .bsa-v108-top-grid{grid-template-columns:minmax(0,1fr)!important;}
@@ -2194,22 +2194,37 @@ body{background:var(--bg)!important;}
 }
 @media(max-width:520px){.bsa-v108-top-grid>.life-home-widget{padding:15px!important;}}
 </style>
-<style id="bsa-v128-ipad-safe-area">
-/* iPad Home Screen PWA: let the dashboard paint into the bottom inset,
-   while keeping interactive content above the home indicator. */
-@supports (padding: env(safe-area-inset-bottom)) {
-  html, body, #root { background:var(--bg)!important; }
-  .shell { background:var(--bg)!important; }
-  .shell > .rail { padding-bottom:calc(13px + env(safe-area-inset-bottom,0px))!important; }
-  .shell > .content { padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))!important; }
-  @media (max-width:899px) {
-    .shell > .content { padding-bottom:calc(85px + env(safe-area-inset-bottom,0px))!important; }
-  }
+<style id="bsa-v129-viewport">
+/* The PWA shell has one measured height. No extra padding outside the shell. */
+html,body,#root{margin:0!important;padding:0!important;height:100%!important;overflow:hidden!important;background:var(--bg)!important}
+.shell{height:var(--bsa-viewport-height,100dvh)!important;max-height:var(--bsa-viewport-height,100dvh)!important}
+.shell>.rail,.shell>.content{min-height:0!important}
+@supports (height:100svh) {
+  html,body,#root{min-height:100svh!important}
 }
-/* On iPadOS the viewport can exclude the system gesture strip.
-   Match the strip's background to the app without changing scroll heights. */
-html { background:var(--bg)!important; }
 </style>
+<script id="bsa-v129-viewport-measure">
+(function(){
+  var root=document.documentElement;
+  var pending=false;
+  function measure(){
+    pending=false;
+    /* innerHeight tracks the PWA layout viewport. Avoid visualViewport.height:
+       it shrinks under the keyboard and can cause clipped content. */
+    var h=window.innerHeight;
+    if(h>0)root.style.setProperty('--bsa-viewport-height',h+'px');
+  }
+  function schedule(){
+    if(pending)return;
+    pending=true;
+    requestAnimationFrame(measure);
+  }
+  measure();
+  window.addEventListener('resize',schedule,{passive:true});
+  window.addEventListener('orientationchange',schedule,{passive:true});
+  window.addEventListener('pageshow',schedule,{passive:true});
+})();
+</script>
 </head>
 <body>
 <div id="root"><p class="boot">Opening your study desk… If this doesn’t load, connect to the internet once so the app can save itself for offline use.</p></div>
