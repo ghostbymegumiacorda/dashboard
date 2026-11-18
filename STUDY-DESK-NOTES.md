@@ -655,3 +655,20 @@ Study Toolkit now offers **Backup all study data** and **Restore all study data*
 - Stroke eraser deletes entire editable vector strokes or shapes.
 - Pencil eraser rubs out raster pixels; older flattened ink is not individually selectable.
 - Pen, zoom, PDF and personalization features retained. Test on iPad before class; back up notebooks before replacing.
+
+## v73 — Full shared interface
+- Publishing now exports the full personal app shell, not the former summarized HTML viewer.
+- Selected subjects, topics, lectures, cards, quizzes, and problem sets are seeded into the full interface.
+- Read-only guards prevent changing published subject records and editing through the primary editor.
+- Personal grades, mistakes, sessions, streaks, and mastery data are excluded.
+- Publishing token remains only in the private browser session.
+- Some local practice tools can still store their own separate local data; the read-only guarantee concerns published records, not local exercises.
+- The original personal site remains unchanged; republish once to replace the old shared index.html.
+- Browser-level end-to-end tests are still required.
+
+## v74 — Custom problem set PDF selection
+- Added Customize PDF to problem set view. Pick individual problems, Select all, Clear all, Missed only, or enter numbers/ranges like 1-5, 8, 12.
+- Optional answer key and solutions; preview uses the existing branded print template.
+- Existing full-set and filtered print actions remain.
+- Physical PDF page numbers can still be selected in the browser's print dialog.
+- JavaScript syntax checked; interactive browser/iPad tests not performed.
