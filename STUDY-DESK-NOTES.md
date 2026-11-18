@@ -325,3 +325,37 @@ Sidebar displays only seven favorite theme swatches in a single row. Customize t
 - Fixed Ask Tutor blank screen caused by referencing `ready` before its `useState` declaration.
 - Increased available desktop sidebar navigation height and compacted spacing without changing stored data.
 - Updated service worker cache version to v25.
+
+## v26 — Curriculum organization and safe bulk cleanup
+- Subject selector now groups prospectus subjects by academic term, with custom subjects in their own group.
+- Curriculum view supports an optional missing-only filter and a status selector (planned / taking now / completed / on hold).
+- Bulk cleanup removes **only empty subjects tagged as prospectus imports**, after confirmation. It intentionally does not remove subjects with saved learning content. Export data before bulk deletion, particularly when syncing between devices.
+- Curriculum cards use a more readable responsive layout. No Gemini requests are added.
+- Planned enhancement (not included): subject-specific practice templates and a redesigned study-tools navigation.
+
+
+## v27 Navigation and UI refresh
+- Collapsible grouped sidebar navigation (Home, Learn, Practice, Progress, Plan & organize).
+- Search tool names or navigation groups; selected page stays visible when searching.
+- Home quick-launch tiles for StudyFlow, Practice, Lectures, Flashcards, AI Tutor, Schedule.
+- Compact workspace toolbar showing current section and selected subject with direct Ask Tutor and Quick Add actions.
+- Theme-aware responsive styling, existing seven-theme favorites retained.
+- No change to subject data, saved study records, Gemini settings, or GitHub sync schema.
+
+
+## v28 Study Toolkit
+Added Notes (local browser storage, export Markdown and print/PDF), calculator, debit/credit worksheet, formula book, and focus timer in one organized Toolkit page. Notes/formulas are device-local and NOT part of GitHub synchronization or the main backup. Export them separately. Printing uses browser Print > Save as PDF. Existing grade report already had PDF printing.
+
+
+## v29 — UI focus
+- Removed duplicate desktop sidebar Quick Add; top toolbar remains. Mobile quick-add FAB remains.
+- Simplified Concept Vault primary actions: Add Card and Review.
+- Moved selection and duplicate controls into a collapsible Manage Cards section.
+- Preserved existing cards, rating logic, filters, drill, and deletion confirmation.
+- No new retention algorithm or sync changes in this release.
+
+## v30 — Foundation & Print
+- Study Toolkit > Solve & Review records an independent or assisted attempt, correction, and a delayed retry reminder (1 day if assisted/incorrect, 3 days if independent). This is a local practice log, **not** a verified adaptive mastery engine or automated answer checker. Saved attempts are local browser data, with a per-subject JSON export button.
+- Print / PDF for toolkit notes and formulas uses an A4 print-friendly document, line wrapping, safe text insertion and page margins. Accounting worksheets print as a proper table with repeated header and row break protection. Browser print dialog provides Save as PDF; long unbroken formulas may still wrap, and print rendering depends on the browser.
+- Sharing: the deployed GitHub Pages application is client-side. Sharing its URL does not grant write access to the owner's GitHub repository, but viewers can interact with their own local copy; this is **not** a true read-only viewer. Do not publish private synced content, credentials or personal study records. A safe classmate sharing experience requires a separate sanitized, read-only published site or backend access control.
+- Existing data keys remain unchanged. No automatic integration of v30 practice log with GitHub sync. Export backups before upgrading. Live browser, GitHub sync, and PDF visual tests remain outstanding.
