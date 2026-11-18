@@ -2021,6 +2021,27 @@ html,body,#root{max-width:100%;overflow-x:clip}
 }
 @media(prefers-reduced-motion:reduce){.ai-wrap .ai-log{scroll-behavior:auto!important}}
 </style>
+<style id="bsa-v119-ask-layout">
+/* One compact action row in the Ask header; no duplicate composer toolbar. */
+.ai-wrap .page-head{align-items:center;gap:12px}
+.ai-wrap .ask-header-actions{display:flex;align-items:center;flex-wrap:wrap;gap:5px}
+.ai-wrap .ask-header-actions .btn{padding:7px 10px;font-size:.78rem;white-space:nowrap}
+.ai-wrap .ask-more{position:relative}
+.ai-wrap .ask-more summary{cursor:pointer;list-style:none}
+.ai-wrap .ask-more summary::-webkit-details-marker{display:none}
+.ai-wrap .ask-more-menu{position:absolute;right:0;top:calc(100% + 5px);z-index:30;min-width:175px;padding:6px;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:var(--lift)}
+.ai-wrap .ask-more-menu .btn{width:100%;text-align:left}
+.ai-wrap .ai-bar{padding:9px 11px!important}
+.ai-wrap .ai-chips{margin:0 0 7px!important}
+.ai-wrap .ai-row textarea{min-height:54px;max-height:145px}
+.ai-wrap .ai-bar>p{margin-top:5px!important;font-size:.72rem}
+.ai-wrap .ai-log{padding-top:12px}
+@media(max-width:650px){
+ .ai-wrap .page-head{align-items:flex-start}
+ .ai-wrap .ask-header-actions{width:100%;justify-content:flex-start}
+ .ai-wrap .ask-header-actions .btn{font-size:.75rem}
+}
+</style>
 </head>
 <body>
 <div id="root"><p class="boot">Opening your study desk… If this doesn’t load, connect to the internet once so the app can save itself for offline use.</p></div>
@@ -11210,7 +11231,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     return h(
       "section",
       { className: "view ai-wrap", ref: topRef },
-      h("div", { className: "page-head" }, h("div", null, h("h1", { className: "page-title" }, "Ask"), h("p", { className: "muted" }, "Ask about lessons, general questions, or how to navigate Study Desk. Dashboard Guide knows the app layout.")), h("div", { className: "head-actions" }, msgs.length > 0 && h("button", { className: "btn ghost", onClick: clear }, "Clear chat"), h("button", { className: "btn ghost", onClick: () => setSetup(true) }, ready ? "Key & model" : "Connect"))),
+      h("div", { className: "page-head" }, h("div", null, h("h1", { className: "page-title" }, "Ask"), h("p", { className: "muted" }, "Ask about lessons, general questions, or how to navigate Study Desk. Dashboard Guide knows the app layout.")), h("div", { className: "head-actions ask-header-actions" }, msgs.length > 0 && h("button", { className: "btn ghost", onClick: () => { stick.current = false; logRef.current?.scrollTo({top:0,behavior:"smooth"}); }, title:"Jump to the first message" }, "↑ Top"), msgs.length > 0 && h("button", { className: "btn ghost", onClick: () => { stick.current = true; logRef.current?.scrollTo({top:logRef.current.scrollHeight,behavior:"smooth"}); }, title:"Jump to the newest message" }, "↓ Latest"), msgs.length > 0 && h("details", { className:"ask-more" }, h("summary", { className:"btn ghost", title:"Conversation options" }, "⋯"), h("div", { className:"ask-more-menu" }, h("button", { className:"btn danger ghost", disabled:busy, onClick:clear }, "Clear conversation"))), h("button", { className: "btn ghost", onClick: () => setSetup(true) }, ready ? "Key & model" : "Connect"))),
       ready && h("div", { className: "ai-ctx ai-switches" },
         h("label", { className: "field-label", htmlFor: "ask-mode" }, "Tutor mode"),
         h("select", { id: "ask-mode", value: mode, disabled: busy, onChange: e => changeMode(e.target.value) },
@@ -11255,12 +11276,6 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
             ));
         }), h("div", { ref: endRef })),
         h("div", { className: "ai-bar" },
-          h("div", { className: "ai-quicktools" },
-            h("span", { className: "muted small" }, msgs.length ? Math.floor(msgs.length / 2) + " exchanges" : "New conversation"),
-            h("span", { className: "spacer" }),
-            msgs.length > 0 && h("button", { className: "btn ghost", onClick: () => { stick.current = false; if(logRef.current)logRef.current.scrollTo({top:0,behavior:"smooth"}); } }, "↑ Top"),
-            msgs.length > 0 && h("button", { className: "btn ghost", onClick: () => { stick.current = true; if(logRef.current)logRef.current.scrollTo({top:logRef.current.scrollHeight,behavior:"smooth"}); } }, "↓ Latest"),
-            msgs.length > 0 && h("button", { className: "btn danger ghost", disabled: busy, onClick: clear, title: "Clear this conversation without scrolling to the top" }, "Clear chat")),
           mode === "sources" && h("div", { className: "ai-chips" }, [["Summarize source", "Summarize the selected source and identify the main rules, using only its contents."], ["Quiz from source", "Quiz me one question at a time using only the selected source."], ["Explain a problem", "Explain a worked problem from the selected source step by step."]].map(([label, prompt]) => h("button", { key: label, className: "chip", disabled: busy, onClick: () => ask(prompt) }, label))),
           h("div", { className: "ai-row" },
             h("textarea", { ref: boxRef, rows: 2, value: text, placeholder: mode === "sources" ? "Ask about your saved sources…" : "Ask anything…", onChange: (e) => setText(e.target.value), onKeyDown: (e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); ask(text); } } }),
