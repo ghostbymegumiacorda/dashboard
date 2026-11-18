@@ -359,3 +359,11 @@ Added Notes (local browser storage, export Markdown and print/PDF), calculator, 
 - Print / PDF for toolkit notes and formulas uses an A4 print-friendly document, line wrapping, safe text insertion and page margins. Accounting worksheets print as a proper table with repeated header and row break protection. Browser print dialog provides Save as PDF; long unbroken formulas may still wrap, and print rendering depends on the browser.
 - Sharing: the deployed GitHub Pages application is client-side. Sharing its URL does not grant write access to the owner's GitHub repository, but viewers can interact with their own local copy; this is **not** a true read-only viewer. Do not publish private synced content, credentials or personal study records. A safe classmate sharing experience requires a separate sanitized, read-only published site or backend access control.
 - Existing data keys remain unchanged. No automatic integration of v30 practice log with GitHub sync. Export backups before upgrading. Live browser, GitHub sync, and PDF visual tests remain outstanding.
+
+
+## v31 print and navigation patch
+- Prevents oversized problem sections from being pushed to the next page in PDF output. A4 portrait and table row pagination improvements.
+- Adds Print / PDF inside individual lectures. Existing problem-set print buttons remain available.
+- Maps existing subject codes to prospectus terms in the selector without modifying subject records.
+- Adds a Toolkit error boundary and safer parsing of local toolkit data; if a runtime failure remains it displays the error instead of a blank area.
+- Note: this patch has not been visually validated in the user browser.
