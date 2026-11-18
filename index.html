@@ -1928,6 +1928,54 @@ body{background:var(--bg)!important;color:var(--text);background-image:var(--tex
 .life-standalone-launch .btn{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;min-height:42px}
 @media(max-width:690px){.life-standalone-launch{flex-direction:column;align-items:stretch}.life-standalone-launch .btn{width:100%}}
 </style>
+
+<style id="bsa-v116-routine-and-focus">
+/* Clear hierarchy: routine first, advanced controls optional. Colors inherit current theme. */
+.bsa-daily-path{margin:0 0 22px;padding:clamp(18px,2.4vw,28px);border:1px solid var(--line);border-radius:17px}
+.bsa-path-top{display:flex;justify-content:space-between;align-items:start;gap:18px}
+.bsa-path-top h2{font-size:clamp(1.3rem,2vw,1.7rem);margin:5px 0 7px}
+.bsa-path-top p{margin:0}
+.bsa-path-progress{min-width:85px;display:flex;flex-direction:column;align-items:center;gap:3px}
+.bsa-path-progress strong{font-size:1.35rem;font-variant-numeric:tabular-nums}
+.bsa-path-meter{height:7px;border-radius:99px;background:var(--line);overflow:hidden;margin:17px 0 18px}
+.bsa-path-meter span{height:100%;display:block;background:var(--accent,#9879ca);border-radius:99px;transition:width .25s ease}
+.bsa-path-topic{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:13px 16px;border:1px solid var(--line);border-radius:12px;margin:0 0 15px}
+.bsa-path-topic>div{display:flex;flex-direction:column;gap:3px;min-width:0}.bsa-path-topic strong{font-size:.99rem}
+.bsa-path-topic label{display:flex;flex-direction:column;gap:4px;font-size:.77rem;max-width:240px;min-width:140px}
+.bsa-path-topic select{border:1px solid var(--line);background:var(--panel,var(--bg));color:inherit;padding:8px 9px;border-radius:9px;max-width:100%}
+.bsa-path-next{display:flex;align-items:flex-start;gap:14px;background:color-mix(in srgb,var(--accent,#9a82c6) 7%,transparent);padding:19px;border-radius:13px}
+.bsa-path-step-number{flex:none;display:grid;place-items:center;width:34px;height:34px;border-radius:11px;background:var(--accent,#8f79c0);color:white;font-weight:750}
+.bsa-path-next-copy{flex:1}.bsa-path-next h3{margin:5px 0 5px;font-size:1.13rem}.bsa-path-next p{margin:0 0 13px}
+.bsa-path-actions{display:flex;flex-wrap:wrap;gap:9px}.bsa-path-actions .btn{min-height:38px}
+.bsa-path-all{margin-top:15px}.bsa-path-all>summary{cursor:pointer;font-size:.86rem;font-weight:600;padding:9px 0}
+.bsa-path-steps{border-top:1px solid var(--line);margin-top:6px}.bsa-path-mini{display:grid;grid-template-columns:30px minmax(100px,1fr) auto auto;align-items:center;gap:10px;border-bottom:1px solid var(--line);padding:10px 0}
+.bsa-path-mini p{margin:3px 0 0}.bsa-path-marker{width:25px;height:25px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;font-size:.8rem}.bsa-path-marker.completed{background:var(--accent,#9879ca);color:white;border-color:transparent}
+.bsa-path-check{display:flex;align-items:center;gap:5px;white-space:nowrap;font-size:.82rem;cursor:pointer}
+.bsa-path-all-done{padding:14px;border-radius:12px;background:color-mix(in srgb,var(--accent,#9a82c6) 8%,transparent)}
+.bsa-path-warning{color:#b34b43;font-size:.84rem}
+.bsa-advanced-flow{margin:10px 0 18px;border:1px solid var(--line);border-radius:12px;padding:10px 15px}
+.bsa-advanced-flow>summary{cursor:pointer;font-weight:650;font-size:.89rem;padding:6px 3px}
+.bsa-advanced-flow[open]>*:not(summary){margin-top:15px}
+.bsa-workflow-ribbon{display:flex;align-items:center;flex-wrap:wrap;gap:7px;padding:9px 12px;border:1px solid var(--line);border-radius:12px;margin:0 0 18px}
+.bsa-workflow-ribbon>span{font-size:.7rem;letter-spacing:.06em;font-weight:700;margin-right:7px;color:var(--muted)}
+.bsa-workflow-link,.bsa-workflow-home{border:0;border-radius:9px;background:transparent;color:inherit;padding:9px 10px;cursor:pointer;font:inherit;font-size:.79rem;white-space:nowrap}
+.bsa-workflow-link>span{display:inline-grid;place-items:center;width:19px;height:19px;border-radius:50%;border:1px solid var(--line);margin-right:6px;font-size:.69rem}
+.bsa-workflow-link.active{background:color-mix(in srgb,var(--accent,#9a82c6) 14%,transparent);font-weight:700}
+.bsa-workflow-home{margin-left:auto;text-decoration:underline;text-underline-offset:3px}
+@media(max-width:720px){.bsa-path-top{flex-direction:column;gap:9px}.bsa-path-progress{flex-direction:row}.bsa-path-topic{flex-direction:column;align-items:stretch}.bsa-path-topic label{max-width:100%}.bsa-path-mini{grid-template-columns:26px minmax(90px,1fr) auto;gap:6px}.bsa-path-mini .bsa-path-check{grid-column:2/4}.bsa-path-next{padding:13px}.bsa-workflow-ribbon{gap:3px}.bsa-workflow-link{padding:9px 6px}.bsa-workflow-ribbon>span{width:100%}.bsa-workflow-home{margin-left:0}}
+@media(prefers-reduced-motion:reduce){.bsa-path-meter span{transition:none}}
+</style>
+<style id="bsa-v117-feature-discovery">
+.bsa-new-here{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:15px 19px;border:1px solid var(--line);background:var(--surface);border-radius:14px;margin:0 0 15px}
+.bsa-new-here strong{font-size:.96rem}.bsa-new-here p{font-size:.85rem;color:var(--muted);margin:4px 0 0}.bsa-new-actions{display:flex;gap:8px;flex-shrink:0}
+.bsa-feature-guide{max-width:1180px;margin-inline:auto}.bsa-guide-intro{padding:26px 28px;background:var(--surface);border:1px solid var(--line);border-radius:17px;margin-bottom:20px}.bsa-guide-intro h1{font-size:clamp(1.4rem,3vw,2rem);line-height:1.25;margin:8px 0}.bsa-guide-intro p{max-width:650px;margin:0 0 16px;line-height:1.65}
+.bsa-guide-flow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:0 0 24px}.bsa-guide-flow-step{background:var(--surface);color:var(--text);border:1px solid var(--line);border-radius:11px;min-height:53px;padding:9px 7px;font-size:.83rem;font-weight:650;cursor:pointer}.bsa-guide-flow-step:hover{border-color:var(--accent);background:var(--accent-soft)}
+.bsa-guide-tools{display:flex;flex-direction:column;gap:10px;margin:8px 0 17px}.bsa-guide-tools label{font-size:1.07rem;font-weight:750}.bsa-guide-tools input{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--text);font:inherit}.bsa-guide-filters{display:flex;flex-wrap:wrap;gap:7px}
+.bsa-guide-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.bsa-guide-card{text-align:left;display:flex;align-items:flex-start;gap:13px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;color:var(--text);min-height:132px;cursor:pointer;transition:border-color .15s,transform .15s}.bsa-guide-card:hover{border-color:var(--accent);transform:translateY(-1px)}.bsa-guide-card-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:var(--accent-soft);color:var(--accent);flex-shrink:0}.bsa-guide-card-body{display:flex;flex:1;flex-direction:column;gap:4px}.bsa-guide-card-body strong{font-size:1rem}.bsa-guide-card-body>span:last-child{font-size:.82rem;line-height:1.5;color:var(--muted)}.bsa-guide-card-role{font-size:.68rem;font-weight:750;text-transform:uppercase;letter-spacing:.06em;color:var(--accent)}.bsa-guide-help{margin-top:16px;padding:15px}.bsa-guide-help summary{cursor:pointer;font-weight:700}
+@media(max-width:800px){.bsa-new-here{flex-direction:column;align-items:flex-start}.bsa-guide-flow{grid-template-columns:repeat(3,minmax(0,1fr))}.bsa-guide-grid{grid-template-columns:1fr}.bsa-guide-intro{padding:19px}}
+@media(max-width:420px){.bsa-guide-flow{grid-template-columns:repeat(2,minmax(0,1fr))}.bsa-new-actions{width:100%}.bsa-new-actions .btn{flex:1}}
+@media(prefers-reduced-motion:reduce){.bsa-guide-card{transition:none}.bsa-guide-card:hover{transform:none}}
+</style>
 </head>
 <body>
 <div id="root"><p class="boot">Opening your study desk… If this doesn’t load, connect to the internet once so the app can save itself for offline use.</p></div>
@@ -4468,10 +4516,130 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     );
   }
 
+
+  /* =====================================================================
+     Daily Study Path (v116)
+     Data contract: UI-only routine checkpoints. Uses STORE_KEY namespace so
+     a shared published copy has its own routine, too. Never writes to a
+     subject, learningEvents, XP, saved timer sessions or personal cloud data.
+     ===================================================================== */
+  const BSA_ROUTINE_KEY = STORE_KEY + ':daily-path:v1';
+  const ROUTINE_TASKS = [
+    {id:'learn',label:'Learn',title:'Understand one concept',description:'Read a lecture or refresh the topic before testing yourself.',tab:'lectures',button:'Open lectures'},
+    {id:'recall',label:'Recall',title:'Retrieve it from memory',description:'Use flashcards or the Practice review. Try before revealing answers.',tab:'practice',button:'Start recall'},
+    {id:'apply',label:'Apply',title:'Solve problems without notes',description:'Answer a problem set or timed quiz to check your understanding.',tab:'psets',button:'Solve problems'},
+    {id:'correct',label:'Correct',title:'Repair your mistakes',description:'Explain why an answer was wrong, then schedule a retest.',tab:'mistakes',button:'Open mistake log'},
+    {id:'reflect',label:'Reflect',title:'Check progress and plan tomorrow',description:'Review your results and decide what to revisit next.',tab:'stats-clean',button:'View progress'}
+  ];
+  function loadRoutineDate(subjectId){
+    const day=today();
+    try{
+      const obj=JSON.parse(localStorage.getItem(BSA_ROUTINE_KEY)||'{}');
+      const record=obj&&obj.subjects&&obj.subjects[subjectId];
+      if(record&&record.date===day&&record.done&&typeof record.done==='object')
+        return {date:day,done:Object.fromEntries(ROUTINE_TASKS.map(t=>[t.id,record.done[t.id]===true])),topicId:record.topicId||''};
+    }catch(e){}
+    return {date:day,done:{},topicId:''};
+  }
+  function saveRoutineDate(subjectId,record){
+    try{
+      let obj={};try{obj=JSON.parse(localStorage.getItem(BSA_ROUTINE_KEY)||'{}')||{}}catch(e){}
+      if(!obj||typeof obj!=='object')obj={};
+      const subjects=obj.subjects&&typeof obj.subjects==='object'?obj.subjects:{};
+      subjects[subjectId]={date:record.date,done:record.done,topicId:record.topicId};
+      // Keep only the current day's checklist for each subject.
+      for(const id of Object.keys(subjects))if(subjects[id]?.date!==today())delete subjects[id];
+      localStorage.setItem(BSA_ROUTINE_KEY,JSON.stringify({version:1,subjects}));
+      return true;
+    }catch(e){return false}
+  }
+  function DailyStudyPath({subject,go}){
+    const [routine,setRoutine]=useState(()=>loadRoutineDate(subject.id));
+    const [warning,setWarning]=useState('');
+    const ranked=useMemo(()=>smartTopicStats(subject),[subject]);
+    const recommendation=ranked[0];
+    const chosen=ranked.find(r=>r.topic.id===routine.topicId)||recommendation;
+    const completed=ROUTINE_TASKS.filter(t=>routine.done[t.id]).length;
+    const next=ROUTINE_TASKS.find(t=>!routine.done[t.id]);
+    const todayLabel=new Date().toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'});
+    const commit=(mutate)=>{
+      const updated=mutate(routine);
+      setRoutine(updated);
+      setWarning(saveRoutineDate(subject.id,updated)?'':'This browser could not save routine progress. Your academic records are unchanged.');
+    };
+    const stepLink=task=>{
+      const opts={topicId:chosen?.topic.id};
+      if(task.id==='recall')opts.start='review';
+      if(task.id==='learn'&&chosen){const lx=(subject.lectures||[]).find(l=>l.topicId===chosen.topic.id);if(lx)opts.open=lx.id}
+      if(task.id==='apply'&&chosen){const ps=(subject.psets||[]).find(p=>p.topicId===chosen.topic.id);if(ps)opts.open=ps.id}
+      go(task.tab,opts);
+    };
+    const taskAction=(task)=>h('button',{className:'btn'+(next?.id===task.id?' primary':''),onClick:()=>stepLink(task)},task.button);
+    return h('section',{className:'panel bsa-daily-path','aria-label':'Your guided daily study routine'},
+      h('div',{className:'bsa-path-top'},
+        h('div',null,h('div',{className:'panel-kicker'},'YOUR DAILY ROUTINE · '+todayLabel),h('h2',null,'One step at a time'),h('p',{className:'muted small'},'Learn → Recall → Apply → Correct → Reflect. You decide when a step is genuinely done.')),
+        h('div',{className:'bsa-path-progress'},h('strong',null,completed,' / ',ROUTINE_TASKS.length),h('span',{className:'muted small'},'steps completed'))),
+      h('div',{className:'bsa-path-meter',role:'progressbar','aria-valuenow':completed,'aria-valuemin':0,'aria-valuemax':5,'aria-label':'Daily study routine completion'},h('span',{style:{width:(completed/5*100)+'%'}})),
+      chosen&&h('div',{className:'bsa-path-topic'},h('div',null,h('span',{className:'muted small'},'Suggested focus topic'),h('strong',null,chosen.topic.title),h('span',{className:'muted small'},chosen.mistakes?chosen.mistakes+' unresolved mistakes':chosen.dueCards?chosen.dueCards+' reviews due':chosen.accuracy===null?'Not yet assessed':chosen.accuracy+'% observed accuracy')),h('label',null,'Change topic',h('select',{value:chosen.topic.id,onChange:e=>commit(old=>({...old,topicId:e.target.value}))},ranked.map(r=>h('option',{key:r.topic.id,value:r.topic.id},r.topic.title))))),
+      next?h('div',{className:'bsa-path-next'},h('span',{className:'bsa-path-step-number'},ROUTINE_TASKS.indexOf(next)+1),h('div',{className:'bsa-path-next-copy'},h('span',{className:'panel-kicker'},'UP NEXT · '+next.label.toUpperCase()),h('h3',null,next.title),h('p',{className:'muted'},next.description),h('div',{className:'bsa-path-actions'},taskAction(next),h('button',{className:'btn',onClick:()=>commit(old=>({...old,done:{...old.done,[next.id]:true}}))},'Mark completed')))):
+        h('div',{className:'bsa-path-all-done'},h('strong',null,'Daily path complete ✨'),h('p',{className:'muted small'},'Your checklist is finished. You can still review or practice any time.'),h('button',{className:'btn',onClick:()=>go('practice',{start:'review'})},'Optional extra practice')),
+      h('details',{className:'bsa-path-all'},h('summary',null,'See all 5 steps'),h('div',{className:'bsa-path-steps'},ROUTINE_TASKS.map((task,i)=>h('div',{className:'bsa-path-mini',key:task.id},h('span',{className:'bsa-path-marker'+(routine.done[task.id]?' completed':'')},routine.done[task.id]?'✓':i+1),h('div',null,h('strong',null,task.label),h('p',{className:'muted small'},task.title)),h('button',{className:'btn ghost',onClick:()=>stepLink(task)},'Open'),h('label',{className:'bsa-path-check'},h('input',{type:'checkbox',checked:!!routine.done[task.id],onChange:e=>commit(old=>({...old,done:{...old.done,[task.id]:e.target.checked}}))}),' Done'))))),
+      warning&&h('p',{className:'bsa-path-warning',role:'alert'},warning),
+      h('p',{className:'muted small'},'Checkpoints are personal reminders, not proof of mastery. They do not award XP, coins, grades or study minutes. Each subject gets a fresh checklist every day.')
+    );
+  }
+  function WorkflowRibbon({tab,go}){
+    const relevant=['lectures','vault','practice','psets','mistakes','stats-clean'];
+    if(!relevant.includes(tab))return null;
+    const links=[['lectures','Learn'],['practice','Recall'],['psets','Apply'],['mistakes','Correct'],['stats-clean','Reflect']];
+    return h('nav',{className:'bsa-workflow-ribbon','aria-label':'Study workflow'},
+      h('span',null,'STUDY PATH'),links.map(([id,label],i)=>h('button',{key:id,className:'bsa-workflow-link'+(tab===id||(id==='practice'&&tab==='vault')?' active':''),onClick:()=>go(id,id==='practice'?{start:'review'}:{})},h('span',null,i+1),label)),h('button',{className:'bsa-workflow-home',onClick:()=>go('home')},'Routine ↗'));
+  }
+
+
+  const DESK_FEATURE_GUIDE=[
+    {id:'home',name:'Today',role:'Your starting point',desc:'See your recommended topic and follow the five-step daily study routine.',group:'Start here',icon:'home'},
+    {id:'lectures',name:'Lectures',role:'Learn',desc:'Read explanations and lesson materials before practicing.',group:'Study',icon:'lecture'},
+    {id:'practice',name:'Flashcard review',role:'Recall',desc:'Test your memory with due cards, new cards, and missed questions.',group:'Study',icon:'cards'},
+    {id:'psets',name:'Problem sets',role:'Apply',desc:'Solve longer questions and check which concepts you missed.',group:'Study',icon:'pset'},
+    {id:'mistakes',name:'Mistake log',role:'Correct',desc:'Track incorrect answers and revisit the concepts that need work.',group:'Study',icon:'mistakes'},
+    {id:'stats-clean',name:'Statistics',role:'Reflect',desc:'Review recorded study activity and spot what needs attention.',group:'Study',icon:'grade'},
+    {id:'vault',name:'Flashcard collection',role:'Organize',desc:'Browse or organize the flashcards available in this subject.',group:'Organize',icon:'cards'},
+    {id:'roadmap',name:'Course topics',role:'Plan topics',desc:'Track topics and subtopics from your course syllabus.',group:'Organize',icon:'roadmap'},
+    {id:'calendar',name:'Calendar',role:'Plan time',desc:'Manage upcoming study sessions, tasks and important dates.',group:'Organize',icon:'calendar'},
+    {id:'class',name:'Class & deadlines',role:'Keep up',desc:'Find classes, attendance and submissions in one place.',group:'Organize',icon:'subjects'},
+    {id:'toolkit',name:'Study Toolkit',role:'Use tools',desc:'Open built-in accounting reference tools and study utilities.',group:'More',icon:'book'},
+    {id:'ask',name:'Ask tutor',role:'Get help',desc:'Get guided help with accounting questions and difficult concepts.',group:'More',icon:'ask'},
+    {id:'life',name:'Study Life',role:'Take a reward',desc:'Visit your avatar, pets, room and coin market. Optional and separate from study time.',group:'More',icon:'look'}
+  ];
+  function FeatureGuide({go}){
+    const [query,setQuery]=useState('');
+    const [filter,setFilter]=useState('All');
+    const matched=DESK_FEATURE_GUIDE.filter(f=>(filter==='All'||f.group===filter)&&[f.name,f.role,f.desc].join(' ').toLowerCase().includes(query.trim().toLowerCase()));
+    const jump=id=>go(id,id==='practice'?{start:'review'}:{});
+    return h('section',{className:'view bsa-feature-guide'},
+      h('div',{className:'bsa-guide-intro'},h('span',{className:'panel-kicker'},'START HERE'),h('h1',null,'Find your way around'),h('p',{className:'muted'},'You do not need to learn every feature at once. Start with Today, then follow Learn → Recall → Apply → Correct → Reflect.'),h('button',{className:'btn primary',onClick:()=>go('home')},'Go to my daily routine')),
+      h('div',{className:'bsa-guide-flow','aria-label':'Recommended study flow'},[['lectures','1 · Learn'],['practice','2 · Recall'],['psets','3 · Apply'],['mistakes','4 · Correct'],['stats-clean','5 · Reflect']].map(([id,label])=>h('button',{key:id,onClick:()=>jump(id),className:'bsa-guide-flow-step'},label))),
+      h('div',{className:'bsa-guide-tools'},h('label',{htmlFor:'bsa-feature-search'},'Explore the features'),h('input',{id:'bsa-feature-search',type:'search',value:query,placeholder:'Search by what you want to do…',onChange:e=>setQuery(e.target.value),'aria-label':'Search features'}),h('div',{className:'bsa-guide-filters'},['All','Start here','Study','Organize','More'].map(g=>h('button',{key:g,className:'btn'+(filter===g?' primary':''),onClick:()=>setFilter(g)},g)))),
+      h('div',{className:'bsa-guide-grid'},matched.map(f=>h('button',{className:'bsa-guide-card',key:f.id,onClick:()=>jump(f.id)},h('span',{className:'bsa-guide-card-icon'},h(Icon,{name:f.icon,size:21})),h('span',{className:'bsa-guide-card-body'},h('span',{className:'bsa-guide-card-role'},f.role),h('strong',null,f.name),h('span',null,f.desc)),h('span',{'aria-hidden':true},'→')))),!matched.length&&h('p',{className:'muted'},'No matching features. Try a shorter search.'),
+      h('details',{className:'panel bsa-guide-help'},h('summary',null,'A simple example: studying a new CFAS topic'),h('p',null,'Read a lecture → review flashcards → solve a problem set → record mistakes → check your results. You can always return to Today to resume.'))
+    );
+  }
+  function NewHereCard({go}){
+    const [visible,setVisible]=useState(()=>{try{return localStorage.getItem('bsa-beginner-hint-hidden')!=='1'}catch(e){return true}});
+    if(!visible)return null;
+    return h('div',{className:'bsa-new-here',role:'region','aria-label':'Getting started'},
+      h('div',null,h('strong',null,'New here? Start with Today.'),h('p',null,'Follow the daily routine or explore what each feature does. You can learn the rest as you go.')),
+      h('div',{className:'bsa-new-actions'},h('button',{className:'btn primary',onClick:()=>go('guide')},'Explore features'),h('button',{className:'btn ghost',onClick:()=>{setVisible(false);try{localStorage.setItem('bsa-beginner-hint-hidden','1')}catch(e){}}},'Got it'))
+    );
+  }
+
   function HomeView({ subject, go, openEditor, update, settings, toast }) {
     const welcomeJohn=h("p",{className:"muted",style:{margin:"0 0 12px",fontWeight:600}},"Welcome back, John Angel 👋");
     const lifeWidget=homePreferences().showLife?h(StudyLifeHomeWidget,{go}):null;
     const academicOverview=h(AcademicCommandCenter,{subject,go,update,toast});
+    const dailyPath=h(DailyStudyPath,{subject,go});
+    const newcomerCard=h(NewHereCard,{go});
     const reviewDue=buildReview(subject,settings.newPerDay||10,settings.maxPerDay||0);
     const activeMistakes=(subject.mistakes||[]).filter(m=>m.status!=="Cleared");
     const dueCount=reviewDue.due.length+reviewDue.mist.length;
@@ -4499,7 +4667,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const rated = subject.cards.filter((c) => c.conf).length;
     const recall = rated ? Math.round(subject.cards.filter((c) => c.conf === "known").length / rated * 100) : null;
     if (!topics.length) {
-      return /* @__PURE__ */ React.createElement("section", { className: "view bsa-v108-home" }, /* @__PURE__ */ welcomeJohn, h("div",{className:"bsa-v108-top-grid"},academicOverview,lifeWidget), academicQuickActions, React.createElement("div", { className: "hero" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h1", null, subject.name), subject.code && /* @__PURE__ */ React.createElement("p", { className: "muted" }, subject.code))), /* @__PURE__ */ React.createElement("div", { className: "empty big" }, /* @__PURE__ */ React.createElement(Icon, { name: "roadmap", size: 32 }), /* @__PURE__ */ React.createElement("h2", null, "Set up ", subject.name), /* @__PURE__ */ React.createElement("p", { className: "muted" }, "Add your syllabus topics one by one, or paste them as JSON from NotebookLM. Today’s plan appears once you have topics."), /* @__PURE__ */ React.createElement("div", { className: "row-center" }, /* @__PURE__ */ React.createElement("button", { className: "btn primary", onClick: () => go("roadmap", { add: true }) }, "Add a topic"), h("button", { className: "btn", onClick: () => go("data", { tab: "packs" }) }, "Browse starter packs"), /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: () => go("data") }, "Import data"))));
+      return /* @__PURE__ */ React.createElement("section", { className: "view bsa-v108-home" }, /* @__PURE__ */ welcomeJohn, newcomerCard, dailyPath, h("div",{className:"bsa-v108-top-grid"},academicOverview,lifeWidget), academicQuickActions, React.createElement("div", { className: "hero" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h1", null, subject.name), subject.code && /* @__PURE__ */ React.createElement("p", { className: "muted" }, subject.code))), /* @__PURE__ */ React.createElement("div", { className: "empty big" }, /* @__PURE__ */ React.createElement(Icon, { name: "roadmap", size: 32 }), /* @__PURE__ */ React.createElement("h2", null, "Set up ", subject.name), /* @__PURE__ */ React.createElement("p", { className: "muted" }, "Add your syllabus topics one by one, or paste them as JSON from NotebookLM. Today’s plan appears once you have topics."), /* @__PURE__ */ React.createElement("div", { className: "row-center" }, /* @__PURE__ */ React.createElement("button", { className: "btn primary", onClick: () => go("roadmap", { add: true }) }, "Add a topic"), h("button", { className: "btn", onClick: () => go("data", { tab: "packs" }) }, "Browse starter packs"), /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: () => go("data") }, "Import data"))));
     }
     const done = current ? current.sub.filter((s) => s.done).length : 0;
     const planned = (subject.sessions || []).filter((s) => s.date === today() && !s.done).sort(byTime);
@@ -4582,7 +4750,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         actions: active.length ? [{ label: "Open mistake log", run: () => go("mistakes") }] : []
       }
     ].filter(Boolean);
-    return /* @__PURE__ */ React.createElement("section", { className: "view bsa-v108-home" }, pmDue && h("div", { className: "panel gc-wi-bar" }, h("p", null, h("strong", null, pmDue.title + " was " + fmtDay(pmDue.due, "long") + "."), " Two minutes now on what actually came up is worth more than an hour of guessing before the next one."), h("div", { className: "step-actions" }, h("button", { className: "btn primary", onClick: () => setPm(pmDue) }, "Record how it went"), h("button", { className: "btn ghost", onClick: () => update((s) => { const e = s.topics.find((x) => x.id === pmDue.id); if (e) e.pmAt = today(); }) }, "Skip"))), pm && h(ExamPostMortem, { subject, exam: pm, update, toast, onClose: () => setPm(null) }), welcomeJohn, h("div",{className:"bsa-v108-top-grid"},academicOverview,lifeWidget), academicQuickActions, /* @__PURE__ */ React.createElement("div", { className: "hero" }, /* @__PURE__ */ React.createElement("div", { className: "hero-title" }, /* @__PURE__ */ React.createElement("p", { className: "muted" }, (/* @__PURE__ */ new Date()).toLocaleDateString(void 0, { weekday: "long", month: "long", day: "numeric" })), /* @__PURE__ */ React.createElement("h1", null, subject.name, subject.code ? /* @__PURE__ */ React.createElement("span", { className: "hero-code" }, " ", subject.code) : null), subject.school && /* @__PURE__ */ React.createElement("p", { className: "muted" }, subject.school)), /* @__PURE__ */ React.createElement("div", { className: "hero-figure" }, /* @__PURE__ */ React.createElement(Ring, { done: mastered, total: topics.length }), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "topics mastered"))), /* @__PURE__ */ React.createElement(Track, { subject, onJump: (id) => go("roadmap", { open: id }) }), h(StudyFlow, { subject, go, update, openEditor }), h(SmartScheduleBuilder,{subject,update,toast,go}), h("div",{className:"curriculum-shortcut"},h("div",null,h("strong",null,"Planning next semester?"),h("p",{className:"muted small"},"Browse the four-year prospectus and add future subjects when you need them.")),h("button",{className:"btn ghost",onClick:()=>go("curriculum")},"Open curriculum")), h(SmartStudyPanel, { subject, go }), h(StudyEnhancements, { subject, go, update, toast }), /* @__PURE__ */ React.createElement("div", { className: "home-grid" }, /* @__PURE__ */ React.createElement("div", { className: "panel plan" }, /* @__PURE__ */ React.createElement("h2", null, "Today’s plan"), /* @__PURE__ */ React.createElement("ol", { className: "steps" }, steps.map((s, i) => /* @__PURE__ */ React.createElement("li", { key: i, className: "step" }, /* @__PURE__ */ React.createElement("span", { className: "step-num", "aria-hidden": "true" }, i + 1), /* @__PURE__ */ React.createElement("div", { className: "step-body" }, /* @__PURE__ */ React.createElement("span", { className: "step-label" }, /* @__PURE__ */ React.createElement(Icon, { name: s.icon, size: 16 }), " ", s.label), /* @__PURE__ */ React.createElement("strong", { className: "step-title" }, s.title), s.detail && /* @__PURE__ */ React.createElement("span", { className: "muted step-detail" }, s.detail), s.chip && h("span", { className: "step-chip" }, h(DueChip, { t: s.chip })), s.actions.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "step-actions" }, s.actions.map((a) => /* @__PURE__ */ React.createElement("button", { key: a.label, className: `btn${a.primary ? " primary" : ""}`, onClick: a.run }, a.label)))))))), /* @__PURE__ */ React.createElement("div", { className: "side-col" }, nextExam && (() => {
+    return /* @__PURE__ */ React.createElement("section", { className: "view bsa-v108-home" }, pmDue && h("div", { className: "panel gc-wi-bar" }, h("p", null, h("strong", null, pmDue.title + " was " + fmtDay(pmDue.due, "long") + "."), " Two minutes now on what actually came up is worth more than an hour of guessing before the next one."), h("div", { className: "step-actions" }, h("button", { className: "btn primary", onClick: () => setPm(pmDue) }, "Record how it went"), h("button", { className: "btn ghost", onClick: () => update((s) => { const e = s.topics.find((x) => x.id === pmDue.id); if (e) e.pmAt = today(); }) }, "Skip"))), pm && h(ExamPostMortem, { subject, exam: pm, update, toast, onClose: () => setPm(null) }), welcomeJohn, newcomerCard, dailyPath, h("div",{className:"bsa-v108-top-grid"},academicOverview,lifeWidget), academicQuickActions, /* @__PURE__ */ React.createElement("div", { className: "hero" }, /* @__PURE__ */ React.createElement("div", { className: "hero-title" }, /* @__PURE__ */ React.createElement("p", { className: "muted" }, (/* @__PURE__ */ new Date()).toLocaleDateString(void 0, { weekday: "long", month: "long", day: "numeric" })), /* @__PURE__ */ React.createElement("h1", null, subject.name, subject.code ? /* @__PURE__ */ React.createElement("span", { className: "hero-code" }, " ", subject.code) : null), subject.school && /* @__PURE__ */ React.createElement("p", { className: "muted" }, subject.school)), /* @__PURE__ */ React.createElement("div", { className: "hero-figure" }, /* @__PURE__ */ React.createElement(Ring, { done: mastered, total: topics.length }), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "topics mastered"))), /* @__PURE__ */ React.createElement(Track, { subject, onJump: (id) => go("roadmap", { open: id }) }), h("details",{className:"bsa-advanced-flow"},h("summary",null,"Advanced planning & topic-by-topic StudyFlow"),h(StudyFlow,{subject,go,update,openEditor}),h(SmartScheduleBuilder,{subject,update,toast,go})), h("div",{className:"curriculum-shortcut"},h("div",null,h("strong",null,"Planning next semester?"),h("p",{className:"muted small"},"Browse the four-year prospectus and add future subjects when you need them.")),h("button",{className:"btn ghost",onClick:()=>go("curriculum")},"Open curriculum")), h(SmartStudyPanel, { subject, go }), h(StudyEnhancements, { subject, go, update, toast }), /* @__PURE__ */ React.createElement("div", { className: "home-grid" }, /* @__PURE__ */ React.createElement("div", { className: "panel plan" }, /* @__PURE__ */ React.createElement("h2", null, "Today’s plan"), /* @__PURE__ */ React.createElement("ol", { className: "steps" }, steps.map((s, i) => /* @__PURE__ */ React.createElement("li", { key: i, className: "step" }, /* @__PURE__ */ React.createElement("span", { className: "step-num", "aria-hidden": "true" }, i + 1), /* @__PURE__ */ React.createElement("div", { className: "step-body" }, /* @__PURE__ */ React.createElement("span", { className: "step-label" }, /* @__PURE__ */ React.createElement(Icon, { name: s.icon, size: 16 }), " ", s.label), /* @__PURE__ */ React.createElement("strong", { className: "step-title" }, s.title), s.detail && /* @__PURE__ */ React.createElement("span", { className: "muted step-detail" }, s.detail), s.chip && h("span", { className: "step-chip" }, h(DueChip, { t: s.chip })), s.actions.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "step-actions" }, s.actions.map((a) => /* @__PURE__ */ React.createElement("button", { key: a.label, className: `btn${a.primary ? " primary" : ""}`, onClick: a.run }, a.label)))))))), /* @__PURE__ */ React.createElement("div", { className: "side-col" }, nextExam && (() => {
       const r = readiness(subject, nextExam);
       const covered = (nextExam.covers || []).map((id) => subject.topics.find((t) => t.id === id)).filter(Boolean);
       return /* @__PURE__ */ React.createElement("div", { className: "panel exam-panel" }, /* @__PURE__ */ React.createElement("span", { className: "muted" }, "Next exam, week ", nextExam.week), /* @__PURE__ */ React.createElement("h2", null, nextExam.title), nextExam.due && h("p", null, h(DueChip, { t: nextExam })), r.total > 0 && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "bar-lg" }, /* @__PURE__ */ React.createElement("span", { style: { width: `${r.done / r.total * 100}%` } })), /* @__PURE__ */ React.createElement("p", null, /* @__PURE__ */ React.createElement("strong", null, r.done, " of ", r.total), " topics ready"), /* @__PURE__ */ React.createElement("div", { className: "topic-chips" }, covered.map((t) => /* @__PURE__ */ React.createElement("button", { key: t.id, className: "tchip", "data-status": t.status, onClick: () => go("roadmap", { open: t.id }), title: `${t.title}: ${t.status}` }, /* @__PURE__ */ React.createElement("span", { className: "dot" }), t.code || t.standard || t.title)))), nextExam.scope && /* @__PURE__ */ React.createElement("p", { className: "muted small" }, "Covers ", nextExam.scope), h(ExamReadyMini, { subject, exam: nextExam, go }));
@@ -11538,11 +11706,11 @@ window.__BSA_READ_ONLY__=true;
       let app=appScript.textContent;
       app=app.replace('(() => {','(() => {\n  const localStorage = window.__BSA_SHARED_STORAGE__;\n  const sessionStorage = window.__BSA_SHARED_STORAGE__;',1);
       // Hide authoring/navigation features but keep exactly the study components.
-      const oldGroups=`{name:"Study", items:["home","vault","psets","lectures","practice"]},
-      {name:"Tools", items:["toolkit","roadmap","ask","curriculum","howto"]},
-      {name:"Progress", items:["stats-clean","mistakes","grades","achievements"]},
-      {name:"Plan", items:["calendar","class"]},
-      {name:"Your space", items:["life","break","personalize"]}`;
+      const oldGroups=`{name:"Start here", items:["home","guide","practice","lectures","psets"]},
+      {name:"Study library", items:["vault","mistakes","toolkit","ask","howto"]},
+      {name:"My progress", items:["stats-clean","grades","achievements"]},
+      {name:"Planning", items:["roadmap","calendar","class","curriculum"]},
+      {name:"Personal", items:["life","break","personalize"]}`;
       const newGroups=`{name:"Study",items:["home","vault","practice","psets","lectures"]},
       {name:"Reference",items:["toolkit"]}`;
       if(!app.includes(oldGroups))throw Error('Shared dashboard navigation compatibility check failed');
@@ -12375,7 +12543,7 @@ h('div',{className:'life-avatar-preview'},h('span',null,life.avatar.accessory===
     useEffect(()=>{const handler=e=>{if(e.detail==='joy')setNav(v=>({tab:'joy',opts:{},key:v.key+1}))};window.addEventListener('bsa-life-navigation',handler);return()=>window.removeEventListener('bsa-life-navigation',handler)},[]);
     const [modal, setModal] = useState(null);
     const [navSearch, setNavSearch] = useState("");
-    const [collapsedNav, setCollapsedNav] = useState({"Plan":true,"Your space":true});
+    const [collapsedNav, setCollapsedNav] = useState({"Planning":true,"Personal":true});
     const [editor, setEditor] = useState(null);
     const [msg, setMsg] = useState("");
     const [downloads, setDownloads] = useState(null);
@@ -12563,13 +12731,14 @@ h('div',{className:'life-avatar-preview'},h('span',null,life.avatar.accessory===
     }, []);
     const subject = data.subjects.find((s) => s.id === data.activeId) || data.subjects[0];
     const activeMistakes = subject.mistakes.filter((m) => m.status !== "Cleared").length;
-    const reviewCount = (() => {
+    const reviewCount = useMemo(() => {
       const rv = buildReview(subject, data.settings.newPerDay || 10, data.settings.maxPerDay || 0);
       return rv.due.length + rv.fresh.length + rv.mist.length;
-    })();
+    }, [subject, data.settings.newPerDay, data.settings.maxPerDay]);
     useEffect(() => { setBadge(reviewCount); }, [reviewCount]);
     const tabs = [
       ["home", "Today", "home"],
+      ["guide", "Explore features", "book"],
       ["break", "Break Corner", "home"],
       ["achievements", "Academic Progress", "grade"],
       ["stats-clean", "Study-time audit", "grade"],
@@ -12618,11 +12787,11 @@ h('div',{className:'life-avatar-preview'},h('span',null,life.avatar.accessory===
     };
     const viewProps = { key: `${subject.id}-${nav.key}`, subject, update, toast, go, openEditor, init: nav.opts, settings: data.settings, setSettings };
     const subjectPicker = (id) => /* @__PURE__ */ React.createElement("select", { id, className: "subject-select", value: data.activeId, onChange: (e) => switchSubject(e.target.value), "aria-label": "Active subject" }, (() => {const groups=new Map();data.subjects.forEach(s=>{const matched=PROSPECTUS.flatMap(t=>t.courses.map(c=>({...c,term:t.term}))).find(c=>String(c.code).trim().toLowerCase()===String(s.code||"").trim().toLowerCase());const label=s.curriculumTerm||(matched&&matched.term)||"Other / custom subjects";if(!groups.has(label))groups.set(label,[]);groups.get(label).push(s);});return [...groups].sort((a,b)=>a[0].localeCompare(b[0],undefined,{numeric:true})).map(([term,subjects])=>React.createElement("optgroup",{key:term,label:term},subjects.map(s=>React.createElement("option",{key:s.id,value:s.id},s.code?`${s.code} · ${s.name}`:s.name))));})());
-    return /* @__PURE__ */ React.createElement("div", { className: "shell" }, /* @__PURE__ */ React.createElement("aside", { className: "rail", "aria-label": "Main" }, /* @__PURE__ */ React.createElement("div", { className: "brand" }, /* @__PURE__ */ React.createElement("span", { className: "brand-mark", "aria-hidden": "true" }, "Σ"), /* @__PURE__ */ React.createElement("span", null, "BSA Study Desk")), /* @__PURE__ */ React.createElement("div", { className: "rail-subject" }, /* @__PURE__ */ React.createElement("span", { className: "rail-label" }, "Subject"), subjectPicker("subj"), /* @__PURE__ */ React.createElement("button", { className: "link-btn", onClick: () => setModal("subjects") }, "+ Add new subject")), h("div",{className:"rail-nav-wrap"},h("label",{className:"nav-search-label",htmlFor:"desk-nav-search"},"Find a tool"),h("input",{id:"desk-nav-search",className:"nav-search",type:"search",placeholder:"Search tools…",value:navSearch,onChange:e=>setNavSearch(e.target.value),"aria-label":"Search dashboard tools"}),h("nav",{className:"rail-nav","aria-label":"Study Desk sections"},filteredNavGroups.map(group=>h("section",{className:"nav-group",key:group.name},h("button",{className:"nav-group-heading",type:"button","aria-expanded":navSearch?true:!collapsedNav[group.name],onClick:()=>setCollapsedNav(prev=>({...prev,[group.name]:!prev[group.name]}))},h("span",null,group.name),h("span",{className:"nav-chevron","aria-hidden":"true"},navSearch||!collapsedNav[group.name]?"⌄":"›")),(navSearch||!collapsedNav[group.name])?h("div",{className:"nav-group-links"},group.tabs.map(([k,l,ic,n])=>h("button",{key:k,className:nav.tab===k?"on":"","aria-current":nav.tab===k?"page":undefined,onClick:()=>go(k)},h(Icon,{name:ic}),h("span",null,l),n?h("span",{className:"n"},n):null))):null)))), /* @__PURE__ */ React.createElement("div", { className: "rail-tools" }, /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("data") }, /* @__PURE__ */ React.createElement(Icon, { name: "data", size: 18 }), " Import & export"), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("look") }, /* @__PURE__ */ React.createElement(Icon, { name: "look", size: 18 }), " Appearance"), /* @__PURE__ */ React.createElement(ThemeDots, { settings: data.settings, setSettings })), React.createElement(SyncBadge, { onOpen: openSync })), /* @__PURE__ */ React.createElement("header", { className: "mobilebar" }, /* @__PURE__ */ React.createElement("span", { className: "brand-mark", "aria-hidden": "true" }, "Σ"), subjectPicker("subj-m"), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal(syncAlert ? "sync" : "data"), "aria-label": syncAlert ? "Import, export and sync (needs attention)" : "Import and export", "data-sync": syncAlert }, /* @__PURE__ */ React.createElement(Icon, { name: "data" })), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal("look"), "aria-label": "Appearance" }, /* @__PURE__ */ React.createElement(Icon, { name: "look" }))), /* @__PURE__ */ React.createElement("main", { className: "content" },
+    return /* @__PURE__ */ React.createElement("div", { className: "shell" }, /* @__PURE__ */ React.createElement("aside", { className: "rail", "aria-label": "Main" }, /* @__PURE__ */ React.createElement("div", { className: "brand" }, /* @__PURE__ */ React.createElement("span", { className: "brand-mark", "aria-hidden": "true" }, "Σ"), /* @__PURE__ */ React.createElement("span", null, "BSA Study Desk")), /* @__PURE__ */ React.createElement("div", { className: "rail-subject" }, /* @__PURE__ */ React.createElement("span", { className: "rail-label" }, "Subject"), subjectPicker("subj"), /* @__PURE__ */ React.createElement("button", { className: "link-btn", onClick: () => setModal("subjects") }, "+ Add new subject")), h("div",{className:"rail-nav-wrap"},h("label",{className:"nav-search-label",htmlFor:"desk-nav-search"},"Find a tool"),h("input",{id:"desk-nav-search",className:"nav-search",type:"search",placeholder:"Search tools…",value:navSearch,onChange:e=>setNavSearch(e.target.value),"aria-label":"Search dashboard tools"}),h("nav",{className:"rail-nav","aria-label":"Study Desk sections"},filteredNavGroups.map(group=>h("section",{className:"nav-group",key:group.name},h("button",{className:"nav-group-heading",type:"button","aria-expanded":navSearch?true:!collapsedNav[group.name],onClick:()=>setCollapsedNav(prev=>({...prev,[group.name]:!prev[group.name]}))},h("span",null,group.name),h("span",{className:"nav-chevron","aria-hidden":"true"},navSearch||!collapsedNav[group.name]?"⌄":"›")),(navSearch||!collapsedNav[group.name])?h("div",{className:"nav-group-links"},group.tabs.map(([k,l,ic,n])=>h("button",{key:k,className:nav.tab===k?"on":"","aria-current":nav.tab===k?"page":undefined,title:(DESK_FEATURE_GUIDE.find(f=>f.id===k)||{}).desc||l,onClick:()=>go(k)},h(Icon,{name:ic}),h("span",null,l),n?h("span",{className:"n"},n):null))):null)))), /* @__PURE__ */ React.createElement("div", { className: "rail-tools" }, /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("data") }, /* @__PURE__ */ React.createElement(Icon, { name: "data", size: 18 }), " Import & export"), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("look") }, /* @__PURE__ */ React.createElement(Icon, { name: "look", size: 18 }), " Appearance"), /* @__PURE__ */ React.createElement(ThemeDots, { settings: data.settings, setSettings })), React.createElement(SyncBadge, { onOpen: openSync })), /* @__PURE__ */ React.createElement("header", { className: "mobilebar" }, /* @__PURE__ */ React.createElement("span", { className: "brand-mark", "aria-hidden": "true" }, "Σ"), subjectPicker("subj-m"), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal(syncAlert ? "sync" : "data"), "aria-label": syncAlert ? "Import, export and sync (needs attention)" : "Import and export", "data-sync": syncAlert }, /* @__PURE__ */ React.createElement(Icon, { name: "data" })), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal("look"), "aria-label": "Appearance" }, /* @__PURE__ */ React.createElement(Icon, { name: "look" }))), /* @__PURE__ */ React.createElement("main", { className: "content" },
       h("div",{className:"workspace-topbar"},
         h("div",{className:"workspace-context"},h("span",{className:"workspace-eyebrow"},"STUDY DESK"),h("strong",null,(tabs.find(t=>t[0]===nav.tab)||[null,"Today"])[1]),h("span",{className:"workspace-subject"},subject.code||subject.name)),
         h("div",{className:"workspace-actions"},h("button",{className:"btn ghost",onClick:()=>setModal("quick")},"Quick add"),h("button",{className:"btn primary",onClick:()=>go("ask")},"Ask tutor"))),
-      nav.tab === "break" && h(BreakCorner), nav.tab === "joy" && h(JoyHub,{go}), nav.tab === "life" && h(StudyLife), nav.tab === "achievements" && h(AcademicProgress,{go}), nav.tab === "stats-clean" && h(StatsFreshStart,{data,update,toast}), nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), nav.tab === "home" && /* @__PURE__ */ React.createElement(HomeView, { ...viewProps }), nav.tab === "practice" && h(PracticeView, { ...viewProps, data }), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(CalendarView, { ...viewProps }), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(PsView, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })), /* @__PURE__ */ React.createElement("nav", { className: "bottom-nav", "aria-label": "Sections" }, tabs.filter(x=>["home","practice","roadmap"].includes(x[0])).map(([k, l, ic]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), /* @__PURE__ */ React.createElement("span", null, l))), /* @__PURE__ */ React.createElement("button", { className: "fab", onClick: () => setModal("quick"), "aria-label": "Quick add" }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 24 })), [tabs.find(x=>x[0]==="calendar"), tabs.find(x=>x[0]==="mistakes")].map(([k, l, ic, n]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement("span", { className: "ico-wrap" }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), k === "mistakes" && n ? /* @__PURE__ */ React.createElement("span", { className: "badge" }, n) : null), /* @__PURE__ */ React.createElement("span", null, k === "calendar" ? "Calendar" : "Mistakes"))), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("more") }, /* @__PURE__ */ React.createElement(Icon, { name: "more" }), /* @__PURE__ */ React.createElement("span", null, "More"))), /* @__PURE__ */ React.createElement("div", { className: `toast${msg ? " show" : ""}`, role: "status", "aria-live": "polite" }, msg), h(FocusBar, { data, update, toast }), modal === "quick" && /* @__PURE__ */ React.createElement(QuickAdd, { onClose: () => setModal(null), onPick: (k) => {
+      nav.tab === "guide" && h(FeatureGuide,{go}), nav.tab === "break" && h(BreakCorner), nav.tab === "joy" && h(JoyHub,{go}), nav.tab === "life" && h(StudyLife), nav.tab === "achievements" && h(AcademicProgress,{go}), nav.tab === "stats-clean" && h(StatsFreshStart,{data,update,toast}), nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), h(WorkflowRibbon,{tab:nav.tab,go}), nav.tab === "home" && /* @__PURE__ */ React.createElement(HomeView, { ...viewProps }), nav.tab === "practice" && h(PracticeView, { ...viewProps, data }), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(CalendarView, { ...viewProps }), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(PsView, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })), /* @__PURE__ */ React.createElement("nav", { className: "bottom-nav", "aria-label": "Sections" }, tabs.filter(x=>["home","practice","roadmap"].includes(x[0])).map(([k, l, ic]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), /* @__PURE__ */ React.createElement("span", null, l))), /* @__PURE__ */ React.createElement("button", { className: "fab", onClick: () => setModal("quick"), "aria-label": "Quick add" }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 24 })), [tabs.find(x=>x[0]==="calendar"), tabs.find(x=>x[0]==="mistakes")].map(([k, l, ic, n]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement("span", { className: "ico-wrap" }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), k === "mistakes" && n ? /* @__PURE__ */ React.createElement("span", { className: "badge" }, n) : null), /* @__PURE__ */ React.createElement("span", null, k === "calendar" ? "Calendar" : "Mistakes"))), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("more") }, /* @__PURE__ */ React.createElement(Icon, { name: "more" }), /* @__PURE__ */ React.createElement("span", null, "More"))), /* @__PURE__ */ React.createElement("div", { className: `toast${msg ? " show" : ""}`, role: "status", "aria-live": "polite" }, msg), h(FocusBar, { data, update, toast }), modal === "quick" && /* @__PURE__ */ React.createElement(QuickAdd, { onClose: () => setModal(null), onPick: (k) => {
       if (k === "grade") {
         setModal(null);
         go("grades", { gtab: "scores" });
