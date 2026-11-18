@@ -16,6 +16,13 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500..800&display=swap">
 <style>
+/* NotebookLM mathematical expressions: legible without external scripts. */
+.math-inline { display:inline; font-family: Georgia, "Times New Roman", serif; font-size:1.04em; white-space:normal; }
+.math-display { display:block; width:fit-content; max-width:100%; margin:.6rem 0; overflow-x:auto; font-family:Georgia,"Times New Roman",serif; font-size:1.08em; line-height:1.5; }
+.math-frac { display:inline-flex; vertical-align:middle; flex-direction:column; text-align:center; line-height:1.3; margin:0 .15em; }
+.math-frac > span:first-child { padding:0 .28em .1em; border-bottom:1px solid currentColor; }
+.math-frac > span:last-child { padding:.1em .28em 0; }
+
 :root {
   box-sizing: border-box;
   padding-top: env(safe-area-inset-top, 0px);
@@ -1922,24 +1929,32 @@ input.gc-name.big { font-family: var(--display); font-size: 1.1rem; }
     if (cur && cur.a) out.push(cur);
     return out.map((c) => ({ ...c, tip: "", topicText: "" }));
   }
-  function parseImport(raw) {
-    let text = String(raw || "").trim();
-    if (!text) throw new Error("Paste some JSON or Q:/A: text first.");
-    text = text.replace(/^```[a-z]*\s*/i, "").replace(/```\s*$/, "").trim();
-    let obj = null;
-    try {
-      obj = JSON.parse(text);
-    } catch {
-      const m = text.match(/[[{][\s\S]*[\]}]/);
-      for (const cand of [psRepairJSON(text), m && m[0], m && psRepairJSON(m[0])]) {
-        if (!cand) continue;
-        try {
-          obj = JSON.parse(cand);
-          break;
-        } catch {
-          obj = null;
-        }
+  function psJSONCandidates(raw) {
+    const input=String(raw||'').replace(/^\uFEFF/,'').trim();
+    const list=[input];
+    for (const m of input.matchAll(/```(?:json|javascript|js)?\s*([\s\S]*?)```/gi)) list.push(m[1].trim());
+    // Extract a complete JSON object/array, ignoring braces inside quoted strings.
+    for (const str of [input,...list.slice(1)]) {
+      let depth=0, quote=false, escaped=false, start=-1;
+      for (let i=0;i<str.length;i++) {
+        const c=str[i];
+        if (quote) { if(escaped) escaped=false; else if(c==='\\') escaped=true; else if(c==='"') quote=false; continue; }
+        if(c==='"') {quote=true;continue;}
+        if(c==='{'||c==='[') {if(depth===0)start=i;depth++;}
+        else if(c==='}'||c===']') {if(depth>0)depth--; if(depth===0&&start>=0) {list.push(str.slice(start,i+1));start=-1;}}
       }
+    }
+    return [...new Set(list.filter(Boolean))];
+  }
+  function parseImport(raw) {
+    const text=String(raw||'').trim();
+    if (!text) throw new Error("Paste some JSON or Q:/A: text first.");
+    let obj=null;
+    for (const candidate of psJSONCandidates(text)) {
+      for (const version of [candidate, psRepairJSON(candidate)]) {
+        try { obj=JSON.parse(version); break; } catch(e) {}
+      }
+      if(obj!==null)break;
     }
     if (obj === null) {
       const cards2 = parseQA(text);
@@ -9148,21 +9163,84 @@ ${c.kindHint}` }
     }
     return blocks;
   }
+  // NotebookLM formulas: render familiar LaTeX without showing raw $$ or backslashes.
+  // All content is HTML-escaped before conversion; unknown commands stay readable.
+  function psMathHtml(source) {
+    let x = psEsc(String(source || '').trim());
+    const braced = (text, start) => {
+      if (text[start] !== '{') return null;
+      let depth = 0;
+      for (let i = start; i < text.length; i++) {
+        if (text[i] === '{') depth++;
+        else if (text[i] === '}' && --depth === 0) return [text.slice(start + 1, i), i + 1];
+      }
+      return null;
+    };
+    // Recursively convert nested fractions and textual labels.
+    const convert = (str, depth = 0) => {
+      if (depth > 8) return str;
+      let out = '';
+      for (let i = 0; i < str.length;) {
+        if (str.startsWith('\\frac', i) || str.startsWith('\\dfrac', i)) {
+          const offset = str.startsWith('\\dfrac', i) ? 6 : 5;
+          const a = braced(str, i + offset);
+          const b = a && braced(str, a[1]);
+          if (b) { out += '<span class="math-frac"><span>' + convert(a[0], depth + 1) + '</span><span>' + convert(b[0], depth + 1) + '</span></span>'; i = b[1]; continue; }
+        }
+        const label = ['\\text', '\\mathrm', '\\operatorname', '\\mathbf'].find(k => str.startsWith(k, i));
+        if (label) {
+          const v = braced(str, i + label.length);
+          if (v) { out += convert(v[0], depth + 1); i = v[1]; continue; }
+        }
+        const symbols = {'\\times':' × ', '\\div':' ÷ ', '\\cdot':' · ', '\\pm':' ± ', '\\leq':' ≤ ', '\\geq':' ≥ ', '\\neq':' ≠ ', '\\approx':' ≈ ', '\\%':'%', '\\_':'_', '\\rightarrow':' → ', '\\Rightarrow':' ⇒ ', '\\sum':'Σ', '\\Delta':'Δ', '\\alpha':'α', '\\beta':'β'};
+        const symbol = Object.keys(symbols).find(k => str.startsWith(k, i));
+        if (symbol) { out += symbols[symbol]; i += symbol.length; continue; }
+        if ((str[i] === '^' || str[i] === '_') && str[i + 1] === '{') {
+          const v = braced(str, i + 1);
+          if (v) { const tag = str[i] === '^' ? 'sup' : 'sub'; out += '<' + tag + '>' + convert(v[0], depth + 1) + '</' + tag + '>'; i = v[1]; continue; }
+        }
+        if (str[i] === '\\' && str[i + 1] === '\\') { out += ' '; i += 2; continue; }
+        if (str[i] === '{' || str[i] === '}') { i++; continue; }
+        out += str[i++];
+      }
+      return out;
+    };
+    return convert(x);
+  }
+  function psMathSegments(text, html = false) {
+    const raw = String(text || '');
+    const pattern = /(\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|(?<!\$)\$(?!\$)[^\n$]+?\$(?!\$)|\\\([^\n]+?\\\))/g;
+    const parts = []; let last = 0, m;
+    while ((m = pattern.exec(raw))) {
+      if (m.index > last) parts.push({math:false,text:raw.slice(last,m.index)});
+      const token = m[0];
+      parts.push({math:true,display:token.startsWith('$$') || token.startsWith('\\['),text:token.startsWith('$$') ? token.slice(2,-2) : token.slice(2,-2)});
+      last = pattern.lastIndex;
+    }
+    if (last < raw.length) parts.push({math:false,text:raw.slice(last)});
+    return parts.length ? parts : [{math:false,text:raw}];
+  }
   const PS_INLINE = /(\*\*[^*]+\*\*|`[^`]+`|\*[^*\s][^*]*\*)/g;
   function psInline(text) {
-    const out = [];
-    let last = 0, m, i = 0;
-    PS_INLINE.lastIndex = 0;
-    while ((m = PS_INLINE.exec(text))) {
-      if (m.index > last) out.push(text.slice(last, m.index));
-      const t = m[0];
-      if (t.startsWith("**")) out.push(h("strong", { key: i++ }, t.slice(2, -2)));
-      else if (t[0] === "`") out.push(h("code", { key: i++ }, t.slice(1, -1)));
-      else out.push(h("em", { key: i++ }, t.slice(1, -1)));
-      last = m.index + t.length;
+    const result = [];
+    for (const [i, segment] of psMathSegments(text).entries()) {
+      if (segment.math) {
+        result.push(h('span', {key:'math'+i, className:segment.display?'math-display':'math-inline', dangerouslySetInnerHTML:{__html:psMathHtml(segment.text)}}));
+      } else {
+        const value = segment.text, pattern = /(\*\*[^*]+\*\*|`[^`]+`|\*[^*\s][^*]*\*)/g;
+        let last=0, m, j=0;
+        while ((m=pattern.exec(value))) {
+          if (m.index>last) result.push(value.slice(last,m.index));
+          const t=m[0];
+          if (t.startsWith('**')) result.push(h('strong',{key:'md'+i+'-'+j++},t.slice(2,-2)));
+          else if (t[0]==='`') result.push(h('code',{key:'md'+i+'-'+j++},t.slice(1,-1)));
+          else result.push(h('em',{key:'md'+i+'-'+j++},t.slice(1,-1)));
+          last=pattern.lastIndex;
+        }
+        if (last<value.length) result.push(value.slice(last));
+      }
     }
-    if (last < text.length) out.push(text.slice(last));
-    return out;
+    return result;
   }
   const psNumCell = (c) => { const t = c.replace(/\*\*/g, "").trim(); return PS_NUM.test(t) || /^[–—-]$/.test(t); };
   function PsMd({ text, className }) {
@@ -9190,7 +9268,7 @@ ${c.kindHint}` }
   }
   // Same blocks as HTML text, for printing.
   const psEsc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-  const psInlineHtml = (s) => psEsc(s).replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>").replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*([^*\s][^*]*)\*/g, "<em>$1</em>");
+  const psInlineHtml = (s) => psMathSegments(s).map(p => p.math ? '<span class="' + (p.display ? 'math-display' : 'math-inline') + '">' + psMathHtml(p.text) + '</span>' : psEsc(p.text).replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>").replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*([^*\s][^*]*)\*/g, "<em>$1</em>")).join('');
   function psMdHtml(text) {
     return psBlocks(text).map((b) => {
       if (b.k === "p") return `<p>${b.lines.map(psInlineHtml).join("<br>")}</p>`;
@@ -9227,7 +9305,14 @@ ${c.kindHint}` }
   }
   const PDF_DESIGN_CSS = `@page{size:A4;margin:17mm 16mm 18mm}*{box-sizing:border-box}body{color:#18342c;-webkit-print-color-adjust:exact;print-color-adjust:exact}h1{font-size:23pt!important;line-height:1.18!important;letter-spacing:-.6pt;color:#123d32!important;margin:0 0 9pt!important}h2{font-size:14pt!important;line-height:1.3!important;color:#125b46!important;border:0!important;border-left:4px solid #218566!important;background:#eff7f2!important;padding:7pt 10pt!important;margin:18pt 0 10pt!important;break-after:avoid-page}h3{font-size:11.5pt!important;color:#174a3b!important;margin:13pt 0 6pt!important;break-after:avoid-page}h4{color:#276550!important}p,li{line-height:1.65;orphans:3;widows:3}li{margin:3pt 0}strong{color:#123e32}blockquote{border-left:3px solid #87b8a1;background:#f5faf7;padding:8pt 12pt;margin:9pt 0}table{border-collapse:collapse;width:100%;margin:10pt 0 13pt;font-size:9pt}thead{display:table-header-group}tr{break-inside:avoid-page}th{background:#eaf3ee!important;color:#1d4b3d;font-weight:700}th,td{padding:7pt 8pt;border-bottom:1px solid #dbe7e0;vertical-align:top}tbody tr:nth-child(even){background:#f8fbf9!important}pre,code{overflow-wrap:anywhere}pre{white-space:pre-wrap;background:#f3f7f5;padding:10pt;border:1px solid #e0ebe5;border-radius:6px}.meta,small{color:#61766d!important}.key{break-before:page}section,.entry,.formula-card{break-inside:auto}h1,h2,h3,h4{break-after:avoid-page}a{color:#17694e;text-decoration:none}@media print{button,.toolbar,.no-print{display:none!important}}`;
   const PDF_BRAND_CSS = `.pdf-identity{margin-top:22pt;padding-top:9pt;border-top:1px solid #dbe7e0;display:flex;flex-wrap:wrap;gap:5pt 12pt;align-items:baseline;break-inside:avoid}.pdf-identity-label{font:700 7pt Arial,sans-serif;letter-spacing:1.4pt;color:#7b9185}.pdf-identity-name{font:700 9pt Arial,sans-serif;color:#245a45}.pdf-signature{font:italic 9pt Georgia,serif;color:#3e705a;margin-left:auto}.pdf-kicker{font:700 8pt/1.4 Arial,sans-serif;letter-spacing:1.7pt;text-transform:uppercase;color:#24765b;margin:0 0 7pt}.pdf-meta{font:9pt/1.5 Arial,sans-serif;color:#647a70;margin:0 0 15pt}.pdf-rule{height:3px;background:linear-gradient(90deg,#1a7456,#8ab9a3);margin:0 0 17pt}.pdf-footer{margin-top:24pt;padding-top:8pt;border-top:1px solid #dbe7e0;font:8pt Arial,sans-serif;color:#70857a}`;
-  const PS_PRINT_CSS = `${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans-serif;color:#111}.ps-print h1{font-size:19pt;margin:0 0 7pt}.ps-print h2{font-size:13pt;margin:14pt 0 7pt;border-bottom:1px solid #999}.ps-print h3{font-size:11.5pt;margin:12pt 0 4pt}.ps-print .meta{color:#555;margin:0 0 10pt}.ps-print table{border-collapse:collapse;margin:6pt 0;width:100%;font-size:9.5pt}.ps-print td,.ps-print th{border:1px solid #bbb;padding:3pt 6pt;text-align:left;vertical-align:top}.ps-print .num{text-align:right;white-space:nowrap}.ps-print table.t td,.ps-print table.t th{border:0}.ps-print table.t tr:first-of-type th{border-bottom:1.5pt solid #111}.ps-print table.t td:nth-child(2){border-right:1.5pt solid #111}.ps-print caption{font-weight:bold;text-align:center}.ps-print .prob{break-inside:auto;page-break-inside:auto;margin-bottom:10pt}.ps-print .prob h3{break-after:avoid-page;page-break-after:avoid}.ps-print .prob p,.ps-print .prob li{orphans:2;widows:2}.ps-print table{table-layout:auto;break-inside:auto;page-break-inside:auto}.ps-print tr{break-inside:avoid;page-break-inside:avoid}.ps-print thead{display:table-header-group}.ps-print td,.ps-print th{overflow-wrap:anywhere;word-break:normal}.ps-print{overflow:visible;max-width:none}.ps-print .key{break-before:page}.ps-print ol.req{list-style:lower-alpha}`;
+  const PS_PRINT_CSS = `
+/* NotebookLM mathematical expressions: legible without external scripts. */
+.math-inline { display:inline; font-family: Georgia, "Times New Roman", serif; font-size:1.04em; white-space:normal; }
+.math-display { display:block; width:fit-content; max-width:100%; margin:.6rem 0; overflow-x:auto; font-family:Georgia,"Times New Roman",serif; font-size:1.08em; line-height:1.5; }
+.math-frac { display:inline-flex; vertical-align:middle; flex-direction:column; text-align:center; line-height:1.3; margin:0 .15em; }
+.math-frac > span:first-child { padding:0 .28em .1em; border-bottom:1px solid currentColor; }
+.math-frac > span:last-child { padding:.1em .28em 0; }
+${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans-serif;color:#111}.ps-print h1{font-size:19pt;margin:0 0 7pt}.ps-print h2{font-size:13pt;margin:14pt 0 7pt;border-bottom:1px solid #999}.ps-print h3{font-size:11.5pt;margin:12pt 0 4pt}.ps-print .meta{color:#555;margin:0 0 10pt}.ps-print table{border-collapse:collapse;margin:6pt 0;width:100%;font-size:9.5pt}.ps-print td,.ps-print th{border:1px solid #bbb;padding:3pt 6pt;text-align:left;vertical-align:top}.ps-print .num{text-align:right;white-space:nowrap}.ps-print table.t td,.ps-print table.t th{border:0}.ps-print table.t tr:first-of-type th{border-bottom:1.5pt solid #111}.ps-print table.t td:nth-child(2){border-right:1.5pt solid #111}.ps-print caption{font-weight:bold;text-align:center}.ps-print .prob{break-inside:auto;page-break-inside:auto;margin-bottom:10pt}.ps-print .prob h3{break-after:avoid-page;page-break-after:avoid}.ps-print .prob p,.ps-print .prob li{orphans:2;widows:2}.ps-print table{table-layout:auto;break-inside:auto;page-break-inside:auto}.ps-print tr{break-inside:avoid;page-break-inside:avoid}.ps-print thead{display:table-header-group}.ps-print td,.ps-print th{overflow-wrap:anywhere;word-break:normal}.ps-print{overflow:visible;max-width:none}.ps-print .key{break-before:page}.ps-print ol.req{list-style:lower-alpha}`;
   function psPrint(set, withKey, selectedProblems) {
     const problems = Array.isArray(selectedProblems) ? selectedProblems : set.problems;
     if (!problems.length) { window.alert("No problems match the selected filter."); return; }
@@ -10768,8 +10853,8 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       const safeJSON=JSON.stringify(snapshot).replace(/</g,'\\u003c').replace(/>/g,'\\u003e').replace(/&/g,'\\u0026');
       const boot='<script>window.__BSA_SHARED_SNAPSHOT__='+safeJSON+';window.__BSA_READ_ONLY__=true;<'+'/script>';
       const css='<style id="bsa-shared-style">.bsa-readonly-banner{position:fixed;right:12px;top:10px;z-index:999999;background:#175e45;color:white;padding:7px 12px;border-radius:99px;box-shadow:0 4px 14px #0003;font:700 12px system-ui;pointer-events:none}@media print{.bsa-readonly-banner{display:none!important}}</style>';
-      {const pos=source.lastIndexOf('</head>');if(pos<0)throw Error('Missing HTML head');source=source.slice(0,pos)+css+boot+source.slice(pos);}
-      source=source.replace('<div id="root"></div>','<div class="bsa-readonly-banner">BSA Study Desk · Read-only</div><div id="root"></div>');
+      {const pos=source.indexOf('</head>');if(pos<0)throw Error('Missing HTML head');source=source.slice(0,pos)+css+boot+source.slice(pos);}
+      source=source.replace('<div id="root">','<div class="bsa-readonly-banner">BSA Study Desk · Read-only</div><div id="root">');
       const changes=[
         ['const [data, setData] = useState(() => loadLocal() || buildDefault());','const [data, setData] = useState(() => window.__BSA_SHARED_SNAPSHOT__ || loadLocal() || buildDefault());'],
         ['const update = useCallback((fn, whole) => {','const update = useCallback((fn, whole) => { if(window.__BSA_READ_ONLY__)return;'],

@@ -1,3 +1,5 @@
+v80: Fix shared dashboard publishing HTML: inject boot script at FIRST actual </head>, not last occurrence inside JavaScript strings. Restore read-only banner at actual root opening. Republish shared website from personal dashboard.
+
 # BSA Study Desk: notes for future updates
 
 Last updated: November 5, 2026.
@@ -704,3 +706,6 @@ Study Toolkit now offers **Backup all study data** and **Restore all study data*
 
 ## v79 shared publish fix
 Insert bootstrap and read-only guard at the actual closing HTML tags, not earlier string literals inside the dashboard JavaScript. Re-publish the shared site after uploading v79 to the personal repository.
+
+
+v81: NotebookLM math expressions (inline/display fractions and labels) and more resilient JSON candidate extraction. Supports common math notation; complex LaTeX is not a full KaTeX renderer.
