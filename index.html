@@ -1422,6 +1422,218 @@ input.gc-name.big { font-family: var(--display); font-size: 1.1rem; }
 
 /* v43 handwriting page library and distraction-free workspace */
 .ink-panel{max-width:none}.ink-heading{border-bottom:1px solid var(--line);padding-bottom:.6rem}.ink-heading .muted{flex:1}.ink-workspace{display:grid;grid-template-columns:minmax(195px,240px) minmax(0,1fr);gap:1rem;align-items:start}.ink-workspace:has(>.ink-writing-area:first-child){grid-template-columns:minmax(0,1fr)}.ink-page-sidebar{border:1px solid var(--line);border-radius:12px;padding:.75rem;display:flex;flex-direction:column;gap:.65rem;min-width:0;max-height:75vh;overflow:auto}.ink-page-sidebar input,.ink-page-sidebar select{width:100%;min-width:0}.ink-page-list{display:flex;flex-direction:column;gap:.35rem}.ink-page-item{border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--text);text-align:left;display:flex;gap:.55rem;align-items:center;padding:.65rem;cursor:pointer;width:100%;min-width:0}.ink-page-item.selected{border-color:var(--accent);background:var(--surface-2)}.ink-page-index{display:flex;align-items:center;justify-content:center;flex:none;width:25px;height:25px;border-radius:7px;background:var(--surface-2);font-size:.8rem}.ink-page-meta{min-width:0;display:flex;flex-direction:column;gap:.2rem}.ink-page-meta strong{font-size:.85rem;overflow-wrap:anywhere}.ink-page-meta small{color:var(--muted);font-size:.72rem}.ink-writing-area{min-width:0}.ink-page-caption{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;margin-bottom:.65rem}.ink-fullscreen{position:fixed!important;inset:0!important;z-index:99999!important;width:100vw!important;max-width:none!important;height:100dvh!important;overflow:auto!important;border-radius:0!important;padding:1rem!important;background:var(--surface)!important}.ink-fullscreen .ink-scroll{max-height:calc(100dvh - 265px);min-height:40vh}.ink-fullscreen .ink-page-sidebar{max-height:calc(100dvh - 120px)}.ink-fullscreen .ink-canvas{width:min(100%,920px)}@media(max-width:720px){.ink-workspace{grid-template-columns:minmax(0,1fr)}.ink-page-sidebar{max-height:220px}.ink-fullscreen .ink-scroll{max-height:calc(100dvh - 340px)}}
+
+/* v85 — actual navigation/layout redesign; keep existing feature components. */
+:root { --rail: 232px; --r-sm: 7px; --r-md: 10px; --r-lg: 12px; --lift: none; --glow: none; --texture: none; }
+html, body, #root { min-height: 100%; }
+body { background: var(--bg); background-image: none !important; }
+@media (min-width: 900px) {
+  html, body, #root { height: 100%; overflow: hidden; }
+  .shell { height: 100dvh; min-height: 0; overflow: hidden; grid-template-columns: var(--rail) minmax(0,1fr); }
+  .shell > .rail { position: relative; top: auto; height: 100%; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+  .shell > .content { height: 100%; min-height: 0; overflow-y: auto; overscroll-behavior: contain; max-width: none; padding: 0 clamp(20px,3vw,44px) 48px; scrollbar-gutter: stable; }
+  .content > .workspace-topbar { position: sticky; top: 0; z-index: 35; }
+}
+.rail { gap: .75rem; padding: 1.1rem .75rem; box-shadow: none; }
+.brand { padding: .35rem .55rem .8rem; font-size: 1rem; letter-spacing: -.02em; border-bottom: 1px solid var(--line); }
+.brand-mark { box-shadow: none !important; border-radius: 8px; }
+.rail-subject { padding: .6rem; background: transparent; border: 1px solid var(--line); }
+.rail-nav { padding: .25rem 0 .5rem; overflow-y: visible; flex: 0 0 auto; }
+.rail-nav .nav-group-heading { font-size: .68rem; font-weight: 700; letter-spacing: .055em; min-height: 1.9rem; }
+.rail-nav .nav-group-links button { border-radius: 8px; min-height: 2.6rem; font-weight: 500; }
+.rail-nav .nav-group-links button.on { background: var(--accent-soft); color: var(--text); font-weight: 700; }
+.rail-nav .nav-group-links button.on::before { display: none; }
+.rail-tools { margin-top: auto; padding-top: .8rem; border-top: 1px solid var(--line); }
+.nav-search { background: var(--surface); border-radius: 8px; }
+.workspace-topbar { margin: 0 0 1.4rem; padding: 1.1rem 0 .9rem; background: var(--bg); border: 0; border-bottom: 1px solid var(--line); border-radius: 0; box-shadow: none !important; }
+.workspace-context { gap: .5rem; }
+.workspace-context strong { font-size: 1.18rem; font-weight: 750; letter-spacing: -.02em; }
+.workspace-eyebrow { font-size: .64rem; letter-spacing: .06em; }
+.workspace-subject { font-size: .74rem; }
+.workspace-actions .btn { box-shadow: none !important; border-radius: 8px; }
+.workspace-launcher { padding: 0 0 1.25rem; border: 0; background: transparent; border-radius: 0; margin-bottom: .6rem; }
+.launcher-heading strong { font-size: .91rem; font-weight: 700; }
+.launcher-links { grid-template-columns: repeat(4,minmax(0,1fr)); gap: .6rem; margin-top: .65rem; }
+.launcher-tile { min-height: 74px; border-radius: 10px; background: var(--surface); padding: .85rem; font-weight: 650; box-shadow: none; transition: border-color .12s, background .12s; }
+.launcher-tile:hover { transform: none; background: var(--surface-2); border-color: var(--accent); }
+.launcher-tile .ico { color: var(--muted); }
+.content .card, .content .panel { box-shadow: none !important; }
+.content button, .rail button { -webkit-tap-highlight-color: transparent; }
+.content button:focus-visible, .rail button:focus-visible, .content input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (max-width: 899px) {
+  html, body, #root { height: auto; overflow: visible; }
+  .shell { height: auto; min-height: 100dvh; overflow: visible; }
+  .content { max-width: none; padding: 0 1rem 5.5rem; }
+  .workspace-topbar { position: sticky; top: 52px; z-index: 19; padding: .8rem 0; }
+  .launcher-links { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .launcher-tile { min-height: 62px; }
+}
+@media (max-width: 480px) {
+  .workspace-context strong { font-size: 1rem; }
+  .workspace-subject { max-width: 100px; }
+  .workspace-topbar { top: 55px; }
+}
+@media (prefers-reduced-motion: reduce) { .launcher-tile, .rail button { transition: none !important; } }
+
+
+/* v86: restrained, responsive study dashboard — no images or decorative gradients. */
+.home-redesign{max-width:1260px;margin:0 auto 1.35rem;display:flex;flex-direction:column;gap:1.2rem}
+.home-welcome{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:1.35rem 1.5rem;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.home-kicker{display:block;color:var(--muted);font-size:.69rem;font-weight:750;letter-spacing:.095em;margin-bottom:.45rem}
+.home-welcome h1{font-family:var(--display);font-size:clamp(1.5rem,2.5vw,2.15rem);letter-spacing:-.035em;line-height:1.15;color:var(--text);margin:0 0 .4rem}
+.home-welcome p,.home-section-heading p,.home-shortcuts p{margin:0;color:var(--muted);font-size:.88rem}
+.home-today{white-space:nowrap;font-size:.78rem;color:var(--muted);border:1px solid var(--line);border-radius:100px;padding:.5rem .8rem}
+.home-section-heading h2{margin:0 0 .2rem;color:var(--text);font-size:1.13rem;font-weight:750}
+.home-study-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.8rem}
+.home-study-card{position:relative;display:flex;flex-direction:column;align-items:flex-start;min-height:152px;gap:.6rem;text-align:left;padding:1.1rem;border:1px solid var(--line);border-radius:13px;background:var(--surface);color:var(--text);font:inherit;cursor:pointer;transition:border-color .15s,background-color .15s}
+.home-study-card:hover,.home-study-card:focus-visible{border-color:var(--accent);background:var(--accent-soft);outline-offset:3px}
+.home-study-card .ico{color:var(--accent)}
+.home-study-card strong{font-size:.98rem;line-height:1.2}
+.home-study-card>span:not(.home-card-arrow){font-size:.79rem;color:var(--muted);padding-right:.6rem}
+.home-card-arrow{position:absolute;right:1rem;bottom:1rem;font-size:1.1rem;color:var(--muted)}
+.home-shortcuts{display:flex;align-items:center;justify-content:space-between;gap:1rem;border:1px solid var(--line);background:var(--surface);border-radius:13px;padding:1rem 1.2rem}
+.home-shortcuts strong{display:block;margin-bottom:.2rem}
+.home-shortcut-buttons{display:flex;flex-wrap:wrap;gap:.45rem}
+.home-shortcut-buttons button{background:var(--surface-2);border:1px solid var(--line);border-radius:9px;color:var(--text);padding:.65rem .9rem;font:inherit;font-size:.8rem;cursor:pointer}
+.home-shortcut-buttons button:hover{border-color:var(--accent)}
+.workspace-topbar{background:var(--bg);border-radius:0;border:0;border-bottom:1px solid var(--line);padding:.85rem .2rem}
+@media(max-width:1100px){.home-study-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.home-welcome{padding:1rem;align-items:flex-start;flex-direction:column}.home-study-grid{gap:.55rem}.home-study-card{padding:.85rem;min-height:143px}.home-shortcuts{align-items:flex-start;flex-direction:column}.home-today{font-size:.72rem}}
+@media(prefers-reduced-motion:reduce){.home-study-card{transition:none}}
+
+/* v88: consistent compact game surfaces and navigation */
+.break-tabs{display:flex;flex-wrap:wrap;gap:8px;position:sticky;top:0;z-index:2;padding:10px 0;background:var(--bg,var(--background,#fff))}
+.break-tabs .btn{white-space:nowrap}.break-panel{max-width:900px;margin-inline:auto}
+.sudoku-board{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));width:min(100%,450px);margin:20px auto;border:3px solid var(--text,#333);border-radius:6px;overflow:hidden}
+.sudoku-cell{box-sizing:border-box;min-width:0;width:100%;aspect-ratio:1;border:1px solid var(--line,#ccc);border-radius:0!important;text-align:center;font-size:clamp(12px,2.5vw,20px);font-weight:600;padding:0!important;background:var(--card,#fff);color:var(--text,#222)}
+.sudoku-cell.given{background:var(--surface,#f3f3f5);font-weight:800}.sudoku-cell.wrong{background:#fce2e2;color:#8b2020}
+.sudoku-cell:focus{outline:2px solid #8c78d5;outline-offset:-2px;z-index:1}
+.mine-grid{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));width:min(100%,400px);margin:18px auto;gap:3px}
+.mine-cell{min-width:0;aspect-ratio:1;border:1px solid var(--line,#ccc);border-radius:6px;background:var(--surface,#eae9f0);color:var(--text,#222);font-weight:750;font-size:clamp(12px,2.5vw,20px);cursor:pointer}
+.mine-cell.revealed{background:var(--card,#fff)}.mine-cell.bomb{background:#f4c5c5;color:#872727}.game-success{text-align:center;font-weight:650}
+@media(max-width:600px){.break-tabs{position:static}.sudoku-board{margin:12px auto}.break-panel{padding:14px!important}.mine-grid{gap:2px}}
+</style>
+
+<style id="bsa-minimal-v84">
+/* Restrained, consistent application chrome. Preserve existing color themes. */
+:root{--lift:none!important;--glow:none!important}
+.shell{height:100dvh;min-height:0;overflow:hidden}
+.rail{position:relative;top:auto;height:100%;min-height:0;overflow:hidden;padding:1rem .75rem;gap:.75rem}
+.rail-nav-wrap{min-height:0;flex:1;overflow-y:auto;overscroll-behavior:contain}
+.content{height:100%;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding-top:1.15rem}
+.workspace-topbar{position:sticky;top:0;z-index:25;border-radius:10px;box-shadow:none!important;margin-bottom:1rem}
+.workspace-launcher,.panel,.card,.toolkit-panel{box-shadow:none!important}
+.brand-mark{box-shadow:none!important;border-radius:8px}
+.rail-nav button,.btn,.launcher-tile{transition:background-color .12s ease,border-color .12s ease,color .12s ease}
+.workspace-eyebrow{letter-spacing:.035em;font-weight:650}
+.rail-nav button.on::before{display:none}
+@media(max-width:899px){.shell{height:auto;min-height:100dvh;overflow:visible}.rail{height:auto}.content{height:auto;overflow:visible;scrollbar-gutter:auto}.workspace-topbar{position:relative}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+<style>
+/* v87: restrained, accessible progress and games UI */
+.home-academic-link{display:flex;align-items:center;gap:14px;flex-wrap:wrap;width:100%;text-align:left;margin:14px 0 20px;padding:15px 18px;border:1px solid var(--line,#d5d8e0);border-radius:13px;background:var(--card,#fff);color:var(--text,#222);cursor:pointer}
+.home-academic-link>span:first-child{font-size:11px;font-weight:750;letter-spacing:.08em;color:var(--muted,#777)}.home-academic-link strong{font-size:15px}.home-academic-link>span:last-child{margin-left:auto;font-size:12px;color:var(--muted,#777)}
+.academic-page{max-width:1050px}.academic-summary{padding:22px}.academic-heading{display:flex;align-items:center;gap:16px}.academic-heading h2{margin:2px 0;font-size:24px}.academic-heading p{margin:0}.academic-emblem{display:grid;place-items:center;width:58px;height:58px;border:1px solid var(--line,#ccc);border-radius:14px;font-size:30px}.academic-meter{height:9px;background:var(--line,#ddd);border-radius:20px;overflow:hidden;margin-top:22px}.academic-meter span{display:block;height:100%;background:#8776bb;border-radius:20px}.academic-subheading{font-size:19px;margin:28px 0 14px}.academic-achievements{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.academic-achievement{display:flex;gap:12px;padding:16px;border:1px solid var(--line,#ddd);border-radius:12px;opacity:.67}.academic-achievement.unlocked{opacity:1}.academic-achievement p{margin:4px 0 0}.academic-achievement-icon{display:grid;place-items:center;flex:none;width:32px;height:32px;border-radius:9px;background:var(--surface,#eee)}
+.break-game-heading{display:flex;justify-content:space-between;align-items:start;gap:12px;text-align:left}.break-game-heading p{margin:6px 0}.game2048-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:min(100%,380px);margin:20px auto;padding:8px;background:var(--line,#ddd);border-radius:12px}.game2048-cell{display:grid;place-items:center;aspect-ratio:1;border-radius:7px;background:var(--card,#fff);font-weight:750;font-size:clamp(18px,4vw,29px);color:var(--text,#222)}.game2048-cell.filled{background:color-mix(in srgb,var(--card,#fff) 80%,#a796dc 20%)}.game2048-controls{display:flex;justify-content:center;gap:8px;margin:12px 0}.game2048-controls button{min-width:50px}
+@media(max-width:650px){.academic-achievements{grid-template-columns:1fr}.home-academic-link>span:last-child{margin-left:0}}
+</style>
+
+<style id="bsa-ui-v92">
+:root{--desk-radius:12px;--desk-accent:#8876b8}
+.shell{isolation:isolate}
+.rail{border-right:1px solid var(--line);box-shadow:none!important}
+.rail-nav-wrap{scrollbar-width:thin}
+.rail-nav button,.nav-group-heading{min-height:38px;border-radius:9px}
+.content{scroll-padding-top:72px}
+.content>.view,.content>.home-redesign{max-width:1260px;margin-left:auto;margin-right:auto}
+.workspace-topbar{border-radius:0!important;margin-top:0}
+.home-welcome{gap:1rem}
+.home-study-card,.home-academic-link,.panel,.card,.toolkit-panel{box-shadow:none!important;border-radius:var(--desk-radius)}
+.home-study-card{min-height:130px}
+.home-study-card:hover,.home-academic-link:hover{border-color:var(--desk-accent)}
+button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--desk-accent)!important;outline-offset:2px}
+.study-audit{margin-bottom:16px}
+.study-audit-total{display:flex;align-items:baseline;gap:12px;margin:12px 0 16px}
+.study-audit-total strong{font-size:1.6rem}
+.study-audit-total span,.study-audit-row span:last-child{color:var(--muted)}
+.study-audit-rows{border-top:1px solid var(--line)}
+.study-audit-row{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+@media(max-width:899px){.content{padding-left:16px;padding-right:16px}.workspace-topbar{position:sticky;top:0;background:var(--bg);z-index:30}}
+@media(max-width:600px){.study-audit-row{flex-direction:column;gap:2px}.home-study-card{min-height:110px}}
+</style>
+
+<style id="bsa-v93-refinement">
+/* Deliberately restrained decoration: gentle accents, clearer hierarchy, no busy patterns. */
+:root{--desk-v93-lilac:#8d79c7;--desk-v93-mint:#5c9b83}
+.rail{background:linear-gradient(165deg,color-mix(in srgb,var(--bg) 96%,#b9a7e9),var(--bg) 42%,color-mix(in srgb,var(--bg) 97%,#7fb9a3));}
+.brand{position:relative;padding-bottom:15px;margin-bottom:5px}
+.brand:after{content:"";position:absolute;left:14px;right:14px;bottom:0;height:1px;background:linear-gradient(90deg,transparent,var(--desk-v93-lilac),transparent);opacity:.5}
+.brand-mark{background:linear-gradient(135deg,#8f80c8,#76a6a0)!important;color:#fff!important;border-radius:11px!important;box-shadow:0 3px 12px rgba(113,100,164,.16)}
+.rail-nav .nav-group-heading{letter-spacing:.085em;font-size:.68rem;font-weight:750;opacity:.84}
+.rail-nav .nav-group-links button{transition:background-color .15s ease,border-color .15s ease,transform .15s ease;border-left:2px solid transparent}
+.rail-nav .nav-group-links button:hover{background:color-mix(in srgb,var(--desk-v93-lilac) 9%,transparent);transform:translateX(2px)}
+.rail-nav .nav-group-links button.on{background:color-mix(in srgb,var(--desk-v93-lilac) 13%,var(--bg));border-left-color:var(--desk-v93-lilac);font-weight:700}
+.rail-tools{border-top:1px solid color-mix(in srgb,var(--desk-v93-lilac) 22%,var(--line));padding-top:11px}
+.rail-tools>button:not(.theme-dot){border-radius:9px;transition:background-color .15s ease}
+.rail-tools>button:hover{background:color-mix(in srgb,var(--desk-v93-lilac) 9%,transparent)}
+.home-welcome{position:relative;overflow:hidden}
+.home-welcome:after{content:"";position:absolute;right:12px;top:12px;width:74px;height:74px;border-radius:50%;pointer-events:none;background:radial-gradient(circle,color-mix(in srgb,var(--desk-v93-lilac) 13%,transparent),transparent 70%)}
+.home-study-card{position:relative;overflow:hidden;transition:transform .16s ease,border-color .16s ease}
+.home-study-card:hover{transform:translateY(-2px)}
+.home-study-card:before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:0 3px 3px 0;background:linear-gradient(var(--desk-v93-lilac),var(--desk-v93-mint));opacity:.55}
+.home-academic-link{transition:border-color .15s ease,transform .15s ease}
+.home-academic-link:hover{transform:translateY(-1px)}
+@media(prefers-reduced-motion:reduce){.rail-nav .nav-group-links button,.home-study-card,.home-academic-link{transition:none!important}.rail-nav .nav-group-links button:hover,.home-study-card:hover,.home-academic-link:hover{transform:none!important}}
+</style>
+
+<style id="bsa-study-life-v95">
+.life-page{max-width:1120px;margin:auto}
+.life-summary{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0 18px}
+.life-summary>span{background:var(--panel,var(--bg));border:1px solid var(--line);border-radius:999px;padding:9px 14px;font-size:.9rem}
+.life-panel{padding:22px;margin:16px 0}
+.life-notice{border:1px solid #9ac7b0;border-radius:10px;padding:10px 14px;margin:12px 0}
+.life-scene{height:300px;max-width:690px;margin:18px auto;border:5px solid #8f80b3;border-radius:18px;position:relative;overflow:hidden;background:linear-gradient(180deg,#d9d1eb 0%,#e8e1ef 69%,#bba08b 69%,#b18d77 100%);box-shadow:inset 0 -10px 0 #9d7b68}
+.life-scene-window{position:absolute;top:22px;right:44px;width:100px;height:100px;background:#bdd8e9;border:8px solid #fff1dc;border-radius:10px;display:grid;place-items:center;color:#527c9e}
+.life-scene-shelf{position:absolute;left:40px;top:42px;font-size:28px;border-bottom:8px solid #96745e}
+.life-scene-lamp{position:absolute;left:53%;top:50%;font-size:32px}
+.life-scene-avatar{position:absolute;left:33%;bottom:64px;font-size:64px;filter:drop-shadow(1px 5px 0 #987b78)}
+.life-scene-pet{position:absolute;left:58%;bottom:51px;font-size:46px}
+.life-scene-desk{position:absolute;left:21%;bottom:25px;width:58%;height:53px;background:#a37a61;border:5px solid #785943;border-radius:10px;text-align:center;font-size:25px}
+.life-scene-rug{position:absolute;left:30%;bottom:3px;color:#9e8bc5;font-size:40px}
+.life-scene-plants{position:absolute;right:15px;bottom:35px;font-size:43px}
+.life-inventory-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:12px;margin-top:14px}
+.life-item{min-height:105px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);border-radius:12px;background:var(--panel,var(--bg));padding:12px;text-align:center;color:inherit}
+button.life-item{cursor:pointer}
+.life-item.selected{outline:2px solid #a38dd2}
+.life-item-emoji{font-size:38px}
+.life-item button{width:100%}
+.life-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-top:20px}
+.life-options label{display:flex;flex-direction:column;gap:7px;font-size:.86rem}
+.life-options select,.life-options input{width:100%;padding:9px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:inherit}
+.life-avatar-preview{height:185px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;background:linear-gradient(145deg,#e6def4,#d9eee8);border-radius:15px;color:#514b60;font-size:24px}
+.life-avatar-preview>div{font-size:65px}
+.life-pet-card{max-width:430px;margin:16px 0;padding:20px;border:1px solid var(--line);border-radius:14px;display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+.life-pet-emoji{font-size:76px}
+.life-pet-card input{padding:8px;border-radius:8px;border:1px solid var(--line);display:block;margin-top:6px}
+.life-log{max-height:220px;overflow:auto;font-size:.82rem}
+.life-log>div{padding:7px 0;border-bottom:1px solid var(--line)}
+@media(max-width:650px){.life-panel{padding:14px}.life-scene{height:245px}.life-scene-avatar{font-size:50px}.life-scene-window{width:70px;height:70px}.life-scene-pet{font-size:35px}}
+</style>
+<style id="bsa-study-life-v96">
+.life-home-widget{display:flex;align-items:center;gap:14px;padding:13px 17px;margin:0 0 16px;border:1px solid var(--line);border-radius:15px;background:linear-gradient(120deg,rgba(189,174,225,.12),rgba(165,215,198,.1))}
+.life-home-character{display:flex;gap:4px;align-items:center;font-size:31px}
+.life-home-copy{flex:1;min-width:0}
+.life-home-copy p{margin:4px 0;color:var(--muted,#777);font-size:.85rem}
+.life-home-copy small{color:var(--muted,#777)}
+.life-town-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:12px;margin:18px 0}
+.life-town-place{border:1px solid var(--line);border-radius:13px;padding:18px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px}
+.life-town-place p{flex:1}
+.life-town-place.locked{opacity:.6}
+.life-town-emoji{font-size:44px}
+.life-night{background:linear-gradient(180deg,#575273 0%,#7d718e 69%,#8b6c64 69%,#795b51 100%)}
+.life-night .life-scene-window{background:#343c66;color:#f8df92}
+@media(max-width:650px){.life-home-widget{flex-wrap:wrap}.life-home-widget .btn{width:100%}}
 </style>
 </head>
 <body>
@@ -3274,6 +3486,10 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       if (mode === "replace") {
         if (!window.confirm("Replace everything in this dashboard with the backup? This can’t be undone.")) return;
         replaceAll({ ...buildDefault(), ...b, settings: { ...DEFAULT_SETTINGS, ...b.settings || data.settings }, subjects, activeId: subjects.some((s) => s.id === b.activeId) ? b.activeId : subjects[0].id });
+        if(b.academicProgress&&Array.isArray(b.academicProgress.events))localStorage.setItem(PROGRESS_KEY,JSON.stringify(b.academicProgress));
+        if(b.studyLife&&typeof b.studyLife==='object')localStorage.setItem(LIFE_KEY,JSON.stringify(b.studyLife));
+        if(b.studyJoy&&typeof b.studyJoy==='object')localStorage.setItem(JOY_KEY,JSON.stringify(b.studyJoy));
+        window.dispatchEvent(new Event('bsa-progress-updated'));
         toast("Backup restored");
       } else {
         update(null, (d) => {
@@ -3285,7 +3501,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     };
     const exportText = useMemo(() => {
       const subs = scope === "all" ? data.subjects : [active];
-      return JSON.stringify({ app: "bsa-study-dashboard", version: 1, exportedAt: (/* @__PURE__ */ new Date()).toISOString(), activeId: data.activeId, settings: data.settings, subjects: subs }, null, 2);
+      return JSON.stringify({ app: "bsa-study-dashboard", version: 1, exportedAt: (/* @__PURE__ */ new Date()).toISOString(), activeId: data.activeId, settings: data.settings, subjects: subs, academicProgress:readProgress(), studyLife:readLife(), studyJoy:readJoy() }, null, 2);
     }, [scope, data]);
     const fileName = `${scope === "all" ? "bsa-study" : norm(active.name).replace(/ /g, "-")}-backup-${today()}.json`;
     const save = async () => {
@@ -3900,6 +4116,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
   }
   function HomeView({ subject, go, openEditor, update, settings, toast }) {
     const welcomeJohn=h("p",{className:"muted",style:{margin:"0 0 12px",fontWeight:600}},"Welcome back, John Angel 👋");
+    const lifeWidget=h(StudyLifeHomeWidget,{go});
     const [pm, setPm] = useState(null);
     const pmDue = pmPending(subject);
     const topics = studyTopics(subject);
@@ -3998,7 +4215,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         actions: active.length ? [{ label: "Open mistake log", run: () => go("mistakes") }] : []
       }
     ].filter(Boolean);
-    return /* @__PURE__ */ React.createElement("section", { className: "view" }, pmDue && h("div", { className: "panel gc-wi-bar" }, h("p", null, h("strong", null, pmDue.title + " was " + fmtDay(pmDue.due, "long") + "."), " Two minutes now on what actually came up is worth more than an hour of guessing before the next one."), h("div", { className: "step-actions" }, h("button", { className: "btn primary", onClick: () => setPm(pmDue) }, "Record how it went"), h("button", { className: "btn ghost", onClick: () => update((s) => { const e = s.topics.find((x) => x.id === pmDue.id); if (e) e.pmAt = today(); }) }, "Skip"))), pm && h(ExamPostMortem, { subject, exam: pm, update, toast, onClose: () => setPm(null) }), welcomeJohn, /* @__PURE__ */ React.createElement("div", { className: "hero" }, /* @__PURE__ */ React.createElement("div", { className: "hero-title" }, /* @__PURE__ */ React.createElement("p", { className: "muted" }, (/* @__PURE__ */ new Date()).toLocaleDateString(void 0, { weekday: "long", month: "long", day: "numeric" })), /* @__PURE__ */ React.createElement("h1", null, subject.name, subject.code ? /* @__PURE__ */ React.createElement("span", { className: "hero-code" }, " ", subject.code) : null), subject.school && /* @__PURE__ */ React.createElement("p", { className: "muted" }, subject.school)), /* @__PURE__ */ React.createElement("div", { className: "hero-figure" }, /* @__PURE__ */ React.createElement(Ring, { done: mastered, total: topics.length }), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "topics mastered"))), /* @__PURE__ */ React.createElement(Track, { subject, onJump: (id) => go("roadmap", { open: id }) }), h(StudyFlow, { subject, go, update, openEditor }), h(SmartScheduleBuilder,{subject,update,toast,go}), h("div",{className:"curriculum-shortcut"},h("div",null,h("strong",null,"Planning next semester?"),h("p",{className:"muted small"},"Browse the four-year prospectus and add future subjects when you need them.")),h("button",{className:"btn ghost",onClick:()=>go("curriculum")},"Open curriculum")), h(SmartStudyPanel, { subject, go }), h(StudyEnhancements, { subject, go, update, toast }), /* @__PURE__ */ React.createElement("div", { className: "home-grid" }, /* @__PURE__ */ React.createElement("div", { className: "panel plan" }, /* @__PURE__ */ React.createElement("h2", null, "Today’s plan"), /* @__PURE__ */ React.createElement("ol", { className: "steps" }, steps.map((s, i) => /* @__PURE__ */ React.createElement("li", { key: i, className: "step" }, /* @__PURE__ */ React.createElement("span", { className: "step-num", "aria-hidden": "true" }, i + 1), /* @__PURE__ */ React.createElement("div", { className: "step-body" }, /* @__PURE__ */ React.createElement("span", { className: "step-label" }, /* @__PURE__ */ React.createElement(Icon, { name: s.icon, size: 16 }), " ", s.label), /* @__PURE__ */ React.createElement("strong", { className: "step-title" }, s.title), s.detail && /* @__PURE__ */ React.createElement("span", { className: "muted step-detail" }, s.detail), s.chip && h("span", { className: "step-chip" }, h(DueChip, { t: s.chip })), s.actions.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "step-actions" }, s.actions.map((a) => /* @__PURE__ */ React.createElement("button", { key: a.label, className: `btn${a.primary ? " primary" : ""}`, onClick: a.run }, a.label)))))))), /* @__PURE__ */ React.createElement("div", { className: "side-col" }, nextExam && (() => {
+    return /* @__PURE__ */ React.createElement("section", { className: "view" }, pmDue && h("div", { className: "panel gc-wi-bar" }, h("p", null, h("strong", null, pmDue.title + " was " + fmtDay(pmDue.due, "long") + "."), " Two minutes now on what actually came up is worth more than an hour of guessing before the next one."), h("div", { className: "step-actions" }, h("button", { className: "btn primary", onClick: () => setPm(pmDue) }, "Record how it went"), h("button", { className: "btn ghost", onClick: () => update((s) => { const e = s.topics.find((x) => x.id === pmDue.id); if (e) e.pmAt = today(); }) }, "Skip"))), pm && h(ExamPostMortem, { subject, exam: pm, update, toast, onClose: () => setPm(null) }), welcomeJohn, lifeWidget, /* @__PURE__ */ React.createElement("div", { className: "hero" }, /* @__PURE__ */ React.createElement("div", { className: "hero-title" }, /* @__PURE__ */ React.createElement("p", { className: "muted" }, (/* @__PURE__ */ new Date()).toLocaleDateString(void 0, { weekday: "long", month: "long", day: "numeric" })), /* @__PURE__ */ React.createElement("h1", null, subject.name, subject.code ? /* @__PURE__ */ React.createElement("span", { className: "hero-code" }, " ", subject.code) : null), subject.school && /* @__PURE__ */ React.createElement("p", { className: "muted" }, subject.school)), /* @__PURE__ */ React.createElement("div", { className: "hero-figure" }, /* @__PURE__ */ React.createElement(Ring, { done: mastered, total: topics.length }), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "topics mastered"))), /* @__PURE__ */ React.createElement(Track, { subject, onJump: (id) => go("roadmap", { open: id }) }), h(StudyFlow, { subject, go, update, openEditor }), h(SmartScheduleBuilder,{subject,update,toast,go}), h("div",{className:"curriculum-shortcut"},h("div",null,h("strong",null,"Planning next semester?"),h("p",{className:"muted small"},"Browse the four-year prospectus and add future subjects when you need them.")),h("button",{className:"btn ghost",onClick:()=>go("curriculum")},"Open curriculum")), h(SmartStudyPanel, { subject, go }), h(StudyEnhancements, { subject, go, update, toast }), /* @__PURE__ */ React.createElement("div", { className: "home-grid" }, /* @__PURE__ */ React.createElement("div", { className: "panel plan" }, /* @__PURE__ */ React.createElement("h2", null, "Today’s plan"), /* @__PURE__ */ React.createElement("ol", { className: "steps" }, steps.map((s, i) => /* @__PURE__ */ React.createElement("li", { key: i, className: "step" }, /* @__PURE__ */ React.createElement("span", { className: "step-num", "aria-hidden": "true" }, i + 1), /* @__PURE__ */ React.createElement("div", { className: "step-body" }, /* @__PURE__ */ React.createElement("span", { className: "step-label" }, /* @__PURE__ */ React.createElement(Icon, { name: s.icon, size: 16 }), " ", s.label), /* @__PURE__ */ React.createElement("strong", { className: "step-title" }, s.title), s.detail && /* @__PURE__ */ React.createElement("span", { className: "muted step-detail" }, s.detail), s.chip && h("span", { className: "step-chip" }, h(DueChip, { t: s.chip })), s.actions.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "step-actions" }, s.actions.map((a) => /* @__PURE__ */ React.createElement("button", { key: a.label, className: `btn${a.primary ? " primary" : ""}`, onClick: a.run }, a.label)))))))), /* @__PURE__ */ React.createElement("div", { className: "side-col" }, nextExam && (() => {
       const r = readiness(subject, nextExam);
       const covered = (nextExam.covers || []).map((id) => subject.topics.find((t) => t.id === id)).filter(Boolean);
       return /* @__PURE__ */ React.createElement("div", { className: "panel exam-panel" }, /* @__PURE__ */ React.createElement("span", { className: "muted" }, "Next exam, week ", nextExam.week), /* @__PURE__ */ React.createElement("h2", null, nextExam.title), nextExam.due && h("p", null, h(DueChip, { t: nextExam })), r.total > 0 && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "bar-lg" }, /* @__PURE__ */ React.createElement("span", { style: { width: `${r.done / r.total * 100}%` } })), /* @__PURE__ */ React.createElement("p", null, /* @__PURE__ */ React.createElement("strong", null, r.done, " of ", r.total), " topics ready"), /* @__PURE__ */ React.createElement("div", { className: "topic-chips" }, covered.map((t) => /* @__PURE__ */ React.createElement("button", { key: t.id, className: "tchip", "data-status": t.status, onClick: () => go("roadmap", { open: t.id }), title: `${t.title}: ${t.status}` }, /* @__PURE__ */ React.createElement("span", { className: "dot" }), t.code || t.standard || t.title)))), nextExam.scope && /* @__PURE__ */ React.createElement("p", { className: "muted small" }, "Covers ", nextExam.scope), h(ExamReadyMini, { subject, exam: nextExam, go }));
@@ -5320,11 +5537,19 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
   }
   function FocusBar({ data, update, toast }) {
     const t = useTimer();
+    const focusActive=useRef({id:null,ms:0,last:Date.now()});
+    useEffect(()=>{const id=setInterval(()=>{const cur=timerState,now=Date.now(),f=focusActive.current;
+      const key=cur&&(cur.startedAt||cur.start);
+      if(key!==f.id){f.id=key;f.ms=0;}
+      if(cur&&cur.phase==='break')f.ms=0;
+      if(cur&&cur.running&&cur.phase!=='break'&&document.visibilityState==='visible'&&document.hasFocus())f.ms+=Math.min(1500,Math.max(0,now-f.last));
+      f.last=now;
+    },1000);return()=>clearInterval(id);},[]);
     useTick(1e3);
     const finish = (auto) => {
       const cur = timerState;
       if (!cur) return;
-      const mins = Math.round(timerElapsed(cur) / 6e4);
+      const mins = Math.floor(focusActive.current.ms / 6e4);
       // A break is rest, not study: never logged, and it rolls straight into the next round.
       if (cur.phase === "break") {
         if (auto && cur.pomo) {
@@ -5338,6 +5563,8 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         return;
       }
       if (auto && cur.pomo) {
+        grantFocusXp(Math.floor(focusActive.current.ms/60000),String(cur.startedAt||cur.start)+':'+String(cur.round||1));
+        focusActive.current.ms=0;
         const r = cur.round || 1;
         const long = r % 4 === 0;
         update(null, (d) => {
@@ -5350,6 +5577,8 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         toast(`Round ${r} done, ${fmtMins(mins)} logged. ${long ? "Long break" : "Break"} now.`);
         return;
       }
+      grantFocusXp(Math.floor(focusActive.current.ms/60000),String(cur.startedAt||cur.start)+':'+String(cur.round||1));
+      focusActive.current.ms=0;
       setTimerState(null);
       holdScreen(false);
       if (mins < 1) {
@@ -5375,7 +5604,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     useEffect(() => {
       if (t && t.running && left <= 0) finish(true);
     });
-    // The phone sleeping after 30 seconds should not interrupt a 50-minute block.
+    // The timer can continue in the background, but only active foreground minutes are logged.
     useEffect(() => {
       holdScreen(!!(t && t.running));
       const wake = () => {
@@ -9777,7 +10006,12 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
     const visibleProblems = set.problems.filter((p) => filter === "all" || (filter === "todo" ? !p.st : p.st === filter));
     const printVisible = (withKey) => psPrint(set, withKey, visibleProblems);
 
-    const mark = (pid, st) => update((s) => {
+    const mark = (pid, st) => {
+      // A set earns XP once, when every problem has a recorded attempt.
+      // Re-marking and repeating the set cannot farm additional XP.
+      const allMarked=set.problems.length>=2 && set.problems.every(p=>p.id===pid?(p.st===st?false:true):!!p.st);
+      if(allMarked)grantActivityXp('problemset',subject.id+':'+set.id,30,90);
+      update((s) => {
       const x = (s.psets || []).find((y) => y.id === set.id);
       const p = x && x.problems.find((y) => y.id === pid);
       if (!p) return;
@@ -9793,7 +10027,8 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
           s.mistakes.unshift({ id: uid("m"), topicId: set.topicId || null, topicText: set.topicText, date: today(), question: label, wrong: "", correct: psPlain(p.answer).slice(0, 400), trap: psPlain(p.trap || p.approach).slice(0, 400), status: "Active" });
         }
       } else p.rt = null;
-    });
+      });
+    };
     const logMistake = (p) => {
       update((s) => {
         const label = `${set.title}, problem ${p.no}: ${p.title}`;
@@ -10826,7 +11061,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
         if(kinds.quizzes)(sub.quizzes||[]).forEach(q=>{out+='<article><h3>'+esc(q.title||'Quiz')+'</h3>'+(q.questions||[]).map((item,i)=>'<div class="problem"><strong>'+(i+1)+'. '+esc(item.q||item.question||item.prompt||'')+'</strong>'+(showAnswers?'<p>'+esc(item.answer||item.a||'')+'</p>':'')+'</div>').join('')+'</article>'});
         if(kinds.notes)noteRows.filter(n=>n.subjectId===sub.id).forEach(n=>{out+='<article><h3>'+esc(n.title)+'</h3><div class="formatted">'+psMdHtml(n.body)+'</div></article>'});out+='</section>'});return out};
     const html=()=>`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Study Desk · Classmate Library</title><style>@page{size:A4;margin:18mm 17mm}*{box-sizing:border-box}body{max-width:820px;margin:32px auto;padding:0 20px;color:#1c3028;background:#fff;font:10.5pt/1.55 Arial,Helvetica,sans-serif}header{border-bottom:2px solid #177650;margin-bottom:22px;padding-bottom:14px}h1{font:700 24pt/1.2 Arial,sans-serif;margin:0 0 6px}h2{font:700 17pt/1.3 Arial,sans-serif;border-bottom:1px solid #ccd9d0;padding-bottom:8px}h3{font:700 13pt/1.35 Arial,sans-serif}h4{font:700 11pt Arial,sans-serif}article{margin:16px 0 20px}p{white-space:pre-wrap;overflow-wrap:anywhere;orphans:3;widows:3}h2,h3,h4{break-after:avoid-page}table{border-collapse:collapse;width:100%;font:9.5pt/1.4 Arial,sans-serif;margin:8pt 0 12pt}td,th{border:1px solid #b9c9c0;padding:5pt 6pt;vertical-align:top;overflow-wrap:anywhere}th{background:#edf4ef;text-align:left}tr{break-inside:avoid-page}thead{display:table-header-group}.formatted p{white-space:normal;margin:6pt 0}.formatted strong{font-weight:700}.formatted ul,.formatted ol{padding-left:20pt}.card,.problem{padding:10px 0;border-bottom:1px solid #e0e8e2;break-inside:avoid-page}.subject{break-before:page}.subject:first-of-type{break-before:auto}.controls{margin-bottom:20px}.controls button{background:#14784c;color:#fff;border:0;padding:10px 15px;border-radius:7px;cursor:pointer}@media print{body{max-width:none;margin:0;padding:0}.controls{display:none}.subject{break-before:page}}</style></head><body><div class="controls"><button onclick="window.print()">Print / Save as PDF</button></div><header><h1>Classmate Study Library</h1><p>Selected materials shared for reading and printing. This file contains no account credentials or private study history.</p></header>${sections()||'<p>No materials selected.</p>'}</body></html>`;
-    const dashboardHtml=()=>{const content=permissions.view?sections():'';const css=`*{box-sizing:border-box}body{margin:0;background:#f2f7f3;color:#18382c;font:15px/1.6 system-ui,-apple-system,Arial,sans-serif}aside{position:fixed;inset:0 auto 0 0;width:235px;background:#fff;border-right:1px solid #d6e5db;padding:20px;overflow:auto}aside h1{font-size:19px;margin:0 0 18px}aside button{display:block;width:100%;padding:10px;margin:6px 0;text-align:left;background:#eef6f0;border:1px solid #d2e2d6;border-radius:9px;color:#153f30;cursor:pointer}aside button.on{background:#16734e;color:white}.personal{margin-top:24px;padding:20px;background:white;border:1px solid #d8e7dc;border-radius:12px}.personal input,.personal textarea{display:block;margin:8px 0;padding:9px;max-width:100%}.personal button{padding:8px 12px;margin:4px;border:1px solid #c2d7ca;border-radius:7px;background:#e9f2ec;cursor:pointer}main{margin-left:235px;padding:30px;max-width:1150px}header{padding:20px 24px;background:#fff;border:1px solid #d8e7dc;border-radius:15px;margin-bottom:22px}h2{font-size:23px}h3{font-size:18px}article{background:white;border:1px solid #d8e7dc;border-radius:12px;padding:18px;margin:14px 0}table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px}th,td{border:1px solid #becdc3;padding:7px;text-align:left;vertical-align:top}th{background:#e9f2ec}tr{break-inside:avoid}h2,h3,h4{break-after:avoid-page}.subject{display:none}.subject.on{display:block}p{overflow-wrap:anywhere}button.print{padding:9px 14px;border:0;border-radius:8px;background:#16734e;color:white;cursor:pointer}@media(max-width:700px){aside{position:static;width:auto;border:0}main{margin:0;padding:14px}aside button{display:inline-block;width:auto;margin:4px}}@page{size:A4;margin:16mm}@media print{aside,.print{display:none!important}main{margin:0;padding:0;max-width:none}header{border:0}.subject{display:block!important;break-before:page}.subject:first-of-type{break-before:auto}article{border:0;padding:0;break-inside:auto}table{font-size:9pt}tr{break-inside:avoid}}`;const labels=data.subjects.filter(x=>allowed.includes(x.id)).map(x=>esc((x.code?x.code+' · ':'')+x.name));return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>BSA Study Desk · Shared View</title><style>'+css+'</style></head><body><aside><h1>Σ BSA Study Desk</h1><p>Shared read-only view</p>'+labels.map((n,i)=>'<button data-index="'+i+'"'+(i===0?' class="on"':'')+'>'+n+'</button>').join('')+'</aside><main><header><h2>Classmate Study Desk</h2><p>Selected subjects and materials only. No account or editing access.</p><button class="print" onclick="window.print()">Print / Save PDF</button></header>'+content+(permissions.personalNotes?'<section class="personal"><h2>My personal notes</h2><p>Stored only in this browser, not shared with John Angel or other classmates.</p><textarea id="myNotes" rows="8" style="width:100%;padding:12px" placeholder="Write your private study notes here"></textarea><p id="saveNoteStatus"></p></section>':'')+(permissions.flashcards?'<section class="personal"><h2>My flashcards</h2><input id="cardFront" placeholder="Question" aria-label="Flashcard question"><input id="cardBack" placeholder="Answer" aria-label="Flashcard answer"><button id="addCard">Add card</button><div id="myCards"></div><p>Saved only in this browser.</p></section>':'')+(permissions.quizzes?'<section class="personal"><h2>My practice scratchpad</h2><p>Write your answers to the shared questions here. Answers are stored only in this browser.</p><textarea id="myQuizAnswers" rows="6" style="width:100%" placeholder="My answers and reasoning"></textarea></section>':'')+'</main><script>const sections=[...document.querySelectorAll(".subject")],buttons=[...document.querySelectorAll("aside button")];function select(i){sections.forEach((e,j)=>e.classList.toggle("on",i===j));buttons.forEach((e,j)=>e.classList.toggle("on",i===j))}buttons.forEach((b,i)=>b.addEventListener("click",()=>select(i)));select(0);\nconst storePrefix="bsa_shared_v67_";\nfunction bindDraft(id,key){const el=document.getElementById(id);if(!el)return;try{el.value=localStorage.getItem(storePrefix+key)||""}catch(e){}el.addEventListener("input",()=>{try{localStorage.setItem(storePrefix+key,el.value)}catch(e){}})}\nbindDraft("myNotes","notes");bindDraft("myQuizAnswers","quiz");\nconst front=document.getElementById("cardFront"),back=document.getElementById("cardBack"),add=document.getElementById("addCard"),list=document.getElementById("myCards");\nif(front&&back&&add&&list){let cards=[];try{cards=JSON.parse(localStorage.getItem(storePrefix+"cards")||"[]");if(!Array.isArray(cards))cards=[]}catch(e){}\nfunction render(){list.replaceChildren();cards.forEach((c,i)=>{const row=document.createElement("article"),q=document.createElement("strong"),a=document.createElement("p"),flip=document.createElement("button"),del=document.createElement("button");q.textContent=c.q;a.textContent=c.a;a.hidden=true;flip.textContent="Show / hide answer";flip.onclick=()=>a.hidden=!a.hidden;del.textContent="Delete";del.onclick=()=>{cards.splice(i,1);persist()};row.append(q,document.createElement("br"),flip,a,del);list.append(row)})}\nfunction persist(){try{localStorage.setItem(storePrefix+"cards",JSON.stringify(cards))}catch(e){}render()}\nadd.onclick=()=>{if(!front.value.trim()||!back.value.trim())return;cards.push({q:front.value.trim(),a:back.value.trim()});front.value="";back.value="";persist()};render()}\n<\/script></body></html>'};
+    const dashboardHtml=()=>{const content=permissions.view?sections():'';const css=`*{box-sizing:border-box}body{margin:0;background:#f2f7f3;color:#18382c;font:15px/1.6 system-ui,-apple-system,Arial,sans-serif}aside{position:fixed;inset:0 auto 0 0;width:235px;background:#fff;border-right:1px solid #d6e5db;padding:20px;overflow:auto}aside h1{font-size:19px;margin:0 0 18px}aside button{display:block;width:100%;padding:10px;margin:6px 0;text-align:left;background:#eef6f0;border:1px solid #d2e2d6;border-radius:9px;color:#153f30;cursor:pointer}aside button.on{background:#16734e;color:white}.personal{margin-top:24px;padding:20px;background:white;border:1px solid #d8e7dc;border-radius:12px}.personal input,.personal textarea{display:block;margin:8px 0;padding:9px;max-width:100%}.personal button{padding:8px 12px;margin:4px;border:1px solid #c2d7ca;border-radius:7px;background:#e9f2ec;cursor:pointer}main{margin-left:235px;padding:30px;max-width:1150px}header{padding:20px 24px;background:#fff;border:1px solid #d8e7dc;border-radius:15px;margin-bottom:22px}h2{font-size:23px}h3{font-size:18px}article{background:white;border:1px solid #d8e7dc;border-radius:12px;padding:18px;margin:14px 0}table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px}th,td{border:1px solid #becdc3;padding:7px;text-align:left;vertical-align:top}th{background:#e9f2ec}tr{break-inside:avoid}h2,h3,h4{break-after:avoid-page}.subject{display:none}.subject.on{display:block}p{overflow-wrap:anywhere}button.print{padding:9px 14px;border:0;border-radius:8px;background:#16734e;color:white;cursor:pointer}@media(max-width:700px){aside{position:static;width:auto;border:0}main{margin:0;padding:14px}aside button{display:inline-block;width:auto;margin:4px}}@page{size:A4;margin:16mm}@media print{aside,.print{display:none!important}main{margin:0;padding:0;max-width:none}header{border:0}.subject{display:block!important;break-before:page}.subject:first-of-type{break-before:auto}article{border:0;padding:0;break-inside:auto}table{font-size:9pt}tr{break-inside:avoid}}`;const labels=data.subjects.filter(x=>allowed.includes(x.id)).map(x=>esc((x.code?x.code+' · ':'')+x.name));return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>BSA Study Desk · Shared View</title><style>'+css+'</style></head><body><aside><h1>Σ BSA Study Desk</h1><p>Shared read-only view</p>'+labels.map((n,i)=>'<button data-index="'+i+'"'+(i===0?' class="on"':'')+'>'+n+'</button>').join('')+'</aside><main><header><h2>BSA Study Desk</h2><p>Selected subjects and materials only. No account or editing access.</p><button class="print" onclick="window.print()">Print / Save PDF</button></header>'+content+(permissions.personalNotes?'<section class="personal"><h2>My personal notes</h2><p>Stored only in this browser, not shared with John Angel or other classmates.</p><textarea id="myNotes" rows="8" style="width:100%;padding:12px" placeholder="Write your private study notes here"></textarea><p id="saveNoteStatus"></p></section>':'')+(permissions.flashcards?'<section class="personal"><h2>My flashcards</h2><input id="cardFront" placeholder="Question" aria-label="Flashcard question"><input id="cardBack" placeholder="Answer" aria-label="Flashcard answer"><button id="addCard">Add card</button><div id="myCards"></div><p>Saved only in this browser.</p></section>':'')+(permissions.quizzes?'<section class="personal"><h2>My practice scratchpad</h2><p>Write your answers to the shared questions here. Answers are stored only in this browser.</p><textarea id="myQuizAnswers" rows="6" style="width:100%" placeholder="My answers and reasoning"></textarea></section>':'')+'</main><script>const sections=[...document.querySelectorAll(".subject")],buttons=[...document.querySelectorAll("aside button")];function select(i){sections.forEach((e,j)=>e.classList.toggle("on",i===j));buttons.forEach((e,j)=>e.classList.toggle("on",i===j))}buttons.forEach((b,i)=>b.addEventListener("click",()=>select(i)));select(0);\nconst storePrefix="bsa_shared_v67_";\nfunction bindDraft(id,key){const el=document.getElementById(id);if(!el)return;try{el.value=localStorage.getItem(storePrefix+key)||""}catch(e){}el.addEventListener("input",()=>{try{localStorage.setItem(storePrefix+key,el.value)}catch(e){}})}\nbindDraft("myNotes","notes");bindDraft("myQuizAnswers","quiz");\nconst front=document.getElementById("cardFront"),back=document.getElementById("cardBack"),add=document.getElementById("addCard"),list=document.getElementById("myCards");\nif(front&&back&&add&&list){let cards=[];try{cards=JSON.parse(localStorage.getItem(storePrefix+"cards")||"[]");if(!Array.isArray(cards))cards=[]}catch(e){}\nfunction render(){list.replaceChildren();cards.forEach((c,i)=>{const row=document.createElement("article"),q=document.createElement("strong"),a=document.createElement("p"),flip=document.createElement("button"),del=document.createElement("button");q.textContent=c.q;a.textContent=c.a;a.hidden=true;flip.textContent="Show / hide answer";flip.onclick=()=>a.hidden=!a.hidden;del.textContent="Delete";del.onclick=()=>{cards.splice(i,1);persist()};row.append(q,document.createElement("br"),flip,a,del);list.append(row)})}\nfunction persist(){try{localStorage.setItem(storePrefix+"cards",JSON.stringify(cards))}catch(e){}render()}\nadd.onclick=()=>{if(!front.value.trim()||!back.value.trim())return;cards.push({q:front.value.trim(),a:back.value.trim()});front.value="";back.value="";persist()};render()}\n<\/script></body></html>'};
     // Full-interface export: the same app shell, with a sanitized, published snapshot.
     const sharedSnapshot=()=>{
       const subjects=data.subjects.filter(x=>allowed.includes(x.id)).map(x=>{
@@ -10865,6 +11100,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
         ['localStorage.setItem(STORE_KEY, JSON.stringify(data));','if(!window.__BSA_READ_ONLY__)localStorage.setItem(STORE_KEY, JSON.stringify(data));'],
         ['const go = (tab, opts = {}) => {','const go = (tab, opts = {}) => { if(window.__BSA_READ_ONLY__ && !window.__BSA_SHARED_ALLOWED__.includes(tab))return;'],
         ['const tabs = [','const tabs = ['],
+        ['const navGroups = [','const navGroups = ['],
         ['const filteredNavGroups = navGroups.map(group=>({','const filteredNavGroups = navGroups.filter(group=>!window.__BSA_READ_ONLY__ || group.items.some(k=>window.__BSA_SHARED_ALLOWED__.includes(k))).map(group=>({'],
         ['tabs:tabs.filter(t=>group.items.includes(t[0]) && (t[1].toLowerCase().includes(navSearch.toLowerCase()) || group.name.toLowerCase().includes(navSearch.toLowerCase())))','tabs:tabs.filter(t=>(!window.__BSA_READ_ONLY__ || window.__BSA_SHARED_ALLOWED__.includes(t[0])) && group.items.includes(t[0]) && (t[1].toLowerCase().includes(navSearch.toLowerCase()) || group.name.toLowerCase().includes(navSearch.toLowerCase())))'],
         ['const jumpLinks = [','const jumpLinks = ['],
@@ -10872,7 +11108,32 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
         ['const okTabs = ["curriculum",','const okTabs = ["curriculum",'],
         ['if (want && okTabs.includes(want)) {','if (want && okTabs.includes(want) && (!window.__BSA_READ_ONLY__ || window.__BSA_SHARED_ALLOWED__.includes(want))) {']
       ];
-      for(const [from,to] of changes){if(!source.includes(from))throw Error('Read-only compatibility check failed: '+from.slice(0,65));source=source.replace(from,to)}
+      for(const [from,to] of changes){if(!source.includes(from))throw Error('Shared dashboard source changed; update required: '+from.slice(0,65));source=source.replace(from,to)}
+      // Strictly scope the rendered navigation and auxiliary controls in the exported app.
+      const mustReplace=(before,after)=>{if(!source.includes(before))throw Error('Shared UI compatibility check failed: '+before.slice(0,70));source=source.replace(before,after)};
+      // Remove personal navigation outside the left rail, not just its links.
+      mustReplace('React.createElement("div", { className: "rail-tools" },','!window.__BSA_READ_ONLY__ && React.createElement("div", { className: "rail-tools" },');
+      mustReplace('React.createElement("nav", { className: "bottom-nav"', '!window.__BSA_READ_ONLY__ && React.createElement("nav", { className: "bottom-nav"');
+      mustReplace('h("div",{className:"workspace-topbar"},', '!window.__BSA_READ_ONLY__ && h("div",{className:"workspace-topbar"},');
+      mustReplace('nav.tab==="home"&&h("section",{className:"workspace-launcher"', '!window.__BSA_READ_ONLY__ && nav.tab==="home"&&h("section",{className:"workspace-launcher"');
+      mustReplace('React.createElement("button", { className: "link-btn", onClick: () => setModal("subjects") }, "+ Add new subject")', '!window.__BSA_READ_ONLY__ && React.createElement("button", { className: "link-btn", onClick: () => setModal("subjects") }, "+ Add new subject")');
+      mustReplace('h(FocusBar, { data, update, toast })', '!window.__BSA_READ_ONLY__ && h(FocusBar, { data, update, toast })');
+      mustReplace('React.createElement("button", { className: "fab",', '!window.__BSA_READ_ONLY__ && React.createElement("button", { className: "fab",');
+      mustReplace('React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })', '!window.__BSA_READ_ONLY__ && React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })');
+      mustReplace('React.createElement(SyncBadge, { onOpen: openSync })', '!window.__BSA_READ_ONLY__ && React.createElement(SyncBadge, { onOpen: openSync })');
+
+      mustReplace('modal === "quick" &&', '!window.__BSA_READ_ONLY__ && modal === "quick" &&');
+      mustReplace('modal === "more" &&', '!window.__BSA_READ_ONLY__ && modal === "more" &&');
+      mustReplace('modal === "look" &&', '!window.__BSA_READ_ONLY__ && modal === "look" &&');
+      mustReplace('modal === "subjects" &&', '!window.__BSA_READ_ONLY__ && modal === "subjects" &&');
+      mustReplace('(modal === "data" || modal === "sync" || modal && modal.data) &&', '!window.__BSA_READ_ONLY__ && (modal === "data" || modal === "sync" || modal && modal.data) &&');
+      // Avoid exposing personal sections through the mobile bar.
+      mustReplace('React.createElement("header", { className: "mobilebar"', '!window.__BSA_READ_ONLY__ && React.createElement("header", { className: "mobilebar"');
+      // Explicit allow-list for the shared app's navigation.
+      mustReplace('const filteredNavGroups = navGroups.filter(group=>!window.__BSA_READ_ONLY__ || group.items.some(k=>window.__BSA_SHARED_ALLOWED__.includes(k))).map(group=>({',
+        'const filteredNavGroups = (window.__BSA_READ_ONLY__ ? [{name:"Study Materials",items:["vault","psets","lectures","toolkit"]}] : navGroups).map(group=>({');
+      // Keep the published app independent of any private dashboard storage.
+      // Hide other shared-only edit affordances, with data mutation disabled at the state layer.
       // Limit shared navigation to the four requested sections, retaining their original components.
       source=source.replace('const tabs = [\n      ["home", "Today", "home"],','const tabs = [\n      ["home", "Today", "home"],');
       source=source.replace('const jumpLinks = [\n      ["home","StudyFlow","home"], ["break","Take a break","home"],','const jumpLinks = [\n      ["home","StudyFlow","home"],');
@@ -10882,7 +11143,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       // mutations are blocked, and edit-only controls are disabled on capture.
       const guard='<script>(function(){if(!window.__BSA_READ_ONLY__)return;const deny=/^(\+?\s*(add|new|create)|edit|delete|remove|rename|duplicate|reset|clear|import|upload|save|change|manage|reorder|publish|sync|restore|apply|customize|mark|archive|record|submit|undo|quick add|ask tutor)/i;document.addEventListener("click",function(e){const el=e.target.closest("button,[role=button],a");if(!el)return;const label=(el.getAttribute("aria-label")||el.innerText||el.title||"").trim();if(deny.test(label)){e.preventDefault();e.stopImmediatePropagation();}},true);document.addEventListener("submit",function(e){e.preventDefault();e.stopImmediatePropagation()},true);function hide(){document.querySelectorAll(".workspace-actions,.workspace-launcher").forEach(el=>el.style.display="none");document.querySelectorAll("button,a").forEach(el=>{const t=(el.getAttribute("aria-label")||el.textContent||"").trim();if(deny.test(t)){el.style.display="none"}})}new MutationObserver(hide).observe(document.documentElement,{childList:true,subtree:true});document.addEventListener("DOMContentLoaded",hide)})();<'+'/script>';
       {const pos=source.lastIndexOf('</body>');if(pos<0)throw Error('Missing HTML body');source=source.slice(0,pos)+guard+source.slice(pos);}
-      source=source.replace(/Classmate Study Desk/g,'BSA Study Desk').replace(/Classmate Library/g,'Study Library').replace(/Classmate sharing/g,'Sharing').replace(/classmates/g,'visitors');
+      source=source.replace(/BSA Study Desk/g,'BSA Study Desk').replace(/Classmate Library/g,'Study Library').replace(/Classmate sharing/g,'Sharing').replace(/classmates/g,'visitors');
       source=source.replace('<title>BSA Study Desk</title>','<title>BSA Study Desk · Read-only</title>');
       return source;
     };
@@ -10943,7 +11204,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const due=records.filter(r=>r.subjectId===subject.id&&r.due<=Date.now());
     const current=records.filter(r=>r.subjectId===subject.id).sort((a,b)=>a.due-b.due);
     const add=()=>{if(!topic.trim()||!promptText.trim()){toast('Enter a topic and a question or mistake.');return}const now=Date.now();setRecords(p=>[{id:'r'+now,subjectId:subject.id,topic:topic.trim(),prompt:promptText.trim(),answer,reason,interval:1,attempts:0,due:now,created:now},...p]);setTopic('');setPromptText('');setAnswer('');setReason('');toast('Added to review queue')};
-    const review=(r,grade)=>{const interval=grade==='again'?1:grade==='hard'?Math.max(2,Math.round((r.interval||1)*1.3)):grade==='good'?Math.max(3,Math.round((r.interval||1)*2.2)):Math.max(5,Math.round((r.interval||1)*3.5));setRecords(p=>p.map(x=>x.id===r.id?{...x,interval,attempts:(x.attempts||0)+1,due:Date.now()+interval*86400000,lastGrade:grade}:x));toast('Next review in '+interval+' day(s)')};
+    const review=(r,grade)=>{grantFlashcardReviewXp(r.id);const interval=grade==='again'?1:grade==='hard'?Math.max(2,Math.round((r.interval||1)*1.3)):grade==='good'?Math.max(3,Math.round((r.interval||1)*2.2)):Math.max(5,Math.round((r.interval||1)*3.5));setRecords(p=>p.map(x=>x.id===r.id?{...x,interval,attempts:(x.attempts||0)+1,due:Date.now()+interval*86400000,lastGrade:grade}:x));toast('Next review in '+interval+' day(s)')};
     const cards=(subject.cards||[]).filter(c=>c.q&&c.a).slice(0,20);
     const addCardsToQueue=()=>{const now=Date.now();let added=0;setRecords(prev=>{const next=prev.slice();(subject.cards||[]).filter(c=>c.q&&c.a).forEach((c,i)=>{if(next.some(r=>r.subjectId===subject.id&&r.prompt===c.q))return;next.push({id:'card_'+subject.id+'_'+i+'_'+now,subjectId:subject.id,topic:'Flashcards',prompt:c.q,answer:c.a,reason:'Imported from Concept Vault',interval:1,attempts:0,due:now,created:now});added++});return next});toast(added+' flashcards queued for review')};
     const addProblemsToQueue=()=>{const now=Date.now();let added=0;setRecords(prev=>{const next=prev.slice();(subject.psets||[]).forEach((set,si)=>(set.problems||[]).forEach((pr,i)=>{const question=String(pr.q||pr.question||pr.prompt||pr.text||'').trim();if(!question||next.some(r=>r.subjectId===subject.id&&r.prompt===question))return;next.push({id:'problem_'+subject.id+'_'+si+'_'+i+'_'+now,subjectId:subject.id,topic:set.title||'Problem set',prompt:question,answer:String(pr.answer||pr.ans||pr.solution||'')||'Check your source problem set',reason:'Imported from Problem Sets · verify the worked solution',interval:1,attempts:0,due:now,created:now});added++}));return next});toast(added+' problem-set questions added to Review Queue')};
@@ -10953,7 +11214,17 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const addExamMistakes=()=>{const now=Date.now();let added=0;setRecords(prev=>{const next=prev.slice();cards.forEach((c,i)=>{if(examCorrect(examAnswers[i],c.a)||next.some(r=>r.subjectId===subject.id&&r.prompt===c.q))return;next.push({id:'exam_'+subject.id+'_'+i+'_'+now,subjectId:subject.id,topic:'Exam corrections',prompt:c.q,answer:c.a,reason:'My exam answer: '+(examAnswers[i]||'(blank)'),interval:1,attempts:0,due:now,created:now});added++});return next});toast(added+' missed questions added to Review Queue')};
     useEffect(()=>{if(examStarted&&remaining===0)setExamSubmitted(true)},[remaining,examStarted]);
     // v47: automatically capture missed exam questions exactly once per submission.
-    useEffect(()=>{if(!examStarted||!examSubmitted||examCaptured.current)return;examCaptured.current=true;addExamMistakes()},[examStarted,examSubmitted]);
+    useEffect(()=>{if(!examStarted||!examSubmitted||examCaptured.current)return;
+      examCaptured.current=true;
+      const answered=cards.filter((c,i)=>String(examAnswers[i]||'').trim()).length;
+      if(cards.length>=5 && answered>=Math.ceil(cards.length*.8)){
+        const questionSignature=cards.map(c=>String(c.id||c.q)).join('|');
+        const key=subject.id+':'+questionSignature;
+        // One award per question set per local day; new attempts cannot farm XP.
+        grantActivityXp('quiz',new Date().toLocaleDateString('en-CA')+':'+key,20,60);
+      }
+      addExamMistakes();
+    },[examStarted,examSubmitted]);
     const normalizeExam=v=>String(v??'').toLowerCase().replace(/₱|php|,/g,'').replace(/\s+/g,' ').replace(/[.!?]+$/g,'').trim();
     const examCorrect=(a,b)=>{const x=normalizeExam(a),y=normalizeExam(b);if(!x||!y)return false;if(x===y)return true;const nx=Number(x.replace(/%$/,'')),ny=Number(y.replace(/%$/,''));return Number.isFinite(nx)&&Number.isFinite(ny)&&x.match(/^[-+]?\d+(?:\.\d+)?%?$/)&&y.match(/^[-+]?\d+(?:\.\d+)?%?$/)&&Math.abs(nx-ny)<1e-7&&x.endsWith('%')===y.endsWith('%')};
     const examScore=cards.reduce((n,c,i)=>n+(examCorrect(examAnswers[i],c.a)?1:0),0);
@@ -11179,6 +11450,331 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     );
   }
   /* Break activities are intentionally local UI state: no study stats are written. */
+  /* v87: isolated progression ledger. No historical data is converted to XP. */
+  const PROGRESS_KEY='bsa-academic-progress-v1';
+  const ACADEMIC_RANKS=[['Beginner',0],['Learner',500],['Scholar',1500],['Analyst',3500],['Strategist',6500],['Master Scholar',10000]];
+  const readProgress=()=>{try{const x=JSON.parse(localStorage.getItem(PROGRESS_KEY)||'null');return x&&Array.isArray(x.events)?x:{events:[]};}catch(e){return {events:[]};}};
+  const progressTotal=p=>p.events.reduce((a,e)=>a+(Number(e.xp)||0),0);
+  const progressRank=x=>ACADEMIC_RANKS.reduce((a,r)=>x>=r[1]?r:a,ACADEMIC_RANKS[0]);
+  function grantFocusXp(minutes,uniqueId){
+    if(window.__BSA_READ_ONLY__||minutes<10)return;
+    try{
+      const p=readProgress(),day=new Date().toLocaleDateString('en-CA');
+      if(p.events.some(e=>e.id===uniqueId))return;
+      const todayXp=p.events.filter(e=>e.day===day&&e.kind==='focus').reduce((a,e)=>a+e.xp,0);
+      const xp=Math.max(0,Math.min(100-todayXp,Math.floor(minutes/10)*10));
+      if(!xp)return;
+      p.events.push({id:uniqueId,day,kind:'focus',xp,minutes,at:Date.now()});
+      localStorage.setItem(PROGRESS_KEY,JSON.stringify(p));
+      window.dispatchEvent(new Event('bsa-progress-updated'));
+    }catch(e){console.warn('XP not saved',e);}
+  }
+  // Activity XP is independent of time totals; event IDs make rewards idempotent.
+  function grantActivityXp(kind, id, amount, dailyLimit){
+    if(window.__BSA_READ_ONLY__ || !id || !amount)return;
+    try{
+      const p=readProgress(),day=new Date().toLocaleDateString('en-CA');
+      const eventId=kind+':'+id;
+      if(p.events.some(e=>e.id===eventId))return;
+      const earned=p.events.filter(e=>e.day===day&&e.kind===kind).reduce((n,e)=>n+(Number(e.xp)||0),0);
+      const xp=Math.min(amount,Math.max(0,dailyLimit-earned));
+      if(xp<=0)return;
+      p.events.push({id:eventId,day,kind,xp,at:Date.now()});
+      localStorage.setItem(PROGRESS_KEY,JSON.stringify(p));
+      window.dispatchEvent(new Event('bsa-progress-updated'));
+    }catch(e){console.warn('Activity XP not saved',e);}
+  }
+  function grantFlashcardReviewXp(cardId){
+    if(!cardId)return;
+    const day=new Date().toLocaleDateString('en-CA');
+    // 3 XP for a distinct card each day; up to 45 XP/day.
+    grantActivityXp('flashcard',day+':'+cardId,3,45);
+  }
+  function AcademicProgress({go}){
+    const [progress,setProgress]=useState(readProgress);
+    useEffect(()=>{const refresh=()=>setProgress(readProgress());window.addEventListener('bsa-progress-updated',refresh);return()=>window.removeEventListener('bsa-progress-updated',refresh);},[]);
+    const total=progressTotal(progress),rank=progressRank(total),index=ACADEMIC_RANKS.findIndex(r=>r[0]===rank[0]),next=ACADEMIC_RANKS[index+1];
+    const achievements=[['First Focus','Complete one XP-eligible focus session',progress.events.some(e=>e.kind==='focus')],['Steady Learner','Study on 3 different XP-earning days',new Set(progress.events.map(e=>e.day)).size>=3],['Focused Mind','Earn 500 focus XP',progress.events.filter(e=>e.kind==='focus').reduce((n,e)=>n+e.xp,0)>=500],['Recall Rookie','Review 100 distinct flashcards',new Set(progress.events.filter(e=>e.kind==='flashcard').map(e=>e.id.split(':').slice(2).join(':'))).size>=100],['Problem Solver','Complete 10 problem sets',progress.events.filter(e=>e.kind==='problemset').length>=10],['Quiz Finisher','Complete 5 eligible practice exams',progress.events.filter(e=>e.kind==='quiz').length>=5],['Scholar','Reach Scholar rank',total>=1500],['Master Scholar','Reach 10,000 XP',total>=10000]];
+    return h('section',{className:'view academic-page'},h('div',{className:'page-head'},h('div',null,h('h1',{className:'page-title'},'Academic Progress'),h('p',{className:'muted'},'Small rewards for focused study. Your study records and XP are kept separate.'))),
+      h('div',{className:'panel academic-summary'},h('div',{className:'academic-heading'},h('span',{className:'academic-emblem','aria-hidden':'true'},'✦'),h('div',null,h('span',{className:'muted small'},'CURRENT RANK'),h('h2',null,rank[0]),h('p',{className:'muted'},total.toLocaleString()+' XP earned'))),
+        h('div',{className:'academic-meter',role:'progressbar','aria-valuemin':rank[1],'aria-valuemax':next?next[1]:total,'aria-valuenow':total},h('span',{style:{width:(next?Math.min(100,100*(total-rank[1])/(next[1]-rank[1])):100)+'%'}})),h('p',{className:'muted small'},next?(next[1]-total)+' XP to '+next[0]:'Highest rank achieved')),
+      h('h2',{className:'academic-subheading'},'Achievements'),h('div',{className:'academic-achievements'},achievements.map(([name,desc,unlocked])=>h('div',{key:name,className:'academic-achievement'+(unlocked?' unlocked':'')},h('span',{className:'academic-achievement-icon','aria-hidden':'true'},unlocked?'✓':'○'),h('div',null,h('strong',null,name),h('p',{className:'muted small'},desc))))),
+      h('p',{className:'muted small'},'XP: focus +10 per 10 active minutes (100/day); distinct flashcard reviews +3 each (45/day); completed problem sets +30 each (90/day); eligible practice exams +20 each (60/day, one reward per question set/day). Repeat attempts, breaks and games earn no XP. Rewards are saved separately from study-time totals and included in unified backups.'));
+  }
+  function Game2048(){
+    const fresh=()=>{const a=Array(16).fill(0);for(let k=0;k<2;k++){const empty=a.map((v,i)=>v?null:i).filter(v=>v!==null);a[empty[Math.floor(Math.random()*empty.length)]]=2;}return a;};
+    const [board,setBoard]=useState(fresh),[score,setScore]=useState(0);
+    const move=(dir)=>{let gain=0;const out=board.slice();for(let line=0;line<4;line++){
+      const ids=Array.from({length:4},(_,i)=>dir==='left'?line*4+i:dir==='right'?line*4+3-i:dir==='up'?i*4+line:(3-i)*4+line);
+      const values=ids.map(i=>board[i]).filter(Boolean),merged=[];
+      for(let i=0;i<values.length;i++){if(values[i]===values[i+1]){merged.push(values[i]*2);gain+=values[i]*2;i++;}else merged.push(values[i]);}
+      ids.forEach((id,i)=>out[id]=merged[i]||0);
+    }
+    if(out.every((v,i)=>v===board[i]))return;
+    const empty=out.map((v,i)=>v?null:i).filter(v=>v!==null);
+    if(empty.length)out[empty[Math.floor(Math.random()*empty.length)]]=Math.random()<.9?2:4;
+    setBoard(out);setScore(v=>v+gain);
+    };
+    useEffect(()=>{const key=e=>{if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key))return;const el=document.activeElement;if(el&&['INPUT','TEXTAREA','SELECT'].includes(el.tagName))return;e.preventDefault();move(e.key.replace('Arrow','').toLowerCase());};window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key);},[board]);
+    const stuck=board.every(Boolean)&&!board.some((v,i)=>i%4<3&&v===board[i+1]||i<12&&v===board[i+4]);
+    return h('div',{className:'panel break-panel'},h('div',{className:'break-game-heading'},h('div',null,h('h2',null,'2048'),h('p',{className:'muted'},'Merge matching tiles. Use arrow keys or buttons.')),h('strong',null,'Score '+score)),h('div',{className:'game2048-grid'},board.map((n,i)=>h('div',{key:i,className:'game2048-cell'+(n?' filled':'')},n||''))),stuck&&h('p',null,'No more moves. Try again!'),h('div',{className:'game2048-controls'},[['up','↑'],['left','←'],['down','↓'],['right','→']].map(([d,l])=>h('button',{key:d,className:'btn',onClick:()=>move(d),'aria-label':'Move '+d},l))),h('button',{className:'btn',onClick:()=>{setBoard(fresh());setScore(0);}},'New game'));
+  }
+  function SudokuGame(){
+    const puzzles=[
+      {q:'530070000600195000098000060800060003400803001700020006060000280000419005000080079',a:'534678912672195348198342567859761423426853791713924856961537284287419635345286179'},
+      {q:'003020600900305001001806400008102900700000008006708200002609500800203009005010300',a:'483921657967345821251876493548132976729564138136798245372689514814253769695417382'}
+    ];
+    const [round,setRound]=useState(0),[cells,setCells]=useState(()=>puzzles[0].q.split('')),[mistakes,setMistakes]=useState([]),[checked,setChecked]=useState(false);
+    const puzzle=puzzles[round];const fixed=puzzle.q.split('');
+    const restart=(n=round)=>{setRound(n);setCells(puzzles[n].q.split(''));setMistakes([]);setChecked(false)};
+    const verify=()=>{const bad=cells.map((v,i)=>v&&v!==puzzle.a[i]?i:null).filter(v=>v!==null);setMistakes(bad);setChecked(true)};
+    const won=cells.join('')===puzzle.a;
+    return h('section',{className:'panel break-panel'},h('div',{className:'break-game-heading'},h('div',null,h('h2',null,'Sudoku'),h('p',{className:'muted'},'Fill each row, column and 3×3 box with 1–9.'))),h('div',{className:'sudoku-board'},cells.map((v,i)=>h('input',{key:round+'-'+i,type:'text',inputMode:'numeric',maxLength:1,readOnly:!!fixed[i],value:v==='0'?'':v,className:'sudoku-cell'+(fixed[i]!=='0'?' given':'')+(mistakes.includes(i)?' wrong':''),style:{borderRightWidth:i%9===2||i%9===5?'3px':undefined,borderBottomWidth:Math.floor(i/9)===2||Math.floor(i/9)===5?'3px':undefined},'aria-label':'Row '+(Math.floor(i/9)+1)+' column '+(i%9+1),onChange:e=>{const value=e.target.value.replace(/[^1-9]/g,'').slice(-1)||'0';setCells(old=>old.map((x,j)=>j===i?value:x));setChecked(false);setMistakes([])}}))),won&&h('p',{className:'game-success'},'Solved! Nice work.'),checked&&!won&&h('p',{className:'muted'},mistakes.length?'Some entries are incorrect. Highlighted cells need another look.':'No wrong entries so far. Keep going.'),h('div',{className:'break-actions'},h('button',{className:'btn',onClick:verify},'Check answers'),h('button',{className:'btn',onClick:()=>restart()},'Restart'),h('button',{className:'btn primary',onClick:()=>restart((round+1)%puzzles.length)},'Next puzzle')));
+  }
+  function MinesweeperGame(){
+    const side=8,mines=10;
+    const fresh=()=>{const a=Array(side*side).fill(false);let n=0;while(n<mines){const i=Math.floor(Math.random()*a.length);if(!a[i]){a[i]=true;n++}}return a};
+    const [bombs,setBombs]=useState(fresh),[open,setOpen]=useState([]),[flags,setFlags]=useState([]),[lost,setLost]=useState(false),[flagMode,setFlagMode]=useState(false);
+    const around=i=>{const r=Math.floor(i/side),c=i%side;const arr=[];for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){const rr=r+dr,cc=c+dc;if((dr||dc)&&rr>=0&&rr<side&&cc>=0&&cc<side)arr.push(rr*side+cc)}return arr};
+    const reset=()=>{setBombs(fresh());setOpen([]);setFlags([]);setLost(false)};
+    const win=open.length===side*side-mines;
+    const reveal=i=>{if(lost||win||open.includes(i))return;if(flagMode){setFlags(p=>p.includes(i)?p.filter(x=>x!==i):[...p,i]);return}if(flags.includes(i))return;if(bombs[i]){setLost(true);setOpen(p=>[...p,i]);return}const seen=new Set(open),queue=[i];while(queue.length){const j=queue.pop();if(seen.has(j)||bombs[j]||flags.includes(j))continue;seen.add(j);if(!around(j).filter(k=>bombs[k]).length)around(j).forEach(k=>{if(!seen.has(k))queue.push(k)})}setOpen([...seen])};
+    return h('section',{className:'panel break-panel'},h('h2',null,'Minesweeper'),h('p',{className:'muted'},'Reveal safe squares. Toggle Flag mode to mark mines. '+(mines-flags.length)+' mines remaining.'),h('div',{className:'mine-grid'},bombs.map((b,i)=>{const shown=open.includes(i)||lost&&b,number=around(i).filter(k=>bombs[k]).length;return h('button',{key:i,type:'button',className:'mine-cell'+(shown?' revealed':'')+(shown&&b?' bomb':''),disabled:lost||win,'aria-label':'Row '+(Math.floor(i/side)+1)+' column '+(i%side+1),onClick:()=>reveal(i),onContextMenu:e=>{e.preventDefault();if(!lost&&!win&&!open.includes(i))setFlags(p=>p.includes(i)?p.filter(x=>x!==i):[...p,i])}},shown?(b?'✹':number||''):flags.includes(i)?'⚑':'')})),(lost||win)&&h('p',{className:'game-success'},win?'You cleared the field!':'Mine hit. Try a new board.'),h('div',{className:'break-actions'},h('button',{className:'btn'+(flagMode?' primary':''),onClick:()=>setFlagMode(v=>!v)},flagMode?'Flag mode ON':'Flag mode OFF'),h('button',{className:'btn',onClick:reset},'New board')));
+  }
+
+  // Optional leisure and motivation state, separate from academic records and time.
+  const JOY_KEY='bsa-joy-v1';
+  const joyDefault=()=>({room:{wall:'lavender',desk:'oak',plant:'fern',lamp:'warm'},garden:{},scores:{},daily:{}});
+  const readJoy=()=>{try{const j=JSON.parse(localStorage.getItem(JOY_KEY)||'null');return j&&typeof j==='object'?{...joyDefault(),...j}:joyDefault()}catch(e){return joyDefault()}};
+  function useJoy(){
+    const [joy,setJoy]=useState(readJoy);
+    const save=fn=>setJoy(old=>{const next=typeof fn==='function'?fn(old):fn;try{localStorage.setItem(JOY_KEY,JSON.stringify(next))}catch(e){}return next});
+    return [joy,save];
+  }
+  const joyDay=()=>new Date().toLocaleDateString('en-CA');
+
+
+  const LIFE_TOWN=[
+    {id:'bookstore',name:'Book Nook',icon:'📚',need:0,desc:'A quiet spot for book lovers.'},
+    {id:'cafe',name:'Moonlight Café',icon:'☕',need:300,desc:'A cozy place to unwind after studying.'},
+    {id:'park',name:'Garden Park',icon:'🌷',need:700,desc:'Take your companion on a relaxing stroll.'},
+    {id:'petshop',name:'Paw Plaza',icon:'🐾',need:1100,desc:'Visit the town’s animal friends.'},
+    {id:'observatory',name:'Star Observatory',icon:'🔭',need:1800,desc:'A peaceful nighttime destination.'}
+  ];
+  const LIFE_SEASONS=[
+    {id:'spring',name:'Spring Blossoms',icon:'🌸',need:300},
+    {id:'summer',name:'Summer Picnic',icon:'🌻',need:700},
+    {id:'autumn',name:'Autumn Leaves',icon:'🍂',need:1200},
+    {id:'winter',name:'Winter Lights',icon:'❄️',need:2000}
+  ];
+  function lifePetStatus(life,now){
+    if(!life.pet)return 'No pet';
+    const hours=Math.max(0,(now-(Number(life.petFedAt)||now))/3600000);
+    return hours>=72?'Passed away':hours>=48?'Very hungry':hours>=24?'Hungry':'Happy';
+  }
+  function StudyLifeHomeWidget({go}){
+    const [now,setNow]=useState(Date.now());
+    useEffect(()=>{const t=setInterval(()=>setNow(Date.now()),60000);return()=>clearInterval(t)},[]);
+    const life=readLife(),earned=lifeEarned(),balance=Math.max(0,earned-(Number(life.spent)||0));
+    const pet=LIFE_CATALOG.find(x=>x.id===life.pet);
+    const state=lifePetStatus(life,now);
+    return h('div',{className:'life-home-widget'},
+      h('div',{className:'life-home-character'},h('span',null,'🧑🏽'),h('span',null,pet?pet.emoji:'🌱')),
+      h('div',{className:'life-home-copy'},h('strong',null,'Your Study Life'),h('p',null,'🪙 '+balance.toLocaleString()+' coins · '+(pet?(life.petName||pet.name)+' — '+state:'Adopt a companion')),
+        h('small',null,pet&&state!=='Passed away'?'Pet food: '+(life.inventory.food||0)+' · Feed within 24 hours to keep your pet happy':'Earn coins by studying and decorate your room')),
+      h('button',{className:'btn',onClick:()=>go('life')},'Visit room'));
+  }
+
+  const LIFE_KEY='bsa-study-life-v1';
+  const LIFE_CATALOG=[
+    {id:'oak',name:'Oak Desk',cost:0,type:'furniture',emoji:'🪵'},
+    {id:'lamp',name:'Moon Lamp',cost:100,type:'furniture',emoji:'💡'},
+    {id:'shelf',name:'Bookcase',cost:170,type:'furniture',emoji:'📚'},
+    {id:'rug',name:'Lavender Rug',cost:130,type:'decor',emoji:'🟣'},
+    {id:'plant',name:'Monstera',cost:90,type:'decor',emoji:'🪴'},
+    {id:'window',name:'Rainy Window',cost:220,type:'decor',emoji:'🌧️'},
+    {id:'hoodie',name:'Cozy Hoodie',cost:120,type:'outfit',emoji:'🧥'},
+    {id:'glasses',name:'Round Glasses',cost:75,type:'outfit',emoji:'👓'},
+    {id:'cap',name:'Study Cap',cost:90,type:'outfit',emoji:'🧢'},
+    {id:'cat',name:'Mochi the Cat',cost:180,type:'pet',emoji:'🐈'},
+    {id:'dog',name:'Biscuit the Dog',cost:230,type:'pet',emoji:'🐕'},
+    {id:'bunny',name:'Luna the Bunny',cost:200,type:'pet',emoji:'🐇'},
+    {id:'frog',name:'Pip the Frog',cost:150,type:'pet',emoji:'🐸'},
+    {id:'food',name:'Pet Food',cost:20,type:'consumable',emoji:'🥣'}
+  ];
+  const lifeDefault=()=>({purchases:[],spent:0,inventory:{food:0},equipped:['oak'],avatar:{skin:'medium',hair:'brown',style:'short',outfit:'uniform',accessory:'none',name:'My Scholar'},pet:null,petName:'',petFedAt:0,petRestAt:0,revivals:0,log:[]});
+  function readLife(){try{const v=JSON.parse(localStorage.getItem(LIFE_KEY)||'null');return v&&typeof v==='object'?{...lifeDefault(),...v,avatar:{...lifeDefault().avatar,...v.avatar},inventory:{...lifeDefault().inventory,...v.inventory}}:lifeDefault()}catch(e){return lifeDefault()}}
+  function lifeEarned(){
+    const p=readProgress();
+    // Coins are derived from already capped, unique XP ledger events.
+    // No coins can be created by games, refreshing, or opening Study Life.
+    return p.events.reduce((sum,e)=>sum+Math.max(0,Math.floor(Number(e.xp)||0))*2,0);
+  }
+  function StudyLife(){
+    const [life,setLife]=useState(readLife),[tab,setTab]=useState('room'),[category,setCategory]=useState('all'),[tick,setTick]=useState(Date.now()),[xpRefresh,setXpRefresh]=useState(0),[notice,setNotice]=useState('');
+    useEffect(()=>{const f=()=>setXpRefresh(v=>v+1);window.addEventListener('bsa-progress-updated',f);return()=>window.removeEventListener('bsa-progress-updated',f)},[]);
+    useEffect(()=>{const id=setInterval(()=>setTick(Date.now()),60000);return()=>clearInterval(id)},[]);
+    const save=fn=>setLife(old=>{const next=fn(old);try{localStorage.setItem(LIFE_KEY,JSON.stringify(next))}catch(e){setNotice('Could not save: browser storage is full.')}return next});
+    const earned=lifeEarned(),balance=Math.max(0,earned-(Number(life.spent)||0));
+    const owned=new Set(['oak',...(life.purchases||[])]);
+    const pet=life.pet?LIFE_CATALOG.find(i=>i.id===life.pet):null;
+    const elapsed=pet?Math.max(0,tick-(Number(life.petFedAt)||tick)):0;
+    const petState=!pet?'none':elapsed>=72*3600000?'passed':elapsed>=48*3600000?'weak':elapsed>=24*3600000?'hungry':'happy';
+    const petLabel={none:'No pet yet',happy:'Happy & fed',hungry:'Hungry',weak:'Very hungry',passed:'Your pet has passed away'}[petState];
+    const buy=item=>{
+      if(window.__BSA_READ_ONLY__)return;
+      if(item.type!=='consumable'&&owned.has(item.id)){setNotice('Already owned.');return}
+      if(balance<item.cost){setNotice('Not enough Study Coins. Complete eligible study activities to earn more.');return}
+      save(old=>({...old,spent:(old.spent||0)+item.cost,purchases:item.type==='consumable'?old.purchases:[...(old.purchases||[]),item.id],inventory:item.type==='consumable'?{...old.inventory,food:(old.inventory.food||0)+1}:old.inventory,log:[...(old.log||[]).slice(-49),{id:'purchase-'+Date.now(),at:Date.now(),kind:'purchase',item:item.id,coins:-item.cost}]}));
+      setNotice(item.name+' purchased!');
+    };
+    const equip=id=>save(old=>({...old,equipped:old.equipped.includes(id)?old.equipped.filter(x=>x!==id):[...old.equipped,id]}));
+    const adopt=id=>{
+      if(!owned.has(id))return;
+      save(old=>({...old,pet:id,petName:LIFE_CATALOG.find(x=>x.id===id).name,petFedAt:Date.now(),petRestAt:0}));
+      setNotice('Your new companion has arrived!');
+    };
+    const feed=()=>{
+      if(!pet||petState==='passed')return;
+      if((life.inventory.food||0)<1){setNotice('Buy Pet Food at the Market first.');return}
+      save(old=>({...old,inventory:{...old.inventory,food:old.inventory.food-1},petFedAt:Date.now(),log:[...(old.log||[]).slice(-49),{id:'feed-'+Date.now(),at:Date.now(),kind:'feed',item:old.pet,coins:0}]}));
+      setNotice('Your pet enjoyed its meal!');
+    };
+    const revive=()=>{
+      if(petState!=='passed')return;
+      if(balance<80){setNotice('You need 80 Study Coins to welcome your pet back.');return}
+      save(old=>({...old,spent:old.spent+80,petFedAt:Date.now(),revivals:(old.revivals||0)+1,log:[...(old.log||[]).slice(-49),{id:'revive-'+Date.now(),at:Date.now(),kind:'revive',coins:-80}]}));
+      setNotice('Your companion is back and healthy!');
+    };
+    const updateAvatar=(key,value)=>save(old=>({...old,avatar:{...old.avatar,[key]:value}}));
+    const avatarFace=life.avatar.skin==='light'?'🧑🏻':life.avatar.skin==='dark'?'🧑🏿':life.avatar.skin==='tan'?'🧑🏽':'🧑🏾';
+    const ownedItems=LIFE_CATALOG.filter(i=>owned.has(i.id)&&i.type!=='consumable');
+    return h('section',{className:'view life-page'},
+      h('div',{className:'page-head'},h('div',null,h('h1',{className:'page-title'},'Study Life'),h('p',{className:'muted'},'Your cozy little world, powered by real study progress.'))),
+      h('div',{className:'life-summary'},h('span',null,'🪙 ',h('strong',null,balance.toLocaleString()),' Study Coins'),h('span',null,'🎓 ',progressRank(progressTotal(readProgress()))[0]),h('span',null,'🐾 ',petLabel)),
+      h('div',{className:'joy-tabs'},[['room','My Room'],['avatar','Avatar'],['market','Cozy Market'],['pets','Pets'],['inventory','Inventory'],['town','Study Town'],['events','Events']].map(([id,label])=>h('button',{key:id,className:'btn '+(tab===id?'primary':''),onClick:()=>{setTab(id);setNotice('')}},label))),
+      notice&&h('p',{className:'life-notice',role:'status'},notice),
+      tab==='room'&&h('div',{className:'panel life-panel'},
+        h('h2',null,'Your Cozy Room'),
+        h('div',{className:'life-scene '+(new Date().getHours()>=18||new Date().getHours()<6?'life-night':'life-day')},h('div',{className:'life-scene-window'},'☁️ ☀️'),h('div',{className:'life-scene-shelf'},life.equipped.includes('shelf')?'📚 🪴':'📖'),h('div',{className:'life-scene-lamp'},life.equipped.includes('lamp')?'💡':''),h('div',{className:'life-scene-avatar'},avatarFace),pet&&h('div',{className:'life-scene-pet'},petState==='passed'?'💤':pet.emoji),h('div',{className:'life-scene-desk'},'📖　☕'),h('div',{className:'life-scene-rug'},life.equipped.includes('rug')?'◯':''),h('div',{className:'life-scene-plants'},life.equipped.includes('plant')?'🪴':'')),
+        h('p',{className:'muted'},'Decorate your room using items from the market. Your avatar and pet live here.'),
+        h('div',{className:'life-inventory-grid'},ownedItems.filter(i=>i.type==='furniture'||i.type==='decor').map(item=>h('button',{className:'life-item '+(life.equipped.includes(item.id)?'selected':''),key:item.id,onClick:()=>equip(item.id)},h('span',null,item.emoji),h('span',null,item.name),h('small',null,life.equipped.includes(item.id)?'Placed ✓':'Place'))))),
+      tab==='avatar'&&h('div',{className:'panel life-panel'},h('h2',null,'My Avatar'),h('div',{className:'life-avatar-preview'},h('span',null,life.avatar.accessory==='glasses'?'👓':life.avatar.accessory==='cap'?'🧢':'✨'),h('div',null,avatarFace),h('span',null,life.avatar.outfit==='hoodie'?'🧥':life.avatar.outfit==='casual'?'👕':'🎓')),h('div',{className:'life-options'},
+        h('label',null,'Nickname',h('input',{className:'input',maxLength:24,value:life.avatar.name,onChange:e=>updateAvatar('name',e.target.value)})),
+        ...[['skin','Skin tone',['light','medium','tan','dark']],['hair','Hair color',['black','brown','blonde','auburn']],['style','Hairstyle',['short','long','curly','ponytail']],['outfit','Outfit',['uniform','casual',...(owned.has('hoodie')?['hoodie']:[])]],['accessory','Accessory',['none',...(owned.has('glasses')?['glasses']:[]),...(owned.has('cap')?['cap']:[])]]].map(([key,label,values])=>h('label',{key},label,h('select',{value:life.avatar[key],onChange:e=>updateAvatar(key,e.target.value)},values.map(v=>h('option',{key:v,value:v},v)))))),
+        h('p',{className:'muted small'},'Avatar is a lightweight character preview. Outfits and accessories unlock in the market.')),
+      tab==='market'&&h('div',{className:'panel life-panel'},h('h2',null,'Cozy Market'),h('p',{className:'muted'},'Earn 2 coins per eligible academic XP. No real-money purchases or game rewards.'),h('div',{className:'joy-tabs'},[['all','All'],['furniture','Furniture'],['decor','Decor'],['outfit','Clothing'],['pet','Pets'],['consumable','Food']].map(([id,label])=>h('button',{className:'btn '+(category===id?'primary':''),key:id,onClick:()=>setCategory(id)},label))),h('div',{className:'life-inventory-grid'},LIFE_CATALOG.filter(i=>category==='all'||i.type===category).map(item=>h('div',{className:'life-item',key:item.id},h('span',{className:'life-item-emoji'},item.emoji),h('strong',null,item.name),h('span',null,'🪙 '+item.cost),h('button',{className:'btn',disabled:(item.type!=='consumable'&&owned.has(item.id))||balance<item.cost,onClick:()=>buy(item)},item.type!=='consumable'&&owned.has(item.id)?'Owned':balance<item.cost?'Not enough coins':'Buy'))))),
+      tab==='pets'&&h('div',{className:'panel life-panel'},h('h2',null,'My Companion'),pet?h('div',{className:'life-pet-card'},h('div',{className:'life-pet-emoji'},petState==='passed'?'🕯️':pet.emoji),h('strong',null,life.petName||pet.name),h('p',null,petLabel),h('p',{className:'muted small'},petState==='passed'?'Your companion can be revived for 80 Study Coins.':petState==='weak'?'Feed soon: your pet may pass away after 72 hours without food.':petState==='hungry'?'Your pet is hungry.':'Feed at least once every 24 hours to keep your pet happy.'),h('p',{className:'muted small'},'Pet food in inventory: '+(life.inventory.food||0)),h('p',{className:'muted small'},petState==='passed'?'Revive your pet whenever you are ready.':'Time until next hunger stage: '+Math.max(0,Math.ceil((24-(elapsed/3600000)%24)))+' hours'),h('button',{className:'btn',onClick:()=>{setCategory('consumable');setTab('market')}},'Buy food / stock up'),petState==='passed'?h('button',{className:'btn primary',onClick:revive,disabled:balance<80},'Revive · 80 coins'):h('button',{className:'btn primary',onClick:feed,disabled:life.inventory.food<1},'Feed Pet'),h('label',null,'Pet name',h('input',{className:'input',maxLength:24,value:life.petName,onChange:e=>save(old=>({...old,petName:e.target.value}))}))):h('p',{className:'muted'},'Visit the Cozy Market to adopt your first pet.'),h('h3',null,'Adopted pets'),h('div',{className:'life-inventory-grid'},LIFE_CATALOG.filter(i=>i.type==='pet'&&owned.has(i.id)).map(i=>h('button',{className:'life-item',key:i.id,onClick:()=>adopt(i.id)},i.emoji,' ',i.name,life.pet===i.id?' · Active':' · Choose'))),h('p',{className:'muted small'},'Pet care is optional. Your pet can pass away after 72 hours without feeding, but can always be revived. No academic XP, grades or study history are lost.')),
+
+      tab==='town'&&h('div',{className:'panel life-panel'},
+        h('h2',null,'Study Town'),
+        h('p',{className:'muted'},'New locations unlock as you earn lifetime Study Coins. Visiting never costs coins.'),
+        h('div',{className:'life-town-grid'},LIFE_TOWN.map(place=>{
+          const unlocked=earned>=place.need;
+          return h('div',{className:'life-town-place'+(unlocked?'':' locked'),key:place.id},
+            h('div',{className:'life-town-emoji'},unlocked?place.icon:'🔒'),
+            h('strong',null,place.name),h('p',{className:'muted small'},unlocked?place.desc:'Unlock at '+place.need+' lifetime coins'),
+            h('button',{className:'btn',disabled:!unlocked,onClick:()=>setNotice('Visiting '+place.name+'! '+place.desc)},unlocked?'Visit':'Locked'));
+        }))),
+      tab==='events'&&h('div',{className:'panel life-panel'},
+        h('h2',null,'Seasonal Collections'),
+        h('p',{className:'muted'},'Collect seasonal keepsakes through your academic progress. No daily pressure or missed-day penalties.'),
+        h('div',{className:'life-town-grid'},LIFE_SEASONS.map(item=>h('div',{className:'life-town-place',key:item.id},
+          h('div',{className:'life-town-emoji'},earned>=item.need?item.icon:'🔒'),
+          h('strong',null,item.name),
+          h('p',{className:'muted small'},earned>=item.need?'Unlocked in your collection':'Unlock at '+item.need+' lifetime coins'))))),
+      tab==='inventory'&&h('div',{className:'panel life-panel'},h('h2',null,'Collection & Inventory'),h('p',{className:'muted'},ownedItems.length+' items unlocked · '+(life.inventory.food||0)+' pet food'),h('div',{className:'life-inventory-grid'},ownedItems.map(i=>h('div',{className:'life-item',key:i.id},h('span',{className:'life-item-emoji'},i.emoji),h('strong',null,i.name))),h('div',{className:'life-item'},'🥣 Pet Food × '+(life.inventory.food||0))),h('h3',null,'Coin history'),h('p',{className:'muted small'},'Earned: '+earned+' · Spent: '+life.spent+' · Available: '+balance),h('div',{className:'life-log'},(life.log||[]).slice(-10).reverse().map(e=>h('div',{key:e.id},new Date(e.at).toLocaleString()+' · '+e.kind+' '+(e.item||'')+' · '+e.coins+' coins')))),
+      h('p',{className:'muted small'},'Study Life is separate from study-time totals and academic XP. All purchases and pet care are virtual.')
+    );
+  }
+
+
+  function JoyHub({go}){
+    const [section,setSection]=useState('garden');
+    const [joy,save]=useJoy();
+    const progress=readProgress();
+    const events=progress.events||[];
+    const days=new Set(events.filter(e=>e.kind==='focus').map(e=>e.day)).size;
+    const today=joyDay();
+    const todays=events.filter(e=>e.day===today);
+    const goals=[
+      ['Complete a focus session',todays.some(e=>e.kind==='focus')],
+      ['Review five distinct flashcards',todays.filter(e=>e.kind==='flashcard').length>=5],
+      ['Complete a problem set or quiz',todays.some(e=>e.kind==='problemset'||e.kind==='quiz')]
+    ];
+    const badges=[
+      ['First Steps',days>=1],['Habit Builder',days>=3],['Growing Strong',days>=9],
+      ['Recall Collector',events.filter(e=>e.kind==='flashcard').reduce((a,e)=>a+(e.xp||0),0)>=100],
+      ['Problem Explorer',events.filter(e=>e.kind==='problemset').length>=5],
+      ['Scholar',progressTotal(progress)>=1500]
+    ];
+    return h('section',{className:'view joy-page'},
+      h('h1',null,'My Study Space'),
+      h('p',{className:'muted'},'Your garden, gentle goals, and collections. Explore the new Study Life tab for pets and the market.'),
+      h('div',{className:'joy-tabs'},[['garden','Study Garden'],['quests','Daily Quests'],['room','Study Room'],['badges','Collectibles']].map(([id,label])=>h('button',{key:id,className:'btn '+(section===id?'primary':''),onClick:()=>setSection(id)},label))),
+      section==='garden'&&h('div',{className:'panel joy-panel'},
+        h('div',{className:'joy-plant'},['🌱','🌿','🪴','🌷','🌳'][Math.min(4,Math.floor(days/3))]),
+        h('h2',null,'Study Garden'),h('p',{className:'muted'},days+' distinct days with eligible focus sessions. Your garden grows every three days.')),
+      section==='quests'&&h('div',{className:'panel joy-panel'},h('h2',null,"Today's Quests"),
+        ...goals.map(([label,done])=>h('div',{className:'joy-quest',key:label},h('span',null,done?'✓':'○'),' ',label)),
+        h('p',{className:'muted'},goals.filter(x=>x[1]).length+' of 3 complete today.')),
+      section==='room'&&h('div',{className:'panel joy-panel'},h('h2',null,'Study Room'),h('p',{className:'muted'},'Your interactive room and new marketplace are now in Study Life.'),h('button',{className:'btn primary',onClick:()=>go('life')},'Open Study Life')),
+      section==='badges'&&h('div',{className:'joy-badges'},...badges.map(([name,done])=>h('div',{className:'panel joy-badge',key:name},h('div',{className:'joy-badge-icon'},done?'🏅':'🔒'),h('strong',null,name),h('p',{className:'muted'},done?'Unlocked':'Locked'))))
+    );
+  }
+  function SnakeGame(){
+    const size=12,initial=[65,64,63];
+    const [snake,setSnake]=useState(initial),[food,setFood]=useState(30),[direction,setDirection]=useState('right'),[running,setRunning]=useState(false),[lost,setLost]=useState(false),[score,setScore]=useState(0);
+    const dirRef=useRef('right'),snakeRef=useRef(initial),foodRef=useRef(30);
+    const reset=()=>{snakeRef.current=initial;foodRef.current=30;dirRef.current='right';setSnake(initial);setFood(30);setDirection('right');setRunning(false);setLost(false);setScore(0)};
+    const change=d=>{const opposite={up:'down',down:'up',left:'right',right:'left'};if(opposite[dirRef.current]!==d){dirRef.current=d;setDirection(d)}};
+    useEffect(()=>{const fn=e=>{const map={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right'};if(!map[e.key]||['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName))return;e.preventDefault();change(map[e.key])};window.addEventListener('keydown',fn);return()=>window.removeEventListener('keydown',fn)},[]);
+    useEffect(()=>{if(!running||lost)return;const id=setInterval(()=>{
+      const a=snakeRef.current,head=a[0],d=dirRef.current;
+      const row=Math.floor(head/size),col=head%size;
+      const r=row+(d==='down'?1:d==='up'?-1:0),c=col+(d==='right'?1:d==='left'?-1:0);
+      const n=r*size+c,eat=n===foodRef.current;
+      if(r<0||r>=size||c<0||c>=size||a.slice(0,eat?a.length:a.length-1).includes(n)){setLost(true);setRunning(false);return}
+      const next=[n,...a.slice(0,eat?a.length:a.length-1)];snakeRef.current=next;setSnake(next);
+      if(eat){setScore(v=>v+10);const empty=Array.from({length:size*size},(_,i)=>i).filter(i=>!next.includes(i));if(empty.length){foodRef.current=empty[Math.floor(Math.random()*empty.length)];setFood(foodRef.current)}else{setRunning(false)}}
+    },160);return()=>clearInterval(id)},[running,lost]);
+    return h('div',{className:'panel break-panel'},h('h2',null,'Snake'),h('p',{className:'muted'},'Collect fruit without hitting the wall or yourself. Score: '+score),h('div',{className:'snake-grid'},Array.from({length:size*size},(_,i)=>h('div',{key:i,className:'snake-cell'+(snake.includes(i)?' snake-body':'')+(i===snake[0]?' snake-head':'')+(i===food?' snake-food':'')}))),lost&&h('p',null,'Game over. Try again!'),h('div',{className:'break-actions'},h('button',{className:'btn primary',onClick:()=>setRunning(v=>!v),disabled:lost},running?'Pause':'Start'),h('button',{className:'btn',onClick:reset},'New game')),h('div',{className:'game2048-controls'},[['up','↑'],['left','←'],['down','↓'],['right','→']].map(([d,l])=>h('button',{className:'btn',key:d,onClick:()=>change(d)},l))));
+  }
+  const WORD_BANK=['PLANT','STUDY','CHAIR','MUSIC','LIGHT','WATER','BRAIN','SMILE','CLOUD','PAPER','SHELF','GREEN','BRAVE','DREAM','SPACE','QUEST','HAPPY','LEARN'];
+  function WordGuessGame(){
+    const [round,setRound]=useState(0),[guess,setGuess]=useState(''),[history,setHistory]=useState([]),[message,setMessage]=useState('');
+    const target=WORD_BANK[round%WORD_BANK.length],won=history.includes(target),done=won||history.length>=6;
+    const submit=()=>{const g=guess.toUpperCase().trim();if(g.length!==5||!/^[A-Z]{5}$/.test(g)){setMessage('Enter exactly five letters.');return}if(done)return;setHistory(v=>[...v,g]);setGuess('');setMessage(g===target?'Solved!':'')};
+    const next=()=>{setRound(v=>v+1);setHistory([]);setGuess('');setMessage('')};
+    return h('div',{className:'panel break-panel'},h('h2',null,'Word Guess'),h('p',{className:'muted'},'Guess the five-letter word in six tries.'),h('div',{className:'word-rows'},Array.from({length:6},(_,r)=>h('div',{className:'word-row',key:r},Array.from({length:5},(_,c)=>{const v=history[r]||'';const letter=v[c]||'';const cls=!v?'':target[c]===letter?' exact':target.includes(letter)?' present':' absent';return h('span',{className:'word-cell'+cls,key:c},letter)})))),h('div',{className:'break-actions'},h('input',{className:'input',maxLength:5,placeholder:'Five-letter word',value:guess,disabled:done,onChange:e=>setGuess(e.target.value.replace(/[^a-z]/gi,'').toUpperCase()),onKeyDown:e=>{if(e.key==='Enter')submit()}}),h('button',{className:'btn primary',onClick:submit,disabled:done},'Guess'),h('button',{className:'btn',onClick:next},'New word')),h('p',{className:'muted'},message||(done?(won?'Great job!':'The word was '+target):history.length+' of 6 guesses used')));
+  }
+  const NONOGRAM_PATTERNS=[
+    ['01110','10001','10101','10001','01110'],
+    ['00100','01110','11111','01110','00100'],
+    ['10001','11011','11111','01110','00100'],
+    ['00100','01110','11111','10101','00100']
+  ];
+  function NonogramGame(){
+    const [round,setRound]=useState(0),[cells,setCells]=useState(Array(25).fill(false));
+    const pattern=NONOGRAM_PATTERNS[round%NONOGRAM_PATTERNS.length].join('');
+    const clues=line=>{const out=[];let n=0;for(const ch of line+'0'){if(ch==='1')n++;else if(n){out.push(n);n=0}}return out.join(' ')||'0'};
+    const won=cells.every((v,i)=>v===(pattern[i]==='1'));
+    return h('div',{className:'panel break-panel'},h('h2',null,'Nonogram'),h('p',{className:'muted'},'Fill squares to match the row and column clues. Tap a square to toggle it.'),h('div',{className:'nonogram-wrap'},h('div',{className:'nonogram-board'},h('span',{className:'nonogram-clue'},'✦'),Array.from({length:5},(_,c)=>h('span',{className:'nonogram-clue',key:'c'+c},clues(Array.from({length:5},(_,r)=>pattern[r*5+c]).join('')))),Array.from({length:5},(_,r)=>[h('span',{className:'nonogram-clue',key:'r'+r},clues(pattern.slice(r*5,r*5+5))),...Array.from({length:5},(_,c)=>h('button',{type:'button',key:r*5+c,className:'nonogram-cell'+(cells[r*5+c]?' filled':''),'aria-label':'Row '+(r+1)+' column '+(c+1),onClick:()=>setCells(old=>old.map((v,i)=>i===r*5+c?!v:v))},cells[r*5+c]?'■':''))]))),won&&h('p',{className:'game-success'},'Puzzle complete!'),h('div',{className:'break-actions'},h('button',{className:'btn',onClick:()=>setCells(Array(25).fill(false))},'Clear'),h('button',{className:'btn primary',onClick:()=>{setRound(v=>v+1);setCells(Array(25).fill(false))}},'Next puzzle')));
+  }
+  function BubblePopGame(){
+    const colors=['a','b','c','d'],newBoard=()=>Array.from({length:64},()=>colors[Math.floor(Math.random()*colors.length)]);
+    const [board,setBoard]=useState(newBoard),[score,setScore]=useState(0);
+    const click=i=>{
+      if(!board[i])return;const color=board[i],group=new Set([i]),todo=[i];
+      while(todo.length){const n=todo.pop(),r=Math.floor(n/8),c=n%8;for(const [rr,cc] of [[r-1,c],[r+1,c],[r,c-1],[r,c+1]]){const j=rr*8+cc;if(rr>=0&&rr<8&&cc>=0&&cc<8&&board[j]===color&&!group.has(j)){group.add(j);todo.push(j)}}}
+      if(group.size<2)return;
+      const next=board.map((v,j)=>group.has(j)?null:v);
+      for(let c=0;c<8;c++){const remaining=[];for(let r=7;r>=0;r--){const v=next[r*8+c];if(v)remaining.push(v)}for(let r=7;r>=0;r--)next[r*8+c]=remaining[7-r]||null}
+      setBoard(next);setScore(v=>v+group.size*group.size);
+    };
+    return h('div',{className:'panel break-panel'},h('h2',null,'Bubble Pop'),h('p',{className:'muted'},'Tap groups of two or more matching bubbles. Score: '+score),h('div',{className:'bubble-grid'},board.map((v,i)=>h('button',{key:i,className:'bubble-cell'+(v?' bubble-'+v:''),onClick:()=>click(i),disabled:!v,'aria-label':v?'Bubble '+v:'Empty cell'},v?'●':''))),h('button',{className:'btn',onClick:()=>{setBoard(newBoard());setScore(0)}},'New board'));
+  }
+
   function BreakCorner() {
     const [mode,setMode]=useState("rest");
     const [seconds,setSeconds]=useState(300);
@@ -11195,20 +11791,42 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const turn=i=>{if(flipped.length>=2||flipped.includes(i)||matched.includes(i))return;setFlipped(v=>[...v,i]);if(flipped.length===1)setMoves(v=>v+1);};
     return h("section",{className:"view break-corner"},
       h("div",{className:"page-head"},h("div",null,h("h1",{className:"page-title"},"Break Corner 🌿"),h("p",{className:"muted"},"A little breathing room. Break activities never count toward your study statistics."))),
-      h("div",{className:"break-tabs"},[["rest","Break timer"],["game","Memory match"],["breathe","Breathing"]].map(([k,label])=>h("button",{key:k,className:"btn "+(mode===k?"primary":""),onClick:()=>setMode(k)},label))),
+      h("div",{className:"break-tabs"},[["rest","Break timer"],["game","Memory match"],["2048","2048"],["sudoku","Sudoku"],["mines","Minesweeper"],["snake","Snake"],["word","Word Guess"],["nonogram","Nonogram"],["bubble","Bubble Pop"],["breathe","Breathing"]].map(([k,label])=>h("button",{key:k,className:"btn "+(mode===k?"primary":""),onClick:()=>setMode(k)},label))),
       mode==="rest"&&h("div",{className:"panel break-panel"},h("h2",null,"Time for yourself"),h("div",{className:"break-clock","aria-live":"off"},`${Math.floor(seconds/60).toString().padStart(2,"0")}:${(seconds%60).toString().padStart(2,"0")}`),h("p",{className:"muted"},seconds===0?"Your break is finished. Ready when you are!":"Take a stretch, drink water, or simply do nothing."),h("div",{className:"break-actions"},[5,10,15].map(n=>h("button",{className:"btn",onClick:()=>{setSeconds(n*60);setRunning(false);}},n+" min")),h("button",{className:"btn primary",onClick:()=>{if(seconds===0)setSeconds(300);setRunning(v=>!v);}},running?"Pause":"Start / resume"),h("button",{className:"btn",onClick:()=>{setRunning(false);setSeconds(300);}},"Reset"))),
       mode==="game"&&h("div",{className:"panel break-panel"},h("h2",null,"Memory match"),h("p",{className:"muted"},"Find six matching pairs. Moves: "+moves+(matched.length===12?" · You found every pair! 🎉":"")),h("div",{className:"break-memory-grid"},tiles.map((value,i)=>h("button",{key:i,className:"break-tile"+(flipped.includes(i)||matched.includes(i)?" revealed":""),onClick:()=>turn(i),disabled:matched.includes(i),"aria-label":flipped.includes(i)||matched.includes(i)?"Revealed tile":"Hidden tile"},flipped.includes(i)||matched.includes(i)?icons[value%6]:"?"))),h("button",{className:"btn",onClick:resetGame},"New game")),
+      mode==="2048"&&h(Game2048),
+      mode==="sudoku"&&h(SudokuGame),
+      mode==="mines"&&h(MinesweeperGame),
+      mode==="snake"&&h(SnakeGame),
+      mode==="word"&&h(WordGuessGame),
+      mode==="nonogram"&&h(NonogramGame),
+      mode==="bubble"&&h(BubblePopGame),
       mode==="breathe"&&h("div",{className:"panel break-panel"},h("h2",null,"Slow breathing"),h("p",{className:"muted"},"Breathe in for 4 seconds, hold for 4, then breathe out for 6. Repeat at your own pace."),h("div",{className:"break-orb","aria-hidden":"true"},"🌿"),h("p",{className:"muted"},"No scores. No streaks. Just a moment to rest.")));
+  }
+  function StudyTimeAudit({data}) {
+    const rows=data.subjects.map(sub=>{
+      const days=(sub.days||[]).filter(d=>d&&Number(d.mins)>0);
+      const minutes=days.reduce((n,d)=>n+Math.max(0,Number(d.mins)||0),0);
+      return {name:sub.code||sub.name,days:days.length,minutes};
+    }).filter(x=>x.minutes>0);
+    const total=rows.reduce((n,x)=>n+x.minutes,0);
+    return h("div",{className:"panel study-audit"},
+      h("h2",null,"Recorded study-time audit"),
+      h("p",{className:"muted"},"These are the saved daily study minutes, not independently verified active study time. Earlier inaccurate entries cannot be reconstructed automatically."),
+      h("div",{className:"study-audit-total"},h("strong",null,Math.floor(total/60)+"h "+String(total%60).padStart(2,"0")+"m"),h("span",null,"across "+rows.length+" subjects")),
+      rows.length?h("div",{className:"study-audit-rows"},rows.map(r=>h("div",{key:r.name,className:"study-audit-row"},h("span",null,r.name),h("span",null,Math.floor(r.minutes/60)+"h "+String(r.minutes%60).padStart(2,"0")+"m · "+r.days+" days")))):h("p",{className:"muted"},"No recorded study minutes."),
+      h("p",{className:"muted small"},"Export a backup before resetting. XP and quiz history are stored separately.")
+    );
   }
   function StatsFreshStart({data,update,toast}) {
     const [scope,setScope]=useState("all");
     const reset=()=>{
       const targets=scope==="all"?data.subjects.map(s=>s.id):[data.activeId];
-      if(!window.confirm("Reset recorded test activity for "+(scope==="all"?"ALL subjects":"the current subject")+"? This removes recorded quiz scores, study-day activity, review history and attempt logs. It keeps your lectures, flashcard questions, problem sets, notebooks and curriculum. Export a backup first. This cannot be undone without a backup."))return;
-      update(null,d=>{for(const s of d.subjects){if(!targets.includes(s.id))continue;s.days=[];s.quizzes=[];s.learningEvents=[];s.aiAttempts=[];s.foundationAttempts=[];for(const c of s.cards||[]){delete c.srs;delete c.conf;}for(const set of s.psets||[])for(const p of set.problems||[]){delete p.rt;if(["got","miss"].includes(p.st))p.st="new";}}});
-      toast("Test activity cleared. Study materials preserved.");
+      if(!window.confirm("Reset STUDY TIME totals for "+(scope==="all"?"ALL subjects":"the current subject")+"? Only the minutes recorded in daily study history will be set to zero. Flashcard reviews, quizzes, problem attempts, grades and study materials are preserved. Back up first."))return;
+      update(null,d=>{for(const s of d.subjects){if(!targets.includes(s.id))continue;for(const day of s.days||[])day.mins=0;}});
+      toast("Recorded daily study minutes reset. Academic progress preserved.");
     };
-    return h("section",{className:"view"},h("div",{className:"page-head"},h("div",null,h("h1",{className:"page-title"},"Statistics cleanup"),h("p",{className:"muted"},"Remove practice and test activity without deleting your study materials."))),h("div",{className:"panel"},h("h2",null,"Fresh start"),h("p",null,"This resets recorded quiz scores, daily activity, flashcard review history, problem attempt statuses, and learning attempt logs. It does not remove your lectures, flashcard questions, problem-set questions, notebooks or curriculum."),h("p",{className:"muted"},"Some manually entered grades, scheduled sessions and mistake-log entries remain untouched. Export a full backup before resetting."),h("label",null,"Reset scope ",h("select",{value:scope,onChange:e=>setScope(e.target.value)},h("option",{value:"all"},"All subjects"),h("option",{value:"current"},"Current subject only"))),h("div",{className:"break-actions"},h("button",{className:"btn primary",onClick:reset},"Reset test activity"))));
+    return h("section",{className:"view"},h("div",{className:"page-head"},h("div",null,h("h1",{className:"page-title"},"Study-time reset"),h("p",{className:"muted"},"Correct inaccurate study-time totals from testing."))),h(StudyTimeAudit,{data}),h("div",{className:"panel"},h("h2",null,"Reset recorded study minutes"),h("p",null,"Sets the minutes in daily study history to zero. Monthly and weekly study-time summaries derived from these minutes will update. It does not reset quizzes, flashcard reviews, problem attempts, grades or materials."),h("p",{className:"muted"},"Other metrics based on separate timers or events may not change. Export a full backup before resetting."),h("label",null,"Reset scope ",h("select",{value:scope,onChange:e=>setScope(e.target.value)},h("option",{value:"all"},"All subjects"),h("option",{value:"current"},"Current subject only"))),h("div",{className:"break-actions"},h("button",{className:"btn primary",onClick:reset},"Reset study minutes"))));
   }
   function App() {
     const [data, setData] = useState(() => loadLocal() || buildDefault());
@@ -11411,7 +12029,8 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const tabs = [
       ["home", "Today", "home"],
       ["break", "Break Corner", "home"],
-      ["stats-clean", "Statistics cleanup", "grade"],
+      ["achievements", "Academic Progress", "grade"],
+      ["stats-clean", "Study-time reset", "grade"],
       ["curriculum", "Curriculum", "book"],
       ["practice", "Practice", "bolt", reviewCount],
       ["roadmap", "Roadmap", "roadmap"],
@@ -11424,13 +12043,13 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       ["class", "Class", "subjects", (subject.tasks || []).filter((t) => !t.done && t.due && daysUntil(t.due) <= 3).length],
       ["ask", "Ask", "ask"],
       ["toolkit", "Study Toolkit", "book"],
-      ["personalize", "Personalization Corner", "look"], ["howto", "How-To Corner", "book"]
+      ["life", "Study Life", "look"], ["joy", "My Study Space", "look"], ["personalize", "Personalization Corner", "look"], ["howto", "How-To Corner", "book"]
     ];
     const navGroups = [
-      {name:"Home", items:["home","break","curriculum","howto","personalize"]},
+      {name:"Home", items:["home","break","life","joy","curriculum","howto","personalize"]},
       {name:"Learn", items:["roadmap","lectures","vault","toolkit"]},
       {name:"Practice", items:["practice","psets","ask"]},
-      {name:"Progress", items:["mistakes","grades","stats-clean"]},
+      {name:"Progress", items:["achievements","mistakes","grades","stats-clean"]},
       {name:"Plan & organize", items:["calendar","class"]}
     ];
     const filteredNavGroups = navGroups.map(group=>({
@@ -11457,14 +12076,24 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     };
     const viewProps = { key: `${subject.id}-${nav.key}`, subject, update, toast, go, openEditor, init: nav.opts, settings: data.settings, setSettings };
     const subjectPicker = (id) => /* @__PURE__ */ React.createElement("select", { id, className: "subject-select", value: data.activeId, onChange: (e) => switchSubject(e.target.value), "aria-label": "Active subject" }, (() => {const groups=new Map();data.subjects.forEach(s=>{const matched=PROSPECTUS.flatMap(t=>t.courses.map(c=>({...c,term:t.term}))).find(c=>String(c.code).trim().toLowerCase()===String(s.code||"").trim().toLowerCase());const label=s.curriculumTerm||(matched&&matched.term)||"Other / custom subjects";if(!groups.has(label))groups.set(label,[]);groups.get(label).push(s);});return [...groups].sort((a,b)=>a[0].localeCompare(b[0],undefined,{numeric:true})).map(([term,subjects])=>React.createElement("optgroup",{key:term,label:term},subjects.map(s=>React.createElement("option",{key:s.id,value:s.id},s.code?`${s.code} · ${s.name}`:s.name))));})());
-    return /* @__PURE__ */ React.createElement("div", { className: "shell" }, /* @__PURE__ */ React.createElement("aside", { className: "rail", "aria-label": "Main" }, /* @__PURE__ */ React.createElement("div", { className: "brand" }, /* @__PURE__ */ React.createElement("span", { className: "brand-mark", "aria-hidden": "true" }, "Σ"), /* @__PURE__ */ React.createElement("span", null, "BSA Study Desk")), /* @__PURE__ */ React.createElement("div", { className: "rail-subject" }, /* @__PURE__ */ React.createElement("span", { className: "rail-label" }, "Subject"), subjectPicker("subj"), /* @__PURE__ */ React.createElement("button", { className: "link-btn", onClick: () => setModal("subjects") }, "+ Add new subject")), h("div",{className:"rail-nav-wrap"},h("label",{className:"nav-search-label",htmlFor:"desk-nav-search"},"Find a tool"),h("input",{id:"desk-nav-search",className:"nav-search",type:"search",placeholder:"Search tools…",value:navSearch,onChange:e=>setNavSearch(e.target.value),"aria-label":"Search dashboard tools"}),h("nav",{className:"rail-nav","aria-label":"Study Desk sections"},filteredNavGroups.map(group=>h("section",{className:"nav-group",key:group.name},h("button",{className:"nav-group-heading",type:"button","aria-expanded":navSearch?true:!collapsedNav[group.name],onClick:()=>setCollapsedNav(prev=>({...prev,[group.name]:!prev[group.name]}))},h("span",null,group.name),h("span",{className:"nav-chevron","aria-hidden":"true"},navSearch||!collapsedNav[group.name]?"⌄":"›")),(navSearch||!collapsedNav[group.name])?h("div",{className:"nav-group-links"},group.tabs.map(([k,l,ic,n])=>h("button",{key:k,className:nav.tab===k?"on":"","aria-current":nav.tab===k?"page":undefined,onClick:()=>go(k)},h(Icon,{name:ic}),h("span",null,l),n?h("span",{className:"n"},n):null))):null)))), /* @__PURE__ */ React.createElement("div", { className: "rail-tools" }, /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("data") }, /* @__PURE__ */ React.createElement(Icon, { name: "data", size: 18 }), " Import & export"), /* @__PURE__ */ React.createElement("button", { onClick: () => go("personalize") }, /* @__PURE__ */ React.createElement(Icon, { name: "look", size: 18 }), " Personalization Corner"), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("look") }, /* @__PURE__ */ React.createElement(Icon, { name: "look", size: 18 }), " Appearance"), /* @__PURE__ */ React.createElement(ThemeDots, { settings: data.settings, setSettings })), React.createElement(SyncBadge, { onOpen: openSync })), /* @__PURE__ */ React.createElement("header", { className: "mobilebar" }, /* @__PURE__ */ React.createElement("span", { className: "brand-mark", "aria-hidden": "true" }, "Σ"), subjectPicker("subj-m"), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal(syncAlert ? "sync" : "data"), "aria-label": syncAlert ? "Import, export and sync (needs attention)" : "Import and export", "data-sync": syncAlert }, /* @__PURE__ */ React.createElement(Icon, { name: "data" })), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal("look"), "aria-label": "Appearance" }, /* @__PURE__ */ React.createElement(Icon, { name: "look" }))), /* @__PURE__ */ React.createElement("main", { className: "content" },
+    return /* @__PURE__ */ React.createElement("div", { className: "shell" }, /* @__PURE__ */ React.createElement("aside", { className: "rail", "aria-label": "Main" }, /* @__PURE__ */ React.createElement("div", { className: "brand" }, /* @__PURE__ */ React.createElement("span", { className: "brand-mark", "aria-hidden": "true" }, "Σ"), /* @__PURE__ */ React.createElement("span", null, "BSA Study Desk")), /* @__PURE__ */ React.createElement("div", { className: "rail-subject" }, /* @__PURE__ */ React.createElement("span", { className: "rail-label" }, "Subject"), subjectPicker("subj"), /* @__PURE__ */ React.createElement("button", { className: "link-btn", onClick: () => setModal("subjects") }, "+ Add new subject")), h("div",{className:"rail-nav-wrap"},h("label",{className:"nav-search-label",htmlFor:"desk-nav-search"},"Find a tool"),h("input",{id:"desk-nav-search",className:"nav-search",type:"search",placeholder:"Search tools…",value:navSearch,onChange:e=>setNavSearch(e.target.value),"aria-label":"Search dashboard tools"}),h("nav",{className:"rail-nav","aria-label":"Study Desk sections"},filteredNavGroups.map(group=>h("section",{className:"nav-group",key:group.name},h("button",{className:"nav-group-heading",type:"button","aria-expanded":navSearch?true:!collapsedNav[group.name],onClick:()=>setCollapsedNav(prev=>({...prev,[group.name]:!prev[group.name]}))},h("span",null,group.name),h("span",{className:"nav-chevron","aria-hidden":"true"},navSearch||!collapsedNav[group.name]?"⌄":"›")),(navSearch||!collapsedNav[group.name])?h("div",{className:"nav-group-links"},group.tabs.map(([k,l,ic,n])=>h("button",{key:k,className:nav.tab===k?"on":"","aria-current":nav.tab===k?"page":undefined,onClick:()=>go(k)},h(Icon,{name:ic}),h("span",null,l),n?h("span",{className:"n"},n):null))):null)))), /* @__PURE__ */ React.createElement("div", { className: "rail-tools" }, /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("data") }, /* @__PURE__ */ React.createElement(Icon, { name: "data", size: 18 }), " Import & export"), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("look") }, /* @__PURE__ */ React.createElement(Icon, { name: "look", size: 18 }), " Appearance"), /* @__PURE__ */ React.createElement(ThemeDots, { settings: data.settings, setSettings })), React.createElement(SyncBadge, { onOpen: openSync })), /* @__PURE__ */ React.createElement("header", { className: "mobilebar" }, /* @__PURE__ */ React.createElement("span", { className: "brand-mark", "aria-hidden": "true" }, "Σ"), subjectPicker("subj-m"), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal(syncAlert ? "sync" : "data"), "aria-label": syncAlert ? "Import, export and sync (needs attention)" : "Import and export", "data-sync": syncAlert }, /* @__PURE__ */ React.createElement(Icon, { name: "data" })), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal("look"), "aria-label": "Appearance" }, /* @__PURE__ */ React.createElement(Icon, { name: "look" }))), /* @__PURE__ */ React.createElement("main", { className: "content" },
       h("div",{className:"workspace-topbar"},
-        h("div",{className:"workspace-context"},h("span",{className:"workspace-eyebrow"},"YOUR WORKSPACE"),h("strong",null,(tabs.find(t=>t[0]===nav.tab)||[null,"Today"])[1]),h("span",{className:"workspace-subject"},subject.code||subject.name)),
-        h("div",{className:"workspace-actions"},h("button",{className:"btn ghost",onClick:()=>setModal("quick")},"+ Quick add"),h("button",{className:"btn primary",onClick:()=>go("ask")},"Ask tutor"))),
-      nav.tab==="home"&&h("section",{className:"workspace-launcher","aria-label":"Quick study tools"},
-        h("div",{className:"launcher-heading"},h("div",null,h("strong",null,"Where do you want to start?"),h("p",{className:"muted small"},"Jump straight into a tool. Your subject stays selected."))),
-        h("div",{className:"launcher-links"},jumpLinks.map(([key,label,ico])=>h("button",{key,className:"launcher-tile",onClick:()=>go(key)},h(Icon,{name:ico,size:20}),h("span",null,label))))),
-      nav.tab === "break" && h(BreakCorner), nav.tab === "stats-clean" && h(StatsFreshStart,{data,update,toast}), nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), nav.tab === "home" && /* @__PURE__ */ React.createElement(HomeView, { ...viewProps }), nav.tab === "practice" && h(PracticeView, { ...viewProps, data }), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(CalendarView, { ...viewProps }), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(PsView, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })), /* @__PURE__ */ React.createElement("nav", { className: "bottom-nav", "aria-label": "Sections" }, tabs.filter(x=>["home","practice","roadmap"].includes(x[0])).map(([k, l, ic]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), /* @__PURE__ */ React.createElement("span", null, l))), /* @__PURE__ */ React.createElement("button", { className: "fab", onClick: () => setModal("quick"), "aria-label": "Quick add" }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 24 })), [tabs.find(x=>x[0]==="calendar"), tabs.find(x=>x[0]==="mistakes")].map(([k, l, ic, n]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement("span", { className: "ico-wrap" }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), k === "mistakes" && n ? /* @__PURE__ */ React.createElement("span", { className: "badge" }, n) : null), /* @__PURE__ */ React.createElement("span", null, k === "calendar" ? "Calendar" : "Mistakes"))), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("more") }, /* @__PURE__ */ React.createElement(Icon, { name: "more" }), /* @__PURE__ */ React.createElement("span", null, "More"))), /* @__PURE__ */ React.createElement("div", { className: `toast${msg ? " show" : ""}`, role: "status", "aria-live": "polite" }, msg), h(FocusBar, { data, update, toast }), modal === "quick" && /* @__PURE__ */ React.createElement(QuickAdd, { onClose: () => setModal(null), onPick: (k) => {
+        h("div",{className:"workspace-context"},h("span",{className:"workspace-eyebrow"},"STUDY DESK"),h("strong",null,(tabs.find(t=>t[0]===nav.tab)||[null,"Today"])[1]),h("span",{className:"workspace-subject"},subject.code||subject.name)),
+        h("div",{className:"workspace-actions"},h("button",{className:"btn ghost",onClick:()=>setModal("quick")},"Add material"),h("button",{className:"btn primary",onClick:()=>go("ask")},"Ask tutor"))),
+      nav.tab==="home"&&h("section",{className:"home-redesign","aria-label":"Study dashboard"},
+        h("div",{className:"home-welcome"},
+          h("div",{className:"home-welcome-copy"},h("span",{className:"home-kicker"},"YOUR WORKSPACE"),h("h1",null,"Let's study today."),h("p",null,"Review, practice, and build mastery — one step at a time.")),
+          h("span",{className:"home-today"},new Date().toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric",year:"numeric"}))),
+        h("button",{className:"home-academic-link",onClick:()=>go("achievements")},h("span",null,"ACADEMIC PROGRESS"),h("strong",null,progressRank(progressTotal(readProgress()))[0]+" · "+progressTotal(readProgress())+" XP"),h("span",null,"View achievements →")),
+        h("div",{className:"home-section-heading"},h("div",null,h("h2",null,"Study Hub"),h("p",null,"Your core study materials, all in one place."))),
+        h("div",{className:"home-study-grid"},[
+          ["vault","Flashcards","Review key concepts","cards"],
+          ["psets","Problem Sets","Practice accounting problems","pset"],
+          ["lectures","Lectures","Read and review lessons","lecture"],
+          ["toolkit","Study Toolkit","Calculators and study tools","book"]
+        ].map(([key,label,desc,ico])=>h("button",{key,className:"home-study-card",onClick:()=>go(key)},h(Icon,{name:ico,size:24}),h("strong",null,label),h("span",null,desc),h("span",{className:"home-card-arrow","aria-hidden":"true"},"→")))),
+        h("div",{className:"home-shortcuts"},h("div",null,h("strong",null,"Quick actions"),h("p",null,"Get back to your work.")),h("div",{className:"home-shortcut-buttons"},h("button",{onClick:()=>go("practice")},"Practice"),h("button",{onClick:()=>go("calendar")},"Calendar"),h("button",{onClick:()=>go("break")},"Take a break"),h("button",{onClick:()=>go("achievements")},"Academic rank")))),
+      nav.tab === "break" && h(BreakCorner), nav.tab === "joy" && h(JoyHub,{go}), nav.tab === "life" && h(StudyLife), nav.tab === "achievements" && h(AcademicProgress,{go}), nav.tab === "stats-clean" && h(StatsFreshStart,{data,update,toast}), nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), nav.tab === "home" && /* @__PURE__ */ React.createElement(HomeView, { ...viewProps }), nav.tab === "practice" && h(PracticeView, { ...viewProps, data }), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(CalendarView, { ...viewProps }), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(PsView, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })), /* @__PURE__ */ React.createElement("nav", { className: "bottom-nav", "aria-label": "Sections" }, tabs.filter(x=>["home","practice","roadmap"].includes(x[0])).map(([k, l, ic]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), /* @__PURE__ */ React.createElement("span", null, l))), /* @__PURE__ */ React.createElement("button", { className: "fab", onClick: () => setModal("quick"), "aria-label": "Quick add" }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 24 })), [tabs.find(x=>x[0]==="calendar"), tabs.find(x=>x[0]==="mistakes")].map(([k, l, ic, n]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement("span", { className: "ico-wrap" }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), k === "mistakes" && n ? /* @__PURE__ */ React.createElement("span", { className: "badge" }, n) : null), /* @__PURE__ */ React.createElement("span", null, k === "calendar" ? "Calendar" : "Mistakes"))), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("more") }, /* @__PURE__ */ React.createElement(Icon, { name: "more" }), /* @__PURE__ */ React.createElement("span", null, "More"))), /* @__PURE__ */ React.createElement("div", { className: `toast${msg ? " show" : ""}`, role: "status", "aria-live": "polite" }, msg), h(FocusBar, { data, update, toast }), modal === "quick" && /* @__PURE__ */ React.createElement(QuickAdd, { onClose: () => setModal(null), onPick: (k) => {
       if (k === "grade") {
         setModal(null);
         go("grades", { gtab: "scores" });
