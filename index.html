@@ -2160,58 +2160,39 @@ html,body,#root{max-width:100%;overflow-x:clip}
 }
 @media (max-width:570px){.ai-wrap .ask-context-grid{grid-template-columns:minmax(0,1fr)!important}.ai-wrap .ask-context-grid label{overflow:visible!important}}
 </style>
-<style id="bsa-v124-ipad-bottom-fix">
-/* Keep the dashboard background continuous through the iPad Safari bottom safe area. */
-html,body,#root{background:var(--surface)!important;}
-@media (min-width:900px){
-  .shell{height:100vh!important;height:100dvh!important;min-height:100dvh!important;}
-  .shell>.rail{height:100%!important;max-height:none!important;padding-bottom:max(13px,env(safe-area-inset-bottom,0px))!important;}
-  .shell>.content{height:100%!important;min-height:0!important;padding-bottom:max(24px,env(safe-area-inset-bottom,0px))!important;}
-  .shell>.content:has(>.ai-wrap){height:100%!important;padding-bottom:0!important;}
+
+
+
+<style id="bsa-v127-unified-responsive">
+/* Unified viewport and safe-area ownership. Never pad :root outside the shell. */
+:root {padding:0!important; box-sizing:border-box!important;}
+html,body,#root{margin:0!important;padding:0!important;width:100%!important;height:100%!important;min-height:0!important;overflow:hidden!important;}
+*,*::before,*::after{box-sizing:border-box;}
+body{background:var(--bg)!important;}
+.shell{display:grid!important;grid-template-columns:var(--app-rail,224px) minmax(0,1fr)!important;width:100%!important;height:100vh!important;height:100dvh!important;min-height:0!important;max-height:100dvh!important;overflow:hidden!important;}
+.shell>.rail{min-width:0!important;min-height:0!important;height:100%!important;max-height:100%!important;overflow:hidden!important;}
+.shell>.content{min-width:0!important;min-height:0!important;height:100%!important;max-height:100%!important;overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;padding-bottom:max(24px,env(safe-area-inset-bottom,0px))!important;}
+.shell>.content>*{min-width:0;max-width:100%;}
+/* Never allow the Study Life card's three children to compete for one horizontal row. */
+.bsa-v108-top-grid{display:grid!important;grid-template-columns:minmax(0,1.7fr) minmax(280px,1fr)!important;gap:16px!important;align-items:stretch!important;min-width:0!important;}
+.bsa-v108-top-grid>*{min-width:0!important;max-width:100%!important;}
+.bsa-v108-top-grid>.life-home-widget{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:12px!important;min-width:0!important;max-width:100%!important;padding:18px!important;overflow:hidden!important;text-align:center!important;}
+.bsa-v108-top-grid .life-home-character{flex:0 0 auto!important;width:100%!important;min-width:0!important;max-width:100%!important;min-height:120px!important;display:flex!important;align-items:center!important;justify-content:center!important;}
+.bsa-v108-top-grid .life-home-copy{flex:0 1 auto!important;min-width:0!important;width:100%!important;max-width:100%!important;text-align:center!important;overflow-wrap:anywhere!important;word-break:normal!important;}
+.bsa-v108-top-grid .life-home-copy strong,.bsa-v108-top-grid .life-home-copy p,.bsa-v108-top-grid .life-home-copy small{display:block!important;white-space:normal!important;overflow-wrap:anywhere!important;word-break:normal!important;max-width:100%!important;}
+.bsa-v108-top-grid .life-launch-actions{display:grid!important;grid-template-columns:minmax(0,1fr)!important;flex:0 0 auto!important;width:100%!important;min-width:0!important;max-width:100%!important;gap:9px!important;}
+.bsa-v108-top-grid .life-launch-actions>.btn{display:flex!important;align-items:center!important;justify-content:center!important;width:100%!important;min-width:0!important;max-width:100%!important;margin:0!important;white-space:normal!important;overflow-wrap:anywhere!important;}
+/* At narrower desktop/tablet widths, use a single readable column. */
+@media(max-width:1199px){.bsa-v108-top-grid{grid-template-columns:minmax(0,1fr)!important;}.bsa-v108-top-grid>.life-home-widget{min-height:0!important;}}
+/* Respect existing mobile navigation; do not create an inaccessible desktop sidebar. */
+@media(max-width:899px){
+ .shell{display:block!important;height:100dvh!important;min-height:0!important;overflow:hidden!important;}
+ .shell>.rail{display:none!important;}
+ .shell>.content{height:100%!important;min-height:0!important;max-height:100%!important;overflow-y:auto!important;overflow-x:hidden!important;padding-bottom:max(85px,calc(24px + env(safe-area-inset-bottom,0px)))!important;}
+ .bsa-v108-top-grid{grid-template-columns:minmax(0,1fr)!important;}
+ .bsa-v108-top-grid>.life-home-widget{display:flex!important;flex-direction:column!important;}
 }
-@media (max-width:899px){
-  html,body,#root{background:var(--bg)!important;min-height:100dvh;}
-  .shell>.content{padding-bottom:calc(6rem + env(safe-area-inset-bottom,0px))!important;}
-}
-</style>
-<style id="bsa-v125-ipad-layout-repair">
-/* Tablet viewport: do not reserve a second safe-area strip outside the app. */
-:root{padding-top:0!important;padding-bottom:0!important;}
-html,body,#root{margin:0!important;width:100%;min-height:100%;background:var(--bg)!important;}
-body{overflow:hidden!important;}
-.shell{height:100vh!important;height:100dvh!important;min-height:0!important;overflow:hidden!important;}
-.shell>.rail{height:100%!important;max-height:100%!important;min-height:0!important;overflow-y:auto!important;overscroll-behavior:contain;}
-.shell>.content{height:100%!important;min-height:0!important;min-width:0!important;overflow-x:hidden!important;overflow-y:auto!important;scrollbar-gutter:auto!important;overscroll-behavior:contain;padding-bottom:32px!important;}
-/* Study Life is a three-part card, never a flex row that crushes text into a narrow column. */
-.bsa-v108-top-grid>.life-home-widget{
- display:grid!important;grid-template-columns:minmax(130px, .7fr) minmax(210px, 1.3fr)!important;
- grid-template-areas:"avatar details" "actions actions"!important;
- align-items:center!important;align-content:center!important;justify-content:stretch!important;
- gap:16px 22px!important;min-width:0!important;min-height:210px!important;
- padding:22px!important;text-align:left!important;
-}
-.bsa-v108-top-grid .life-home-character{grid-area:avatar!important;width:100%!important;min-width:0!important;min-height:150px!important;max-width:none!important;}
-.bsa-v108-top-grid .life-home-copy{grid-area:details!important;min-width:0!important;width:100%!important;max-width:none!important;text-align:left!important;overflow-wrap:normal!important;word-break:normal!important;}
-.bsa-v108-top-grid .life-home-copy strong{display:block!important;line-height:1.35!important;white-space:normal!important;}
-.bsa-v108-top-grid .life-home-copy p{line-height:1.5!important;white-space:normal!important;overflow-wrap:break-word!important;}
-.bsa-v108-top-grid .life-launch-actions{grid-area:actions!important;min-width:0!important;width:100%!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important;}
-.bsa-v108-top-grid .life-launch-actions>.btn{width:100%!important;min-width:0!important;margin:0!important;white-space:normal!important;text-align:center!important;}
-@media (min-width:900px) and (max-width:1199px){
- .bsa-v108-top-grid>.life-home-widget{grid-template-columns:minmax(150px,.6fr) minmax(230px,1.4fr)!important;}
-}
-@media (max-width:899px){
- html,body,#root{height:auto!important;overflow:visible!important;}
- body{overflow-x:hidden!important;overflow-y:auto!important;}
- .shell{height:auto!important;min-height:100dvh!important;overflow:visible!important;}
- .shell>.content{height:auto!important;min-height:100dvh!important;overflow:visible!important;padding-bottom:calc(7rem + env(safe-area-inset-bottom,0px))!important;}
- .bsa-v108-top-grid>.life-home-widget{grid-template-columns:minmax(100px,.6fr) minmax(0,1.4fr)!important;}
-}
-@media (max-width:520px){
- .bsa-v108-top-grid>.life-home-widget{grid-template-columns:minmax(0,1fr)!important;grid-template-areas:"avatar" "details" "actions"!important;text-align:center!important;}
- .bsa-v108-top-grid .life-home-copy{text-align:center!important;}
- .bsa-v108-top-grid .life-home-character{min-height:120px!important;}
- .bsa-v108-top-grid .life-launch-actions{grid-template-columns:minmax(0,1fr)!important;}
-}
+@media(max-width:520px){.bsa-v108-top-grid>.life-home-widget{padding:15px!important;}}
 </style>
 </head>
 <body>
