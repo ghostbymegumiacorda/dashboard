@@ -2068,6 +2068,71 @@ html,body,#root{max-width:100%;overflow-x:clip}
 }
 @media(max-width:560px){.ai-wrap .ask-help-text{display:none}.ai-wrap .ask-compact-head{align-items:center!important}.ai-wrap .ask-header-actions .btn{font-size:.7rem!important;padding:5px 6px!important}.ai-wrap .ask-composer textarea{height:44px!important;min-height:44px!important}}
 </style>
+<style id="bsa-v121-ask-app-makeover">
+/* App-level Ask redesign: theme-aware surfaces, a single conversation viewport, no popover menus. */
+@media(min-width:900px){
+ .shell>.content:has(>.ai-wrap){display:flex!important;flex-direction:column!important;height:100dvh!important;min-height:0!important;overflow:hidden!important}
+ .shell>.content:has(>.ai-wrap)>.workspace-topbar{flex:0 0 auto!important}
+ .shell>.content>.ai-wrap{flex:1 1 auto!important;min-height:0!important;height:auto!important;max-height:none!important;overflow:hidden!important;padding:16px clamp(16px,2.2vw,34px) 18px!important;margin:0 auto!important;max-width:1480px!important;gap:10px!important;box-sizing:border-box}
+ .shell>.content>.ai-wrap>.ai-log{flex:1 1 0!important;min-height:0!important;max-height:none!important;overflow-y:auto!important}
+ .shell>.content>.ai-wrap>.ask-composer{flex:0 0 auto!important}
+}
+.ai-wrap{--ask-radius:18px;min-width:0}
+.ai-wrap .ask-compact-head{margin:0!important;padding:3px 3px 8px!important;align-items:center!important;flex-shrink:0!important;border:0!important}
+.ai-wrap .ask-title-group{display:flex!important;align-items:flex-start!important;flex-direction:column!important;gap:2px!important}
+.ai-wrap .ask-compact-head h1{font-size:clamp(1.5rem,2.1vw,1.9rem)!important;font-weight:780!important;letter-spacing:-.04em!important;line-height:1.16!important}
+.ai-wrap .ask-help-text{font-size:.82rem!important;white-space:normal!important;overflow:visible!important;color:var(--muted)!important}
+.ai-wrap .ask-header-actions{display:flex!important;align-items:center!important;gap:8px!important;flex-wrap:wrap!important}
+.ai-wrap .ask-header-actions .btn{min-height:37px!important;padding:8px 13px!important;border-radius:11px!important;font-size:.79rem!important;font-weight:650!important;box-shadow:none!important;background:var(--surface)!important;border:1px solid var(--line)!important;color:var(--text)!important}
+.ai-wrap .ask-header-actions .btn:hover{background:var(--surface-2)!important;border-color:var(--accent)!important}
+.ai-wrap .ask-header-actions .ask-clear-button{color:var(--bad)!important}
+.ai-wrap .ask-context-details{border:0!important;background:transparent!important;padding:0!important;font-size:.8rem!important;flex:0 0 auto!important}
+.ai-wrap .ask-context-details>summary{display:inline-flex!important;align-items:center!important;gap:5px!important;background:var(--surface)!important;border:1px solid var(--line)!important;padding:7px 12px!important;border-radius:999px!important;font-size:.78rem!important;line-height:1.25!important;max-width:100%;cursor:pointer}
+.ai-wrap .ask-context-details>summary:hover{border-color:var(--accent)!important}
+.ai-wrap .ask-context-details>summary:after{float:none!important;content:'⌄'!important}
+.ai-wrap .ask-context-grid{margin-top:8px!important;border:1px solid var(--line)!important;border-radius:14px!important;background:var(--surface)!important;padding:12px!important;box-shadow:var(--lift)}
+.ai-wrap .ai-log{box-sizing:border-box!important;width:100%!important;min-width:0!important;margin:0!important;padding:22px clamp(14px,2.5vw,34px)!important;border:1px solid var(--line)!important;border-radius:var(--ask-radius)!important;background:var(--surface)!important;overflow-x:hidden!important;scrollbar-width:thin!important;scroll-behavior:smooth!important;overscroll-behavior:contain!important;gap:18px!important}
+.ai-wrap .ai-msg{max-width:min(92%,920px)!important;gap:5px!important}
+.ai-wrap .ai-msg.me{max-width:min(85%,780px)!important}
+.ai-wrap .ai-who{font-size:.73rem!important;font-weight:650!important;letter-spacing:.015em!important}
+.ai-wrap .ai-body{padding:16px 18px!important;border-radius:16px!important;box-shadow:none!important;border:1px solid var(--line)!important;background:var(--bg)!important;line-height:1.7!important;font-size:.93rem!important}
+.ai-wrap .ai-msg.me .ai-body{background:var(--accent-soft)!important;border-color:color-mix(in srgb,var(--accent) 25%,var(--line))!important}
+.ai-wrap .ai-body p{margin:.45rem 0!important}
+.ai-wrap .ai-body h2,.ai-wrap .ai-body h3{margin:.8rem 0 .4rem!important;line-height:1.35!important}
+.ai-wrap .ai-body table{max-width:100%;overflow:auto!important}
+.ai-wrap .ai-acts{margin-top:10px!important;gap:6px!important}
+.ai-wrap .ai-acts .btn{border-radius:9px!important}
+.ai-wrap .ask-composer{position:relative!important;bottom:auto!important;z-index:1!important;border:1px solid var(--line)!important;border-radius:16px!important;background:var(--surface)!important;padding:9px 11px!important;box-shadow:none!important;margin:0!important;gap:2px!important}
+.ai-wrap .ask-composer .ai-row{display:flex!important;align-items:center!important;gap:8px!important}
+.ai-wrap .ask-composer textarea{height:48px!important;min-height:48px!important;max-height:145px!important;padding:12px 14px!important;resize:vertical!important;border:1px solid var(--line)!important;border-radius:11px!important;background:var(--bg)!important;font-size:.92rem!important;line-height:1.4!important}
+.ai-wrap .ask-composer .ai-row .btn{height:44px!important;min-height:44px!important;border-radius:11px!important;padding:10px 16px!important;font-weight:700!important}
+.ai-wrap .ask-prompts-details{margin-top:1px!important}
+.ai-wrap .ask-prompts-details>summary{width:max-content!important;cursor:pointer!important;padding:5px 7px!important;font-size:.73rem!important}
+.ai-wrap .ask-prompts-details[open] .ai-chips{margin:3px 0 1px!important}
+.ai-wrap .ask-welcome{margin:auto;display:flex;flex-direction:column;gap:10px;align-items:center;text-align:center;max-width:660px;padding:22px 8px}
+.ai-wrap .ask-welcome-icon{font-size:2rem;color:var(--accent);width:62px;height:62px;border-radius:20px;background:var(--accent-soft);display:grid;place-items:center}
+.ai-wrap .ask-welcome h2{margin:0;font-size:1.4rem}
+.ai-wrap .ask-welcome p{margin:0 0 10px}
+.ai-wrap .ask-start-prompts{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.ai-wrap .ask-start-prompts .btn{background:var(--bg);border-radius:999px;padding:10px 14px}
+@media(max-width:899px){
+ .shell>.content>.ai-wrap{min-height:0!important;height:calc(100dvh - 140px)!important;overflow:hidden!important;padding:12px 12px calc(12px + env(safe-area-inset-bottom))!important;gap:8px!important}
+ .shell>.content>.ai-wrap>.ai-log{flex:1 1 0!important;max-height:none!important;min-height:0!important;overflow-y:auto!important}
+ .ai-wrap .ask-header-actions{gap:5px!important}
+ .ai-wrap .ask-header-actions .btn{padding:7px 9px!important;min-height:33px!important}
+}
+@media(max-width:560px){
+ .ai-wrap .ask-compact-head{flex-wrap:wrap!important}
+ .ai-wrap .ask-header-actions{width:100%!important}
+ .ai-wrap .ask-help-text{display:none!important}
+ .ai-wrap .ai-log{padding:12px 10px!important}
+ .ai-wrap .ai-msg{max-width:98%!important}
+ .ai-wrap .ai-msg.me{max-width:94%!important}
+ .ai-wrap .ai-body{padding:12px!important;font-size:.88rem!important}
+ .ai-wrap .ask-composer textarea{font-size:16px!important}
+}
+@media(prefers-reduced-motion:reduce){.ai-wrap .ai-log{scroll-behavior:auto!important}}
+</style>
 </head>
 <body>
 <div id="root"><p class="boot">Opening your study desk… If this doesn’t load, connect to the internet once so the app can save itself for offline use.</p></div>
@@ -11258,17 +11323,11 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       "section",
       { className: "view ai-wrap", ref: topRef },
       h("div", { className: "page-head ask-compact-head" },
-        h("div", { className: "ask-title-group" }, h("h1", { className: "page-title" }, "Ask Tutor"), h("span", { className: "ask-help-text" }, "Ask, understand, practice.")),
+        h("div", { className: "ask-title-group" }, h("h1", { className: "page-title" }, "Ask Tutor"), h("span", { className: "ask-help-text" }, "Your accounting study companion")),
         h("div", { className: "ask-header-actions" },
-          msgs.length > 0 && h("button", { className: "btn ghost", onClick: () => { stick.current = true; logRef.current?.scrollTo({top:logRef.current.scrollHeight,behavior:"smooth"}); }, title: "Jump to newest message" }, "↓ Latest"),
-          h("details", { className: "ask-more" },
-            h("summary", { className: "btn ghost", title: "Conversation options" }, "⋯ Options"),
-            h("div", { className: "ask-more-menu" },
-              msgs.length > 0 && h("button", { className: "btn ghost", onClick: () => { stick.current = false; logRef.current?.scrollTo({top:0,behavior:"smooth"}); } }, "↑ First message"),
-              msgs.length > 0 && h("button", { className: "btn danger ghost", disabled: busy, onClick: clear }, "Clear conversation"),
-              h("button", { className: "btn ghost", onClick: () => setSetup(true) }, ready ? "API key & model" : "Connect Gemini")
-            )
-          )
+          msgs.length > 0 && h("button", { className: "btn ghost ask-nav-button", onClick: () => { stick.current = true; logRef.current?.scrollTo({top:logRef.current.scrollHeight,behavior:"smooth"}); }, title: "Jump to latest message" }, "↓ Latest"),
+          h("button", { className: "btn ghost ask-settings-button", onClick: () => setSetup(true), title: "API key and model settings" }, "⚙ Settings"),
+          msgs.length > 0 && h("button", { className: "btn ghost ask-clear-button", disabled: busy, onClick: clear, title: "Clear this conversation" }, "Clear")
         )
       ),
       ready && h("details", { className: "ask-context-details" },
@@ -11297,7 +11356,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
         h("p", { className: "muted", style: { maxWidth: "36rem" } }, "One free API key from Google AI Studio. Your Google AI Plus subscription is for the Gemini app and won’t work here — the API is separate, and its free tier is plenty for this."),
         h("button", { className: "btn primary", onClick: () => setSetup(true) }, "Connect Gemini")
       ) : h(React.Fragment, null,
-        msgs.length === 0 && h("div", { className: "empty" }, h("p", { className: "muted" }, "Ask anything, or start with one of these.")),
+        msgs.length === 0 && h("div", { className: "ask-welcome" }, h("div", { className:"ask-welcome-icon" }, "✦"), h("h2", null, "What are we learning today?"), h("p", { className: "muted" }, "Ask about your lectures, work through a problem, or practice a concept."), h("div", {className:"ask-start-prompts"}, [ ["Explain a concept", "Explain the main concept in my selected lecture with a simple example."], ["Practice with me", "Quiz me one question at a time using my saved sources."], ["Work through a problem", "Help me solve a problem step by step, without revealing the answer immediately."] ].map(([label,q]) => h("button", {key:label,className:"btn ghost",onClick:()=>ask(q)},label)))),
         h("div", { className: "ai-log", ref: logRef, onScroll: onChatScroll, role:"log", "aria-label":"Tutor conversation", "aria-live":"polite" }, msgs.slice(-60).map((m, i) => {
           const live = busy && i === Math.min(msgs.length, 60) - 1 && m.role === "ai";
           const json = m.role === "ai" && !m.err && !live ? gemFindJSON(m.text) : "";
