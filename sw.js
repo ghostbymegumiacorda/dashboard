@@ -3,7 +3,7 @@
    Your study data is NOT stored here; it lives in the browser's storage and in your GitHub data repo.
    If you change this file later, bump VERSION so every device picks up the new copy. */
 const CACHE_FAMILY = "study-desk-" + encodeURIComponent(new URL(self.registration.scope).pathname) + "-";
-const VERSION = CACHE_FAMILY + "v140-tested-grid";
+const VERSION = CACHE_FAMILY + "v142-safe-pwa-update";
 const SCOPE = self.registration.scope;               // e.g. https://you.github.io/bsa-dashboard/
 const SHELL = ["index.html", "manifest.json", "icon-192.png", "icon-512.png", "icon-maskable-512.png", "apple-touch-icon.png", "favicon.png", "avatar-front.png", "avatar-back.png", "avatar-happy.png", "avatar-walk.png"];
 const CDN = [
@@ -18,12 +18,21 @@ async function put(cache, key, resp) {
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(VERSION);
-    // Fetch everything independently so one missing icon can't block offline support.
-    await Promise.all([
-      fetch(SCOPE, { cache: "reload" }).then((r) => r.ok && put(cache, SCOPE, r)).catch(() => {}),
-      ...SHELL.map((p) => fetch(new URL(p, SCOPE), { cache: "reload" }).then((r) => r.ok && put(cache, new URL(p, SCOPE).href, r)).catch(() => {})),
-      ...CDN.map((u) => fetch(u, { mode: "cors" }).then((r) => r.ok && put(cache, u, r)).catch(() => {}))
-    ]);
+    // Do not replace an existing offline app if essential files cannot be saved.
+    // In particular, failed network responses cannot silently count as a success.
+    const essentials = [SCOPE, ...CDN];
+    await Promise.all(essentials.map(async (url) => {
+      const response = await fetch(url, { cache: "reload" });
+      if (!response.ok) throw new Error("Required offline resource unavailable: " + url);
+      await cache.put(url, response);
+    }));
+    await Promise.all(SHELL.map(async (path) => {
+      const url = new URL(path, SCOPE).href;
+      try {
+        const response = await fetch(url, { cache: "reload" });
+        if (response.ok) await put(cache, url, response);
+      } catch (e) { /* Optional icons do not prevent a safe update. */ }
+    }));
     await self.skipWaiting();
   })());
 });
@@ -41,7 +50,7 @@ const isAppPage = (url) => url.href === SCOPE || url.href === SCOPE + "index.htm
 async function networkFirst(request) {
   const cache = await caches.open(VERSION);
   const net = fetch(request.url, { cache: "no-cache", credentials: "same-origin" }).then((r) => {
-    if (r.ok) { put(cache, SCOPE, r.clone()); put(cache, SCOPE + "index.html", r.clone()); }
+    if (r.ok) { void put(cache, SCOPE, r.clone()); void put(cache, SCOPE + "index.html", r.clone()); }
     return r;
   });
   net.catch(() => {});
