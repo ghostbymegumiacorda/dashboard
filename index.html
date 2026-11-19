@@ -2496,7 +2496,39 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 @media(max-width:750px){.bsa-v157-compare{grid-template-columns:minmax(0,1fr)}.bsa-v157-mark-row .btn{flex:1 1 auto}.bsa-v157-drill{padding:14px!important}}
 @media(prefers-reduced-motion:reduce){.bsa-v157-drill *{animation:none!important;transition:none!important}}
 </style>
-</head>
+<style id="bsa-v158-study-report-vault">
+.bsa-report-eyebrow{display:block;letter-spacing:.11em;text-transform:uppercase;font-size:.7rem;font-weight:850;color:var(--accent);margin-bottom:.35rem}
+.bsa-report-controls{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:14px 0 20px}
+.bsa-report-controls label{display:flex;align-items:center;gap:8px;font-weight:650}
+.bsa-report-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:18px}
+.bsa-report-metric{display:flex;flex-direction:column;gap:7px;min-width:0;border:1px solid var(--line);border-radius:17px;padding:17px;background:var(--surface)}
+.bsa-report-metric strong{font-size:clamp(1.4rem,2.6vw,2rem);line-height:1.1;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.bsa-report-label{font-size:.84rem;font-weight:750}.bsa-report-metric small{font-size:.78rem;line-height:1.45}
+.bsa-report-section-title{margin-bottom:15px}.bsa-report-section-title h2{margin:0 0 5px}
+.bsa-report-topic{display:flex;align-items:center;gap:13px;padding:13px 0;border-top:1px solid var(--line);min-width:0}
+.bsa-report-index{flex:0 0 32px;width:32px;height:32px;border-radius:11px;background:var(--accent);color:var(--bg);display:flex;align-items:center;justify-content:center;font-weight:800}
+.bsa-report-topic-main{min-width:0;display:flex;flex:1;flex-direction:column;gap:4px;overflow-wrap:anywhere}
+.bsa-report-topic .btn{flex-shrink:0;white-space:normal}.bsa-report-help{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 18px}
+.bsa-report-help p{margin:0;line-height:1.6}.bsa-report-disclosure{border:0;background:none;color:var(--text);font:inherit;font-weight:800;cursor:pointer;padding:4px 0 12px;text-align:left}
+.bsa-report-danger{margin-top:12px;padding:14px;border-radius:12px;border:1px solid var(--line)}
+.bsa-vault-warning{background:var(--surface2,var(--surface));border:1px solid var(--line);border-radius:12px;padding:14px;line-height:1.65}
+.bsa-vault-login{display:flex;flex-direction:column;gap:9px;max-width:550px}.bsa-vault-login input,.bsa-vault-form input,.bsa-vault-form textarea,.bsa-vault-form select{width:100%;max-width:100%;min-width:0}
+.bsa-vault-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.bsa-vault-items{display:grid;gap:10px}.bsa-vault-item{display:flex;align-items:center;gap:12px;flex-wrap:wrap;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:13px}
+.bsa-vault-item>div:first-child{display:flex;flex-direction:column;gap:4px;min-width:170px;flex:1}.bsa-vault-item code{overflow-wrap:anywhere;word-break:break-all;max-width:100%;font-size:.85rem}
+.bsa-vault-actions{display:flex;gap:6px;flex-wrap:wrap}.bsa-vault-form{display:flex;flex-direction:column;gap:9px;max-width:650px;margin-top:20px;padding-top:17px;border-top:1px solid var(--line)}.bsa-vault-error{color:var(--danger,#b42318);font-weight:700}
+@media(max-width:1000px){.bsa-report-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.bsa-report-metrics,.bsa-report-help{grid-template-columns:minmax(0,1fr)}.bsa-report-topic{align-items:flex-start;flex-wrap:wrap}.bsa-report-topic .btn{margin-left:45px}}
+</style>
+<style id="bsa-v159-sound-studio">
+.bsa-v156-theme-picker {display:grid;gap:10px;min-width:0}
+.bsa-v156-theme-picker select {width:100%;max-width:420px;padding:12px 14px;border-radius:12px}
+.bsa-v156-preview-row {display:flex;flex-wrap:wrap;gap:8px}
+.bsa-v156-preview-row .btn {min-height:40px;flex:0 1 auto}
+.bsa-v155-audio-controls {display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.bsa-v155-audio-controls input[type=range] {min-width:min(280px,100%);accent-color:var(--accent,#399d82)}
+@media(max-width:700px){.bsa-v156-preview-row .btn {flex:1 1 42%}.bsa-v155-audio-controls {align-items:stretch;flex-direction:column}}
+</style></head>
 <body>
 <div id="root"><p class="boot">Opening your study desk… If this doesn’t load, connect to the internet once so the app can save itself for offline use.</p></div>
 <script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
@@ -5138,7 +5170,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     {id:'practice',name:'Flashcard review',role:'Recall',desc:'Test your memory with due cards, new cards, and missed questions.',group:'Study',icon:'cards'},
     {id:'psets',name:'Problem sets',role:'Apply',desc:'Solve longer questions and check which concepts you missed.',group:'Study',icon:'pset'},
     {id:'mistakes',name:'Mistake log',role:'Correct',desc:'Track incorrect answers and revisit the concepts that need work.',group:'Study',icon:'mistakes'},
-    {id:'stats-clean',name:'Statistics',role:'Reflect',desc:'Review recorded study activity and spot what needs attention.',group:'Study',icon:'grade'},
+    {id:'stats-clean',name:'Study report',role:'Reflect',desc:'Review learning outcomes and get practical next steps.',group:'Study',icon:'grade'},
     {id:'vault',name:'Flashcard collection',role:'Organize',desc:'Browse or organize the flashcards available in this subject.',group:'Organize',icon:'cards'},
     {id:'roadmap',name:'Course topics',role:'Plan topics',desc:'Track topics and subtopics from your course syllabus.',group:'Organize',icon:'roadmap'},
     {id:'calendar',name:'Calendar',role:'Plan time',desc:'Manage upcoming study sessions, tasks and important dates.',group:'Organize',icon:'calendar'},
@@ -6912,17 +6944,25 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       return h("span", { key: d, className: `act${d === today() ? " today" : ""}`, title: `${fmtDay(d)}: ${x.reviews || 0} reviews, ${fmtMins(x.mins) || "0 min"} timed`, style: { "--h": `${v ? Math.max(12, v / max * 100) : 4}%` } }, h("i", null), h("b", null, parseD(d).toLocaleDateString(void 0, { weekday: "narrow" })));
     }));
   }
-  /* v156: original selectable cute sound palettes, device-local, generated via Web Audio.
-     Sounds run only on user gestures and never interfere with scoring. */
+  /* v159: sound studio — original, locally synthesized SFX; no remote audio.
+     Audio uses only user gestures. Scores and saved study progress are unaffected. */
   const QUIZ_SOUND_THEMES = [
     ['bubble','🫧 Bubble Pop','Bouncy, squishy little pops'],
     ['starlight','🌟 Starlight','Bright sparkly chimes'],
-    ['cozy','🍵 Cozy Chimes','Soft and warm notes'],
+    ['cozy','🍵 Cozy Chimes','Warm, sleepy notes'],
     ['pixel','🎮 Pixel Pals','Playful retro blips'],
-    ['bells','🔔 Tiny Bells','Delicate bell melodies']
+    ['bells','🔔 Tiny Bells','Delicate bell melodies'],
+    ['marshmallow','🍡 Marshmallow','Soft, fluffy kawaii pops'],
+    ['kitten','🐱 Kitty Paws','Tiny, chirpy kitten-style chirps'],
+    ['fairy','🧚 Fairy Dust','Twinkly, magical sparkles'],
+    ['candy','🍬 Candy Shop','Bright little candy-jingle notes'],
+    ['sakura','🌸 Sakura','Sweet pastel music-box notes'],
+    ['raindrop','💧 Raindrops','Watery plinks and soft ripples'],
+    ['arcade','🕹️ Mini Arcade','Cheery 8-bit reward sounds']
   ];
   let bsaQuizAudioContext = null;
   let bsaQuizSoundLastAt = 0;
+  let bsaQuizSoundSequence = 0;
   function playQuizFeedbackSound(kind, forcePreview = false) {
     try {
       if (!forcePreview && localStorage.getItem('bsa_quiz_audio_v154') !== 'on') return;
@@ -6932,57 +6972,61 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       const ctx = bsaQuizAudioContext || (bsaQuizAudioContext = new AudioCtor());
       if (ctx.state === 'suspended') ctx.resume().catch(() => {});
       const nowMs = Date.now();
-      if (!forcePreview && kind === 'select' && nowMs - bsaQuizSoundLastAt < 70) return;
+      if (!forcePreview && kind === 'select' && nowMs - bsaQuizSoundLastAt < 85) return;
       bsaQuizSoundLastAt = nowMs;
-      const volume = Number(localStorage.getItem('bsa_quiz_audio_volume_v155') || '45');
-      const master = Math.min(.12, Math.max(0, Number.isFinite(volume) ? volume : 45) / 100 * .12);
+      const raw = Number(localStorage.getItem('bsa_quiz_audio_volume_v155') ?? '70');
+      const volume = Math.min(100,Math.max(0,Number.isFinite(raw) ? raw : 70));
+      // Per-note cap plus compressor allow stronger yet controlled output.
+      const master = (volume / 100) * 0.22;
       if (!master) return;
       const theme = localStorage.getItem('bsa_quiz_audio_theme_v156') || 'bubble';
-      const now = ctx.currentTime + .018;
-      function note(hz,delay,duration,amp=1,wave='sine',endHz=null) {
+      const now = ctx.currentTime + 0.015;
+      const seq = bsaQuizSoundSequence++;
+      const variant = seq % 3;
+      const compressor = ctx.createDynamicsCompressor();
+      compressor.threshold.value = -16;
+      compressor.knee.value = 12;
+      compressor.ratio.value = 7;
+      compressor.attack.value = 0.003;
+      compressor.release.value = 0.18;
+      compressor.connect(ctx.destination);
+      function note(hz, delay, duration, amp=1, wave='sine', endHz=null) {
+        if (!(hz>0 && duration>0)) return;
         const osc=ctx.createOscillator(), gain=ctx.createGain();
-        osc.type=wave; osc.frequency.setValueAtTime(hz,now+delay);
-        if(endHz) osc.frequency.exponentialRampToValueAtTime(endHz,now+delay+duration);
-        const peak=Math.max(.00012,master*amp);
+        osc.type=wave;
+        osc.frequency.setValueAtTime(hz, now+delay);
+        if (endHz>0) osc.frequency.exponentialRampToValueAtTime(endHz,now+delay+duration);
+        const peak=Math.max(.0001, Math.min(.18,master*amp));
         gain.gain.setValueAtTime(.0001,now+delay);
-        gain.gain.exponentialRampToValueAtTime(peak,now+delay+Math.min(.014,duration*.25));
+        gain.gain.exponentialRampToValueAtTime(peak,now+delay+Math.min(.017,duration*.28));
         gain.gain.exponentialRampToValueAtTime(.0001,now+delay+duration);
-        osc.connect(gain); gain.connect(ctx.destination);
-        osc.start(now+delay); osc.stop(now+delay+duration+.025);
+        osc.connect(gain);gain.connect(compressor);
+        osc.start(now+delay);osc.stop(now+delay+duration+.028);
+        osc.onended=()=>{try{osc.disconnect();gain.disconnect()}catch(_){}};
       }
-      const v = (notes, wave='sine') => notes.forEach(([freq,at,dur,amp,end])=>note(freq,at,dur,amp,wave,end));
-      if(theme==='starlight') {
-        if(kind==='select') v([[990,0,.07,.24],[1480,.055,.10,.18]]);
-        if(kind==='correct') v([[784,0,.18,.48],[1175,.11,.19,.5],[1568,.24,.28,.53],[2093,.35,.25,.22]]);
-        if(kind==='wrong') v([[659,0,.14,.35],[494,.17,.2,.27]]);
-        if(kind==='next') v([[988,0,.075,.2],[1318,.07,.1,.18]]);
-        if(kind==='finish') v([[784,0,.18,.44],[988,.12,.18,.5],[1175,.24,.18,.5],[1568,.36,.2,.5],[2093,.51,.35,.34]]);
-      } else if(theme==='cozy') {
-        if(kind==='select') v([[440,0,.12,.27,520]]);
-        if(kind==='correct') v([[392,0,.22,.46],[523,.18,.26,.49],[659,.37,.34,.4]]);
-        if(kind==='wrong') v([[392,0,.22,.34],[330,.24,.28,.28]]);
-        if(kind==='next') v([[523,0,.16,.26],[587,.12,.18,.2]]);
-        if(kind==='finish') v([[392,0,.24,.44],[494,.17,.24,.46],[587,.35,.25,.46],[784,.53,.42,.36]]);
-      } else if(theme==='pixel') {
-        if(kind==='select') v([[570,0,.055,.2,870]],'square');
-        if(kind==='correct') v([[523,0,.095,.25],[659,.09,.095,.25],[1047,.19,.20,.28]],'square');
-        if(kind==='wrong') v([[330,0,.10,.24],[247,.12,.20,.18]],'triangle');
-        if(kind==='next') v([[740,0,.055,.2],[980,.06,.09,.18]],'square');
-        if(kind==='finish') v([[523,0,.09,.26],[659,.11,.09,.26],[784,.22,.09,.26],[1047,.33,.12,.28],[1318,.48,.30,.24]],'square');
-      } else if(theme==='bells') {
-        if(kind==='select') v([[880,0,.15,.25],[1760,.02,.10,.07]]);
-        if(kind==='correct') v([[659,0,.28,.42],[880,.16,.32,.44],[1318,.34,.45,.38]]);
-        if(kind==='wrong') v([[587,0,.28,.28],[440,.20,.32,.25]]);
-        if(kind==='next') v([[784,0,.16,.26],[1047,.12,.23,.23]]);
-        if(kind==='finish') v([[523,0,.25,.35],[659,.19,.27,.35],[880,.39,.29,.4],[1318,.59,.50,.35]]);
-      } else { /* bubble */
-        if(kind==='select') v([[510,0,.09,.35,900],[1250,.025,.05,.09]]);
-        if(kind==='correct') v([[523,0,.13,.50,660],[659,.11,.16,.54,830],[880,.25,.24,.49,1100],[1320,.31,.13,.12]]);
-        if(kind==='wrong') v([[380,0,.18,.35,315],[290,.17,.22,.30,245]]);
-        if(kind==='next') v([[650,0,.09,.28,980],[980,.08,.10,.22,1175]]);
-        if(kind==='finish') v([[523,0,.15,.42,660],[659,.12,.15,.45,830],[784,.24,.15,.45,990],[1047,.36,.18,.47,1320],[1568,.55,.30,.32]]);
-      }
-    } catch (_) { /* Optional audio must never block quiz interaction. */ }
+      const v=(notes,wave='sine') => notes.forEach(([hz,at,dur,amp,end])=>note(hz,at,dur,amp,wave,end));
+      const transpose=(notes, semitones) => notes.map(([hz,at,dur,amp,end])=>[hz*Math.pow(2,semitones/12),at,dur,amp,end&&end*Math.pow(2,semitones/12)]);
+      const patterns={
+        bubble:{select:[[510,0,.09,.60,870],[1140,.035,.065,.18]],correct:[[523,0,.15,.68,660],[659,.12,.17,.70,820],[880,.26,.22,.65,1080]],wrong:[[360,0,.16,.50,330],[280,.18,.20,.44,245]],next:[[620,0,.08,.43,900],[920,.09,.12,.34,1100]],finish:[[523,0,.16,.54],[659,.13,.16,.58],[784,.27,.18,.60],[1047,.41,.24,.66],[1318,.63,.32,.52]]},
+        starlight:{select:[[990,0,.08,.44],[1480,.07,.13,.30]],correct:[[784,0,.17,.60],[1175,.14,.19,.62],[1568,.29,.27,.65],[2093,.40,.23,.36]],wrong:[[659,0,.15,.42],[494,.16,.21,.42]],next:[[988,0,.08,.38],[1318,.08,.12,.28]],finish:[[784,0,.18,.56],[988,.12,.18,.58],[1175,.24,.19,.58],[1568,.37,.26,.60],[2093,.54,.38,.42]]},
+        cozy:{select:[[440,0,.15,.43,520]],correct:[[392,0,.23,.58],[523,.19,.29,.64],[659,.40,.34,.50]],wrong:[[392,0,.22,.42],[330,.24,.28,.37]],next:[[523,0,.16,.43],[587,.14,.22,.32]],finish:[[392,0,.24,.52],[494,.19,.27,.54],[587,.38,.25,.54],[784,.58,.44,.48]]},
+        pixel:{select:[[570,0,.07,.29,860]],correct:[[523,0,.10,.37],[659,.11,.11,.37],[1047,.24,.21,.43]],wrong:[[330,0,.12,.35],[247,.13,.22,.28]],next:[[740,0,.06,.30],[980,.07,.10,.29]],finish:[[523,0,.10,.37],[659,.11,.10,.38],[784,.22,.11,.38],[1047,.34,.14,.41],[1318,.49,.30,.39]]},
+        bells:{select:[[880,0,.19,.39],[1760,.02,.12,.15]],correct:[[659,0,.29,.57],[880,.18,.35,.59],[1318,.37,.49,.54]],wrong:[[587,0,.28,.40],[440,.21,.33,.36]],next:[[784,0,.19,.37],[1047,.14,.25,.36]],finish:[[523,0,.26,.50],[659,.20,.30,.52],[880,.41,.34,.55],[1318,.63,.51,.48]]},
+        marshmallow:{select:[[390,0,.12,.59,690],[780,.07,.08,.17]],correct:[[440,0,.13,.61,610],[550,.12,.13,.63,740],[660,.25,.20,.60,790]],wrong:[[420,0,.15,.38,360],[340,.19,.18,.35,280]],next:[[530,0,.10,.48,700],[700,.09,.12,.31]],finish:[[440,0,.15,.57],[550,.13,.15,.60],[660,.28,.17,.62],[880,.44,.25,.58],[1100,.63,.33,.48]]},
+        kitten:{select:[[690,0,.095,.47,950],[1050,.07,.065,.26]],correct:[[660,0,.12,.54,850],[880,.13,.14,.61,1110],[1175,.29,.20,.54,1350]],wrong:[[480,0,.13,.42,400],[390,.15,.17,.35,330]],next:[[800,0,.085,.44,1050],[990,.095,.10,.29]],finish:[[660,0,.13,.53],[880,.13,.13,.55],[990,.25,.13,.54],[1320,.38,.19,.56],[1760,.58,.30,.39]]},
+        fairy:{select:[[1047,0,.10,.37],[1568,.06,.12,.27]],correct:[[880,0,.17,.48],[1318,.10,.19,.53],[1760,.25,.22,.52],[2093,.40,.31,.40]],wrong:[[784,0,.18,.34],[659,.19,.27,.30]],next:[[1175,0,.085,.35],[1760,.10,.15,.32]],finish:[[784,0,.16,.42],[1175,.12,.19,.47],[1568,.27,.19,.50],[2093,.43,.28,.50],[2637,.62,.35,.32]]},
+        candy:{select:[[630,0,.075,.52,950],[1260,.04,.075,.19]],correct:[[659,0,.12,.54],[988,.12,.13,.57],[1318,.26,.19,.55]],wrong:[[494,0,.13,.36],[392,.16,.19,.36]],next:[[740,0,.07,.42],[988,.08,.10,.37]],finish:[[659,0,.12,.49],[784,.12,.12,.51],[988,.24,.12,.53],[1318,.38,.20,.58],[1568,.60,.32,.41]]},
+        sakura:{select:[[587,0,.19,.40],[1175,.025,.09,.10]],correct:[[523,0,.20,.47],[659,.20,.22,.51],[784,.41,.30,.46]],wrong:[[523,0,.19,.34],[440,.22,.27,.30]],next:[[659,0,.14,.36],[784,.14,.20,.27]],finish:[[523,0,.23,.48],[659,.18,.24,.49],[784,.36,.28,.51],[1047,.60,.43,.42]]},
+        raindrop:{select:[[960,0,.11,.42,590],[1300,.03,.09,.15,870]],correct:[[1175,0,.14,.51,870],[1318,.14,.14,.53,990],[1568,.30,.23,.48,1175]],wrong:[[740,0,.17,.32,510],[587,.22,.21,.31,390]],next:[[1175,0,.09,.33,880],[1470,.12,.11,.28,1080]],finish:[[990,0,.14,.49,770],[1175,.14,.14,.50,900],[1318,.29,.17,.53,1000],[1568,.47,.23,.49,1260]]},
+        arcade:{select:[[640,0,.06,.32,960]],correct:[[523,0,.09,.37],[659,.09,.09,.40],[784,.18,.1,.41],[1047,.30,.18,.45]],wrong:[[370,0,.10,.32],[294,.12,.20,.32]],next:[[784,0,.06,.32],[988,.07,.08,.31]],finish:[[523,0,.085,.36],[659,.10,.085,.36],[784,.20,.085,.38],[1047,.32,.12,.42],[1318,.46,.25,.44]]}
+      };
+      const pack=patterns[theme]||patterns.bubble;
+      const notes=pack[kind]||pack.select;
+      const wave=theme==='pixel'||theme==='arcade'?'square':theme==='candy'||theme==='kitten'?'triangle':'sine';
+      // Three subtle variations so repeated correct answers don't sound identical.
+      const shift=(kind==='correct'||kind==='select')?[0,2,-2][variant]:0;
+      v(shift?transpose(notes,shift):notes,wave);
+    } catch (_) { /* Audio must never block the quiz. */ }
   }
   /* v156: strict topical routing for the dedicated MCQ bank.
      Unassigned material appears only under All topics until categorized. */
@@ -7864,8 +7908,8 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       h("h3", null, "Studying"),
       h("div", { className: "bsa-sound-setting" },
         h("div", null,
-          h("strong", null, "Quiz sounds"),
-          h("p", { className: "muted small" }, "Playful game-style quiz cues for selecting, correct or wrong answers, moving on, and completing a quiz. Original audio. Off by default; only stored on this device.")),
+          h("strong", null, "Quiz sounds · Sound Studio"),
+          h("p", { className: "muted small" }, "12 original sound packs with subtle variations, brighter rewards, and adjustable volume. Sounds are off by default and saved only on this device.")),
         h("label", { className: "bsa-sound-switch" },
           h("input", { type: "checkbox", defaultChecked: (() => { try { return localStorage.getItem("bsa_quiz_audio_v154") === "on"; } catch (_) { return false; } })(),
             onChange: e => { try { localStorage.setItem("bsa_quiz_audio_v154", e.target.checked ? "on" : "off"); } catch (_) {} if (e.target.checked) playQuizFeedbackSound("select"); } }),
@@ -7875,14 +7919,14 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
           h("select",{id:"bsa-quiz-theme", defaultValue:(()=>{try{return localStorage.getItem('bsa_quiz_audio_theme_v156')||'bubble';}catch(_){return 'bubble';}})(),
             onChange:e=>{try{localStorage.setItem('bsa_quiz_audio_theme_v156',e.target.value);}catch(_){} playQuizFeedbackSound('correct',true);}},
             QUIZ_SOUND_THEMES.map(([id,title])=>h("option",{key:id,value:id},title))),
-          h("p",{className:"muted small"},"Bubble Pop, Starlight, Cozy Chimes, Pixel Pals or Tiny Bells. Choose the vibe you like."),
+          h("p",{className:"muted small"},"12 themes including Marshmallow, Kitty Paws, Fairy Dust, Candy Shop, Sakura, Raindrops and Mini Arcade. Choosing a theme previews its correct-answer cue."),
           h("div",{className:"bsa-v156-preview-row"},
-            [["🫧 Tap","select"],["💚 Correct","correct"],["🌷 Try again","wrong"],["🏆 Finish","finish"]].map(([title,kind])=>h("button",{key:kind,type:"button",className:"btn",onClick:()=>playQuizFeedbackSound(kind,true)},title)))),
+            [["🫧 Tap","select"],["💚 Correct","correct"],["🌷 Try again","wrong"],["✨ Next","next"],["🏆 Finish","finish"]].map(([title,kind])=>h("button",{key:kind,type:"button",className:"btn",onClick:()=>playQuizFeedbackSound(kind,true)},title)))),
         h("div", { className: "bsa-v155-audio-controls" },
-          h("label", { htmlFor: "bsa-quiz-volume" }, "Sound volume"),
-          h("input", { id: "bsa-quiz-volume", type: "range", min: "0", max: "100", step: "5", defaultValue: (() => { try { return localStorage.getItem("bsa_quiz_audio_volume_v155") || "45"; } catch (_) { return "45"; } })(),
+          h("label", { htmlFor: "bsa-quiz-volume" }, "Sound volume · default 70%"),
+          h("input", { id: "bsa-quiz-volume", type: "range", min: "0", max: "100", step: "5", defaultValue: (() => { try { return localStorage.getItem("bsa_quiz_audio_volume_v155") ?? "70"; } catch (_) { return "45"; } })(),
             onChange: e => { try { localStorage.setItem("bsa_quiz_audio_volume_v155", e.target.value); } catch (_) {} } }),
-          h("button", { type: "button", className: "btn", onClick: () => playQuizFeedbackSound("correct", true) }, "Preview correct sound")
+          h("span", { className: "muted small" }, "If your iPad is quiet, increase the slider and check the device volume. Avoid maximum volume with headphones.")
         ),
 
       sayOK() && h(Field, { label: `Reading speed: ${Math.round((settings.speakRate || 1) * 100)}%`, hint: "Used by Read aloud during a review." }, h("input", { type: "range", min: "0.6", max: "1.6", step: "0.1", value: settings.speakRate || 1, onChange: (e) => set("speakRate", Number(e.target.value)) })),
@@ -13574,16 +13618,111 @@ h('div',{className:'life-avatar-preview'},h('span',null,life.avatar.accessory===
       h("p",{className:"muted small"},"Export a backup before resetting. XP and quiz history are stored separately.")
     );
   }
-  function StatsFreshStart({data,update,toast}) {
-    const [scope,setScope]=useState("all");
-    const reset=()=>{
-      const targets=scope==="all"?data.subjects.map(s=>s.id):[data.activeId];
-      if(!window.confirm("Reset STUDY TIME totals for "+(scope==="all"?"ALL subjects":"the current subject")+"? Only the minutes recorded in daily study history will be set to zero. Flashcard reviews, quizzes, problem attempts, grades and study materials are preserved. Back up first."))return;
-      update(null,d=>{for(const s of d.subjects){if(!targets.includes(s.id))continue;for(const day of s.days||[])day.mins=0;}});
-      toast("Recorded daily study minutes reset. Academic progress preserved.");
+  // v158: A study report driven by outcomes, never by inferred study time.
+  function StudyReport({data,update,toast,go}) {
+    const [scope,setScope]=useState('current');
+    const [showTime,setShowTime]=useState(false);
+    const [showReset,setShowReset]=useState(false);
+    const subjects=scope==='all'?(data.subjects||[]):(data.subjects||[]).filter(s=>s.id===data.activeId);
+    const roll=(getter)=>subjects.reduce((n,s)=>n+getter(s),0);
+    const qCorrect=roll(s=>(s.quizzes||[]).reduce((n,q)=>n+Math.max(0,Number(q.score)||0),0));
+    const qItems=roll(s=>(s.quizzes||[]).reduce((n,q)=>n+Math.max(0,Number(q.items)||0),0));
+    const qSessions=roll(s=>(s.quizzes||[]).length);
+    const pGot=roll(s=>(s.psets||[]).reduce((n,set)=>n+(set.problems||[]).filter(p=>p.st==='got').length,0));
+    const pMiss=roll(s=>(s.psets||[]).reduce((n,set)=>n+(set.problems||[]).filter(p=>p.st==='miss').length,0));
+    const due=roll(s=>(s.cards||[]).filter(c=>c.srs&&c.srs.due&&c.srs.due<=today()).length);
+    const unresolved=roll(s=>(s.mistakes||[]).filter(m=>m.status!=='Cleared').length);
+    const assessed=roll(s=>(s.cards||[]).filter(c=>['known','again','hard'].includes(c.conf)).length);
+    const known=roll(s=>(s.cards||[]).filter(c=>c.conf==='known').length);
+    const materialTopics=subjects.flatMap(s=>smartTopicStats(s).map(x=>({...x,subject:s}))).filter(x=>x.topic);
+    const priority=materialTopics.filter(x=>x.observations>0||x.mistakes>0||x.dueCards>0).slice().sort((a,b)=>b.score-a.score).slice(0,5);
+    const unassessed=materialTopics.filter(x=>!x.observations).length;
+    const logged=roll(s=>(s.days||[]).reduce((n,d)=>n+Math.max(0,Number(d.mins)||0),0));
+    const finished=roll(s=>(s.sessions||[]).filter(x=>x.done).reduce((n,x)=>n+Math.max(0,Number(x.mins)||0),0));
+    const fmt=(n)=>n+'m';
+    const pct=(a,b)=>b?Math.round(100*a/b)+'%':'Not enough data';
+    const reasons=(x)=>[x.mistakes?x.mistakes+' open mistake'+(x.mistakes===1?'':'s'):'',x.dueCards?x.dueCards+' due card'+(x.dueCards===1?'':'s'):'',x.accuracy!==null&&x.observations?x.accuracy+'% observed performance':'',x.observations?Math.round(x.observations)+' evidence points':''].filter(Boolean).join(' · ');
+    const action=(x)=>x.mistakes?'mistakes':x.dueCards?'practice':x.accuracy!==null&&x.accuracy<75?'psets':'lectures';
+    const doReset=()=>{
+      const targets=subjects.map(s=>s.id);
+      if(!window.confirm('Reset recorded study minutes for '+(scope==='all'?'all subjects':'this subject')+'? This cannot reconstruct untracked time. Export a backup first.'))return;
+      update(null,d=>{for(const sub of d.subjects){if(targets.includes(sub.id))for(const day of sub.days||[])day.mins=0;}});
+      toast('Daily recorded minutes reset; quiz, cards, attempts and mistakes retained.');
     };
-    return h("section",{className:"view"},h("div",{className:"page-head"},h("div",null,h("h1",{className:"page-title"},"Study-time reset"),h("p",{className:"muted"},"Correct inaccurate study-time totals from testing."))),h(StudyTimeAudit,{data}),h("div",{className:"panel"},h("h2",null,"Reset recorded study minutes"),h("p",null,"Sets the minutes in daily study history to zero. Monthly and weekly study-time summaries derived from these minutes will update. It does not reset quizzes, flashcard reviews, problem attempts, grades or materials."),h("p",{className:"muted"},"Other metrics based on separate timers or events may not change. Export a full backup before resetting."),h("label",null,"Reset scope ",h("select",{value:scope,onChange:e=>setScope(e.target.value)},h("option",{value:"all"},"All subjects"),h("option",{value:"current"},"Current subject only"))),h("div",{className:"break-actions"},h("button",{className:"btn primary",onClick:reset},"Reset study minutes"))));
+    const metric=(title,value,detail)=>h('div',{className:'bsa-report-metric',key:title},h('span',{className:'bsa-report-label'},title),h('strong',null,value),h('small',{className:'muted'},detail));
+    return h('section',{className:'view bsa-report'},
+      h('div',{className:'page-head'},h('div',null,h('span',{className:'bsa-report-eyebrow'},'STUDY INSIGHTS · RESULTS, NOT GUESSES'),h('h1',{className:'page-title'},'Your study report'),h('p',{className:'muted'},'See what needs work, what is improving, and what to do next. Untracked study sessions are not assumed to be zero.'))),
+      h('div',{className:'bsa-report-controls'},h('label',null,'Show ',h('select',{value:scope,onChange:e=>setScope(e.target.value)},h('option',{value:'current'},'Current subject'),h('option',{value:'all'},'All subjects'))),h('button',{className:'btn ghost',onClick:()=>go('practice')},'Go to Practice')),
+      h('div',{className:'bsa-report-metrics'},
+        metric('Unresolved mistakes',String(unresolved),unresolved?'Review and correct these first':'No open mistakes recorded'),
+        metric('Flashcards due',String(due),'Cards scheduled for today or earlier'),
+        metric('Problem attempts',String(pGot+pMiss),pGot+' got it · '+pMiss+' missed'),
+        metric('Quiz accuracy',pct(qCorrect,qItems),qItems+' scored questions · '+qSessions+' quizzes'),
+        metric('Recall confidence',pct(known,assessed),assessed+' rated cards · self-rated, not exam score'),
+        metric('Topics without evidence',String(unassessed),'Not yet assessed; not necessarily weak')),
+      h('div',{className:'panel bsa-report-priority'},h('div',{className:'bsa-report-section-title'},h('div',null,h('h2',null,'What should I work on?'),h('p',{className:'muted'},'Prioritized from mistakes, due reviews and actual attempts. These are indicators, not predicted grades.'))),
+        priority.length ? priority.map((x,i)=>h('div',{className:'bsa-report-topic',key:x.subject.id+':'+x.topic.id},
+          h('div',{className:'bsa-report-index'},String(i+1)),h('div',{className:'bsa-report-topic-main'},h('strong',null,[x.topic.code,x.topic.title||x.topic.standard].filter(Boolean).join(' · ')),scope==='all'?h('small',{className:'muted'},x.subject.code||x.subject.name):null,h('small',{className:'muted'},reasons(x)||'Review this topic')),
+          h('button',{className:'btn primary',onClick:()=>{if(x.subject.id!==data.activeId){toast('Switch to '+(x.subject.code||x.subject.name)+' to open this recommendation.');return;}go(action(x),x.topic.id?{topic:x.topic.id}:{})}},x.mistakes?'Correct mistakes':x.dueCards?'Review cards':x.accuracy!==null&&x.accuracy<75?'Solve problems':'Open lectures')))
+          :h('div',{className:'bsa-report-empty'},h('strong',null,'No weak-topic evidence yet'),h('p',{className:'muted'},'Start a quiz, rate flashcards or attempt a problem. Your report will become more useful as you study.'),h('button',{className:'btn primary',onClick:()=>go('practice')},'Start practicing'))),
+      h('div',{className:'panel'},h('h2',null,'How to read these results'),h('div',{className:'bsa-report-help'},
+        h('p',null,h('strong',null,'Quiz accuracy'),': scored answers / scored items. A quiz with five questions is not an exam prediction.'),
+        h('p',null,h('strong',null,'Problem attempts'),': your Got it / Missed it judgments on problems, not automatically verified correctness.'),
+        h('p',null,h('strong',null,'Recall confidence'),': self-rated flashcard status. Use harder problems to confirm mastery.'),
+        h('p',null,h('strong',null,'No evidence'),': the dashboard cannot know whether you studied something outside the app.'))),
+      h('div',{className:'panel bsa-report-time'},h('button',{className:'bsa-report-disclosure',onClick:()=>setShowTime(v=>!v),'aria-expanded':showTime},'Recorded study time (optional) ',showTime?'▴':'▾'),
+        showTime?h('div',null,h('p',{className:'muted'},'Logged daily time: '+fmt(Math.round(logged))+' · Completed session records: '+fmt(Math.round(finished))+'. These are two different records; do not add them together.'),h('p',{className:'muted'},'Time is incomplete when you forget the timer. It is deliberately excluded from the recommendations and performance percentages.'),h(StudyTimeAudit,{data:{subjects}}),h('button',{className:'btn ghost',onClick:()=>setShowReset(v=>!v)},showReset?'Hide reset control':'Advanced: correct inaccurate history'),showReset?h('div',{className:'bsa-report-danger'},h('p',null,'Resets only daily recorded minutes for the current selection; session records may still differ.'),h('button',{className:'btn ghost',onClick:doReset},'Reset recorded daily minutes')):null):null));
   }
+
+  // v158: encrypted, device-local secrets vault, separate from study storage and publishing.
+  const BSA_PRIVATE_VAULT_KEY='bsa_secret_vault_v1';
+  const bsaBytes=b=>Uint8Array.from(atob(b),c=>c.charCodeAt(0));
+  const bsaBase64=b=>btoa(String.fromCharCode(...new Uint8Array(b)));
+  async function bsaVaultKey(password,salt){
+    const base=await crypto.subtle.importKey('raw',new TextEncoder().encode(password),'PBKDF2',false,['deriveKey']);
+    return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:250000,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+  }
+  async function bsaVaultEncrypt(entries,password,saltParam){
+    const salt=saltParam||crypto.getRandomValues(new Uint8Array(16));
+    const iv=crypto.getRandomValues(new Uint8Array(12));
+    const key=await bsaVaultKey(password,salt);
+    const buf=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode(JSON.stringify(entries)));
+    return JSON.stringify({version:1,kdf:'PBKDF2-SHA256',iterations:250000,salt:bsaBase64(salt),iv:bsaBase64(iv),ciphertext:bsaBase64(buf)});
+  }
+  async function bsaVaultDecrypt(doc,password){
+    const o=JSON.parse(doc);if(o.version!==1||!o.salt||!o.iv||!o.ciphertext)throw Error('Unsupported vault format');
+    const key=await bsaVaultKey(password,bsaBytes(o.salt));
+    const decrypted=await crypto.subtle.decrypt({name:'AES-GCM',iv:bsaBytes(o.iv)},key,bsaBytes(o.ciphertext));
+    const entries=JSON.parse(new TextDecoder().decode(decrypted));
+    if(!Array.isArray(entries))throw Error('Invalid vault');return entries;
+  }
+  function PrivateVault({toast}){
+    const [exists,setExists]=useState(()=>!!localStorage.getItem(BSA_PRIVATE_VAULT_KEY));
+    const [pass,setPass]=useState('');const [unlocked,setUnlocked]=useState(false);
+    const [entries,setEntries]=useState([]);const [draft,setDraft]=useState({name:'',kind:'GitHub token',value:''});
+    const [busy,setBusy]=useState(false);const [error,setError]=useState('');const [show,setShow]=useState({});
+    const supported=!!(window.crypto&&crypto.subtle&&window.isSecureContext);
+    const unlock=async()=>{if(!supported)return;setBusy(true);setError('');try{
+      if(!pass||pass.length<12)throw Error('Use a vault passphrase of at least 12 characters.');
+      const saved=localStorage.getItem(BSA_PRIVATE_VAULT_KEY);
+      const list=saved?await bsaVaultDecrypt(saved,pass):[];
+      setEntries(list);setUnlocked(true);setExists(!!saved);
+    }catch(e){setError('Could not unlock. Check your passphrase, or use at least 12 characters to create a new vault.');}finally{setBusy(false)}};
+    const save=async(list)=>{setBusy(true);setError('');try{localStorage.setItem(BSA_PRIVATE_VAULT_KEY,await bsaVaultEncrypt(list,pass));setEntries(list);setExists(true);toast('Encrypted vault saved on this device.');return true;}catch(e){setError('Unable to save encrypted vault: '+(e&&e.message||'storage error'));return false;}finally{setBusy(false)}};
+    const add=async()=>{if(!draft.name.trim()||!draft.value.trim())return setError('Enter a label and a key/value.');const ok=await save([...entries,{id:'v'+Date.now()+Math.random().toString(36).slice(2),name:draft.name.trim(),kind:draft.kind,value:draft.value.trim()}]);if(ok)setDraft({name:'',kind:'GitHub token',value:''})};
+    const remove=(id)=>{if(window.confirm('Delete this encrypted entry?'))save(entries.filter(e=>e.id!==id))};
+    const copy=async(v)=>{try{await navigator.clipboard.writeText(v);toast('Copied. Clipboard contents can be read by other apps; clear it when finished.');}catch(e){toast('Clipboard unavailable in this browser.')}};
+    const lock=()=>{setUnlocked(false);setPass('');setEntries([]);setShow({});setDraft({name:'',kind:'GitHub token',value:''})};
+    return h('section',{className:'view bsa-secrets'},h('div',{className:'page-head'},h('div',null,h('span',{className:'bsa-report-eyebrow'},'PRIVATE · DEVICE ONLY'),h('h1',{className:'page-title'},'My encrypted vault'),h('p',{className:'muted'},'Store GitHub tokens, API keys and private notes in an encrypted vault. Never included in shared publishing or dashboard backups.'))),
+      h('div',{className:'panel'},h('p',{className:'bsa-vault-warning'},'🔒 Encrypted with AES-GCM and a passphrase you choose. The passphrase is not saved. Losing it means the vault cannot be recovered. A compromised device or malicious browser extension can still expose secrets while unlocked.'),
+      !supported?h('p',{className:'bsa-vault-warning'},'This vault needs a secure HTTPS page and Web Crypto. It is disabled in this environment.'):!unlocked?
+        h('div',{className:'bsa-vault-login'},h('h2',null,exists?'Unlock your vault':'Create your private vault'),h('label',null,'Vault passphrase (12+ characters)'),h('input',{type:'password',autoComplete:'off',value:pass,onChange:e=>setPass(e.target.value),onKeyDown:e=>e.key==='Enter'&&unlock(),placeholder:'Passphrase you can remember'}),h('p',{className:'muted small'},exists?'Unlock using your existing passphrase.':'Your passphrase is not saved or synced. Make it unique and store a recovery copy safely elsewhere.'),h('button',{className:'btn primary',disabled:busy||pass.length<12,onClick:unlock},busy?'Working…':exists?'Unlock vault':'Create & unlock vault')):
+        h('div',null,h('div',{className:'bsa-vault-toolbar'},h('strong',null,entries.length+' saved secret'+(entries.length===1?'':'s')),h('button',{className:'btn ghost',onClick:lock},'Lock now')),
+        h('div',{className:'bsa-vault-items'},entries.map(e=>h('div',{className:'bsa-vault-item',key:e.id},h('div',null,h('strong',null,e.name),h('small',{className:'muted'},e.kind)),h('code',null,show[e.id]?e.value:'••••••••••••'),h('div',{className:'bsa-vault-actions'},h('button',{className:'btn ghost',onClick:()=>setShow(old=>({...old,[e.id]:!old[e.id]}))},show[e.id]?'Hide':'Reveal'),h('button',{className:'btn ghost',onClick:()=>copy(e.value)},'Copy'),h('button',{className:'btn ghost',onClick:()=>remove(e.id)},'Delete'))))),
+        h('div',{className:'bsa-vault-form'},h('h2',null,'Add a credential or note'),h('label',null,'Label'),h('input',{value:draft.name,onChange:e=>setDraft(v=>({...v,name:e.target.value})),placeholder:'Shared repository publisher'}),h('label',null,'Type'),h('select',{value:draft.kind,onChange:e=>setDraft(v=>({...v,kind:e.target.value}))},['GitHub token','API key','Recovery note','Other private text'].map(k=>h('option',{key:k,value:k},k))),h('label',null,'Secret value'),h('textarea',{rows:3,autoComplete:'off',value:draft.value,onChange:e=>setDraft(v=>({...v,value:e.target.value})),placeholder:'Paste here; do not include this in published HTML'}),h('button',{className:'btn primary',disabled:busy,onClick:add},'Encrypt & save'))),
+      error?h('p',{role:'alert',className:'bsa-vault-error'},error):null,h('p',{className:'muted small'},'For GitHub publishing, copy your token from here and paste it into the publisher. The vault does not silently inject or upload keys. Existing GitHub Sync credentials elsewhere in the app are managed separately and are not automatically encrypted by this vault.')));
+  }
+
   function App() {
     const [data, setData] = useState(() => loadLocal() || buildDefault());
     const [nav, setNav] = useState({ tab: "home", opts: {}, key: 0 });
@@ -13685,6 +13824,7 @@ h('div',{className:'life-avatar-preview'},h('span',null,life.avatar.accessory===
       shortcutItems.map(([tab,label,symbol])=>h("button",{key:tab,type:"button",role:"menuitem",onClick:()=>shortcutGo(tab)},h("span",{className:"bsa-shortcut-symbol","aria-hidden":"true"},symbol),label)),
       !window.__BSA_SHARED_MODE__ && h("div",{className:"bsa-shortcut-separator",role:"separator"}),
       !window.__BSA_SHARED_MODE__ && h("button",{type:"button",role:"menuitem",onClick:()=>{setShortcutsOpen(false);go("toolkit",{tool:"share"});}},h("span",{className:"bsa-shortcut-symbol","aria-hidden":"true"},"↗"),"Publish materials"),
+      !window.__BSA_SHARED_MODE__ && h('button',{type:'button',role:'menuitem',onClick:()=>{setShortcutsOpen(false);go('private-vault');}},h('span',{className:'bsa-shortcut-symbol','aria-hidden':'true'},'🔒'),'Private vault'),
       !window.__BSA_SHARED_MODE__ && h("button",{type:"button",role:"menuitem",onClick:()=>{setShortcutsOpen(false);const updateButton=document.getElementById("bsa-update-button");if(updateButton)updateButton.click();else window.alert("The update checker is still loading. Please try again.");}},h("span",{className:"bsa-shortcut-symbol","aria-hidden":"true"},"↻"),"Check updates")) : null;
     const openEditor = (type, item = null, defaults = {}) => {
       setModal(null);
@@ -13710,7 +13850,7 @@ h('div',{className:'life-avatar-preview'},h('span',null,life.avatar.accessory===
       try {
         const qs = new URLSearchParams(location.search);
         const want = qs.get("go");
-        const okTabs = ["curriculum", "home", "break", "life", "achievements", "stats-clean", "practice", "roadmap", "calendar", "vault", "mistakes", "grades", "lectures", "psets", "class", "toolkit", "howto"];
+        const okTabs = ["curriculum", "home", "break", "life", "achievements", "stats-clean", "private-vault", "practice", "roadmap", "calendar", "vault", "mistakes", "grades", "lectures", "psets", "class", "toolkit", "howto"];
         if (want && okTabs.includes(want)) {
           setNav({ tab: want, opts: want === "practice" ? { start: "review" } : {}, key: 1 });
           history.replaceState(null, "", location.pathname);
@@ -13801,7 +13941,7 @@ h('div',{className:'life-avatar-preview'},h('span',null,life.avatar.accessory===
       ["guide", "Explore features", "book"],
       ["break", "Break Corner", "home"],
       ["achievements", "Academic Progress", "grade"],
-      ["stats-clean", "Study-time audit", "grade"],
+      ["stats-clean", "Study report", "grade"],
       ["curriculum", "Curriculum", "book"],
       ["practice", "Practice", "bolt", reviewCount],
       ["roadmap", "Roadmap", "roadmap"],
@@ -13852,7 +13992,7 @@ h('div',{className:'life-avatar-preview'},h('span',null,life.avatar.accessory===
       h("div",{className:"workspace-topbar"},
         h("div",{className:"workspace-context"},h("span",{className:"workspace-eyebrow"},"STUDY DESK"),h("strong",null,(tabs.find(t=>t[0]===nav.tab)||[null,"Today"])[1]),h("span",{className:"workspace-subject"},subject.code||subject.name)),
         h("div",{className:"workspace-actions"},h("button",{className:"btn ghost",onClick:()=>setModal("quick")},"Quick add"),h("button",{className:"btn primary",onClick:()=>go("ask")},"Ask tutor"))),
-      nav.tab === "guide" && h(FeatureGuide,{go}), nav.tab === "break" && h(BreakCorner), nav.tab === "joy" && h(JoyHub,{go}), nav.tab === "life" && h(StudyLife), nav.tab === "achievements" && h(AcademicProgress,{go}), nav.tab === "stats-clean" && h(StatsFreshStart,{data,update,toast}), nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data,initialTool:nav.opts?.tool})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), h(WorkflowRibbon,{tab:nav.tab,go}), nav.tab === "home" && /* @__PURE__ */ React.createElement(HomeView, { ...viewProps }), nav.tab === "practice" && h(PracticeView, { ...viewProps, data }), nav.tab === "mcq" && h(MCQPage,{...viewProps}), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(CalendarView, { ...viewProps }), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(PsView, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })), /* @__PURE__ */ React.createElement("nav", { className: "bottom-nav", "aria-label": "Sections" }, tabs.filter(x=>["home","practice","roadmap"].includes(x[0])).map(([k, l, ic]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), /* @__PURE__ */ React.createElement("span", null, l))), /* @__PURE__ */ React.createElement("button", { className: "fab", onClick: () => setModal("quick"), "aria-label": "Quick add" }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 24 })), [tabs.find(x=>x[0]==="calendar"), tabs.find(x=>x[0]==="mistakes")].map(([k, l, ic, n]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement("span", { className: "ico-wrap" }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), k === "mistakes" && n ? /* @__PURE__ */ React.createElement("span", { className: "badge" }, n) : null), /* @__PURE__ */ React.createElement("span", null, k === "calendar" ? "Calendar" : "Mistakes"))), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("more") }, /* @__PURE__ */ React.createElement(Icon, { name: "more" }), /* @__PURE__ */ React.createElement("span", null, "More"))), /* @__PURE__ */ React.createElement("div", { className: `toast${msg ? " show" : ""}`, role: "status", "aria-live": "polite" }, msg), h(FocusBar, { data, update, toast }), modal === "quick" && /* @__PURE__ */ React.createElement(QuickAdd, { onClose: () => setModal(null), onPick: (k) => {
+      nav.tab === "guide" && h(FeatureGuide,{go}), nav.tab === "break" && h(BreakCorner), nav.tab === "joy" && h(JoyHub,{go}), nav.tab === "life" && h(StudyLife), nav.tab === "achievements" && h(AcademicProgress,{go}), nav.tab === "stats-clean" && h(StudyReport,{data,update,toast,go}), nav.tab === "private-vault" && !window.__BSA_SHARED_MODE__ && h(PrivateVault,{toast}), nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data,initialTool:nav.opts?.tool})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), h(WorkflowRibbon,{tab:nav.tab,go}), nav.tab === "home" && /* @__PURE__ */ React.createElement(HomeView, { ...viewProps }), nav.tab === "practice" && h(PracticeView, { ...viewProps, data }), nav.tab === "mcq" && h(MCQPage,{...viewProps}), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(CalendarView, { ...viewProps }), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(PsView, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })), /* @__PURE__ */ React.createElement("nav", { className: "bottom-nav", "aria-label": "Sections" }, tabs.filter(x=>["home","practice","roadmap"].includes(x[0])).map(([k, l, ic]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), /* @__PURE__ */ React.createElement("span", null, l))), /* @__PURE__ */ React.createElement("button", { className: "fab", onClick: () => setModal("quick"), "aria-label": "Quick add" }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 24 })), [tabs.find(x=>x[0]==="calendar"), tabs.find(x=>x[0]==="mistakes")].map(([k, l, ic, n]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement("span", { className: "ico-wrap" }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), k === "mistakes" && n ? /* @__PURE__ */ React.createElement("span", { className: "badge" }, n) : null), /* @__PURE__ */ React.createElement("span", null, k === "calendar" ? "Calendar" : "Mistakes"))), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("more") }, /* @__PURE__ */ React.createElement(Icon, { name: "more" }), /* @__PURE__ */ React.createElement("span", null, "More"))), /* @__PURE__ */ React.createElement("div", { className: `toast${msg ? " show" : ""}`, role: "status", "aria-live": "polite" }, msg), h(FocusBar, { data, update, toast }), modal === "quick" && /* @__PURE__ */ React.createElement(QuickAdd, { onClose: () => setModal(null), onPick: (k) => {
       if (k === "grade") {
         setModal(null);
         go("grades", { gtab: "scores" });
