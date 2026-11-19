@@ -2348,7 +2348,9 @@ html,body{overflow:hidden!important;background:var(--bg)}
 @media(max-width:700px){.mcq-quiz .mcq-shell{border-radius:15px;padding:16px}.mcq-quiz .mcq-choice{padding:13px;min-height:58px}.mcq-quiz .mcq-question{font-size:1.1rem}.study-question-card .ps-acts{gap:8px}.study-answer-panel>div{padding:14px!important}.mcq-bank-line{align-items:flex-start;flex-wrap:wrap}}
 @media(prefers-reduced-motion:reduce){.mcq-quiz .mcq-choice{transition:none!important;transform:none!important}}
 </style>
-</head>
+<style id="bsa-v151-library-prompts">
+.mcq-library{display:grid;gap:14px}.mcq-library-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}.mcq-library-head h2{margin:.25rem 0}.mcq-library-head p{margin:.25rem 0}.mcq-library-total{font-size:.8rem;font-weight:700;color:var(--accent,var(--text));padding:8px 11px;background:var(--surface-2,var(--surface));border:1px solid var(--line);border-radius:999px}.mcq-library-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}.mcq-library-set{border:1px solid var(--line);background:var(--surface-2,var(--surface));border-radius:14px;padding:17px;display:flex;flex-direction:column;gap:16px;justify-content:space-between}.mcq-library-set p{margin:8px 0 0;overflow-wrap:anywhere}.mcq-library-actions,.mcq-library-toolbar{display:flex;gap:8px;flex-wrap:wrap}.mcq-library-toolbar{justify-content:space-between}.mcq-library-questions{display:grid;gap:14px}.mcq-library-question{border:1px solid var(--line);background:var(--surface-2,var(--surface));border-radius:17px;padding:clamp(14px,2vw,24px);min-width:0;display:grid;gap:15px}.mcq-library-question-head{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap}.mcq-library-question-head>div{flex:1;min-width:150px}.mcq-library-question-head strong{font-size:1.05rem}.mcq-library-number{display:inline-flex;align-items:center;justify-content:center;min-width:42px;min-height:40px;border-radius:12px;background:var(--accent);color:white;font-weight:800}.mcq-library-stem{font-size:1.03rem;line-height:1.65}.mcq-library-choices{display:grid;gap:9px;margin:0;padding:0;list-style:none;counter-reset:answers}.mcq-library-choices li{display:flex;align-items:flex-start;gap:11px;border:1px solid var(--line);border-radius:11px;padding:12px 14px;counter-increment:answers;overflow-wrap:anywhere}.mcq-library-choices li:before{content:counter(answers,upper-alpha);font-weight:800;flex:0 0 25px;color:var(--text)}.mcq-library-choices p{margin:0}.mcq-library-answer{display:grid;gap:12px;border-radius:13px;padding:17px}.mcq-library-answer-key{border-left:4px solid var(--ok,var(--accent));padding-left:12px}.mcq-library-answer-key p{font-size:1.04rem;font-weight:650}.mcq-library-search{width:100%;max-width:none}.mcq-library-title{margin:0}.prompt-guide{display:grid;gap:10px;margin-top:10px}.prompt-guide>p{margin:0}.prompt-goal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:9px}.prompt-goal{display:flex;flex-direction:column;align-items:flex-start;gap:5px;min-height:70px;text-align:left;background:var(--surface-2,var(--surface));border:1px solid var(--line);border-radius:12px;color:var(--text);padding:12px;cursor:pointer}.prompt-goal span{font-size:.75rem;color:var(--muted)}.prompt-goal.active,.prompt-result.active{outline:2px solid var(--accent);outline-offset:-2px;border-color:var(--accent)}.prompt-search{margin-top:12px;width:100%;max-width:none}.prompt-results{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:8px;max-height:300px;overflow-y:auto;padding:3px}.prompt-result{display:flex;text-align:left;justify-content:space-between;align-items:flex-start;gap:9px;border:1px solid var(--line);border-radius:11px;background:var(--surface-2,var(--surface));color:var(--text);padding:12px;cursor:pointer;min-width:0}.prompt-result>div{display:grid;gap:5px;min-width:0}.prompt-result>div>span{line-height:1.45}.prompt-type{font-size:.7rem;border-radius:20px;padding:4px 7px;border:1px solid var(--line);white-space:nowrap}.prompt-type.importable{color:var(--accent)}.prompt-howto{background:var(--surface-2,var(--surface));border:1px solid var(--line);border-radius:12px;padding:14px}.prompt-howto p{margin:6px 0 0}@media(max-width:700px){.mcq-library-actions>.btn{flex:1}.mcq-library-set{padding:14px}.prompt-result{flex-direction:column}.prompt-goal-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style></head>
 <body>
 <div id="root"><p class="boot">Opening your study desk… If this doesn’t load, connect to the internet once so the app can save itself for offline use.</p></div>
 <script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
@@ -4282,7 +4284,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       }
     };
     const preview = parsed && parsed.kind === "partial" ? previewPartial(target === "__new" ? { topics: parsed.topics } : data.subjects.find((s) => s.id === target) || active, parsed) : null;
-    return /* @__PURE__ */ React.createElement(Modal, { title: "Import & export data", onClose, wide: true }, /* @__PURE__ */ React.createElement("div", { className: "tabs small", role: "tablist" }, [["import", "Import"], ["packs", "Starter packs"], ["github", "GitHub sync"], ["export", "Export backup"], ["prompt", "AI Study Prompts"]].map(([k, l]) => /* @__PURE__ */ React.createElement("button", { key: k, role: "tab", "aria-selected": tab === k, className: tab === k ? "on" : "", onClick: () => setTab(k) }, l))), tab === "import" && /* @__PURE__ */ React.createElement("div", { className: "import" }, /* @__PURE__ */ React.createElement("p", { className: "muted" }, "Paste JSON from AI (or any AI tutor), a backup file’s contents, or plain text with lines starting “Q:” and “A:”."), /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React.createElement(Modal, { title: "Import, export & AI tools", onClose, wide: true }, /* @__PURE__ */ React.createElement("div", { className: "tabs small", role: "tablist" }, [["import", "Import"], ["packs", "Starter packs"], ["github", "GitHub sync"], ["export", "Export backup"], ["prompt", "AI Prompt Library"]].map(([k, l]) => /* @__PURE__ */ React.createElement("button", { key: k, role: "tab", "aria-selected": tab === k, className: tab === k ? "on" : "", onClick: () => setTab(k) }, l))), tab === "import" && /* @__PURE__ */ React.createElement("div", { className: "import" }, /* @__PURE__ */ React.createElement("p", { className: "muted" }, "To add study materials: (1) Open AI Prompt Library, choose what you want to make and copy its prompt. (2) Use it with your source in an AI tool. (3) Paste the returned JSON here and select Check before importing. You can also paste backup JSON or Q:/A: text."), /* @__PURE__ */ React.createElement(
       "textarea",
       {
         className: "code",
@@ -6766,12 +6768,13 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
   }
   /* v148 — focused, one-at-a-time multiple-choice practice. Uses the same
      authored question pool and progress schema as Mock Exam. */
-  function MultipleChoiceQuiz({ subject, update, toast, go, onExit }) {
+  function MultipleChoiceQuiz({ subject, update, toast, go, onExit, initialSetId = "all" }) {
     const all = useMemo(() => mxPool(subject, null).mcq.filter((q) =>
       q.key && q.choices && q.choices.length >= 2 &&
       q.choices.some((choice, i) => mxChoiceKey(choice, i) === q.key)
     ), [subject]);
     const [topic, setTopic] = useState("all");
+    const [collection, setCollection] = useState(initialSetId);
     const [count, setCount] = useState(10);
     const [phase, setPhase] = useState("setup");
     const [paper, setPaper] = useState([]);
@@ -6781,7 +6784,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const saved = useRef(false);
     const started = useRef(0);
     const topics = studyTopics(subject);
-    const eligible = all.filter((q) => topic === "all" || q.topicId === topic);
+    const eligible = all.filter((q) => (topic === "all" || q.topicId === topic) && (collection === "all" || q.setId === collection));
     const start = () => {
       const items = shuffle(eligible).slice(0, Math.max(1, Math.min(count, eligible.length)));
       if (!items.length) return;
@@ -6827,6 +6830,9 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
             topics.map(t => h("option", { key: t.id, value: t.id }, `${t.code ? t.code + " · " : ""}${t.title}`)))),
           h(Field, { label: "Questions" }, h("select", { value: count, onChange: e => setCount(Number(e.target.value)) },
             [5,10,15,20,30,50].map(n => h("option", { value: n, key: n }, n))))),
+        h(Field, { label: "Question collection" }, h("select", { value: collection, onChange: e => setCollection(e.target.value) },
+          h("option", { value: "all" }, "All collections"),
+          [...(subject.mcqSets || []), ...(subject.psets || []).filter(x => (x.problems || []).some(q => (q.choices || []).length >= 2))].map(x => h("option", { key:x.id, value:x.id }, x.title)))),
         h("p", { className: "muted" }, `${eligible.length} eligible questions from the dedicated MCQ bank and any legacy MCQs. Each needs an answer key (A–D).`),
         h("div", { className: "step-actions" },
           h("button", { className: "btn primary", disabled: !eligible.length, onClick: start }, "Start quiz"),
@@ -6863,6 +6869,57 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     );
   }
 
+  /* v151 — a real MCQ library, not just a count/remove list.
+     Source collections remain in subject.mcqSets; answers stay hidden until requested. */
+  function MCQBankExplorer({ subject, update, onPractice }) {
+    const sets = subject.mcqSets || [];
+    const [openId, setOpenId] = useState(null);
+    const [query, setQuery] = useState("");
+    const [shown, setShown] = useState({});
+    const [limit, setLimit] = useState(20);
+    const current = sets.find(x => x.id === openId);
+    const entries = current ? (current.problems || []).filter(p =>
+      !query.trim() || norm([p.title, p.subtopic, p.problem].join(" ")).includes(norm(query))) : [];
+    const toggle = id => setShown(v => ({ ...v, [id]: !v[id] }));
+    const count = sets.reduce((n,x) => n+(x.problems || []).length,0);
+    return h("section", { className:"panel mcq-library", "aria-label":"Multiple-choice question bank" },
+      h("div", { className:"mcq-library-head" },
+        h("div",null,h("span", {className:"panel-kicker"},"YOUR QUESTION LIBRARY"),h("h2",null,"MCQ question bank"),
+          h("p", {className:"muted small"}, "Browse questions and reveal worked explanations, or start a quiz. MCQs are separate from regular Problem Sets.")),
+        h("span",{className:"mcq-library-total"},`${sets.length} collections · ${count} questions`)),
+      current ? h(React.Fragment,null,
+        h("div",{className:"mcq-library-toolbar"},
+          h("button",{className:"btn",onClick:()=>{setOpenId(null);setQuery("");setLimit(20);}},"← All collections"),
+          h("button",{className:"btn primary",onClick:()=>onPractice(current.id)},"Practice this collection")),
+        h("h3", {className:"mcq-library-title"},current.title),
+        current.source && h("p",{className:"muted small"},`Source: ${current.source}`),
+        h("input",{className:"search mcq-library-search",type:"search",value:query,onChange:e=>{setQuery(e.target.value);setLimit(20);},placeholder:"Search questions or subtopics…","aria-label":"Search multiple-choice questions"}),
+        h("div",{className:"mcq-library-questions"},entries.slice(0,limit).map((q,i)=>{
+          const reveal=!!shown[q.id];
+          const answer=String(q.answer || "");
+          return h("article",{key:q.id || i,className:"mcq-library-question"},
+            h("header",{className:"mcq-library-question-head"},h("span",{className:"mcq-library-number"},`Q${q.no || i+1}`),
+              h("div",null,h("strong",null,q.title || `Question ${q.no || i+1}`),q.subtopic && h("div",{className:"muted small"},q.subtopic)),
+              q.difficulty && h("span",{className:"ps-diff"},q.difficulty)),
+            h("div",{className:"mcq-library-stem"},h(PsMd,{text:q.problem || ""})),
+            (q.choices || []).length>0 && h("ol",{className:"mcq-library-choices",type:"A"},(q.choices || []).map((choice,j)=>h("li",{key:j},h(PsMd,{text:String(choice).replace(/^\s*[A-Da-d]\s*[.)\]]\s*/,"")})))),
+            h("button",{className:`btn${reveal?"":" primary"}`,"aria-expanded":reveal,onClick:()=>toggle(q.id)},reveal?"Hide answer & explanation":"Reveal answer & explanation"),
+            reveal && h("div",{className:"study-answer-panel mcq-library-answer",role:"region","aria-label":"Answer and explanation"},
+              answer && h("div",{className:"mcq-library-answer-key"},h("span",{className:"panel-kicker"},"CORRECT ANSWER"),h(PsMd,{text:answer})),
+              q.approach && h("div",{className:"study-answer-step"},h("strong",null,"How to approach it"),h(PsMd,{text:q.approach})),
+              q.solution && h("div",{className:"study-answer-step"},h("strong",null,"Explanation / solution"),h(PsMd,{text:q.solution})),
+              q.trap && h("div",{className:"study-answer-trap"},h("strong",null,"Common mistake"),h(PsMd,{text:q.trap}))));
+        })),
+        entries.length > limit && h("div",{className:"row-end"},h("span",{className:"muted small"},`Showing ${Math.min(limit,entries.length)} of ${entries.length}`),h("button",{className:"btn",onClick:()=>setLimit(n=>n+20)},"Show 20 more")),
+        !entries.length && h("p",{className:"muted"},"No questions match this search.")) :
+        sets.length ? h("div",{className:"mcq-library-grid"},sets.map(set => h("article",{className:"mcq-library-set",key:set.id},
+          h("div",null,h("strong",null,set.title),h("p",{className:"muted small"},`${(set.problems||[]).length} questions${set.source?` · ${set.source}`:""}`)),
+          h("div",{className:"mcq-library-actions"},
+            h("button",{className:"btn primary",onClick:()=>{setOpenId(set.id);setQuery("");setShown({});setLimit(20);}},"Browse questions"),
+            h("button",{className:"btn",onClick:()=>onPractice(set.id)},"Practice"),
+            h("button",{className:"btn ghost",onClick:()=>{if(!window.confirm(`Remove MCQ collection “${set.title}”? Export a backup first if needed.`))return;update(x=>{x.mcqSets=(x.mcqSets||[]).filter(y=>y.id!==set.id);});}},"Remove"))))) :
+          h("p",{className:"muted"},"No dedicated MCQ collections yet. Use Generate quiz questions to create one, then import it."));
+  }
   function PracticeView({ subject, update, toast, go, init, settings, setSettings, openEditor, data }) {
     const [mode, setMode] = useState(null);
     const newPerDay = settings.newPerDay || 10;
@@ -6891,7 +6948,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     if (mode && mode.kind === "study") return h("section", { className: "view" }, h(StudySession, { subject, update, toast, settings, items: mode.items, title: mode.title, all: mode.all, onExit: () => setMode(null) }));
     if (mode && mode.kind === "compute") return h("section", { className: "view" }, h(ComputeSet, { subject, update, toast, set: mode.set, onExit: () => setMode(null) }));
     if (mode && mode.kind === "mock") return h("section", { className: "view" }, h(MockExam, { subject, exam, update, toast, onExit: () => setMode(null) }));
-    if (mode && mode.kind === "mcq") return h("section", { className: "view" }, h(MultipleChoiceQuiz, { subject, update, toast, go, onExit: () => setMode(null) }));
+    if (mode && mode.kind === "mcq") return h("section", { className: "view" }, h(MultipleChoiceQuiz, { subject, update, toast, go, initialSetId:mode.setId || "all", onExit: () => setMode(null) }));
     const dueTotal = rv.due.length + rv.fresh.length + rv.mist.length;
     const topics = studyTopics(subject);
     const strength = topics.map((t) => {
@@ -6909,14 +6966,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         h("div", { className: "step-actions" },
           h("button", { className: "btn primary", onClick: () => setMode({kind:"mcq"}) }, "Start MCQ quiz"),
           h("button", { className: "btn", onClick: () => go("nlm", {pid:"mcq-quiz"}) }, "Generate quiz questions"))),
-      h("details", { className: "panel mcq-bank" },
-        h("summary", null, h("strong", null, "Multiple-choice question bank"),
-          h("span", { className: "muted small" }, `${(subject.mcqSets || []).length} collections · ${(subject.mcqSets || []).reduce((n, x) => n + (x.problems || []).length, 0)} questions`)),
-        h("p", { className: "muted small" }, "MCQ collections are saved separately from long-form Problem Sets. Existing questions in older mixed problem sets remain available for quizzes."),
-        (subject.mcqSets || []).map(set => h("div", { className: "mcq-bank-line", key: set.id },
-          h("span", null, h("strong", null, set.title), h("small", { className: "muted" }, ` · ${(set.problems || []).length} questions`)),
-          h("button", { className: "btn ghost", onClick: () => { if (!window.confirm(`Remove MCQ collection “${set.title}”? Export your data first if you need a backup.`)) return; update(s => { s.mcqSets = (s.mcqSets || []).filter(x => x.id !== set.id); }); } }, "Remove"))),
-        !(subject.mcqSets || []).length && h("p", { className: "muted small" }, "Import a generated MCQ collection to fill this bank.")),
+      h(MCQBankExplorer, { subject, update, onPractice: (setId) => setMode({kind:"mcq",setId}) }),
       h(
         "div",
         { className: "practice-grid" },
@@ -7006,7 +7056,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       for (const p of s.problems) {
         const key = mxKey(p.answer);
         if (!p.choices || p.choices.length < 2 || !key) continue;
-        mcq.push({ kind: "mcq", id: `x_${p.id}`, topicId: s.topicId, q: p.problem, choices: p.choices, key, why: p.solution || p.approach || "", trap: p.trap || "", src: `${s.title} \u00b7 problem ${p.no}` });
+        mcq.push({ kind: "mcq", id: `x_${p.id}`, topicId: s.topicId, q: p.problem, choices: p.choices, key, why: p.solution || p.approach || "", trap: p.trap || "", src: `${s.title} \u00b7 problem ${p.no}`, setId: s.id });
       }
     }
     const calc = [];
@@ -8086,7 +8136,29 @@ THE PART I'M STUCK ON:
     const [kind, setKind] = useState(() => localPref(`nlmKind_${subject.id}`, nlmGuessKind(subject)));
     const [topicId, setTopicId] = useState(initTopic && subject.topics.some((t) => t.id === initTopic) ? initTopic : "");
     const [pid, setPid] = useState(() => initPid || localPref("nlmPrompt", "cards"));
+    const [goal, setGoal] = useState("recommended");
+    const [search, setSearch] = useState("");
     const p = NLM_PROMPTS.find((x) => x.id === pid) || NLM_PROMPTS[2];
+    const promptGoals = [
+      ["recommended","Start here","Common, high-value tasks"],
+      ["learn","Understand","Lectures, comparisons and teach-back"],
+      ["recall","Remember","Flashcards and recall"],
+      ["solve","Solve problems","Computations, MCQs and problem sets"],
+      ["exam","Prepare for exams","Exam plans and realistic practice"],
+      ["correct","Fix mistakes","Diagnose errors and revisit weak topics"],
+      ["setup","Set up","Course roadmap, textbook and grading"],
+      ["all","All prompts","Browse every available prompt"]
+    ];
+    const goalIds = {
+      recommended:["lecture","mcq-quiz","cards","pset","socratic","why-wrong"],
+      learn:["lecture","lecture-chat","socratic","compare","teachback","case-transfer"],
+      recall:["cards","teachback","socratic","lecture-chat"],
+      solve:["pset","pset-book","pset-compre","pset-mcq","mcq-quiz","drills","pset-chat","case-transfer"],
+      exam:["exam-map","mcq-quiz","pset-compre","pset-mcq","pset","drills"],
+      correct:["why-wrong","compare","teachback","socratic","case-transfer"]
+    };
+    const matches = NLM_PROMPTS.filter(x => (goal === "all" || goalIds[goal] ? goal === "all" || (goalIds[goal] || []).includes(x.id) : x.group === goal) &&
+      (!search.trim() || norm(`${x.title} ${x.desc}`).includes(norm(search))));
     const text = `${NLM_SOURCE_RULES}\n\n${p.make(nlmContext(subject, topicId, kind))}`;
     const pickKind = (v) => {
       setKind(v);
@@ -8106,13 +8178,24 @@ THE PART I'M STUCK ON:
         h(Field, { label: "Subject type", hint: "Changes what the prompt asks AI to focus on" }, h("select", { value: kind, onChange: (e) => pickKind(e.target.value) }, NLM_KINDS.map(([k, l]) => h("option", { key: k, value: k }, l)))),
         h(Field, { label: "Topic" }, h("select", { value: topicId, onChange: (e) => setTopicId(e.target.value) }, h("option", { value: "" }, `Whole subject (${subject.name})`), studyTopics(subject).map((t) => h("option", { key: t.id, value: t.id }, `${t.code ? t.code + " " : ""}${t.title}`))))
       ),
-      NLM_GROUPS.map(([g, gl, gh]) => h(
-        "div",
-        { key: g, className: "nlm-group" },
-        h("div", { className: "nlm-group-head" }, h("strong", null, gl), h("span", { className: "muted small" }, gh)),
-        h("div", { className: "nlm-chips" }, NLM_PROMPTS.filter((x) => x.group === g).map((x) => h("button", { key: x.id, className: `chip${x.id === p.id ? " on" : ""}`, "aria-pressed": x.id === p.id, onClick: () => pickPrompt(x.id) }, x.title)))
-      )),
-      h("div", { className: "nlm-pick" }, h("strong", null, p.title), h("span", { className: "muted small" }, p.desc), h("span", { className: `nlm-tag${p.json ? " json" : ""}` }, p.json ? "Returns JSON: paste the reply into Import" : "Chat only: nothing to import")),
+      h("div",{className:"prompt-guide"},
+        h("strong",null,"What do you want to do?"),
+        h("p",{className:"muted small"},"Choose a goal first. Each prompt explains what it creates and whether its answer can be imported."),
+        h("div",{className:"prompt-goal-grid"},promptGoals.map(([id,label,detail])=>h("button",{
+          key:id,className:`prompt-goal${goal===id?" active":""}`,"aria-pressed":goal===id,onClick:()=>setGoal(id)},
+          h("strong",null,label),h("span",null,detail))))),
+      h("input",{className:"search prompt-search",type:"search",value:search,onChange:e=>setSearch(e.target.value),placeholder:"Search prompts by topic or purpose…","aria-label":"Search AI study prompts"}),
+      h("div",{className:"prompt-results","aria-label":"Available AI prompts"},matches.map(x=>h("button",{
+        key:x.id,className:`prompt-result${x.id===p.id?" active":""}`,"aria-pressed":x.id===p.id,onClick:()=>pickPrompt(x.id)},
+        h("div",null,h("strong",null,x.title),h("span",{className:"muted small"},x.desc)),
+        h("span",{className:`prompt-type${x.json?" importable":""}`},x.json?"Importable":"Interactive")))),
+      !matches.length && h("p",{className:"muted"},"No prompts found. Try another goal or clear the search."),
+      h("div",{className:"prompt-howto"},
+        h("strong",null,"How to use your selected prompt"),
+        h("p",{className:"muted small"},p.json?
+          "1. Attach the chapter or notes in your AI tool. 2. Copy and send this prompt. 3. Copy the JSON response. 4. Return to Import and paste it to add the material.":
+          "1. Attach the relevant chapter or notes to your AI tool. 2. Copy and send this prompt. 3. Answer its questions in the AI chat. Nothing needs importing.")),
+      h("div", { className: "nlm-pick" }, h("strong", null, p.title), h("span", { className: "muted small" }, p.desc), h("span", { className: `nlm-tag${p.json ? " json" : ""}` }, p.json ? "Importable material · paste JSON into Import" : "Interactive tutoring · use in AI chat")),
       h("textarea", { className: "code", rows: 10, readOnly: true, value: text, onFocus: (e) => e.target.select() }),
       /\[[A-Za-z][^\]]*\]/.test(text) && h("p", { className: "muted small" }, "Replace the parts in [square brackets] before you send it."),
       h("div", { className: "row-end" }, p.json && onImport && h("button", { className: "btn", onClick: onImport }, "Go to Import"), h("button", { className: "btn primary", onClick: async () => toast(await copyText(text) ? "Prompt copied" : "Select the text and copy it manually") }, "Copy prompt"))
@@ -11044,7 +11127,7 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
     return h(
       "section",
       { className: "view" },
-      h("div", { className: "page-head" }, h("div", null, h("h1", { className: "page-title" }, "Problem sets"), h("p", { className: "muted" }, "Problems grouped by subtopic. Each one hides its answer and the full way to solve it until you’re ready.")), h("div", { className: "head-actions" }, h("button", { className: "btn", onClick: () => go("nlm", { pid: "pset" }) }, "Get the AI prompt"), h("button", { className: "btn primary", onClick: () => go("data") }, "Paste AI reply"))),
+      h("div", { className: "page-head" }, h("div", null, h("h1", { className: "page-title" }, "Problem sets"), h("p", { className: "muted" }, "Practice each problem: solve it first, reveal the worked answer, then mark Got it or Missed it. Misses return for review.")), h("div", { className: "head-actions" }, h("button", { className: "btn", onClick: () => go("nlm", { pid: "pset" }) }, "Get the AI prompt"), h("button", { className: "btn primary", onClick: () => go("data") }, "Paste AI reply"))),
       h(PsSampleCard, { subject, update, toast }),
       sets.length > 0 && h("div", { className: "stats ps-stats" }, h("div", { className: "stat lead" }, h("span", { className: "stat-label" }, "Problems"), h("span", { className: "big-num" }, all.n), h("span", { className: "muted" }, `in ${plural(sets.length, "set")}`)), h("div", { className: "stat" }, h("span", { className: "stat-label" }, "Tried"), h("span", { className: "big-num" }, tried), h("span", { className: "muted" }, `${all.n - tried} still to try`)), h("div", { className: "stat" }, h("span", { className: "stat-label" }, "Got it"), h("span", { className: "big-num" }, tried ? `${Math.round(all.got / tried * 100)}%` : "—"), h("span", { className: "muted" }, `${all.got} of ${tried} tried`)), h("div", { className: "stat" }, h("span", { className: "stat-label" }, "Missed"), h("span", { className: `big-num${all.miss ? " bad-text" : ""}` }, all.miss), h("span", { className: "muted" }, "Redo these first"))),
       sets.length > 0 && h("div", { className: "filters" }, h("input", { className: "search", type: "search", placeholder: "Search sets and problems", value: query, onChange: (e) => setQuery(e.target.value), "aria-label": "Search problem sets" }), usedTopics.length > 0 && h("div", { className: "chip-scroll", role: "group", "aria-label": "Filter by topic" }, h("button", { className: `chip${topic === "all" ? " on" : ""}`, onClick: () => setTopic("all") }, "All topics"), usedTopics.map((t) => h("button", { key: t.id, className: `chip${topic === t.id ? " on" : ""}`, onClick: () => setTopic(t.id), title: t.title }, t.code || t.title.slice(0, 18))), sets.some((s) => !s.topicId) && h("button", { className: `chip${topic === "" ? " on" : ""}`, onClick: () => setTopic("") }, "Unsorted"))),
@@ -11174,7 +11257,7 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
       p.req.length > 0 && h("div", { className: "ps-req" }, h("strong", null, "Required"), h("ol", null, p.req.map((r, i) => h("li", { key: i }, psInline(r))))),
       p.choices.length > 0 && h("ul", { className: "ps-choices" }, p.choices.map((c, i) => h("li", { key: i }, psInline(c)))),
       p.source && h("p", { className: "muted small" }, p.source),
-      h("div", { className: "ps-acts" }, hasSol && !revealAll && h("button", { className: `btn${open ? "" : " primary"}`, "aria-expanded": open, onClick: () => setOpen((v) => !v) }, open ? "Hide solution" : "Show how to solve"), h("button", { className: `chip${p.st === "got" ? " on ok" : ""}`, "aria-pressed": p.st === "got", onClick: () => onMark("got") }, "Got it"), h("button", { className: `chip${p.st === "miss" ? " on bad" : ""}`, "aria-pressed": p.st === "miss", onClick: () => onMark("miss") }, "Missed it"), p.st === "miss" && h("button", { className: "link-btn", onClick: onLog }, "Log in Mistake log"), h("span", { className: "spacer" }), h("button", { className: "link-btn", onClick: () => psPrint({ title: p.title || `Problem ${p.no}`, problems: [p], topicText: "", source: "" }, false) }, "PDF"), h("button", { className: "link-btn", onClick: () => psPrint({ title: p.title || `Problem ${p.no}`, problems: [p], topicText: "", source: "" }, true) }, "PDF + key"), h("button", { className: "link-btn", onClick: onEdit }, "Edit")),
+      h("div", { className: "ps-acts" }, hasSol && !revealAll && h("button", { className: `btn${open ? "" : " primary"}`, "aria-expanded": open, onClick: () => setOpen((v) => !v) }, open ? "Hide solution" : "Reveal worked solution"), h("button", { className: `chip${p.st === "got" ? " on ok" : ""}`, "aria-pressed": p.st === "got", onClick: () => onMark("got") }, "Got it"), h("button", { className: `chip${p.st === "miss" ? " on bad" : ""}`, "aria-pressed": p.st === "miss", onClick: () => onMark("miss") }, "Missed it"), p.st === "miss" && h("button", { className: "link-btn", onClick: onLog }, "Log in Mistake log"), h("span", { className: "spacer" }), h("button", { className: "link-btn", onClick: () => psPrint({ title: p.title || `Problem ${p.no}`, problems: [p], topicText: "", source: "" }, false) }, "PDF"), h("button", { className: "link-btn", onClick: () => psPrint({ title: p.title || `Problem ${p.no}`, problems: [p], topicText: "", source: "" }, true) }, "PDF + key"), h("button", { className: "link-btn", onClick: onEdit }, "Edit")),
       show && hasSol && h("div", { className: "ps-sol study-answer-panel" }, p.answer && h("div", { className: "ps-answer" }, h("span", { className: "ps-label" }, "Answer"), h(PsMd, { text: p.answer })), p.approach && h("div", { className: "ps-approach study-answer-step" }, h("span", { className: "ps-label" }, "How to approach it"), h(PsMd, { text: p.approach })), p.solution && h("div", { className: "ps-steps study-answer-step" }, h("span", { className: "ps-label" }, "Solution"), h(PsMd, { text: p.solution })), p.trap && h("div", { className: "ps-trap study-answer-trap" }, h("span", { className: "ps-label" }, "Watch out"), h(PsMd, { text: p.trap })))
     );
   }
