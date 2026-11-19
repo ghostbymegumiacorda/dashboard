@@ -2350,6 +2350,92 @@ html,body{overflow:hidden!important;background:var(--bg)}
 </style>
 <style id="bsa-v151-library-prompts">
 .mcq-library{display:grid;gap:14px}.mcq-library-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}.mcq-library-head h2{margin:.25rem 0}.mcq-library-head p{margin:.25rem 0}.mcq-library-total{font-size:.8rem;font-weight:700;color:var(--accent,var(--text));padding:8px 11px;background:var(--surface-2,var(--surface));border:1px solid var(--line);border-radius:999px}.mcq-library-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}.mcq-library-set{border:1px solid var(--line);background:var(--surface-2,var(--surface));border-radius:14px;padding:17px;display:flex;flex-direction:column;gap:16px;justify-content:space-between}.mcq-library-set p{margin:8px 0 0;overflow-wrap:anywhere}.mcq-library-actions,.mcq-library-toolbar{display:flex;gap:8px;flex-wrap:wrap}.mcq-library-toolbar{justify-content:space-between}.mcq-library-questions{display:grid;gap:14px}.mcq-library-question{border:1px solid var(--line);background:var(--surface-2,var(--surface));border-radius:17px;padding:clamp(14px,2vw,24px);min-width:0;display:grid;gap:15px}.mcq-library-question-head{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap}.mcq-library-question-head>div{flex:1;min-width:150px}.mcq-library-question-head strong{font-size:1.05rem}.mcq-library-number{display:inline-flex;align-items:center;justify-content:center;min-width:42px;min-height:40px;border-radius:12px;background:var(--accent);color:white;font-weight:800}.mcq-library-stem{font-size:1.03rem;line-height:1.65}.mcq-library-choices{display:grid;gap:9px;margin:0;padding:0;list-style:none;counter-reset:answers}.mcq-library-choices li{display:flex;align-items:flex-start;gap:11px;border:1px solid var(--line);border-radius:11px;padding:12px 14px;counter-increment:answers;overflow-wrap:anywhere}.mcq-library-choices li:before{content:counter(answers,upper-alpha);font-weight:800;flex:0 0 25px;color:var(--text)}.mcq-library-choices p{margin:0}.mcq-library-answer{display:grid;gap:12px;border-radius:13px;padding:17px}.mcq-library-answer-key{border-left:4px solid var(--ok,var(--accent));padding-left:12px}.mcq-library-answer-key p{font-size:1.04rem;font-weight:650}.mcq-library-search{width:100%;max-width:none}.mcq-library-title{margin:0}.prompt-guide{display:grid;gap:10px;margin-top:10px}.prompt-guide>p{margin:0}.prompt-goal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:9px}.prompt-goal{display:flex;flex-direction:column;align-items:flex-start;gap:5px;min-height:70px;text-align:left;background:var(--surface-2,var(--surface));border:1px solid var(--line);border-radius:12px;color:var(--text);padding:12px;cursor:pointer}.prompt-goal span{font-size:.75rem;color:var(--muted)}.prompt-goal.active,.prompt-result.active{outline:2px solid var(--accent);outline-offset:-2px;border-color:var(--accent)}.prompt-search{margin-top:12px;width:100%;max-width:none}.prompt-results{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:8px;max-height:300px;overflow-y:auto;padding:3px}.prompt-result{display:flex;text-align:left;justify-content:space-between;align-items:flex-start;gap:9px;border:1px solid var(--line);border-radius:11px;background:var(--surface-2,var(--surface));color:var(--text);padding:12px;cursor:pointer;min-width:0}.prompt-result>div{display:grid;gap:5px;min-width:0}.prompt-result>div>span{line-height:1.45}.prompt-type{font-size:.7rem;border-radius:20px;padding:4px 7px;border:1px solid var(--line);white-space:nowrap}.prompt-type.importable{color:var(--accent)}.prompt-howto{background:var(--surface-2,var(--surface));border:1px solid var(--line);border-radius:12px;padding:14px}.prompt-howto p{margin:6px 0 0}@media(max-width:700px){.mcq-library-actions>.btn{flex:1}.mcq-library-set{padding:14px}.prompt-result{flex-direction:column}.prompt-goal-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style><style id="bsa-v152-practice-priorities">
+.bsa-study-priorities{display:grid;gap:18px;min-width:0}
+.bsa-study-priorities-head h2{margin:5px 0 4px;font-size:clamp(1.2rem,1.8vw,1.5rem)}
+.bsa-study-priorities-head p{margin:0}
+.bsa-study-priorities-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:12px;min-width:0}
+.bsa-study-priority{position:relative;min-width:0;display:flex;align-items:flex-start;gap:12px;padding:16px;border:1px solid var(--line);border-radius:16px;background:var(--card);overflow-wrap:anywhere}
+.bsa-study-priority-number{display:grid;place-items:center;flex:0 0 32px;width:32px;height:32px;background:var(--accent);color:var(--on-accent,#fff);border-radius:10px;font-weight:800}
+.bsa-study-priority-body{display:flex;flex-direction:column;align-items:flex-start;gap:7px;min-width:0;flex:1}
+.bsa-study-priority-count{font-size:.72rem;font-weight:800;letter-spacing:.03em;opacity:.78}
+.bsa-study-priority h3{font-size:1rem;line-height:1.3;margin:0}
+.bsa-study-priority p{margin:0 0 4px;line-height:1.45}
+.bsa-study-priority .btn{max-width:100%;white-space:normal}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--accent)!important;outline-offset:3px}
+@media(max-width:700px){.bsa-study-priorities-grid{grid-template-columns:minmax(0,1fr)}.bsa-study-priority{padding:14px}}
+@media(prefers-reduced-motion:reduce){.bsa-study-priority,.bsa-study-priority *{animation:none!important;transition:none!important}}
+</style>
+
+<style id="bsa-v153-print-isolation">
+@media print {
+ html,body,body.gc-printing,#gc-print,#gc-print .ps-print{background:#fff!important;color:#242238!important;color-scheme:light!important;}
+ body.gc-printing #gc-print{display:block!important;box-shadow:none!important;border:0!important;}
+ body.gc-printing #gc-print *{color-scheme:light!important;}
+}
+</style>
+<style id="bsa-v153-study-drill-css">
+.mcq-page{min-width:0}.mcq-page-actions,.mcq-practice-link{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.mcq-practice-link p{margin:.3rem 0 0}
+.ps-written-drill{display:grid;gap:16px;min-width:0}.ps-written-top{display:flex;align-items:start;justify-content:space-between;gap:12px;flex-wrap:wrap}.ps-written-top h2{margin:.3rem 0}.ps-written-question{border:1px solid var(--line);border-radius:16px;padding:clamp(16px,2vw,26px);background:var(--surface-2,var(--surface));display:grid;gap:14px;min-width:0}.ps-written-question h3{margin:0}.ps-written-label{display:block;font-weight:750}.ps-written-question textarea{width:100%;min-width:0;max-width:100%;border:1px solid var(--line);border-radius:12px;padding:14px;font:inherit;line-height:1.55;color:var(--text);background:var(--surface)}.ps-written-question textarea:focus{outline:2px solid var(--accent);outline-offset:2px}.ps-written-feedback{display:grid;gap:12px;padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}.ps-written-feedback-heading{font-weight:800;font-size:1.07rem}.ps-written-feedback-heading.match{color:#087b57}.ps-written-feedback-heading.no-match{color:#ba4a42}.ps-written-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+@media(max-width:700px){.ps-written-actions .btn{flex:1 1 auto}.ps-written-question{padding:15px}}
+</style>
+<style id="bsa-v154-quiz-design">
+/* App-style quiz cards, scoped only to MCQ and the sound preference. */
+.mcq-quiz{--quiz-radius:20px;max-width:980px;margin-inline:auto}
+.mcq-quiz .page-head{margin-bottom:20px}
+.mcq-quiz .mcq-shell{max-width:none!important;padding:clamp(20px,3.3vw,38px)!important;border-radius:24px!important;box-shadow:0 12px 44px rgba(0,0,0,.055)}
+.mcq-quiz .bsa-quiz-progress{display:flex;align-items:center;gap:12px;justify-content:space-between;margin-bottom:10px}
+.mcq-quiz .bsa-quiz-count{font-size:.75rem;font-weight:750;letter-spacing:.08em;color:var(--muted,var(--text))}
+.mcq-quiz .bsa-quiz-count strong{font-size:1.18rem;letter-spacing:0;color:var(--text)}
+.mcq-quiz .bsa-quiz-reviewed{font-size:.78rem;padding:7px 11px;border-radius:99px;background:var(--panel2,var(--surface));color:var(--text)}
+.mcq-quiz .mcq-track{height:9px;margin:12px 0 28px;border-radius:99px}
+.mcq-quiz .mcq-track>span{border-radius:99px;transition:width .25s ease}
+.mcq-quiz .bsa-quiz-source{font-size:.74rem;font-weight:750;letter-spacing:.055em;color:var(--muted,var(--text));text-transform:uppercase;margin:0 0 12px;overflow-wrap:anywhere}
+.mcq-quiz .mcq-question{font-size:clamp(1.17rem,2vw,1.55rem)!important;line-height:1.48!important;font-weight:750!important;margin:12px 0 24px!important;letter-spacing:-.02em}
+.mcq-quiz .mcq-question p{margin:0 0 10px}
+.mcq-quiz .mcq-options{gap:12px!important}
+.mcq-quiz .mcq-choice{display:flex;align-items:center;gap:15px!important;width:100%;min-width:0;min-height:66px;padding:15px 17px!important;text-align:left!important;border-radius:15px!important;transition:background .18s,border-color .18s,transform .18s,box-shadow .18s}
+.mcq-quiz .mcq-choice>strong{display:grid;place-items:center;flex:none;width:39px;height:39px;border-radius:11px;background:var(--panel2,var(--surface));font-size:.9rem}
+.mcq-quiz .mcq-choice>span{min-width:0;flex:1;overflow-wrap:anywhere;line-height:1.5}
+.mcq-quiz .mcq-choice:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+@media(hover:hover){.mcq-quiz .mcq-choice:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 7px 16px rgba(0,0,0,.07)}}
+.mcq-quiz .mcq-choice.selected{box-shadow:0 0 0 1px var(--accent)}
+.mcq-quiz .bsa-quiz-result{margin:26px 0 20px;overflow:hidden;border:1px solid var(--line)!important;border-radius:19px;background:var(--surface)!important;color:var(--text)!important}
+.mcq-quiz .bsa-result-banner{display:flex;gap:16px;align-items:center;padding:20px 22px;background:color-mix(in srgb,#19a879 13%,var(--surface));border-bottom:1px solid var(--line)}
+.mcq-quiz .is-incorrect .bsa-result-banner{background:color-mix(in srgb,#d8893b 13%,var(--surface))}
+.mcq-quiz .bsa-result-icon{width:47px;height:47px;flex:none;border-radius:14px;display:grid;place-items:center;background:#118a5d;color:#fff;font-size:1.6rem;font-weight:750}
+.mcq-quiz .is-incorrect .bsa-result-icon{background:#b96b32}
+.mcq-quiz .bsa-result-eyebrow{display:block;font-size:.7rem;font-weight:800;letter-spacing:.09em;color:var(--muted,var(--text));margin-bottom:7px}
+.mcq-quiz .bsa-result-banner h3{font-size:clamp(1.04rem,1.8vw,1.28rem);line-height:1.3;margin:0 0 5px;color:var(--text)}
+.mcq-quiz .bsa-result-banner p{margin:0;color:var(--text);opacity:.83;font-size:.88rem}
+.mcq-quiz .bsa-result-content{padding:clamp(17px,2vw,25px);display:grid;gap:17px}
+.mcq-quiz .bsa-answer-summary{background:var(--panel2,var(--surface));border:1px solid var(--line);border-radius:14px;padding:15px 17px}
+.mcq-quiz .bsa-answer-row{display:flex;align-items:center;gap:13px;font-weight:600;line-height:1.5}
+.mcq-quiz .bsa-answer-letter{width:38px;height:38px;flex:none;border-radius:10px;background:var(--accent);color:white;display:grid;place-items:center}
+.mcq-quiz .bsa-answer-row p{margin:0}
+.mcq-quiz .bsa-explanation-block{font-size:.94rem;line-height:1.7}
+.mcq-quiz .bsa-explanation-block p:last-child,.mcq-quiz .bsa-trap-block p:last-child{margin-bottom:0}
+.mcq-quiz .bsa-trap-block{background:color-mix(in srgb,#ecaf47 10%,var(--surface));border:1px solid color-mix(in srgb,#ecaf47 35%,var(--line));padding:16px;border-radius:14px;line-height:1.65;font-size:.91rem}
+.mcq-quiz .step-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding-top:6px}
+.mcq-quiz .step-actions .btn{min-height:43px;padding-inline:18px;border-radius:12px}
+.mcq-quiz .bsa-finish-heading{text-align:center;display:grid;justify-items:center;gap:7px;margin:8px 0 16px}
+.mcq-quiz .bsa-finish-heading h2{margin:0;font-size:1.6rem}
+.mcq-quiz .bsa-finish-heading p{margin:0}
+.mcq-quiz .bsa-finish-medal{width:60px;height:60px;border-radius:20px;display:grid;place-items:center;background:color-mix(in srgb,var(--accent) 16%,var(--surface));color:var(--accent);font-size:2rem}
+.mcq-quiz .bsa-finish-score{text-align:center;font-size:clamp(2.6rem,5vw,4rem)!important;letter-spacing:-.04em;margin:8px 0}
+.bsa-sound-setting{display:flex;gap:16px;align-items:center;justify-content:space-between;background:var(--panel2,var(--surface));border:1px solid var(--line);border-radius:14px;padding:15px;margin:12px 0}
+.bsa-sound-setting p{margin:5px 0 0;max-width:440px}
+.bsa-sound-switch{display:flex;align-items:center;gap:9px;white-space:nowrap;cursor:pointer;font-weight:600}
+.bsa-sound-switch input{width:19px;height:19px;accent-color:var(--accent);cursor:pointer}
+@media(max-width:600px){.mcq-quiz .mcq-shell{padding:16px!important;border-radius:17px!important}.mcq-quiz .mcq-choice{padding:12px!important;gap:11px!important}.mcq-quiz .bsa-result-banner{padding:16px;gap:12px}.mcq-quiz .bsa-result-content{padding:15px}.bsa-sound-setting{align-items:flex-start;flex-direction:column}}
+@media(prefers-reduced-motion:reduce){.mcq-quiz .mcq-choice,.mcq-quiz .mcq-track>span{transition:none!important}}
+</style>
+<style id="bsa-v155-audio-controls">
+.bsa-v155-audio-controls{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:10px}
+.bsa-v155-audio-controls label{font-weight:650;font-size:.88rem}
+.bsa-v155-audio-controls input[type=range]{accent-color:var(--accent,#13966b);width:min(190px,55vw);cursor:pointer}
+.bsa-v155-audio-controls .btn{min-height:36px}
+@media(max-width:480px){.bsa-v155-audio-controls{align-items:stretch}.bsa-v155-audio-controls input[type=range]{width:100%}}
 </style></head>
 <body>
 <div id="root"><p class="boot">Opening your study desk… If this doesn’t load, connect to the internet once so the app can save itself for offline use.</p></div>
@@ -6766,6 +6852,60 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       return h("span", { key: d, className: `act${d === today() ? " today" : ""}`, title: `${fmtDay(d)}: ${x.reviews || 0} reviews, ${fmtMins(x.mins) || "0 min"} timed`, style: { "--h": `${v ? Math.max(12, v / max * 100) : 4}%` } }, h("i", null), h("b", null, parseD(d).toLocaleDateString(void 0, { weekday: "narrow" })));
     }));
   }
+  /* v155: Original, playful quiz feedback sound design.
+     Uses Web Audio only, runs on direct user interaction, respects mute and
+     reduced-motion preferences, and never touches study progress. */
+  let bsaQuizAudioContext = null;
+  let bsaQuizSoundLastAt = 0;
+  function playQuizFeedbackSound(kind, forcePreview = false) {
+    try {
+      if (!forcePreview && localStorage.getItem("bsa_quiz_audio_v154") !== "on") return;
+      if (document.visibilityState === "hidden") return;
+      const AudioCtor = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtor) return;
+      const ctx = bsaQuizAudioContext || (bsaQuizAudioContext = new AudioCtor());
+      if (ctx.state === "suspended") { ctx.resume().catch(() => {}); }
+      const nowMs = Date.now();
+      if (!forcePreview && kind === "select" && nowMs - bsaQuizSoundLastAt < 65) return;
+      bsaQuizSoundLastAt = nowMs;
+      const rawVolume = Number(localStorage.getItem("bsa_quiz_audio_volume_v155") || "45");
+      const master = Math.min(.20, Math.max(0, Number.isFinite(rawVolume) ? rawVolume : 45) / 100 * .17);
+      if (master <= 0) return;
+      const start = ctx.currentTime + .012;
+      function note(hz, delay, duration, amplitude = 1, wave = "sine", endingHz = null) {
+        const osc = ctx.createOscillator(), gain = ctx.createGain();
+        osc.type = wave;
+        osc.frequency.setValueAtTime(hz, start + delay);
+        if (endingHz != null) osc.frequency.exponentialRampToValueAtTime(Math.max(30, endingHz), start + delay + duration);
+        const attack = Math.min(.018, duration * .2);
+        const peak = Math.max(.00011, master * amplitude);
+        gain.gain.setValueAtTime(.0001, start + delay);
+        gain.gain.exponentialRampToValueAtTime(peak, start + delay + attack);
+        gain.gain.exponentialRampToValueAtTime(.0001, start + delay + duration);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(start + delay); osc.stop(start + delay + duration + .025);
+      }
+      if (kind === "select") {
+        note(650, 0, .07, .31, "sine", 880);
+        note(1260, .015, .045, .10, "sine");
+      } else if (kind === "correct") {
+        note(523.25, 0, .17, .54, "sine");
+        note(659.25, .095, .18, .60, "sine");
+        note(783.99, .20, .20, .65, "sine");
+        note(1046.5, .31, .27, .56, "triangle");
+        note(1568, .37, .16, .11, "sine");
+      } else if (kind === "wrong") {
+        note(392, 0, .16, .47, "triangle", 340);
+        note(294, .14, .22, .44, "sine", 245);
+      } else if (kind === "finish") {
+        [523.25,659.25,783.99,1046.5,1318.5].forEach((hz,i) => note(hz, i * .105, .19 + (i === 4 ? .26 : 0), .54, "sine"));
+        note(1568, .55, .28, .20, "triangle");
+      } else if (kind === "next") {
+        note(720, 0, .075, .27, "sine", 920);
+        note(960, .055, .09, .23, "sine", 1175);
+      }
+    } catch (_) { /* Audio is optional and must never block a quiz. */ }
+  }
   /* v148 — focused, one-at-a-time multiple-choice practice. Uses the same
      authored question pool and progress schema as Mock Exam. */
   function MultipleChoiceQuiz({ subject, update, toast, go, onExit, initialSetId = "all" }) {
@@ -6839,10 +6979,11 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
           h("button", { className: "btn", onClick: () => go("nlm", { pid: "mcq-quiz" }) }, "Generate MCQ questions")),
         !eligible.length && h("p", { className: "muted small" }, "No questions yet. Open AI Study Prompts, choose Multiple-choice quiz (importable), and import its JSON into your MCQ bank.")
       ) : phase === "run" && current ? h("div", { className: "panel mcq-shell" },
-        h("div", { className: "mcq-progress" }, h("strong", null, `Question ${pos+1} of ${paper.length}`),
-          h("span", { className: "muted" }, `${paper.filter(q => revealed[q.id]).length} reviewed`)),
+        h("div", { className: "mcq-progress bsa-quiz-progress" },
+          h("span", { className: "bsa-quiz-count" }, "QUESTION ", h("strong", null, pos + 1), h("span", null, ` / ${paper.length}`)),
+          h("span", { className: "bsa-quiz-reviewed" }, `${paper.filter(q => revealed[q.id]).length} reviewed`)),
         h("div", { className: "mcq-track" }, h("span", { style: { width: `${(pos+1)/paper.length*100}%` } })),
-        h("p", { className: "muted small" }, current.src),
+        h("div", { className: "bsa-quiz-source" }, "STUDY MATERIAL · ", current.src || "Question bank"),
         h("div", { className: "mcq-question" }, h("div", { dangerouslySetInnerHTML: { __html: psMdHtml(current.q) } })),
         h("div", { className: "mcq-options", role: "group", "aria-label": "Select one answer" }, current.choices.map((choice, i) => {
           const key = mxChoiceKey(choice, i);
@@ -6850,19 +6991,35 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
           const visible = revealed[current.id];
           return h("button", { key: i, type: "button", disabled: !!visible,
             className: `mcq-choice${selected ? " selected" : ""}${visible && key === current.key ? " correct" : ""}${visible && selected && key !== current.key ? " wrong" : ""}`,
-            onClick: () => setAnswers(a => ({...a, [current.id]: key})) },
+            onClick: () => { playQuizFeedbackSound("select"); setAnswers(a => ({...a, [current.id]: key})); } },
             h("strong", null, String.fromCharCode(65+i)), h("span", null, h("span", { dangerouslySetInnerHTML: { __html: psMdHtml(String(choice).replace(/^\s*[A-Da-d]\s*[.)\]]\s*/, "")) } })));
         })),
-        revealed[current.id] && h("div", { className: `mcq-feedback study-feedback-card ${answers[current.id] === current.key ? "is-correct" : "is-incorrect"}`, role: "status" },
-          h("div", { className: "study-feedback-head" }, h("strong", null, answers[current.id] === current.key ? "✓ Correct answer" : `Review answer · ${current.key.toUpperCase()}`), h("span", null, answers[current.id] === current.key ? "You identified the right rule" : "Learn from this attempt")),
-          current.why && h("div", null, h("div", { dangerouslySetInnerHTML: { __html: psMdHtml(current.why) } })),
-          current.trap && h("p", null, h("strong", null, "Watch out: "), h("span", { dangerouslySetInnerHTML: { __html: psMdHtml(current.trap) } }))),
+        revealed[current.id] && h("section", { className: `mcq-feedback bsa-quiz-result ${answers[current.id] === current.key ? "is-correct" : "is-incorrect"}`, role: "status", "aria-live": "polite" },
+          h("div", { className: "bsa-result-banner" },
+            h("span", { className: "bsa-result-icon", "aria-hidden": "true" }, answers[current.id] === current.key ? "✓" : "↻"),
+            h("div", null,
+              h("span", { className: "bsa-result-eyebrow" }, "ANSWER FEEDBACK"),
+              h("h3", null, answers[current.id] === current.key ? "Excellent — you got it!" : "Good attempt — review this one"),
+              h("p", null, answers[current.id] === current.key ? "Your understanding is on track." : "Use the explanation to learn the correct reasoning."))),
+          h("div", { className: "bsa-result-content" },
+            h("div", { className: "bsa-answer-summary" },
+              h("span", { className: "bsa-result-eyebrow" }, "CORRECT ANSWER"),
+              h("div", { className: "bsa-answer-row" },
+                h("strong", { className: "bsa-answer-letter" }, current.key.toUpperCase()),
+                h("div", { dangerouslySetInnerHTML: { __html: psMdHtml(String(current.choices.find((c, ix) => mxChoiceKey(c, ix) === current.key) || "").replace(/^\s*[A-Da-d]\s*[.)\]]\s*/, "")) } }))),
+            current.why && h("div", { className: "bsa-explanation-block" },
+              h("span", { className: "bsa-result-eyebrow" }, "WHY THIS IS CORRECT"),
+              h("div", { dangerouslySetInnerHTML: { __html: psMdHtml(current.why) } })),
+            current.trap && h("div", { className: "bsa-trap-block" },
+              h("span", { className: "bsa-result-eyebrow" }, "COMMON TRAP TO AVOID"),
+              h("div", { dangerouslySetInnerHTML: { __html: psMdHtml(current.trap) } })))),
         h("div", { className: "step-actions" },
-          !revealed[current.id] && h("button", { className: "btn primary", disabled: !answers[current.id], onClick: () => setRevealed(v => ({ ...v, [current.id]: true })) }, "Check answer"),
-          !!revealed[current.id] && h("button", { className: "btn primary", onClick: () => pos === paper.length-1 ? setPhase("done") : setPos(i => i+1) }, pos === paper.length-1 ? "See results" : "Next question"),
+          !revealed[current.id] && h("button", { className: "btn primary", disabled: !answers[current.id], onClick: () => { playQuizFeedbackSound(answers[current.id] === current.key ? "correct" : "wrong"); setRevealed(v => ({ ...v, [current.id]: true })); } }, "Check answer"),
+          !!revealed[current.id] && h("button", { className: "btn primary", onClick: () => { if (pos === paper.length-1) { playQuizFeedbackSound("finish"); setPhase("done"); } else { playQuizFeedbackSound("next"); setPos(i => i+1); } } }, pos === paper.length-1 ? "See results" : "Next question"),
           h("button", { className: "btn", onClick: () => { if(window.confirm("End this quiz without saving?")) onExit(); } }, "Exit"))
       ) : h("div", { className: "panel mcq-shell" },
-        h("h2", null, "Quiz complete"), h("p", { className: "big-num" }, `${score} / ${paper.length}`),
+        h("div", { className: "bsa-finish-heading" }, h("span", { className: "bsa-finish-medal", "aria-hidden": "true" }, "★"), h("h2", null, "Quiz complete!"), h("p", { className: "muted" }, "You showed up and practiced. That's progress.")),
+        h("p", { className: "big-num bsa-finish-score" }, `${score} / ${paper.length}`),
         h("p", { className: "muted" }, `${paper.length ? Math.round(score / paper.length * 100) : 0}% correct. Your score and mistakes were saved locally.`),
         h("div", { className: "step-actions" }, h("button", { className: "btn primary", onClick: start }, "Try another set"),
           h("button", { className: "btn", onClick: onExit }, "Back to Practice")))
@@ -6917,9 +7074,72 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
           h("div",{className:"mcq-library-actions"},
             h("button",{className:"btn primary",onClick:()=>{setOpenId(set.id);setQuery("");setShown({});setLimit(20);}},"Browse questions"),
             h("button",{className:"btn",onClick:()=>onPractice(set.id)},"Practice"),
-            h("button",{className:"btn ghost",onClick:()=>{if(!window.confirm(`Remove MCQ collection “${set.title}”? Export a backup first if needed.`))return;update(x=>{x.mcqSets=(x.mcqSets||[]).filter(y=>y.id!==set.id);});}},"Remove"))))) :
+            !window.__BSA_SHARED_MODE__ && h("button",{className:"btn ghost",onClick:()=>{if(!window.confirm(`Remove MCQ collection “${set.title}”? Export a backup first if needed.`))return;update(x=>{x.mcqSets=(x.mcqSets||[]).filter(y=>y.id!==set.id);});}},"Remove"))))) :
           h("p",{className:"muted"},"No dedicated MCQ collections yet. Use Generate quiz questions to create one, then import it."));
   }
+
+  /* v153: Independent MCQ library and quiz route. */
+  function MCQPage({subject,update,toast,go}){
+    const [quizSet,setQuizSet]=useState(null);
+    return h("section",{className:"view mcq-page"},
+      h("div",{className:"page-head"},
+        h("div",null,h("span",{className:"panel-kicker"},"QUESTION COLLECTIONS"),h("h1",{className:"page-title"},"Multiple-choice questions"),
+          h("p",{className:"muted"},"Browse question sets, inspect answers and explanations, or practice one question at a time."))),
+      quizSet!==null ? h(React.Fragment,null,
+        h("button",{className:"btn",onClick:()=>setQuizSet(null)},"← Back to MCQ library"),
+        h(MultipleChoiceQuiz,{subject,update,toast,go,initialSetId:quizSet,onExit:()=>setQuizSet(null)})) :
+      h(React.Fragment,null,
+        h("div",{className:"mcq-page-actions"},
+          h("button",{className:"btn primary",onClick:()=>setQuizSet("all")},"Start mixed MCQ quiz"),
+          h("button",{className:"btn",onClick:()=>go("nlm",{pid:"mcq-quiz"})},"Generate / import MCQs")),
+        h(MCQBankExplorer,{subject,update,onPractice:setQuizSet})));
+  }
+
+  /* A written-answer drill is checked against the source solution. Only a
+     single numeric answer is auto-compared; descriptive answers and entries
+     require the student to evaluate their own work against the worked key. */
+  function PsWrittenDrill({set,onMark,onExit}){
+    const problems=(set.problems||[]).slice().sort((a,b)=>(a.no||0)-(b.no||0));
+    const [pos,setPos]=useState(0);
+    const [drafts,setDrafts]=useState({});
+    const [revealed,setRevealed]=useState({});
+    const [marked,setMarked]=useState({});
+    const p=problems[pos];
+    if(!p)return h("div",{className:"panel ps-written-drill"},"This set has no problems yet.",h("button",{className:"btn",onClick:onExit},"Back to set"));
+    const answer=drafts[p.id]||"";
+    const checked=!!revealed[p.id];
+    const expected=psPlain(p.answer||"").trim();
+    const single=/^(?:₱|PHP\s*)?\s*[-(]?\s*[\d,]+(?:\.\d+)?\s*\)?\s*$/i;
+    const num=t=>{const v=t.replace(/PHP|₱|,/gi,"").trim();return v.startsWith("(")&&v.endsWith(")")?-Number(v.slice(1,-1)):Number(v);};
+    const numeric=single.test(answer.trim())&&single.test(expected);
+    const matches=numeric && Math.abs(num(answer)-num(expected))<=0.005;
+    const next=()=>{if(pos<problems.length-1)setPos(v=>v+1);else onExit();};
+    return h("div",{className:"ps-written-drill panel"},
+      h("div",{className:"ps-written-top"},h("div",null,h("span",{className:"panel-kicker"},"WRITE · CHECK · CORRECT"),h("h2",null,"Problem-solving drill"),h("p",{className:"muted small"},set.title)),
+        h("button",{className:"btn",onClick:onExit},"Exit drill")),
+      h("div",{className:"muted small"},`Problem ${pos+1} of ${problems.length}`),
+      h("div",{className:"progress"},h("span",{style:{width:`${100*(pos+1)/problems.length}%`}})),
+      h("article",{className:"ps-written-question"},
+        h("h3",null,`#${p.no||pos+1} · ${p.title||"Accounting problem"}`),
+        h(PsMd,{text:p.problem||""}),
+        (p.req||[]).length>0&&h("div",{className:"ps-req"},h("strong",null,"Required"),h("ol",null,p.req.map((r,i)=>h("li",{key:i},psInline(r))))),
+        h("label",{className:"ps-written-label",htmlFor:"ps-written-entry"},"Your answer / computation / journal entry"),
+        h("textarea",{id:"ps-written-entry",rows:6,value:answer,disabled:checked,onChange:e=>setDrafts(v=>({...v,[p.id]:e.target.value})),placeholder:"Type your answer and supporting calculation here. You can use multiple lines."}),
+        !checked ? h("button",{className:"btn primary",disabled:!answer.trim(),onClick:()=>setRevealed(v=>({...v,[p.id]:true}))},"Check my answer") :
+        h("div",{className:"ps-written-feedback"},
+          h("div",{className:`ps-written-feedback-heading${numeric?(matches?" match":" no-match"):""}`},
+            numeric ? matches?"Amount matches the answer key":"Amount differs from the answer key":"Compare your work with the worked solution"),
+          !numeric&&h("p",{className:"muted small"},"Descriptions, multi-part computations, and journal entries cannot be reliably auto-graded here. Compare each part with the model answer before marking your result."),
+          p.answer&&h("div",{className:"study-answer-step"},h("strong",null,"Answer key"),h(PsMd,{text:p.answer})),
+          p.approach&&h("div",{className:"study-answer-step"},h("strong",null,"Approach"),h(PsMd,{text:p.approach})),
+          p.solution&&h("div",{className:"study-answer-step"},h("strong",null,"Worked solution"),h(PsMd,{text:p.solution})),
+          p.trap&&h("div",{className:"study-answer-trap"},h("strong",null,"Common mistake"),h(PsMd,{text:p.trap})),
+          h("div",{className:"ps-written-actions"},
+            h("button",{className:"btn",disabled:!!marked[p.id],onClick:()=>{onMark(p.id,"miss");setMarked(v=>({...v,[p.id]:"miss"}));}},"Missed it · review again"),
+            h("button",{className:"btn primary",disabled:!!marked[p.id],onClick:()=>{onMark(p.id,"got");setMarked(v=>({...v,[p.id]:"got"}));}},"Got it"),
+            h("button",{className:"btn",onClick:next},pos===problems.length-1?"Finish drill":"Next problem →")))));
+  }
+
   function PracticeView({ subject, update, toast, go, init, settings, setSettings, openEditor, data }) {
     const [mode, setMode] = useState(null);
     const newPerDay = settings.newPerDay || 10;
@@ -6956,17 +7176,36 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       return { t, n: cs.length, due: cs.filter((c) => cardIsDue(c, today())).length, s: cs.length ? Math.round(cs.reduce((a, c) => a + cardStrength(c), 0) / cs.length * 100) : 0, lapses: cs.reduce((a, c) => a + (c.srs && c.srs.lapses || 0), 0) };
     }).filter((x) => x.n);
     const streak = streakOf(subject), week = weekMinutes(subject);
+    // Actionable review priorities are computed from existing subject records.
+    // No new persistence keys or changes to scores/history are required.
+    const unresolvedMistakes = (subject.mistakes || []).filter(m => m.status !== "Cleared").length;
+    const weakCards = strength.filter(x => x.s < 65 || x.lapses >= 2)
+      .sort((a,b) => (a.s-b.s) || (b.due-a.due));
+    const weakSpot = weakCards[0] || null;
+    const studyActions = [
+      unresolvedMistakes > 0 && {title:"Correct what went wrong", count:unresolvedMistakes + " unresolved", description:"Review the reason behind your mistakes before repeating similar questions.", label:"Open Mistake Log", action:()=>go("mistakes")},
+      dueTotal > 0 && {title:"Recall before you forget", count:dueTotal + " to review", description:"Start a short mixed review of due cards and past mistakes.", label:"Start daily review", action:startReview},
+      weakSpot && {title:"Strengthen a weak topic", count:weakSpot.s + "% card memory", description:(weakSpot.t.code || weakSpot.t.title) + " needs attention based on your flashcard reviews.",label:"Review topic cards",action:()=>go("vault",{topic:weakSpot.t.id})},
+      {title:"Apply what you've learned", count:"Problem solving",description:"Test accounting treatments and calculations, then reveal the worked solutions.",label:"Open problem sets",action:()=>go("psets")}
+    ].filter(Boolean).slice(0,3);
     return h(
       "section",
       { className: "view" },
       h("div", { className: "page-head" }, h("div", null, h("h1", { className: "page-title" }, "Practice"), h("p", { className: "muted" }, "Short daily reviews beat cramming. Cards come back just before you’d forget them."))),
-      h("div", { className: "panel mcq-entry" },
-        h("div", null, h("span", { className: "panel-kicker" }, "QUESTION PRACTICE"), h("h2", null, "Multiple-choice quiz"),
-          h("p", { className: "muted" }, "Choose a topic, answer one at a time, see why, and save missed questions to your Mistake Log.")),
-        h("div", { className: "step-actions" },
-          h("button", { className: "btn primary", onClick: () => setMode({kind:"mcq"}) }, "Start MCQ quiz"),
-          h("button", { className: "btn", onClick: () => go("nlm", {pid:"mcq-quiz"}) }, "Generate quiz questions"))),
-      h(MCQBankExplorer, { subject, update, onPractice: (setId) => setMode({kind:"mcq",setId}) }),
+      h("section", { className:"panel bsa-study-priorities", "aria-label":"Recommended study actions" },
+        h("div", {className:"bsa-study-priorities-head"},
+          h("div",null,h("span",{className:"panel-kicker"},"PERSONAL STUDY PRIORITIES"),h("h2",null,"What to study next"),
+            h("p",{className:"muted small"},"Suggestions come from your saved reviews and mistakes, not a predicted exam score."))),
+        h("div", {className:"bsa-study-priorities-grid"}, studyActions.map((item,i)=>
+          h("article",{className:"bsa-study-priority",key:item.title},
+            h("div",{className:"bsa-study-priority-number","aria-hidden":"true"},String(i+1)),
+            h("div",{className:"bsa-study-priority-body"},
+              h("span",{className:"bsa-study-priority-count"},item.count),
+              h("h3",null,item.title),h("p",{className:"muted small"},item.description),
+              h("button",{className:i===0?"btn primary":"btn",onClick:item.action},item.label)))))),
+      h("div",{className:"panel mcq-practice-link"},
+        h("div",null,h("strong",null,"Looking for multiple-choice questions?"),h("p",{className:"muted small"},"MCQ collections now have their own library, separate from flashcard Practice and regular Problem Sets.")),
+        h("button",{className:"btn primary",onClick:()=>go("mcq")},"Open MCQ library →")),
       h(
         "div",
         { className: "practice-grid" },
@@ -7427,6 +7666,21 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       ),
       h("hr", null),
       h("h3", null, "Studying"),
+      h("div", { className: "bsa-sound-setting" },
+        h("div", null,
+          h("strong", null, "Quiz sounds"),
+          h("p", { className: "muted small" }, "Playful game-style quiz cues for selecting, correct or wrong answers, moving on, and completing a quiz. Original audio. Off by default; only stored on this device.")),
+        h("label", { className: "bsa-sound-switch" },
+          h("input", { type: "checkbox", defaultChecked: (() => { try { return localStorage.getItem("bsa_quiz_audio_v154") === "on"; } catch (_) { return false; } })(),
+            onChange: e => { try { localStorage.setItem("bsa_quiz_audio_v154", e.target.checked ? "on" : "off"); } catch (_) {} if (e.target.checked) playQuizFeedbackSound("select"); } }),
+          h("span", null, "Enable quiz sounds"))),
+        h("div", { className: "bsa-v155-audio-controls" },
+          h("label", { htmlFor: "bsa-quiz-volume" }, "Sound volume"),
+          h("input", { id: "bsa-quiz-volume", type: "range", min: "0", max: "100", step: "5", defaultValue: (() => { try { return localStorage.getItem("bsa_quiz_audio_volume_v155") || "45"; } catch (_) { return "45"; } })(),
+            onChange: e => { try { localStorage.setItem("bsa_quiz_audio_volume_v155", e.target.value); } catch (_) {} } }),
+          h("button", { type: "button", className: "btn", onClick: () => playQuizFeedbackSound("correct", true) }, "Preview sound")
+        ),
+
       sayOK() && h(Field, { label: `Reading speed: ${Math.round((settings.speakRate || 1) * 100)}%`, hint: "Used by Read aloud during a review." }, h("input", { type: "range", min: "0.6", max: "1.6", step: "0.1", value: settings.speakRate || 1, onChange: (e) => set("speakRate", Number(e.target.value)) })),
       h(Field, { label: "Daily review reminder", hint: "A notification on this device when something is due. Leave empty for none." }, h("div", { className: "remind-row" }, h("input", { type: "time", value: settings.remindAt || "", onChange: async (e) => {
         const v = e.target.value;
@@ -8911,10 +9165,11 @@ Rules: the numbers above are only an example of the format; use the real ones fr
       el.id = "gc-print";
       document.body.appendChild(el);
     }
-    el.innerHTML = `<style>${GC_REPORT_CSS}${PDF_DESIGN_CSS}${PDF_BRAND_CSS}${PDF_CLEAN_CSS}<\/style>${html}${html.includes('pdf-identity')?'':pdfProfileMarkup()}`;
+    el.innerHTML = `<style>@media print {${GC_REPORT_CSS}${PDF_DESIGN_CSS}${PDF_BRAND_CSS}${PDF_CLEAN_CSS}${PS_PRINT_CSS} #gc-print, #gc-print .ps-print {background:#fff!important;color:#242238!important} }<\/style>${html}${html.includes('pdf-identity')?'':pdfProfileMarkup()}`;
     document.body.classList.add("gc-printing");
     const done = () => {
       document.body.classList.remove("gc-printing");
+      if(el.isConnected)el.remove();
       window.removeEventListener("afterprint", done);
     };
     window.addEventListener("afterprint", done);
@@ -10738,7 +10993,7 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
     const problems = Array.isArray(selectedProblems) ? selectedProblems : set.problems;
     if (!problems.length) { window.alert("No problems match the selected filter."); return; }
     const groups = psGroupProblems(problems);
-    let html = `<div class="ps-print"><style>${PS_PRINT_CSS}<\/style><div class="pdf-kicker">BSA STUDY DESK / PROBLEM SET</div><h1>${psEsc(set.title)}</h1><p class="meta">${psEsc([set.topicText, set.source].filter(Boolean).join(". "))}</p>${set.intro ? psMdHtml(set.intro) : ""}`;
+    let html = `<div class="ps-print"><div class="pdf-kicker">BSA STUDY DESK / PROBLEM SET</div><h1>${psEsc(set.title)}</h1><p class="meta">${psEsc([set.topicText, set.source].filter(Boolean).join(". "))}</p>${set.intro ? psMdHtml(set.intro) : ""}`;
     for (const [g, list] of groups) {
       if (g) html += `<h2>${psEsc(g)}</h2>`;
       for (const p of list) {
@@ -11192,6 +11447,7 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
     const [edit, setEdit] = useState(null);
     const [meta, setMeta] = useState(false);
     const [exportOpen,setExportOpen]=useState(false);
+    const [writtenDrill,setWrittenDrill]=useState(false);
     const t = psTally(set);
     const groups = psGroupProblems(set.problems.filter((p) => filter === "all" || (filter === "todo" ? !p.st : p.st === filter)));
     const allGroups = psGroupProblems(set.problems);
@@ -11230,13 +11486,14 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
       toast("Mistake saved (duplicates skipped)");
     };
     const toggleAll = () => { setReveal((v) => { setLocalPref("psRevealAll", !v); return !v; }); };
+    if(writtenDrill)return h("section",{className:"view ps-set"},h(PsWrittenDrill,{set,onMark:mark,onExit:()=>setWrittenDrill(false)}));
     return h(
       "section",
       { className: "view ps-set" },
       h("button", { className: "link-btn back-link", onClick: onBack }, "‹ All problem sets"),
       h("header", { className: "lx-head" }, h("h1", { className: "page-title" }, set.title), h("p", { className: "muted" }, set.topicId && h("span", { className: "std" }, topicName(subject, set.topicId)), " ", [!set.topicId && set.topicText, set.source].filter(Boolean).join(". "))),
       set.intro && h(PsMd, { text: set.intro, className: "lx-summary" }),
-      h("div", { className: "ps-tools" }, h("div", { className: "seg-filter", role: "group", "aria-label": "Show problems" }, [["all", "All", t.n], ["todo", "Not tried", t.todo], ["miss", "Missed", t.miss], ["got", "Got it", t.got]].map(([k, l, n]) => h("button", { key: k, className: filter === k ? "on" : "", "aria-pressed": filter === k, onClick: () => setFilter(k) }, l, " ", h("span", { className: "n" }, n)))), h("label", { className: "ps-switch" }, h("input", { type: "checkbox", checked: reveal, onChange: toggleAll }), " Show all solutions"), h("span", { className: "spacer" }), h("button", { className: "btn primary", onClick: () => setExportOpen(true) }, "Customize PDF"), h("button", { className: "btn ghost", onClick: () => psPrint(set, false) }, "Print problems"), h("button", { className: "btn ghost", onClick: () => psPrint(set, true) }, "Print with answer key"), h("button", { className: "btn ghost", disabled: !visibleProblems.length, onClick: () => printVisible(false) }, "Print filtered"), h("button", { className: "btn ghost", disabled: !visibleProblems.length, onClick: () => printVisible(true) }, "Filtered answer key"), h("button", { className: "btn ghost", onClick: () => go("ask", { focus: { kind: "pset", id: set.id } }) }, "Ask about my misses"), h("button", { className: "btn ghost", onClick: () => setMeta(true) }, "Set options")),
+      h("div", { className: "ps-tools" }, h("div", { className: "seg-filter", role: "group", "aria-label": "Show problems" }, [["all", "All", t.n], ["todo", "Not tried", t.todo], ["miss", "Missed", t.miss], ["got", "Got it", t.got]].map(([k, l, n]) => h("button", { key: k, className: filter === k ? "on" : "", "aria-pressed": filter === k, onClick: () => setFilter(k) }, l, " ", h("span", { className: "n" }, n)))), h("label", { className: "ps-switch" }, h("input", { type: "checkbox", checked: reveal, onChange: toggleAll }), " Show all solutions"), h("span", { className: "spacer" }), h("button",{className:"btn primary",onClick:()=>setWrittenDrill(true)},"Start answer-entry drill"), h("button", { className: "btn", onClick: () => setExportOpen(true) }, "Customize PDF"), h("button", { className: "btn ghost", onClick: () => psPrint(set, false) }, "Print problems"), h("button", { className: "btn ghost", onClick: () => psPrint(set, true) }, "Print with answer key"), h("button", { className: "btn ghost", disabled: !visibleProblems.length, onClick: () => printVisible(false) }, "Print filtered"), h("button", { className: "btn ghost", disabled: !visibleProblems.length, onClick: () => printVisible(true) }, "Filtered answer key"), h("button", { className: "btn ghost", onClick: () => go("ask", { focus: { kind: "pset", id: set.id } }) }, "Ask about my misses"), h("button", { className: "btn ghost", onClick: () => setMeta(true) }, "Set options")),
       allGroups.length > 1 && allGroups.some(([k]) => k) && h("nav", { className: "lx-toc ps-toc", "aria-label": "Subtopics in this set" }, h("span", { className: "muted small" }, "In this set"), h("ul", null, allGroups.map(([k, list]) => h("li", { key: k || "_" }, h("a", { href: "#", onClick: (e) => { e.preventDefault(); setFilter("all"); setTimeout(() => { const el = document.getElementById(`sub-${norm(k) || "other"}`); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }, 30); } }, k || "Other problems"), h("span", { className: "muted small" }, ` ${list.length}`))))),
       !groups.length ? h("div", { className: "empty" }, h("p", null, "Nothing here."), h("p", { className: "muted" }, "Pick “All” to see every problem.")) : groups.map(([k, list]) => h("div", { key: k || "_", className: "ps-sub", id: `sub-${norm(k) || "other"}` }, k && h("h2", { className: "ps-sub-h" }, k), list.map((p) => h(PsProblem, { key: p.id, p, revealAll: reveal, onMark: (st) => mark(p.id, st), onLog: () => logMistake(p), onEdit: () => setEdit(p) })))),
       h("div", { className: "row-end" }, h("button", { className: "btn", onClick: () => setEdit("new") }, h(Icon, { name: "plus", size: 16 }), " Add a problem"), h("button", { className: "btn", onClick: () => go("nlm", { pid: "pset", topicId: set.topicId || "" }) }, "Generate more questions")),
@@ -12287,15 +12544,15 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       const appScript=[...document.scripts].filter(el=>!el.src).sort((a,b)=>b.textContent.length-a.textContent.length)[0];
       if(!appScript||appScript.textContent.length<100000)throw Error('Main dashboard source unavailable');
       let app=appScript.textContent.trimStart();
-      const swaps=[["const [nav, setNav] = useState({ tab: \"home\", opts: {}, key: 0 });", "const [nav, setNav] = useState({ tab: \"path\", opts: {}, key: 0 });"], ["const [shortcutsOpen,setShortcutsOpen] = useState(false);", "const [shortcutsOpen,setShortcutsOpen] = useState(false);"], ["const stop = startSyncLoop();", "const stop = () => {};"], ["function markDirty() {", "function markDirty() { if(window.__BSA_SHARED_MODE__)return;"], ["function startSyncLoop() {", "function startSyncLoop() { if(window.__BSA_SHARED_MODE__)return ()=>{};"], ["function ghConfig() {", "function ghConfig() { if(window.__BSA_SHARED_MODE__)return null;"], ["const shortcutItems = [[\"home\",\"Home\",\"⌂\"],[\"subjects\",\"Subjects\",\"▤\"],[\"practice\",\"Practice\",\"✦\"],[\"ask\",\"Tutor\",\"✧\"],[\"life\",\"Study Life\",\"☀\"]];", "const shortcutItems = [[\"path\",\"Study path\",\"✓\"],[\"lectures\",\"Lectures\",\"▤\"],[\"vault\",\"Flashcards\",\"◇\"],[\"psets\",\"Problem sets\",\"□\"],[\"practice\",\"Practice & quizzes\",\"✦\"],[\"mistakes\",\"Mistake log\",\"!\"],[\"toolkit\",\"Accounting toolkit\",\"∑\"]];"], ["const go = (tab, opts = {}) => {", "const go = (tab, opts = {}) => { if(window.__BSA_SHARED_MODE__ && ![\"lectures\",\"vault\",\"psets\",\"practice\",\"toolkit\",\"mistakes\",\"path\"].includes(tab))return;"], ["const [tool,setTool]=useState(initialTool||\"notes\");", "const [tool,setTool]=useState(initialTool||\"foundation\");"], ["[\"share\",\"Classmate sharing\"],", ""], ["const [modal, setModal] = useState(null);", "const [modal, setModal] = useState(null);"], ["const openEditor = (type, item = null, defaults = {}) => {", "const openEditor = (type, item = null, defaults = {}) => { if(window.__BSA_SHARED_MODE__ && ![\"mistake\",\"quiz\"].includes(type))return;"], ["const okTabs = [\"curriculum\", \"home\", \"break\", \"life\", \"achievements\", \"stats-clean\", \"practice\", \"roadmap\", \"calendar\", \"vault\", \"mistakes\", \"grades\", \"lectures\", \"psets\", \"class\", \"toolkit\", \"howto\"];", "const okTabs = window.__BSA_SHARED_MODE__ ? [\"lectures\",\"vault\",\"psets\",\"practice\",\"toolkit\",\"mistakes\",\"path\"] : [\"curriculum\", \"home\", \"break\", \"life\", \"achievements\", \"stats-clean\", \"practice\", \"roadmap\", \"calendar\", \"vault\", \"mistakes\", \"grades\", \"lectures\", \"psets\", \"class\", \"toolkit\", \"howto\"];"]];
+      const swaps=[["const [nav, setNav] = useState({ tab: \"home\", opts: {}, key: 0 });", "const [nav, setNav] = useState({ tab: \"path\", opts: {}, key: 0 });"], ["const [shortcutsOpen,setShortcutsOpen] = useState(false);", "const [shortcutsOpen,setShortcutsOpen] = useState(false);"], ["const stop = startSyncLoop();", "const stop = () => {};"], ["function markDirty() {", "function markDirty() { if(window.__BSA_SHARED_MODE__)return;"], ["function startSyncLoop() {", "function startSyncLoop() { if(window.__BSA_SHARED_MODE__)return ()=>{};"], ["function ghConfig() {", "function ghConfig() { if(window.__BSA_SHARED_MODE__)return null;"], ["const shortcutItems = [[\"home\",\"Home\",\"⌂\"],[\"subjects\",\"Subjects\",\"▤\"],[\"practice\",\"Practice\",\"✦\"],[\"ask\",\"Tutor\",\"✧\"],[\"life\",\"Study Life\",\"☀\"]];", "const shortcutItems = [[\"path\",\"Study path\",\"✓\"],[\"lectures\",\"Lectures\",\"▤\"],[\"vault\",\"Flashcards\",\"◇\"],[\"psets\",\"Problem sets\",\"□\"],[\"practice\",\"Practice & quizzes\",\"✦\"],[\"mistakes\",\"Mistake log\",\"!\"],[\"toolkit\",\"Accounting toolkit\",\"∑\"]];"], ["const go = (tab, opts = {}) => {", "const go = (tab, opts = {}) => { if(window.__BSA_SHARED_MODE__ && ![\"lectures\",\"vault\",\"psets\",\"mcq\",\"practice\",\"toolkit\",\"mistakes\",\"path\"].includes(tab))return;"], ["const [tool,setTool]=useState(initialTool||\"notes\");", "const [tool,setTool]=useState(initialTool||\"foundation\");"], ["[\"share\",\"Classmate sharing\"],", ""], ["const [modal, setModal] = useState(null);", "const [modal, setModal] = useState(null);"], ["const openEditor = (type, item = null, defaults = {}) => {", "const openEditor = (type, item = null, defaults = {}) => { if(window.__BSA_SHARED_MODE__ && ![\"mistake\",\"quiz\"].includes(type))return;"], ["const okTabs = [\"curriculum\", \"home\", \"break\", \"life\", \"achievements\", \"stats-clean\", \"practice\", \"roadmap\", \"calendar\", \"vault\", \"mistakes\", \"grades\", \"lectures\", \"psets\", \"class\", \"toolkit\", \"howto\"];", "const okTabs = window.__BSA_SHARED_MODE__ ? [\"lectures\",\"vault\",\"psets\",\"mcq\",\"practice\",\"toolkit\",\"mistakes\",\"path\"] : [\"curriculum\", \"home\", \"break\", \"life\", \"achievements\", \"stats-clean\", \"practice\", \"roadmap\", \"calendar\", \"vault\", \"mistakes\", \"grades\", \"lectures\", \"psets\", \"class\", \"toolkit\", \"howto\"];"]];
       if(!app.startsWith('(() => {'))throw Error('Unexpected shared app format');
       app=app.replace('(() => {','(() => {\n const localStorage=window.__BSA_SHARED_STORAGE__;\n const sessionStorage=window.__BSA_SHARED_STORAGE__;\n');
       const pub=app.indexOf('\n  function ClassmatePublisher('),retention=app.indexOf('\n  function RetentionTools(',pub);
       if(pub<0||retention<0)throw Error('Cannot publish: publisher boundary changed');
       app=app.slice(0,pub)+'\n  function ClassmatePublisher(){return null;}'+app.slice(retention);
       for(const [before,after] of swaps){if(!app.includes(before))throw Error('Cannot publish: app compatibility changed ('+before.slice(0,40)+')');app=(before==='["share","Classmate sharing"],' ? app.split(before).join(after) : app.replace(before,after));}
-      if(!app.includes("{name:\"Study\", items:[\"home\",\"guide\",\"vault\",\"psets\",\"lectures\",\"practice\"]},\n      {name:\"Tools\", items:[\"toolkit\",\"roadmap\",\"ask\",\"curriculum\",\"howto\"]},\n      {name:\"Progress\", items:[\"stats-clean\",\"mistakes\",\"grades\",\"achievements\"]},\n      {name:\"Plan\", items:[\"calendar\",\"class\"]},\n      {name:\"Your space\", items:[\"life\",\"break\",\"personalize\"]}"))throw Error('Cannot publish: navigation compatibility changed');
-      app=app.replace("{name:\"Study\", items:[\"home\",\"guide\",\"vault\",\"psets\",\"lectures\",\"practice\"]},\n      {name:\"Tools\", items:[\"toolkit\",\"roadmap\",\"ask\",\"curriculum\",\"howto\"]},\n      {name:\"Progress\", items:[\"stats-clean\",\"mistakes\",\"grades\",\"achievements\"]},\n      {name:\"Plan\", items:[\"calendar\",\"class\"]},\n      {name:\"Your space\", items:[\"life\",\"break\",\"personalize\"]}","{name:\"Study path\", items:[\"path\",\"mistakes\"]},\n      {name:\"Study materials\", items:[\"lectures\",\"vault\",\"psets\",\"practice\"]},\n      {name:\"Accounting tools\", items:[\"toolkit\"]}");
+      if(!app.includes("{name:\"Study\", items:[\"home\",\"guide\",\"vault\",\"psets\",\"mcq\",\"lectures\",\"practice\"]},\n      {name:\"Tools\", items:[\"toolkit\",\"roadmap\",\"ask\",\"curriculum\",\"howto\"]},\n      {name:\"Progress\", items:[\"stats-clean\",\"mistakes\",\"grades\",\"achievements\"]},\n      {name:\"Plan\", items:[\"calendar\",\"class\"]},\n      {name:\"Your space\", items:[\"life\",\"break\",\"personalize\"]}"))throw Error('Cannot publish: navigation compatibility changed');
+      app=app.replace("{name:\"Study\", items:[\"home\",\"guide\",\"vault\",\"psets\",\"mcq\",\"lectures\",\"practice\"]},\n      {name:\"Tools\", items:[\"toolkit\",\"roadmap\",\"ask\",\"curriculum\",\"howto\"]},\n      {name:\"Progress\", items:[\"stats-clean\",\"mistakes\",\"grades\",\"achievements\"]},\n      {name:\"Plan\", items:[\"calendar\",\"class\"]},\n      {name:\"Your space\", items:[\"life\",\"break\",\"personalize\"]}","{name:\"Study path\", items:[\"path\",\"mistakes\"]},\n      {name:\"Study materials\", items:[\"lectures\",\"vault\",\"psets\",\"mcq\",\"practice\"]},\n      {name:\"Accounting tools\", items:[\"toolkit\"]}");
       app=app.replaceAll('Welcome back, John Angel 👋','Welcome to Study Desk 👋').replaceAll('John Angel','Student');
       const checkpoint='        learningCapture(d, n, now);\n        stampChanges(d, n, now);\n        n.updatedAt = now;\n        return n;';
       if(!app.includes(checkpoint))throw Error('Cannot publish: progress system changed');
@@ -13350,13 +13607,14 @@ h('div',{className:'life-avatar-preview'},h('span',null,life.avatar.accessory===
       ["grades", "Grades", "grade"],
       ["lectures", "Lectures", "lecture", (subject.lectures || []).length],
       ["psets", "Problem sets", "pset", (subject.psets || []).reduce((a, x) => a + x.problems.filter((p) => p.st === "miss").length, 0)],
+      ["mcq", "MCQ library", "cards", (subject.mcqSets || []).reduce((a,x)=>a+(x.problems||[]).length,0)],
       ["class", "Class", "subjects", (subject.tasks || []).filter((t) => !t.done && t.due && daysUntil(t.due) <= 3).length],
       ["ask", "Ask", "ask"],
       ["toolkit", "Study Toolkit", "book"],
       ["life", "Study Life", "look"], ["personalize", "Personalization Corner", "look"], ["howto", "How-To Corner", "book"]
     ];
     const navGroups = [
-      {name:"Study", items:["home","guide","vault","psets","lectures","practice"]},
+      {name:"Study", items:["home","guide","vault","psets","mcq","lectures","practice"]},
       {name:"Tools", items:["toolkit","roadmap","ask","curriculum","howto"]},
       {name:"Progress", items:["stats-clean","mistakes","grades","achievements"]},
       {name:"Plan", items:["calendar","class"]},
@@ -13390,7 +13648,7 @@ h('div',{className:'life-avatar-preview'},h('span',null,life.avatar.accessory===
       h("div",{className:"workspace-topbar"},
         h("div",{className:"workspace-context"},h("span",{className:"workspace-eyebrow"},"STUDY DESK"),h("strong",null,(tabs.find(t=>t[0]===nav.tab)||[null,"Today"])[1]),h("span",{className:"workspace-subject"},subject.code||subject.name)),
         h("div",{className:"workspace-actions"},h("button",{className:"btn ghost",onClick:()=>setModal("quick")},"Quick add"),h("button",{className:"btn primary",onClick:()=>go("ask")},"Ask tutor"))),
-      nav.tab === "guide" && h(FeatureGuide,{go}), nav.tab === "break" && h(BreakCorner), nav.tab === "joy" && h(JoyHub,{go}), nav.tab === "life" && h(StudyLife), nav.tab === "achievements" && h(AcademicProgress,{go}), nav.tab === "stats-clean" && h(StatsFreshStart,{data,update,toast}), nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data,initialTool:nav.opts?.tool})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), h(WorkflowRibbon,{tab:nav.tab,go}), nav.tab === "home" && /* @__PURE__ */ React.createElement(HomeView, { ...viewProps }), nav.tab === "practice" && h(PracticeView, { ...viewProps, data }), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(CalendarView, { ...viewProps }), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(PsView, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })), /* @__PURE__ */ React.createElement("nav", { className: "bottom-nav", "aria-label": "Sections" }, tabs.filter(x=>["home","practice","roadmap"].includes(x[0])).map(([k, l, ic]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), /* @__PURE__ */ React.createElement("span", null, l))), /* @__PURE__ */ React.createElement("button", { className: "fab", onClick: () => setModal("quick"), "aria-label": "Quick add" }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 24 })), [tabs.find(x=>x[0]==="calendar"), tabs.find(x=>x[0]==="mistakes")].map(([k, l, ic, n]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement("span", { className: "ico-wrap" }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), k === "mistakes" && n ? /* @__PURE__ */ React.createElement("span", { className: "badge" }, n) : null), /* @__PURE__ */ React.createElement("span", null, k === "calendar" ? "Calendar" : "Mistakes"))), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("more") }, /* @__PURE__ */ React.createElement(Icon, { name: "more" }), /* @__PURE__ */ React.createElement("span", null, "More"))), /* @__PURE__ */ React.createElement("div", { className: `toast${msg ? " show" : ""}`, role: "status", "aria-live": "polite" }, msg), h(FocusBar, { data, update, toast }), modal === "quick" && /* @__PURE__ */ React.createElement(QuickAdd, { onClose: () => setModal(null), onPick: (k) => {
+      nav.tab === "guide" && h(FeatureGuide,{go}), nav.tab === "break" && h(BreakCorner), nav.tab === "joy" && h(JoyHub,{go}), nav.tab === "life" && h(StudyLife), nav.tab === "achievements" && h(AcademicProgress,{go}), nav.tab === "stats-clean" && h(StatsFreshStart,{data,update,toast}), nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data,initialTool:nav.opts?.tool})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), h(WorkflowRibbon,{tab:nav.tab,go}), nav.tab === "home" && /* @__PURE__ */ React.createElement(HomeView, { ...viewProps }), nav.tab === "practice" && h(PracticeView, { ...viewProps, data }), nav.tab === "mcq" && h(MCQPage,{...viewProps}), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(CalendarView, { ...viewProps }), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(PsView, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })), /* @__PURE__ */ React.createElement("nav", { className: "bottom-nav", "aria-label": "Sections" }, tabs.filter(x=>["home","practice","roadmap"].includes(x[0])).map(([k, l, ic]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), /* @__PURE__ */ React.createElement("span", null, l))), /* @__PURE__ */ React.createElement("button", { className: "fab", onClick: () => setModal("quick"), "aria-label": "Quick add" }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 24 })), [tabs.find(x=>x[0]==="calendar"), tabs.find(x=>x[0]==="mistakes")].map(([k, l, ic, n]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement("span", { className: "ico-wrap" }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), k === "mistakes" && n ? /* @__PURE__ */ React.createElement("span", { className: "badge" }, n) : null), /* @__PURE__ */ React.createElement("span", null, k === "calendar" ? "Calendar" : "Mistakes"))), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("more") }, /* @__PURE__ */ React.createElement(Icon, { name: "more" }), /* @__PURE__ */ React.createElement("span", null, "More"))), /* @__PURE__ */ React.createElement("div", { className: `toast${msg ? " show" : ""}`, role: "status", "aria-live": "polite" }, msg), h(FocusBar, { data, update, toast }), modal === "quick" && /* @__PURE__ */ React.createElement(QuickAdd, { onClose: () => setModal(null), onPick: (k) => {
       if (k === "grade") {
         setModal(null);
         go("grades", { gtab: "scores" });
