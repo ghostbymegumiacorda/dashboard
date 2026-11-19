@@ -2860,6 +2860,34 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 }
 
 </style>
+<style id="bsa-v173-prompt-entry-consistency">
+/* All entry points (import tab / Generate MCQ / Get AI prompt) share the same responsive studio. */
+.modal.bsa-prompt-modal{width:min(1240px,calc(100vw - 24px));max-width:none;box-sizing:border-box}
+.modal.bsa-prompt-modal>.modal-body{min-width:0;overflow-x:hidden}
+.modal.bsa-prompt-modal .bsa-pb-layout,
+.modal.bsa-prompt-modal .bsa-pb-main,
+.modal.bsa-prompt-modal .bsa-pb-guide-grid,
+.modal.bsa-prompt-modal .bsa-pb-card{min-width:0}
+@media(min-width:921px) and (max-width:1100px){
+ .modal.bsa-prompt-modal .bsa-pb-layout{grid-template-columns:minmax(210px,250px) minmax(0,1fr);gap:14px}
+ .modal.bsa-prompt-modal .bsa-pb-guide-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .modal.bsa-prompt-modal .bsa-pb-guide-grid>div:last-child{grid-column:1/-1}
+}
+@media(max-width:920px){
+ .modal.bsa-prompt-modal{width:calc(100vw - 20px);height:calc(100dvh - 16px);max-height:calc(100dvh - 16px)}
+ .modal.bsa-prompt-modal .bsa-pb-guide-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .modal.bsa-prompt-modal .bsa-pb-guide-grid>div:last-child{grid-column:1/-1}
+ .modal.bsa-prompt-modal .bsa-pb-top-context{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .modal.bsa-prompt-modal .bsa-pb-top-context>.bsa-pb-field:last-child{grid-column:1/-1}
+}
+@media(max-width:620px){
+ .modal.bsa-prompt-modal{width:100%;height:100dvh;max-height:100dvh}
+ .modal.bsa-prompt-modal .bsa-pb-guide-grid,
+ .modal.bsa-prompt-modal .bsa-pb-top-context{grid-template-columns:minmax(0,1fr)}
+ .modal.bsa-prompt-modal .bsa-pb-guide-grid>div:last-child,
+ .modal.bsa-prompt-modal .bsa-pb-top-context>.bsa-pb-field:last-child{grid-column:auto}
+}
+</style>
 </head>
 <body>
 <div id="root"><p class="boot">Opening your study desk… If this doesn’t load, connect to the internet once so the app can save itself for offline use.</p></div>
@@ -9647,7 +9675,21 @@ THE PART I'M STUCK ON:
     const [kind,setKind]=useState(()=>localPref(`nlmKind_${subject.id}`,nlmGuessKind(subject)));
     const [topicId,setTopicId]=useState(initTopic && subject.topics.some(t=>t.id===initTopic)?initTopic:'');
     const [pid,setPid]=useState(()=>initPid||localPref('nlmPrompt','lecture'));
+    // A Generate-MCQ / Generate-problems shortcut must override the last library choice.
+    // React preserves state when reusing a mounted component, so sync route intent explicitly.
+    useEffect(()=>{
+      if(initPid && NLM_PROMPTS.some(x=>x.id===initPid)){
+        setPid(initPid);
+        setSearch('');
+        setCopied(false);
+        setShowSchema(false);
+        setLocalPref('nlmPrompt',initPid);
+      }
+    },[initPid,subject.id]);
     const [goal,setGoal]=useState(()=>(initPid&&!['lecture','mcq-quiz','cards','pset','rulebook','source-audit','socratic','why-wrong'].includes(initPid))?'all':'recommended');
+    useEffect(()=>{
+      if(initPid) setGoal(['lecture','mcq-quiz','cards','pset','rulebook','source-audit','socratic','why-wrong'].includes(initPid)?'recommended':'all');
+    },[initPid,subject.id]);
     const [search,setSearch]=useState('');
     const prefKey='bsa_v172_prompt_fields_'+subject.id;
     const notesKey='bsa_v172_prompt_notes_'+subject.id;
@@ -15330,7 +15372,7 @@ h('div',{className:'life-avatar-preview'},h('span',null,life.avatar.accessory===
     } }), modal === "more" && /* @__PURE__ */ React.createElement(MoreSheet, { onClose: () => setModal(null), onPick: (k) => setModal(k), settings: data.settings, setSettings, go: (t) => {
       setModal(null);
       go(t);
-    } }), modal && modal.nlm && h(Modal, { title: "AI Study Prompts", wide: true, onClose: () => setModal(null) }, h(NotebookLMPrompts, { subject, toast, initPid: modal.nlm.pid, initTopic: modal.nlm.topicId, onImport: () => setModal("data") })), modal === "look" && /* @__PURE__ */ React.createElement(AppearanceModal, { settings: data.settings, setSettings, onClose: () => setModal(null) }), modal === "subjects" && /* @__PURE__ */ React.createElement(SubjectModal, { data, update, onClose: () => setModal(null), toast }), (modal === "data" || modal === "sync" || modal && modal.data) && /* @__PURE__ */ React.createElement(DataModal, { data, update, replaceAll, onClose: () => setModal(null), toast, downloads, initTab: modal && modal.data ? modal.data : modal === "sync" ? "github" : "import", prefill: modal && modal.prefill }), (editor == null ? void 0 : editor.type) === "card" && /* @__PURE__ */ React.createElement(
+    } }), modal && modal.nlm && h(Modal, { key: "bsa-direct-prompt-" + (modal.nlm.pid || "all") + "-" + subject.id, title: "AI Prompt Studio", wide: true, className: "bsa-prompt-modal", onClose: () => setModal(null) }, h(NotebookLMPrompts, { key: "bsa-prompt-" + (modal.nlm.pid || "all") + "-" + subject.id, subject, toast, initPid: modal.nlm.pid, initTopic: modal.nlm.topicId, onImport: () => setModal({ data: "import" }) })), modal === "look" && /* @__PURE__ */ React.createElement(AppearanceModal, { settings: data.settings, setSettings, onClose: () => setModal(null) }), modal === "subjects" && /* @__PURE__ */ React.createElement(SubjectModal, { data, update, onClose: () => setModal(null), toast }), (modal === "data" || modal === "sync" || modal && modal.data) && /* @__PURE__ */ React.createElement(DataModal, { data, update, replaceAll, onClose: () => setModal(null), toast, downloads, initTab: modal && modal.data ? modal.data : modal === "sync" ? "github" : "import", prefill: modal && modal.prefill }), (editor == null ? void 0 : editor.type) === "card" && /* @__PURE__ */ React.createElement(
       CardEditor,
       {
         subject,
