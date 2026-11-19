@@ -2235,7 +2235,22 @@ body{overflow:hidden}
 .bsa-shortcut-menu button:hover,.bsa-shortcut-menu button:focus-visible{background:var(--soft,#e4f0e9);outline-offset:-2px}
 .bsa-shortcut-symbol{width:23px;text-align:center;font-size:18px}
 @media(max-width:700px){.bsa-shortcut-anchor.mobile .bsa-shortcut-menu{left:0;top:calc(100% + 10px)}}
-</style></head>
+</style>
+<style id="bsa-v138-header-edge-fix">
+/* The v133 generic child max-width:100% clamps the topbar even though
+   its negative side margins intentionally extend across the content padding.
+   Fix that element alone, without changing sidebar, grid or iPad heights. */
+@media (min-width:701px) {
+  #root > .shell > .content > .workspace-topbar {
+    box-sizing:border-box!important;
+    width:calc(100% + 2 * var(--app-pad, 32px))!important;
+    max-width:none!important;
+    margin-left:calc(-1 * var(--app-pad, 32px))!important;
+    margin-right:calc(-1 * var(--app-pad, 32px))!important;
+  }
+}
+</style>
+</head>
 <body>
 <div id="root"><p class="boot">Opening your study desk… If this doesn’t load, connect to the internet once so the app can save itself for offline use.</p></div>
 <script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
