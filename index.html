@@ -2324,7 +2324,26 @@ html,body,#root{height:100%!important;min-height:0!important;margin:0!important;
 #bsa-update-control[data-place="menu"]{position:fixed;left:0;top:0;width:0;height:0;z-index:2147483000;pointer-events:none}
 #bsa-update-control[data-place="menu"]>#bsa-update-button{display:none!important}
 #bsa-update-control[data-place="menu"]>#bsa-update-panel{pointer-events:auto}
-</style></head>
+</style><style id="bsa-v148-mcq-ui">
+.mcq-entry{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:1rem}
+.mcq-entry h2{margin:.2rem 0}.mcq-entry p{margin:.2rem 0;max-width:60ch}
+.mcq-shell{max-width:860px;margin:0 auto;padding:clamp(16px,3vw,28px)}
+.mcq-progress{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.mcq-track{height:6px;background:var(--line,rgba(127,127,127,.2));border-radius:99px;overflow:hidden;margin:12px 0 22px}
+.mcq-track>span{height:100%;display:block;background:var(--accent,#107d53);transition:width .2s}
+.mcq-question{font-size:1.1rem;font-weight:650;line-height:1.65;margin:18px 0}
+.mcq-options{display:grid;gap:10px;margin:14px 0 20px}
+.mcq-choice{display:flex;align-items:flex-start;gap:12px;width:100%;min-width:0;text-align:left;padding:14px 16px;border:1px solid var(--line,rgba(127,127,127,.35));background:var(--card,var(--surface,#fff));color:var(--ink,inherit);border-radius:12px;font:inherit;cursor:pointer}
+.mcq-choice>strong{display:grid;place-items:center;flex:0 0 28px;width:28px;height:28px;border-radius:8px;background:var(--bg,var(--surface,#eee))}
+.mcq-choice>span{min-width:0;overflow-wrap:anywhere}
+.mcq-choice.selected{border-color:var(--accent,#107d53);box-shadow:inset 0 0 0 1px var(--accent,#107d53)}
+.mcq-choice.correct{border-color:#25a26b}.mcq-choice.wrong{border-color:#d95363}
+.mcq-choice:disabled{cursor:default;opacity:1}
+.mcq-feedback{border-top:1px solid var(--line,rgba(127,127,127,.3));padding:16px 0;margin:16px 0;line-height:1.6}
+.mcq-feedback>strong{display:block;margin-bottom:8px}
+@media(max-width:700px){.mcq-entry{align-items:stretch}.mcq-entry>.step-actions{width:100%;flex-wrap:wrap}.mcq-shell{padding:14px}.mcq-choice{padding:12px}}
+</style>
+</head>
 <body>
 <div id="root"><p class="boot">Opening your study desk… If this doesn’t load, connect to the internet once so the app can save itself for offline use.</p></div>
 <script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
@@ -6725,6 +6744,105 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       return h("span", { key: d, className: `act${d === today() ? " today" : ""}`, title: `${fmtDay(d)}: ${x.reviews || 0} reviews, ${fmtMins(x.mins) || "0 min"} timed`, style: { "--h": `${v ? Math.max(12, v / max * 100) : 4}%` } }, h("i", null), h("b", null, parseD(d).toLocaleDateString(void 0, { weekday: "narrow" })));
     }));
   }
+  /* v148 — focused, one-at-a-time multiple-choice practice. Uses the same
+     authored question pool and progress schema as Mock Exam. */
+  function MultipleChoiceQuiz({ subject, update, toast, go, onExit }) {
+    const all = useMemo(() => mxPool(subject, null).mcq.filter((q) =>
+      q.key && q.choices && q.choices.length >= 2 &&
+      q.choices.some((choice, i) => mxChoiceKey(choice, i) === q.key)
+    ), [subject]);
+    const [topic, setTopic] = useState("all");
+    const [count, setCount] = useState(10);
+    const [phase, setPhase] = useState("setup");
+    const [paper, setPaper] = useState([]);
+    const [pos, setPos] = useState(0);
+    const [answers, setAnswers] = useState({});
+    const [revealed, setRevealed] = useState({});
+    const saved = useRef(false);
+    const started = useRef(0);
+    const topics = studyTopics(subject);
+    const eligible = all.filter((q) => topic === "all" || q.topicId === topic);
+    const start = () => {
+      const items = shuffle(eligible).slice(0, Math.max(1, Math.min(count, eligible.length)));
+      if (!items.length) return;
+      setPaper(items); setPos(0); setAnswers({}); setRevealed({});
+      saved.current = false; started.current = Date.now(); setPhase("run");
+    };
+    const current = paper[pos];
+    const score = paper.filter((q) => answers[q.id] && answers[q.id] === q.key).length;
+    const record = () => {
+      if (saved.current || !paper.length) return;
+      saved.current = true;
+      const minutes = Math.max(1, Math.round((Date.now() - started.current) / 60000));
+      update((s) => {
+        s.quizzes.unshift({ id: uid("q"), topicId: topic === "all" ? null : topic,
+          topicText: `Multiple-choice quiz · ${topic === "all" ? "All topics" : (topics.find(t => t.id === topic) || {}).title || "Topic"}`,
+          date: today(), score, items: paper.length });
+        bumpDay(s, { reviews: paper.length, right: score, mins: minutes });
+        for (const q of paper) {
+          if (answers[q.id] === q.key) continue;
+          const question = psPlain(q.q).slice(0, 400);
+          const correct = psPlain(q.choices.find((c, i) => mxChoiceKey(c, i) === q.key) || q.key.toUpperCase()).slice(0, 400);
+          const wrongChoice = q.choices.find((c, i) => mxChoiceKey(c, i) === answers[q.id]);
+          const wrong = answers[q.id] ? psPlain(wrongChoice || answers[q.id]).slice(0, 200) : "Left blank";
+          const existing = (s.mistakes || []).find(m => m.status !== "Cleared" && m.question === question && m.correct === correct);
+          const details = { topicId: q.topicId || null, topicText: "", date: today(), question,
+            wrong, correct, trap: psPlain(q.trap || q.why || "Review the explanation and the source.").slice(0,400), status: "Active" };
+          if (existing) Object.assign(existing, details, { repeatMisses: (existing.repeatMisses || 1) + 1 });
+          else s.mistakes.unshift({ id: uid("m"), ...details, repeatMisses: 1 });
+        }
+      });
+      toast(`Quiz saved: ${score}/${paper.length}. Missed answers added to your Mistake Log.`);
+    };
+    useEffect(() => { if (phase === "done") record(); }, [phase]);
+    return h("div", { className: "mcq-quiz" },
+      h("div", { className: "page-head" }, h("div", null, h("h1", { className: "page-title" }, "Multiple-choice quiz"),
+        h("p", { className: "muted" }, "One question at a time. See the explanation, then move on.")),
+        h("button", { className: "btn", onClick: onExit }, "Back to Practice")),
+      phase === "setup" ? h("div", { className: "panel mcq-shell" },
+        h("h2", null, "Build your quiz"),
+        h("div", { className: "grid-2 tight" },
+          h(Field, { label: "Topic" }, h("select", { value: topic, onChange: e => setTopic(e.target.value) },
+            h("option", { value: "all" }, "All topics"),
+            topics.map(t => h("option", { key: t.id, value: t.id }, `${t.code ? t.code + " · " : ""}${t.title}`)))),
+          h(Field, { label: "Questions" }, h("select", { value: count, onChange: e => setCount(Number(e.target.value)) },
+            [5,10,15,20,30,50].map(n => h("option", { value: n, key: n }, n))))),
+        h("p", { className: "muted" }, `${eligible.length} eligible multiple-choice questions from your problem sets. Each needs answer key A, B, C, or D.`),
+        h("div", { className: "step-actions" },
+          h("button", { className: "btn primary", disabled: !eligible.length, onClick: start }, "Start quiz"),
+          h("button", { className: "btn", onClick: () => go("nlm", { pid: "mcq-quiz" }) }, "Get NotebookLM MCQ prompt")),
+        !eligible.length && h("p", { className: "muted small" }, "No multiple-choice questions for this topic yet. Import a NotebookLM MCQ problem set, or add one in Problem sets.")
+      ) : phase === "run" && current ? h("div", { className: "panel mcq-shell" },
+        h("div", { className: "mcq-progress" }, h("strong", null, `Question ${pos+1} of ${paper.length}`),
+          h("span", { className: "muted" }, `${paper.filter(q => revealed[q.id]).length} reviewed`)),
+        h("div", { className: "mcq-track" }, h("span", { style: { width: `${(pos+1)/paper.length*100}%` } })),
+        h("p", { className: "muted small" }, current.src),
+        h("div", { className: "mcq-question" }, h("div", { dangerouslySetInnerHTML: { __html: psMdHtml(current.q) } })),
+        h("div", { className: "mcq-options", role: "group", "aria-label": "Select one answer" }, current.choices.map((choice, i) => {
+          const key = mxChoiceKey(choice, i);
+          const selected = answers[current.id] === key;
+          const visible = revealed[current.id];
+          return h("button", { key: i, type: "button", disabled: !!visible,
+            className: `mcq-choice${selected ? " selected" : ""}${visible && key === current.key ? " correct" : ""}${visible && selected && key !== current.key ? " wrong" : ""}`,
+            onClick: () => setAnswers(a => ({...a, [current.id]: key})) },
+            h("strong", null, String.fromCharCode(65+i)), h("span", null, h("span", { dangerouslySetInnerHTML: { __html: psMdHtml(String(choice).replace(/^\s*[A-Da-d]\s*[.)\]]\s*/, "")) } })));
+        })),
+        revealed[current.id] && h("div", { className: "mcq-feedback", role: "status" },
+          h("strong", null, answers[current.id] === current.key ? "Correct" : `Correct answer: ${current.key.toUpperCase()}`),
+          current.why && h("div", null, h("div", { dangerouslySetInnerHTML: { __html: psMdHtml(current.why) } })),
+          current.trap && h("p", null, h("strong", null, "Watch out: "), h("span", { dangerouslySetInnerHTML: { __html: psMdHtml(current.trap) } }))),
+        h("div", { className: "step-actions" },
+          !revealed[current.id] && h("button", { className: "btn primary", disabled: !answers[current.id], onClick: () => setRevealed(v => ({ ...v, [current.id]: true })) }, "Check answer"),
+          !!revealed[current.id] && h("button", { className: "btn primary", onClick: () => pos === paper.length-1 ? setPhase("done") : setPos(i => i+1) }, pos === paper.length-1 ? "See results" : "Next question"),
+          h("button", { className: "btn", onClick: () => { if(window.confirm("End this quiz without saving?")) onExit(); } }, "Exit"))
+      ) : h("div", { className: "panel mcq-shell" },
+        h("h2", null, "Quiz complete"), h("p", { className: "big-num" }, `${score} / ${paper.length}`),
+        h("p", { className: "muted" }, `${paper.length ? Math.round(score / paper.length * 100) : 0}% correct. Your score and mistakes were saved locally.`),
+        h("div", { className: "step-actions" }, h("button", { className: "btn primary", onClick: start }, "Try another set"),
+          h("button", { className: "btn", onClick: onExit }, "Back to Practice")))
+    );
+  }
+
   function PracticeView({ subject, update, toast, go, init, settings, setSettings, openEditor, data }) {
     const [mode, setMode] = useState(null);
     const newPerDay = settings.newPerDay || 10;
@@ -6753,6 +6871,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     if (mode && mode.kind === "study") return h("section", { className: "view" }, h(StudySession, { subject, update, toast, settings, items: mode.items, title: mode.title, all: mode.all, onExit: () => setMode(null) }));
     if (mode && mode.kind === "compute") return h("section", { className: "view" }, h(ComputeSet, { subject, update, toast, set: mode.set, onExit: () => setMode(null) }));
     if (mode && mode.kind === "mock") return h("section", { className: "view" }, h(MockExam, { subject, exam, update, toast, onExit: () => setMode(null) }));
+    if (mode && mode.kind === "mcq") return h("section", { className: "view" }, h(MultipleChoiceQuiz, { subject, update, toast, go, onExit: () => setMode(null) }));
     const dueTotal = rv.due.length + rv.fresh.length + rv.mist.length;
     const topics = studyTopics(subject);
     const strength = topics.map((t) => {
@@ -6764,6 +6883,12 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       "section",
       { className: "view" },
       h("div", { className: "page-head" }, h("div", null, h("h1", { className: "page-title" }, "Practice"), h("p", { className: "muted" }, "Short daily reviews beat cramming. Cards come back just before you’d forget them."))),
+      h("div", { className: "panel mcq-entry" },
+        h("div", null, h("span", { className: "panel-kicker" }, "QUESTION PRACTICE"), h("h2", null, "Multiple-choice quiz"),
+          h("p", { className: "muted" }, "Choose a topic, answer one at a time, see why, and save missed questions to your Mistake Log.")),
+        h("div", { className: "step-actions" },
+          h("button", { className: "btn primary", onClick: () => setMode({kind:"mcq"}) }, "Start MCQ quiz"),
+          h("button", { className: "btn", onClick: () => go("nlm", {pid:"mcq-quiz"}) }, "NotebookLM quiz prompt"))),
       h(
         "div",
         { className: "practice-grid" },
@@ -7750,7 +7875,22 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     ["make", "Make study material", "Paste the reply into the Import tab"],
     ["chat", "Study in NotebookLM chat", "Use it right in NotebookLM"]
   ];
+  const NLM_SOURCE_RULES = `SOURCE-ACCURACY RULES (apply throughout): Use ONLY the sources uploaded to this NotebookLM notebook. Follow their actual terminology, page/chapter scope and emphasis. Never invent definitions, dates, figures, citations, examples, standards or answer keys. If a required fact is not supported, omit the item rather than guess. Distinguish source-stated information from any newly constructed application problem; derive the answer carefully and check every number and distractor. Preserve key exceptions and qualifying conditions. Avoid duplicate questions and ambiguous wording. Prioritize understanding, discriminating similar concepts, retrieval practice and feedback on why tempting wrong answers fail. For each explanation, ground the rule in a named source title/chapter/page when identifiable; do not fabricate page numbers. For JSON outputs, place source references only in existing compatible text fields (e.g., tip, approach or solution), not in extra schema keys, and output strictly import-compatible JSON with no markdown fences.`;
   const NLM_PROMPTS = [
+    { id: "mcq-quiz", group: "make", json: true, title: "Multiple-choice quiz (importable)", desc: "High-quality, source-checked MCQs for the dedicated Practice quiz and Mock Exam.", make: (c) => `Create 20 original, rigorous multiple-choice questions on ${c.focus} for ${c.subject}, using my uploaded sources. Give 4 plausible choices per question; only ONE may be correct. Cover definitions, subtle distinctions, rule exceptions, short scenarios and numerical application if supported. Mix easy, medium and challenging questions, without repeating the same learning objective. The choices must not reveal the key by length, grammatical cues or obvious nonsense. Double-check each answer against the source and independently recompute numerical questions.
+${NLM_JSON}
+
+{
+  "subject": "${c.subject}",
+  "problemSets": [
+    { "topic": "${c.topicExample}", "title": "Multiple-choice practice — ${c.topicExample}", "source": "Actual titles or chapters of the supplied sources", "instructions": "Select one answer (A–D) for each item.", "problems": [
+      { "no": 1, "subtopic": "Precise topic or skill", "title": "Short tested concept", "difficulty": "medium", "problem": "Complete standalone question with all necessary facts and amounts", "requirements": ["Select the ONE best answer."], "choices": ["A. Plausible option", "B. Plausible option", "C. Plausible option", "D. Plausible option"], "answer": "B. Correct answer text", "approach": "Rule that decides the answer and why it applies", "solution": "Correct: B. Explain the reasoning, show computations if applicable, and say why A, C, D are wrong. Name the source chapter/section where identifiable.", "trap": "A realistic misconception this question targets" }
+    ] }
+  ]
+}
+
+Strict requirements: ${c.topicRule} Output exactly 20 distinct problems; each has four choices beginning A., B., C., D. and an answer beginning with the matching letter followed by a period. Check that the answer appears in its corresponding option. Every option is independently assessed, there is only one defensible answer, and the solution explains all distractors. Group by subtopic when the sources contain multiple subtopics. Do not create source-unsupported scenarios or fabricate numbers. Return only valid JSON; escape line breaks inside strings. ${c.kindHint}` },
+
     { id: "roadmap", group: "setup", json: true, title: "Syllabus → roadmap", desc: "Turns a syllabus or course outline into weekly topics, subtopics and exams.", make: (c) => `Read the syllabus or course outline for ${c.subject} in my sources and turn it into a study roadmap.
 ${NLM_JSON}
 
@@ -7851,9 +7991,9 @@ Rules: ${c.topicRule} "score" is the number I got right and "items" is the total
 
 THE QUESTIONS AND MY ANSWERS:
 [Paste them here]` },
-    { id: "quiz", group: "chat", json: false, title: "Quiz me, one at a time", desc: "An interactive quiz in NotebookLM. At the end it gives JSON you can import.", make: (c) => `Quiz me on ${c.focus} for ${c.subject} using only my sources. Ask one question at a time and wait for my answer before continuing. Mix question types the way my teacher would: multiple choice, true or false, identification${c.kind === "calc" ? ", and short computations" : ", and short explanation"}. Start average and get harder when I am right.
+    { id: "quiz", group: "chat", json: false, title: "Quiz me, one at a time", desc: "An interactive quiz in NotebookLM. At the end it gives JSON you can import.", make: (c) => `Quiz me on ${c.focus} for ${c.subject} using only my sources. Ask one question at a time and wait for my answer before continuing. Mix question types the way my teacher would: multiple choice, true or false, identification${c.kind === "calc" ? ", and short computations" : ", and short explanation"}. Start with an accessible question, adapt difficulty based on demonstrated accuracy, and revisit concepts I miss with a different scenario. Never reveal the answer before I respond. Ask questions that separate memorization from application.
 
-After each answer: tell me if I am right, give the correct answer, and explain the trap in one or two sentences, citing the source.
+After each answer: check my reasoning, explain the underlying rule in plain English first and formal terminology second, explain why other options are wrong, and cite the exact available source. Avoid overpraising guesses; ask me to explain a correct answer if my reasoning seems weak.
 
 Ask 10 questions. When we finish, give my score, the 3 things I should review first, and then this JSON (and only JSON in that last part) so I can import it into my study dashboard:
 { "quizzes": [ { "date": "${c.today}", "topic": "${c.topicExample}", "score": 0, "items": 10 } ],
@@ -7865,8 +8005,8 @@ ${c.kindHint}` },
 3. Give one realistic example${c.kind === "calc" ? " worked with numbers" : ""} set in the Philippines.
 4. Give an analogy that makes it stick.
 5. End with 3 check questions. Wait for my answers before you reveal the correct ones.
-Cite the part of my sources each point comes from. ${c.kindHint}` },
-    { id: "reviewer", group: "chat", json: false, title: "One-page reviewer", desc: "A dense cheat sheet you can read the night before.", make: (c) => `Make a one-page reviewer for ${c.focus} in ${c.subject} from my sources. Use short headings and bullet points. Include: key definitions, rules and their exceptions, ${c.kind === "calc" ? "every formula with when to use it, " : ""}lists I must memorize, the most testable distinctions, and a final "Don't fall for this" section with common traps. Keep it to what fits on one printed page. ${c.kindHint}` },
+Cite the part of my sources each point comes from. Distinguish what I should understand, memorize, and apply. Ask one check question at a time and only reveal the answer after I try. ${c.kindHint}` },
+    { id: "reviewer", group: "chat", json: false, title: "One-page reviewer", desc: "A dense cheat sheet you can read the night before.", make: (c) => `Make a one-page reviewer for ${c.focus} in ${c.subject} from my sources. Use short headings and bullet points. Include: key definitions, rules and their exceptions, ${c.kind === "calc" ? "every formula with when to use it, " : ""}lists I must memorize, the most testable distinctions, and a final "Don't fall for this" section with common traps. Keep it to what fits on one printed page. Prioritize coverage of testable rules, exceptions, signals in word problems, and how not to confuse similar terms. Where the source is silent, explicitly mark it as not stated. ${c.kindHint}` },
     { id: "compare", group: "chat", json: false, title: "Compare & contrast table", desc: "Side-by-side table of ideas that are easy to mix up.", make: (c) => `From my sources, find the concepts in ${c.focus} for ${c.subject} that are easiest to mix up. Put them in a comparison table with rows for definition, key features, when it applies, an example, and how to tell them apart in an exam question. After the table, give 5 quick "which one is it?" questions with answers hidden at the end. ${c.kindHint}` },
     { id: "predict", group: "chat", json: false, title: "Predict the exam", desc: "The 15 most likely exam questions, based on what your sources emphasize.", make: (c) => `I have ${c.examLine}. Based on what my sources emphasize (repeated points, examples, highlighted rules, end-of-chapter items and anything the teacher's materials stress), list the 15 questions most likely to appear. For each: the question type, why it is likely, where in my sources it comes from, and a model answer. Put the highest-yield questions first. ${c.kindHint}` },
     { id: "mnemonic", group: "chat", json: false, title: "Memory hooks", desc: "Mnemonics and acronyms for lists and steps you must memorize.", make: (c) => `Find every list, sequence, set of criteria or classification in ${c.focus} for ${c.subject} that I need to memorize. For each, give a mnemonic, acronym or short story that makes it stick, then show the full list it stands for. Make them funny or Filipino-flavored when that helps them stick. ${c.kindHint}` },
@@ -7912,7 +8052,7 @@ THE PART I'M STUCK ON:
     const [topicId, setTopicId] = useState(initTopic && subject.topics.some((t) => t.id === initTopic) ? initTopic : "");
     const [pid, setPid] = useState(() => initPid || localPref("nlmPrompt", "cards"));
     const p = NLM_PROMPTS.find((x) => x.id === pid) || NLM_PROMPTS[2];
-    const text = p.make(nlmContext(subject, topicId, kind));
+    const text = `${NLM_SOURCE_RULES}\n\n${p.make(nlmContext(subject, topicId, kind))}`;
     const pickKind = (v) => {
       setKind(v);
       setLocalPref(`nlmKind_${subject.id}`, v);

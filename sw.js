@@ -3,7 +3,7 @@
    Your study data is NOT stored here; it lives in the browser's storage and in your GitHub data repo.
    If you change this file later, bump VERSION so every device picks up the new copy. */
 const CACHE_FAMILY = "study-desk-" + encodeURIComponent(new URL(self.registration.scope).pathname) + "-";
-const VERSION = CACHE_FAMILY + "v147-logo-menu";
+const VERSION = CACHE_FAMILY + "v148-logo-menu";
 const SCOPE = self.registration.scope;               // e.g. https://you.github.io/bsa-dashboard/
 const SHELL = ["index.html", "manifest.json", "icon-192.png", "icon-512.png", "icon-maskable-512.png", "apple-touch-icon.png", "favicon.png", "avatar-front.png", "avatar-back.png", "avatar-happy.png", "avatar-walk.png"];
 const CDN = [
