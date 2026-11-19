@@ -2542,7 +2542,29 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .bsa-v161-insight p{margin:0;overflow-wrap:anywhere}.bsa-v161-insight-top{display:flex;align-items:start;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .bsa-v161-confidence{border:1px solid var(--line,#abb7b3);font-size:.73rem;border-radius:100px;padding:4px 8px;white-space:nowrap}
 @media(max-width:700px){.bsa-v161-insight-list{grid-template-columns:minmax(0,1fr)}}
-</style></head>
+</style>
+<style id="bsa-v162-readiness-css">
+.bsa-v162-readiness{min-width:0;display:grid;gap:16px}
+.bsa-v162-heading h2,.bsa-v162-coach h2{margin:4px 0 6px}
+.bsa-v162-heading p,.bsa-v162-coach p{margin:0}
+.bsa-v162-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.bsa-v162-stat{display:flex;flex-direction:column;gap:7px;padding:17px;border:1px solid var(--line,#d9e0df);border-radius:17px;background:var(--surface,#fff);min-width:0}
+.bsa-v162-stat span{font-size:12px;font-weight:700;opacity:.7}
+.bsa-v162-stat strong{font-size:clamp(19px,2.4vw,28px);line-height:1.2;overflow-wrap:anywhere}
+.bsa-v162-stat small{font-size:12px;opacity:.72}
+.bsa-v162-focus-list{display:grid;gap:9px}
+.bsa-v162-focus{display:flex;align-items:center;justify-content:space-between;gap:15px;border:1px solid var(--line,#d9e0df);border-radius:13px;padding:12px 14px;min-width:0}
+.bsa-v162-focus>div{display:flex;flex-direction:column;gap:5px;min-width:0}
+.bsa-v162-focus small{overflow-wrap:anywhere}
+.bsa-v162-coach{display:grid;gap:14px;border-top:1px solid var(--line,#d9e0df);padding-top:18px}
+.bsa-v162-coach label:not(.bsa-v162-inline){display:grid;gap:8px;font-weight:650}
+.bsa-v162-coach select,.bsa-v162-coach textarea{width:100%;max-width:100%;min-width:0;border:1px solid var(--line,#cfd8d5);background:var(--surface,#fff);color:inherit;border-radius:12px;padding:11px;font:inherit}
+.bsa-v162-inline{display:flex;align-items:center;gap:8px;font-size:13px}
+.bsa-v162-actions{display:flex;gap:9px;flex-wrap:wrap}
+.bsa-v162-prompt{max-height:220px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.5 ui-monospace,monospace;background:var(--surface,#fff);padding:12px;border-radius:10px}
+@media(max-width:800px){.bsa-v162-stats{grid-template-columns:1fr}.bsa-v162-focus{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
 <body>
 <div id="root"><p class="boot">Opening your study desk… If this doesn’t load, connect to the internet once so the app can save itself for offline use.</p></div>
 <script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
@@ -3166,13 +3188,25 @@ if(!window.React||!window.ReactDOM){document.getElementById('root').innerHTML='<
       s.cards.push({ id: uid("c"), topicId: matchTopic(s, c.topicText), q: c.q, a: c.a, tip: c.tip, conf: null });
       addedCards++;
     }
+    let importedMistakes = 0, importedQuizzes = 0;
     for (const m of p.mistakes) {
       const topicId = matchTopic(s, m.topicText);
-      s.mistakes.unshift({ id: uid("m"), topicId, topicText: m.topicText, date: m.date, question: m.question, wrong: m.wrong, correct: m.correct, trap: m.trap, status: m.status });
+      const item = {topicId, topicText:m.topicText, date:m.date, question:m.question,
+        wrong:m.wrong, correct:m.correct, trap:m.trap, status:m.status};
+      const fingerprint = bsaImportIdentity("mistake", item);
+      if (s.mistakes.some(x => x._importFingerprint === fingerprint)) { skipped++; continue; }
+      const result = bsaUpsertMistake(s, {...item, _importFingerprint:fingerprint}, {countRepeat:false, reopen:false});
+      if (result.created) importedMistakes++;
+      else { result.entry._importFingerprint = fingerprint; skipped++; }
     }
     for (const q of p.quizzes) {
       const topicId = matchTopic(s, q.topicText);
-      s.quizzes.unshift({ id: uid("q"), topicId, topicText: q.topicText, date: q.date, score: q.score, items: q.items });
+      const item = {topicId, topicText:q.topicText, date:q.date, score:q.score, items:q.items};
+      const fingerprint = bsaImportIdentity("quiz", item);
+      // Fingerprint applies ONLY to imports: a second real quiz sitting is kept.
+      if (s.quizzes.some(x => x._importFingerprint === fingerprint)) { skipped++; continue; }
+      s.quizzes.unshift({id:uid("q"),...item,_importFingerprint:fingerprint});
+      importedQuizzes++;
     }
     let addedGrading = false;
     if (p.grading) {
@@ -3180,8 +3214,55 @@ if(!window.React||!window.ReactDOM){document.getElementById('root').innerHTML='<
       addedGrading = true;
     }
     const lpr = (p.lectures && p.lectures.length) || (p.psets && p.psets.length) || (p.mcqSets && p.mcqSets.length) ? psApply(s, p) : { addedLectures: 0, updatedLectures: 0, addedSets: 0, addedProblems: 0 };
-    return { addedTopics, addedCards, addedMistakes: p.mistakes.length, addedQuizzes: p.quizzes.length, addedGrading, addedBook, addedDrills, skipped, ...lpr };
+    return { addedTopics, addedCards, addedMistakes: importedMistakes, addedQuizzes: importedQuizzes, addedGrading, addedBook, addedDrills, skipped, ...lpr };
   }
+
+  /* v163 — Record integrity: one issue per study item, many legitimate attempts.
+     Never merge separate quiz sittings, never overwrite user-authored mistake notes,
+     and never remove older records automatically. */
+  function bsaRecordText(value) {
+    return String(value == null ? "" : value).normalize("NFKC").trim().replace(/\s+/g, " ").toLocaleLowerCase();
+  }
+  function bsaMistakeMatch(old, item) {
+    if (!old || !item) return false;
+    for (const k of ["sourceCardId", "sourceProblemId", "sourceDrillId", "sourceMcqId"]) {
+      if (old[k] && item[k] && old[k] === item[k]) return true;
+    }
+    if (old.topicId && item.topicId && old.topicId !== item.topicId) return false;
+    const question = bsaRecordText(item.question);
+    return !!question && question.length >= 8 && bsaRecordText(old.question) === question;
+  }
+  function bsaUpsertMistake(subject, info, options) {
+    if (!Array.isArray(subject.mistakes)) subject.mistakes = [];
+    const opt = options || {};
+    const existing = subject.mistakes.find(m => bsaMistakeMatch(m, info));
+    if (existing) {
+      // Editing an existing mistake must not destroy personally written corrections.
+      existing.repeatMisses = (Number(existing.repeatMisses) || 1) + (opt.countRepeat === false ? 0 : 1);
+      existing.lastMissedAt = Date.now();
+      if (existing.status === "Cleared" && opt.reopen !== false) {
+        existing.previousClearDate = existing.date || "";
+        existing.status = "Active";
+      }
+      if (!existing.topicId && info.topicId) existing.topicId = info.topicId;
+      if (!existing.wrong && info.wrong) existing.wrong = info.wrong;
+      if (!existing.correct && info.correct) existing.correct = info.correct;
+      if (!existing.trap && info.trap) existing.trap = info.trap;
+      for (const k of ["sourceCardId", "sourceProblemId", "sourceDrillId", "sourceMcqId"]) {
+        if (!existing[k] && info[k]) existing[k] = info[k];
+      }
+      return {entry:existing,created:false};
+    }
+    const entry = {id:uid("m"), repeatMisses:1, ...info};
+    subject.mistakes.unshift(entry);
+    return {entry,created:true};
+  }
+  function bsaImportIdentity(kind, entry) {
+    return [kind, bsaRecordText(entry.topicText || entry.topicId),
+      bsaRecordText(entry.question || ""), bsaRecordText(entry.correct || ""),
+      bsaRecordText(entry.date || ""), String(entry.score ?? ""), String(entry.items ?? "")].join("|");
+  }
+
   function previewPartial(subject, p) {
     const unmatched = p.cards.filter((c) => !matchTopic(subject, c.topicText) && !p.topics.some((t) => norm(t.title) === norm(c.topicText))).length;
     return { ...p, unmatched };
@@ -4976,7 +5057,9 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
             if (!Array.isArray(s.aiAttempts)) s.aiAttempts = [];
             s.aiAttempts.push({ id:entryId, topicId:topicId || "", mode, level, question, answer, feedback:result, verdict, date:today(), at:Date.now(), source:"Gemini (provisional)" });
             if ((verdict === "incorrect" || verdict === "partial") && topicId) {
-              s.mistakes.push({ id:uid("m"), topicId, question, wrong:answer, correct:"Review the AI feedback and verify against your course materials.", trap:result.slice(0,1500), date:today(), status:"Active", sourceAttemptId:entryId });
+              bsaUpsertMistake(s, {topicId, question, wrong:answer,
+                correct:"Review the AI feedback and verify against your course materials.",
+                trap:result.slice(0,1500),date:today(),status:"Active",sourceAttemptId:entryId});
             }
           });
           toast(verdict === "unverified" ? "AI response saved as unverified" : "Practice saved to study history" + (verdict === "correct" ? "" : "; review it in Mistake Log"));
@@ -6314,16 +6397,11 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         if (g === "again") {
           s.mistakes = s.mistakes || [];
           const question = String(card.q || "Flashcard");
-          if (!s.mistakes.some(m => m.sourceCardId === card.id && m.status !== "Cleared")) {
-            s.mistakes.unshift({
-              id: uid("m"), date: today(), topicId: card.topicId || null,
-              topicText: card.topicText || "Flashcard review",
-              question, wrong: String(typed || "(could not recall)").slice(0, 300),
-              correct: String(card.a || "").slice(0, 2000),
-              trap: "Marked Again during study review",
-              status: "Active", sourceCardId: card.id
-            });
-          }
+          bsaUpsertMistake(s, {date:today(),topicId:card.topicId||null,
+            topicText:card.topicText||"Flashcard review",question,
+            wrong:String(typed||"(could not recall)").slice(0,300),
+            correct:String(card.a||"").slice(0,2000),trap:"Marked Again during study review",
+            status:"Active",sourceCardId:card.id});
         }
       });
       playStudyFeedbackSound(g === "again" ? "wrong" : "correct", "cards");
@@ -6344,17 +6422,12 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         gradeProbIn(s, prob.id, right);
         if (!right) {
           s.mistakes = s.mistakes || [];
-          if (!s.mistakes.some(m => m.sourceProblemId === prob.id && m.status !== "Cleared")) {
-            s.mistakes.unshift({
-              id: uid("m"), date: today(), topicId: prob.topicId || null,
-              topicText: prob.topicText || "Problem review",
-              question: String(psPlain(prob.problem || "")).slice(0, 2000),
-              wrong: String(typed || "(not solved)").slice(0, 300),
-              correct: String(psPlain(prob.answer || "")).slice(0, 2000),
-              trap: "Marked incorrect during problem review",
-              status: "Active", sourceProblemId: prob.id
-            });
-          }
+          bsaUpsertMistake(s,{date:today(),topicId:prob.topicId||null,
+            topicText:prob.topicText||"Problem review",
+            question:String(psPlain(prob.problem||"")).slice(0,2000),
+            wrong:String(typed||"(not solved)").slice(0,300),
+            correct:String(psPlain(prob.answer||"")).slice(0,2000),
+            trap:"Marked incorrect during problem review",status:"Active",sourceProblemId:prob.id});
         }
       });
       playStudyFeedbackSound(right ? "correct" : "wrong", "problems");
@@ -6579,19 +6652,11 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         // student leaves before the five-question drill is completed.
         update((subjectData) => {
           const question = String(p.q || p.name || "Computation problem").slice(0, 400);
-          const alreadySaved = (subjectData.mistakes || []).some((m) =>
-            m.sourceDrillId === p.id && m.question === question && m.status !== "Cleared");
-          if (alreadySaved) return;
-          subjectData.mistakes = subjectData.mistakes || [];
-          subjectData.mistakes.unshift({
-            id: uid("m"), topicId: p.topic || null,
-            topicText: p.topicText || p.name || "Computation drill",
-            date: today(), question,
-            wrong: String(val).slice(0, 200),
-            correct: String(p.ansText || p.ans).slice(0, 400),
-            trap: (p.steps || []).map(String).join(" | ").slice(0, 400),
-            status: "Active", sourceDrillId: p.id
-          });
+          bsaUpsertMistake(subjectData,{topicId:p.topic||null,
+            topicText:p.topicText||p.name||"Computation drill",date:today(),question,
+            wrong:String(val).slice(0,200),correct:String(p.ansText||p.ans).slice(0,400),
+            trap:(p.steps||[]).map(String).join(" | ").slice(0,400),
+            status:"Active",sourceDrillId:p.id});
         });
         if (toast) toast("Missed computation saved to your Mistake Notebook");
       }
@@ -7180,11 +7245,9 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
           const correct = psPlain(q.choices.find((c, i) => mxChoiceKey(c, i) === q.key) || q.key.toUpperCase()).slice(0, 400);
           const wrongChoice = q.choices.find((c, i) => mxChoiceKey(c, i) === answers[q.id]);
           const wrong = answers[q.id] ? psPlain(wrongChoice || answers[q.id]).slice(0, 200) : "Left blank";
-          const existing = (s.mistakes || []).find(m => m.status !== "Cleared" && m.question === question && m.correct === correct);
-          const details = { topicId: q.topicId || null, topicText: "", date: today(), question,
-            wrong, correct, trap: psPlain(q.trap || q.why || "Review the explanation and the source.").slice(0,400), status: "Active" };
-          if (existing) Object.assign(existing, details, { repeatMisses: (existing.repeatMisses || 1) + 1 });
-          else s.mistakes.unshift({ id: uid("m"), ...details, repeatMisses: 1 });
+          bsaUpsertMistake(s, {topicId:q.topicId || null, topicText:"", date:today(),question,
+            wrong,correct,trap:psPlain(q.trap || q.why || "Review the explanation and the source.").slice(0,400),
+            status:"Active",sourceMcqId:q.id});
         }
       });
       toast(`Quiz saved: ${score}/${paper.length}. Missed answers added to your Mistake Log.`);
@@ -7357,7 +7420,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const [checks,setChecks]=useState({});
     const p=problems[pos];
     const labelFor=p=>`${set.title}, problem ${p.no}: ${p.title}`;
-    const existingFor=p=>(subject.mistakes||[]).find(m=>m.question===labelFor(p)&&m.status!=="Cleared");
+    const existingFor=p=>(subject.mistakes||[]).find(m=>bsaMistakeMatch(m,{question:labelFor(p),topicId:set.topicId||null,sourceProblemId:p.id}));
     if(!p)return h("div",{className:"panel ps-written-drill"},"This set has no problems yet.",h("button",{className:"btn",onClick:onExit},"Back to set"));
     const answer=drafts[p.id]||"";
     const checked=!!revealed[p.id];
@@ -7382,8 +7445,10 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       const name=labelFor(p);
       update(s=>{
         s.mistakes=s.mistakes||[];
-        let entry=s.mistakes.find(m=>m.question===name&&m.status!=="Cleared");
-        if(!entry){entry={id:uid("m"),date:today(),question:name,topicId:set.topicId||null,topicText:set.topicText||"",status:"Active"};s.mistakes.unshift(entry);}
+        const result=bsaUpsertMistake(s,{date:today(),question:name,topicId:set.topicId||null,
+          topicText:set.topicText||"",status:"Active",sourceProblemId:p.id},{countRepeat:false});
+        const entry=result.entry;
+        // This editor is an explicit user action, so saved edits intentionally replace the notes.
         entry.wrong=data.wrong||"";entry.correct=data.correct||"";entry.trap=data.trap||"";
       });
       setEditingNote(null);
@@ -7751,10 +7816,10 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
           if (p.kind === "open" && p.cardId) gradeCardIn(s, p.cardId, "again");
           const missQuestion=psPlain(p.q).slice(0,400);
           const missCorrect=String(p.kind === "mcq" ? p.choices.find((c, k) => mxChoiceKey(c, k) === p.key) || "" : p.kind === "calc" ? p.ansText : p.ans).slice(0,400);
-          const existing=(s.mistakes||[]).find(m=>m.status!=="Cleared"&&m.question===missQuestion&&m.correct===missCorrect);
-          const missData={topicId:p.topicId||null,topicText:"",date:today(),question:missQuestion,wrong:p.kind==="mcq"?(ans[p.id]?`Chose ${ans[p.id].toUpperCase()}`:"Left blank"):String(ans[p.id]||"Left blank").slice(0,200),correct:missCorrect,trap:psPlain(p.trap||p.why).slice(0,400),status:"Active"};
-          if(existing)Object.assign(existing,missData,{repeatMisses:(existing.repeatMisses||1)+1});
-          else s.mistakes.unshift({id:uid("m"),...missData,repeatMisses:1});
+          bsaUpsertMistake(s,{topicId:p.topicId||null,topicText:"",date:today(),question:missQuestion,
+            wrong:p.kind==="mcq"?(ans[p.id]?`Chose ${ans[p.id].toUpperCase()}`:"Left blank"):String(ans[p.id]||"Left blank").slice(0,200),
+            correct:missCorrect,trap:psPlain(p.trap||p.why).slice(0,400),status:"Active",
+            ...(p.kind==="mcq"?{sourceMcqId:p.id}:{sourceProblemId:p.id})});
         }
       });
       toast(`Saved ${score}/${paper.length}. ${plural(misses.length, "miss")} recorded or updated in the Mistake log.`);
@@ -11849,18 +11914,16 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
       if (!off && st === "miss") {
         p.rt = { streak: 0, due: addDays(today(), 1), last: today() };
         const label = `${set.title}, problem ${p.no}: ${p.title}`;
-        if (!(s.mistakes || []).some(m => m.question === label && m.status !== "Cleared")) {
-          s.mistakes = s.mistakes || [];
-          s.mistakes.unshift({ id: uid("m"), topicId: set.topicId || null, topicText: set.topicText, date: today(), question: label, wrong: "", correct: psPlain(p.answer).slice(0, 400), trap: psPlain(p.trap || p.approach).slice(0, 400), status: "Active" });
-        }
+        bsaUpsertMistake(s,{topicId:set.topicId||null,topicText:set.topicText,date:today(),question:label,
+          wrong:"",correct:psPlain(p.answer).slice(0,400),trap:psPlain(p.trap||p.approach).slice(0,400),status:"Active",sourceProblemId:p.id});
       } else p.rt = null;
       });
     };
     const logMistake = (p) => {
       update((s) => {
         const label = `${set.title}, problem ${p.no}: ${p.title}`;
-        if ((s.mistakes || []).some(m => m.question === label && m.status !== "Cleared")) return;
-        s.mistakes.unshift({ id: uid("m"), topicId: set.topicId || null, topicText: set.topicText, date: today(), question: label, wrong: "", correct: psPlain(p.answer).slice(0, 400), trap: psPlain(p.trap || p.approach).slice(0, 400), status: "Active" });
+        bsaUpsertMistake(s,{topicId:set.topicId||null,topicText:set.topicText,date:today(),question:label,
+          wrong:"",correct:psPlain(p.answer).slice(0,400),trap:psPlain(p.trap||p.approach).slice(0,400),status:"Active",sourceProblemId:p.id},{countRepeat:false});
       });
       toast("Mistake saved (duplicates skipped)");
     };
@@ -13750,6 +13813,82 @@ h('div',{className:'life-avatar-preview'},h('span',null,life.avatar.accessory===
     );
   }
   // v158: A study report driven by outcomes, never by inferred study time.
+
+  // v162 readiness: evidence-informed index, never a predicted grade.
+  // Separate coverage from assessed performance; no study timer contribution.
+  function bsaReadinessReport(subjects){
+    const rows=[];
+    for(const sub of subjects||[]){
+      for(const x of smartTopicStats(sub)){
+        const sig=x.signals||{};
+        const cards=(sub.cards||[]).filter(c=>c.topicId===x.topic.id);
+        const rated=cards.filter(c=>['known','again','hard'].includes(c.conf));
+        const attempts=(sub.psets||[]).flatMap(set=>(set.problems||[]).filter(p=>p.topicId===x.topic.id||(!p.topicId&&set.topicId===x.topic.id))).filter(p=>['got','miss'].includes(p.st));
+        const qz=(sub.quizzes||[]).filter(q=>q.topicId===x.topic.id && Number(q.items)>0);
+        const total=qz.reduce((n,q)=>n+Math.max(0,Number(q.items)||0),0);
+        const correct=qz.reduce((n,q)=>n+Math.min(Math.max(0,Number(q.items)||0),Math.max(0,Number(q.score)||0)),0);
+        const objectiveCount=Math.max(Number(sig.objective)||0,total);
+        const accuracy=sig.overall&&sig.overall.percent!==null?sig.overall.percent:null;
+        const covered=x.topic.status==='Mastered'||x.topic.status==='In progress'||(x.topic.sub||[]).some(t=>t.done)||x.observations>0;
+        const confidence=sig.confidence||'Limited';
+        const weight=objectiveCount>=5?0.75:objectiveCount>=1?0.55:0.35;
+        const base=accuracy===null?null:accuracy;
+        const penalty=Math.min(20,(x.mistakes||0)*4+Math.min(8,(x.dueCards||0)*2));
+        const index=base===null?null:Math.max(0,Math.min(100,Math.round(base*weight+50*(1-weight)-penalty)));
+        rows.push({subject:sub,topic:x.topic,covered,confidence,accuracy,index,objectiveCount,quizItems:total,quizCorrect:correct,attempts:attempts.length,rated:rated.length,mistakes:x.mistakes||0,due:x.dueCards||0,next:x.nextStep,trend:sig.trend||'Not measured',score:x.score});
+      }
+    }
+    const covered=rows.filter(r=>r.covered).length;
+    const measured=rows.filter(r=>r.index!==null);
+    const evidence=measured.length;
+    const index=evidence?Math.round(measured.reduce((a,r)=>a+r.index,0)/evidence):null;
+    const confident=measured.filter(r=>r.confidence!=='Limited').length;
+    return {rows,topics:rows.length,covered,measured:evidence,index,confidence:evidence<3||confident<2?'Limited':confident/evidence>=.7&&evidence>=5?'Higher':'Moderate',priorities:rows.filter(r=>r.index!==null||r.mistakes||r.due).sort((a,b)=>b.score-a.score).slice(0,5)};
+  }
+  function BsaReadinessCoach({subjects,go,toast}){
+    const report=bsaReadinessReport(subjects);
+    const [focus,setFocus]=useState('');
+    const [request,setRequest]=useState('');
+    const [includeAnswers,setIncludeAnswers]=useState(false);
+    const shortlist=report.priorities;
+    const selected=report.rows.find(r=>r.subject.id+':'+r.topic.id===focus)||shortlist[0]||report.rows[0];
+    const lines=[
+      'Act as an interactive accounting study coach. Use clear English, explain concepts before technical terminology, and ask ONE question at a time.',
+      'I will provide source materials in this conversation. Use only those materials for source-specific claims. If they are missing, ask me to supply them. Never invent citations or answer keys.',
+      'Guide me before showing an answer, then check my reasoning. Give precise correction and one retention question after each concept.',
+      'This dashboard summary is not an exam prediction and contains self-rated activity. Identify uncertainty rather than diagnosing my knowledge from sparse evidence.',
+      'Subject: '+(selected?(selected.subject.code||selected.subject.name):'Not selected'),
+      'Focus topic: '+(selected?((selected.topic.code||'')+' '+(selected.topic.title||'')):'Not selected'),
+      'Observed evidence: '+(selected?(selected.accuracy===null?'No scored topic-level evidence':selected.accuracy+'% weighted recorded performance'):'None')+'; open mistakes: '+(selected?selected.mistakes:0)+'; due cards: '+(selected?selected.due:0)+'.',
+      'Desired session: '+(request.trim()||'Help me understand this topic, then give 3 progressively harder practice items.'),
+      'For numerical questions show checked computations only after my attempt. For questions without a reliable answer key, tell me rather than guess.'
+    ];
+    if(includeAnswers&&selected){
+      const mistakes=(selected.subject.mistakes||[]).filter(m=>m.topicId===selected.topic.id&&m.status!=='Cleared').slice(0,3);
+      lines.push('Optional user-approved mistake summaries (may contain my own notes): '+JSON.stringify(mistakes.map(m=>({question:String(m.q||m.question||'').slice(0,250),reason:String(m.why||m.note||'').slice(0,250)}))));
+    }
+    const prompt=lines.join('\n\n');
+    const copy=async()=>{try{await navigator.clipboard.writeText(prompt);toast('Coach prompt copied. Paste it into your AI assistant.');}catch(e){toast('Clipboard unavailable; select and copy the prompt below.');}};
+    return h('section',{className:'panel bsa-v162-readiness', 'aria-label':'Readiness and AI study coach'},
+      h('div',{className:'bsa-v162-heading'},h('div',null,h('span',{className:'panel-kicker'},'EXAM READINESS LAB'),h('h2',null,'How prepared am I?'),h('p',{className:'muted small'},'A planning index built from recorded outcomes, topic coverage and review needs—not a predicted exam score.'))),
+      h('div',{className:'bsa-v162-stats'},
+        h('div',{className:'bsa-v162-stat'},h('span',null,'Readiness index'),h('strong',null,report.index===null?'Not enough data':report.index+'/100'),h('small',null,'Assessed topics only · confidence: '+report.confidence)),
+        h('div',{className:'bsa-v162-stat'},h('span',null,'Coverage'),h('strong',null,report.topics?Math.round(report.covered/report.topics*100)+'%':'Not available'),h('small',null,report.covered+' of '+report.topics+' topics started or practiced')),
+        h('div',{className:'bsa-v162-stat'},h('span',null,'Topics with outcomes'),h('strong',null,report.measured+' / '+report.topics),h('small',null,'Unassessed topics are not assumed mastered'))),
+      h('p',{className:'muted small'},report.measured<3?'Low evidence: complete several unassisted MCQs and problems across more than one day before interpreting this index.':'Confidence refers to the amount of learning evidence, not the probability of passing an examination.'),
+      h('div',{className:'bsa-v162-focus-list'},shortlist.length?shortlist.map(r=>h('div',{className:'bsa-v162-focus',key:r.subject.id+':'+r.topic.id},
+        h('div',null,h('strong',null,(r.topic.code||'Topic')+' · '+(r.topic.title||'Untitled')),h('small',{className:'muted'},r.accuracy===null?'Not enough scored evidence':r.accuracy+'% recorded performance · '+r.confidence+' evidence'),h('small',{className:'muted'},r.next)),
+        h('button',{className:'btn ghost',onClick:()=>go('practice')},'Practice'))):h('p',{className:'muted'},'No recorded topic performance yet. Start a quiz or review to create evidence.')),
+      h('div',{className:'bsa-v162-coach'},
+        h('div',null,h('span',{className:'panel-kicker'},'OPTIONAL AI STUDY COACH'),h('h2',null,'Ask an AI for targeted help'),h('p',{className:'muted small'},'Build a source-grounded coaching prompt from your learning summary. Nothing is sent automatically; review what you copy before sharing.')),
+        h('label',null,'Choose a topic',h('select',{value:focus|| (selected?selected.subject.id+':'+selected.topic.id:''),onChange:e=>setFocus(e.target.value)},report.rows.length?report.rows.map(r=>h('option',{key:r.subject.id+':'+r.topic.id,value:r.subject.id+':'+r.topic.id},(r.subject.code||r.subject.name)+' · '+(r.topic.code||r.topic.title||'Topic'))):h('option',{value:''},'No topics available'))),
+        h('label',null,'What help do you want?',h('textarea',{rows:2,value:request,onChange:e=>setRequest(e.target.value),placeholder:'Example: Quiz me on non-adjusting events, one question at a time.'})),
+        h('label',{className:'bsa-v162-inline'},h('input',{type:'checkbox',checked:includeAnswers,onChange:e=>setIncludeAnswers(e.target.checked)}),' Include up to 3 related mistake notes (review before sharing)'),
+        h('div',{className:'bsa-v162-actions'},h('button',{className:'btn primary',onClick:copy},'Copy AI Coach prompt'),h('a',{className:'btn ghost',href:'https://chatgpt.com/',target:'_blank',rel:'noopener noreferrer'},'Open ChatGPT')),
+        h('details',null,h('summary',null,'Preview the prompt and data being shared'),h('pre',{className:'bsa-v162-prompt'},prompt)),
+        h('p',{className:'muted small'},'This version uses an optional copy-and-paste connection. It does not automatically call an AI service or expose API keys. Your classmates’ progress stays on their devices.')));
+  }
+
   function StudyReport({data,update,toast,go}) {
     const [scope,setScope]=useState('current');
     const [showTime,setShowTime]=useState(false);
@@ -13792,6 +13931,7 @@ h('div',{className:'life-avatar-preview'},h('span',null,life.avatar.accessory===
         metric('Quiz accuracy',pct(qCorrect,qItems),qItems+' scored questions · '+qSessions+' quizzes'),
         metric('Recall confidence',pct(known,assessed),assessed+' rated cards · self-rated, not exam score'),
         metric('Topics without evidence',String(unassessed),'Not yet assessed; not necessarily weak')),
+      h(BsaReadinessCoach,{subjects,go,toast}),
       h('section',{className:'panel bsa-v161-coach',"aria-label":"Evidence-based study guidance"},
         h('div',{className:'bsa-v161-coach-head'},h('div',null,h('span',{className:'panel-kicker'},'ADAPTIVE LEARNING INSIGHTS'),h('h2',null,'What your results are saying'),
           h('p',{className:'muted small'},'Multiple attempts, different activities and recent trends matter more than one lucky answer.'))),
@@ -14188,7 +14328,16 @@ h('div',{className:'life-avatar-preview'},h('span',null,life.avatar.accessory===
           update((s) => {
             const i = s.mistakes.findIndex((x) => x.id === m.id);
             if (i >= 0) s.mistakes[i] = m;
-            else s.mistakes.unshift(m);
+            else {
+              const same=s.mistakes.find(x=>bsaMistakeMatch(x,m));
+              if (same) {
+                // Manual entry: consolidate, but retain stable ID and any previous notes.
+                same.repeatMisses=(Number(same.repeatMisses)||1)+1;
+                if (same.status==="Cleared") same.status="Active";
+                for(const key of ["wrong","correct","trap"])
+                  if(!same[key]&&m[key])same[key]=m[key];
+              } else s.mistakes.unshift(m);
+            }
           });
           setEditor(null);
           toast(isNew ? "Mistake logged" : "Changes saved");
