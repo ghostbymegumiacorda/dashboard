@@ -2163,47 +2163,79 @@ html,body,#root{max-width:100%;overflow-x:clip}
 
 
 
-<style id="bsa-v127-unified-responsive">
-/* Unified viewport and safe-area ownership. Never pad :root outside the shell. */
-:root {padding:0!important; box-sizing:border-box!important;}
-html,body,#root{margin:0!important;padding:0!important;width:100%!important;height:100%!important;min-height:0!important;overflow:hidden!important;}
-*,*::before,*::after{box-sizing:border-box;}
-body{background:var(--bg)!important;}
-.shell{display:grid!important;grid-template-columns:var(--app-rail,224px) minmax(0,1fr)!important;width:100%!important;height:100vh!important;height:100dvh!important;min-height:0!important;max-height:100dvh!important;overflow:hidden!important;}
-.shell>.rail{min-width:0!important;min-height:0!important;height:100%!important;max-height:100%!important;overflow:hidden!important;}
-.shell>.content{min-width:0!important;min-height:0!important;height:100%!important;max-height:100%!important;overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;padding-bottom:max(24px,env(safe-area-inset-bottom,0px))!important;}
-.shell>.content>*{min-width:0;max-width:100%;}
-/* Never allow the Study Life card's three children to compete for one horizontal row. */
-.bsa-v108-top-grid{display:grid!important;grid-template-columns:minmax(0,1.7fr) minmax(280px,1fr)!important;gap:16px!important;align-items:stretch!important;min-width:0!important;}
-.bsa-v108-top-grid>*{min-width:0!important;max-width:100%!important;}
-.bsa-v108-top-grid>.life-home-widget{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:12px!important;min-width:0!important;max-width:100%!important;padding:18px!important;overflow:hidden!important;text-align:center!important;}
-.bsa-v108-top-grid .life-home-character{flex:0 0 auto!important;width:100%!important;min-width:0!important;max-width:100%!important;min-height:120px!important;display:flex!important;align-items:center!important;justify-content:center!important;}
-.bsa-v108-top-grid .life-home-copy{flex:0 1 auto!important;min-width:0!important;width:100%!important;max-width:100%!important;text-align:center!important;overflow-wrap:anywhere!important;word-break:normal!important;}
-.bsa-v108-top-grid .life-home-copy strong,.bsa-v108-top-grid .life-home-copy p,.bsa-v108-top-grid .life-home-copy small{display:block!important;white-space:normal!important;overflow-wrap:anywhere!important;word-break:normal!important;max-width:100%!important;}
-.bsa-v108-top-grid .life-launch-actions{display:grid!important;grid-template-columns:minmax(0,1fr)!important;flex:0 0 auto!important;width:100%!important;min-width:0!important;max-width:100%!important;gap:9px!important;}
-.bsa-v108-top-grid .life-launch-actions>.btn{display:flex!important;align-items:center!important;justify-content:center!important;width:100%!important;min-width:0!important;max-width:100%!important;margin:0!important;white-space:normal!important;overflow-wrap:anywhere!important;}
-/* At narrower desktop/tablet widths, use a single readable column. */
-@media(max-width:1199px){.bsa-v108-top-grid{grid-template-columns:minmax(0,1fr)!important;}.bsa-v108-top-grid>.life-home-widget{min-height:0!important;}}
-/* Respect existing mobile navigation; do not create an inaccessible desktop sidebar. */
-@media(max-width:899px){
- .shell{display:block!important;height:100dvh!important;min-height:0!important;overflow:hidden!important;}
- .shell>.rail{display:none!important;}
- .shell>.content{height:100%!important;min-height:0!important;max-height:100%!important;overflow-y:auto!important;overflow-x:hidden!important;padding-bottom:max(85px,calc(24px + env(safe-area-inset-bottom,0px)))!important;}
- .bsa-v108-top-grid{grid-template-columns:minmax(0,1fr)!important;}
- .bsa-v108-top-grid>.life-home-widget{display:flex!important;flex-direction:column!important;}
-}
-@media(max-width:520px){.bsa-v108-top-grid>.life-home-widget{padding:15px!important;}}
-</style>
-<style id="bsa-v130-stable-viewport">
-/* The outer shell owns the available viewport; content panels scroll within it. */
-html,body,#root{width:100%!important;height:100%!important;min-height:0!important;margin:0!important;padding:0!important;background:var(--bg)!important;overflow:hidden!important}
-#root>.shell{position:fixed!important;inset:0!important;width:100%!important;height:auto!important;max-height:none!important;min-height:0!important;overflow:hidden!important;background:var(--bg)!important}
-#root>.shell>.rail,#root>.shell>.content{height:100%!important;max-height:100%!important;min-height:0!important}
-@supports (height:100dvh) {
-  #root>.shell{bottom:0!important}
+<style id="bsa-v134-layout">
+/* Shell has three DOM children: sidebar, mobile header, main. Explicit placement prevents implicit grid rows. */
+*,*::before,*::after{box-sizing:border-box}
+html,body,#root{width:100%;height:100%;margin:0;padding:0;min-height:0}
+body{overflow:hidden}
+#root>.shell{display:grid!important;grid-template-columns:clamp(210px,18vw,260px) minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr)!important;width:100%!important;height:100dvh!important;min-height:0!important;overflow:hidden!important;background:var(--bg)!important}
+#root>.shell>.rail{display:flex!important;grid-column:1!important;grid-row:1!important;flex-direction:column!important;min-width:0!important;min-height:0!important;height:100%!important;max-height:100%!important;overflow-y:auto!important;overflow-x:hidden!important}
+#root>.shell>.mobilebar{display:none!important}
+#root>.shell>.content{grid-column:2!important;grid-row:1!important;min-width:0!important;min-height:0!important;width:100%!important;max-width:none!important;height:100%!important;overflow-y:auto!important;overflow-x:hidden!important;padding-bottom:calc(40px + env(safe-area-inset-bottom,0px))!important;-webkit-overflow-scrolling:touch}
+#root>.shell>.content>*{min-width:0;max-width:100%}
+.bsa-v108-top-grid{display:grid!important;grid-template-columns:minmax(0,1.6fr) minmax(285px,1fr)!important;gap:16px!important;min-width:0!important}
+.bsa-v108-top-grid>*{min-width:0!important;max-width:100%!important}
+.bsa-v108-top-grid>.life-home-widget{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:12px!important;min-width:0!important;max-width:100%!important;padding:18px!important;overflow:hidden!important;text-align:center!important}
+.bsa-v108-top-grid .life-home-character{display:flex!important;justify-content:center!important;align-items:center!important;min-width:0!important;max-width:100%!important;width:100%!important;flex:0 0 auto!important}
+.bsa-v108-top-grid .life-home-copy{display:block!important;min-width:0!important;max-width:100%!important;width:100%!important;flex:0 0 auto!important;text-align:center!important;overflow-wrap:anywhere!important;white-space:normal!important}
+.bsa-v108-top-grid .life-home-copy *{max-width:100%!important;overflow-wrap:anywhere!important;white-space:normal!important;word-break:normal!important}
+.bsa-v108-top-grid .life-launch-actions{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:9px!important;min-width:0!important;width:100%!important;flex:0 0 auto!important}
+.bsa-v108-top-grid .life-launch-actions>*{width:100%!important;max-width:100%!important;min-width:0!important;margin:0!important;white-space:normal!important;overflow-wrap:anywhere!important}
+@media(max-width:1150px){.bsa-v108-top-grid{grid-template-columns:minmax(0,1fr)!important}}
+@media(max-width:700px){
+ #root>.shell{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto minmax(0,1fr)!important}
+ #root>.shell>.rail{display:none!important}
+ #root>.shell>.mobilebar{display:flex!important;grid-column:1!important;grid-row:1!important;position:relative!important;top:auto!important;margin:0!important;min-width:0!important}
+ #root>.shell>.content{grid-column:1!important;grid-row:2!important;width:100%!important;height:100%!important;padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))!important}
 }
 </style>
-</head>
+<style id="bsa-v135-home-shortcut">
+.brand-home-button{width:100%;appearance:none;border:0;background:transparent;color:inherit;text-align:left;cursor:pointer;font:inherit}
+.brand-home-button:hover,.brand-home-button:focus-visible{background:var(--surface,#fff);border-radius:10px}
+.mobile-home-button{appearance:none;border:0;cursor:pointer;font:inherit;flex-shrink:0}
+.mobile-home-button:focus-visible,.brand-home-button:focus-visible{outline:2px solid var(--accent,#23856e);outline-offset:2px}
+</style><style id="bsa-v136-desktop-full-width">
+/* Desktop: prevent legacy fixed widths, clipping and auto-placement gaps. */
+@media (min-width: 701px) {
+ html,body,#root {width:100%!important;max-width:none!important;margin:0!important;padding:0!important;overflow-x:hidden!important}
+ #root>.shell {
+   display:grid!important;
+   grid-template-columns:clamp(210px,18vw,260px) minmax(0,1fr)!important;
+   grid-template-rows:minmax(0,1fr)!important;
+   width:100vw!important;max-width:none!important;
+   margin:0!important;padding:0!important;
+   overflow:hidden!important;
+ }
+ #root>.shell>.rail {
+   display:flex!important;visibility:visible!important;
+   grid-column:1!important;grid-row:1!important;
+   width:100%!important;min-width:0!important;max-width:none!important;
+   transform:none!important;margin:0!important;
+ }
+ #root>.shell>.mobilebar {display:none!important}
+ #root>.shell>.content {
+   display:block!important;grid-column:2!important;grid-row:1!important;
+   width:100%!important;max-width:none!important;min-width:0!important;
+   margin:0!important;transform:none!important;
+   overflow-x:hidden!important;overflow-y:auto!important;
+ }
+ #root>.shell>.content>.topbar,
+ #root>.shell>.content>.view,
+ #root>.shell>.content>main {
+   width:100%!important;max-width:none!important;min-width:0!important;
+ }
+}
+</style><style id="bsa-v137-shortcuts">
+.bsa-shortcut-anchor{position:relative;min-width:0;z-index:100}
+.bsa-shortcut-anchor>.brand{width:100%;cursor:pointer}
+.bsa-shortcut-anchor.mobile{flex:0 0 auto}
+.bsa-shortcut-menu{position:absolute;left:8px;top:calc(100% + 7px);z-index:9999;width:220px;max-width:calc(100vw - 20px);padding:7px;background:var(--surface,#fff);color:var(--text,#142c25);border:1px solid var(--line,#d5ddd7);border-radius:14px;box-shadow:0 14px 36px #0002;display:flex;flex-direction:column;gap:3px}
+.bsa-shortcut-title{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:8px 11px;opacity:.65}
+.bsa-shortcut-menu button{display:flex;align-items:center;gap:11px;width:100%;padding:11px 12px;border:0;border-radius:9px;background:transparent;color:inherit;text-align:left;font:inherit;font-weight:650;cursor:pointer}
+.bsa-shortcut-menu button:hover,.bsa-shortcut-menu button:focus-visible{background:var(--soft,#e4f0e9);outline-offset:-2px}
+.bsa-shortcut-symbol{width:23px;text-align:center;font-size:18px}
+@media(max-width:700px){.bsa-shortcut-anchor.mobile .bsa-shortcut-menu{left:0;top:calc(100% + 10px)}}
+</style></head>
 <body>
 <div id="root"><p class="boot">Opening your study desk… If this doesn’t load, connect to the internet once so the app can save itself for offline use.</p></div>
 <script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
@@ -12770,6 +12802,7 @@ h('div',{className:'life-avatar-preview'},h('span',null,life.avatar.accessory===
     useEffect(()=>{const handler=e=>{if(e.detail==='joy')setNav(v=>({tab:'joy',opts:{},key:v.key+1}))};window.addEventListener('bsa-life-navigation',handler);return()=>window.removeEventListener('bsa-life-navigation',handler)},[]);
     const [modal, setModal] = useState(null);
     const [navSearch, setNavSearch] = useState("");
+    const [shortcutsOpen,setShortcutsOpen] = useState(false);
     const [collapsedNav, setCollapsedNav] = useState({"Planning":true,"Personal":true});
     const [editor, setEditor] = useState(null);
     const [msg, setMsg] = useState("");
@@ -12853,6 +12886,15 @@ h('div',{className:'life-avatar-preview'},h('span',null,life.avatar.accessory===
       setNav((n) => ({ tab, opts, key: n.key + 1 }));
       if (!opts.open) { const workspace=document.querySelector(".shell > .content"); if (workspace) workspace.scrollTop=0; else window.scrollTo({top:0}); }
     };
+    const shortcutItems = [["home","Home","⌂"],["subjects","Subjects","▤"],["practice","Practice","✦"],["ask","Tutor","✧"],["life","Study Life","☀"]];
+    const shortcutGo = (tab) => {
+      setShortcutsOpen(false);
+      if (tab === "subjects") setModal("subjects");
+      else go(tab);
+    };
+    const shortcutMenu = () => shortcutsOpen ? h("div",{className:"bsa-shortcut-menu",role:"menu","aria-label":"Quick shortcuts"},
+      h("div",{className:"bsa-shortcut-title"},"Quick shortcuts"),
+      shortcutItems.map(([tab,label,symbol])=>h("button",{key:tab,type:"button",role:"menuitem",onClick:()=>shortcutGo(tab)},h("span",{className:"bsa-shortcut-symbol","aria-hidden":"true"},symbol),label))) : null;
     const openEditor = (type, item = null, defaults = {}) => {
       setModal(null);
       setEditor({ type, item, defaults });
@@ -13014,7 +13056,7 @@ h('div',{className:'life-avatar-preview'},h('span',null,life.avatar.accessory===
     };
     const viewProps = { key: `${subject.id}-${nav.key}`, subject, update, toast, go, openEditor, init: nav.opts, settings: data.settings, setSettings };
     const subjectPicker = (id) => /* @__PURE__ */ React.createElement("select", { id, className: "subject-select", value: data.activeId, onChange: (e) => switchSubject(e.target.value), "aria-label": "Active subject" }, (() => {const groups=new Map();data.subjects.forEach(s=>{const matched=PROSPECTUS.flatMap(t=>t.courses.map(c=>({...c,term:t.term}))).find(c=>String(c.code).trim().toLowerCase()===String(s.code||"").trim().toLowerCase());const label=s.curriculumTerm||(matched&&matched.term)||"Other / custom subjects";if(!groups.has(label))groups.set(label,[]);groups.get(label).push(s);});return [...groups].sort((a,b)=>a[0].localeCompare(b[0],undefined,{numeric:true})).map(([term,subjects])=>React.createElement("optgroup",{key:term,label:term},subjects.map(s=>React.createElement("option",{key:s.id,value:s.id},s.code?`${s.code} · ${s.name}`:s.name))));})());
-    return /* @__PURE__ */ React.createElement("div", { className: "shell" }, /* @__PURE__ */ React.createElement("aside", { className: "rail", "aria-label": "Main" }, /* @__PURE__ */ React.createElement("div", { className: "brand" }, /* @__PURE__ */ React.createElement("span", { className: "brand-mark", "aria-hidden": "true" }, "Σ"), /* @__PURE__ */ React.createElement("span", null, "BSA Study Desk")), /* @__PURE__ */ React.createElement("div", { className: "rail-subject" }, /* @__PURE__ */ React.createElement("span", { className: "rail-label" }, "Subject"), subjectPicker("subj"), /* @__PURE__ */ React.createElement("button", { className: "link-btn", onClick: () => setModal("subjects") }, "+ Add new subject")), h("div",{className:"rail-nav-wrap"},h("label",{className:"nav-search-label",htmlFor:"desk-nav-search"},"Find a tool"),h("input",{id:"desk-nav-search",className:"nav-search",type:"search",placeholder:"Search tools…",value:navSearch,onChange:e=>setNavSearch(e.target.value),"aria-label":"Search dashboard tools"}),h("nav",{className:"rail-nav","aria-label":"Study Desk sections"},filteredNavGroups.map(group=>h("section",{className:"nav-group",key:group.name},h("button",{className:"nav-group-heading",type:"button","aria-expanded":navSearch?true:!collapsedNav[group.name],onClick:()=>setCollapsedNav(prev=>({...prev,[group.name]:!prev[group.name]}))},h("span",null,group.name),h("span",{className:"nav-chevron","aria-hidden":"true"},navSearch||!collapsedNav[group.name]?"⌄":"›")),(navSearch||!collapsedNav[group.name])?h("div",{className:"nav-group-links"},group.tabs.map(([k,l,ic,n])=>h("button",{key:k,className:nav.tab===k?"on":"","aria-current":nav.tab===k?"page":undefined,title:(DESK_FEATURE_GUIDE.find(f=>f.id===k)||{}).desc||l,onClick:()=>go(k)},h(Icon,{name:ic}),h("span",null,l),n?h("span",{className:"n"},n):null))):null)))), /* @__PURE__ */ React.createElement("div", { className: "rail-tools" }, /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("data") }, /* @__PURE__ */ React.createElement(Icon, { name: "data", size: 18 }), " Import & export"), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("look") }, /* @__PURE__ */ React.createElement(Icon, { name: "look", size: 18 }), " Appearance"), /* @__PURE__ */ React.createElement(ThemeDots, { settings: data.settings, setSettings })), React.createElement(SyncBadge, { onOpen: openSync })), /* @__PURE__ */ React.createElement("header", { className: "mobilebar" }, /* @__PURE__ */ React.createElement("span", { className: "brand-mark", "aria-hidden": "true" }, "Σ"), subjectPicker("subj-m"), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal(syncAlert ? "sync" : "data"), "aria-label": syncAlert ? "Import, export and sync (needs attention)" : "Import and export", "data-sync": syncAlert }, /* @__PURE__ */ React.createElement(Icon, { name: "data" })), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal("look"), "aria-label": "Appearance" }, /* @__PURE__ */ React.createElement(Icon, { name: "look" }))), /* @__PURE__ */ React.createElement("main", { className: "content" },
+    return /* @__PURE__ */ React.createElement("div", { className: "shell" }, /* @__PURE__ */ React.createElement("aside", { className: "rail", "aria-label": "Main" }, /* @__PURE__ */ h("div",{className:"bsa-shortcut-anchor"},React.createElement("button", { className: "brand brand-home-button", type: "button", onClick: () => setShortcutsOpen(v=>!v), title: "Open quick shortcuts", "aria-label": "Open quick shortcuts", "aria-expanded":shortcutsOpen,"aria-haspopup":"menu" }, /* @__PURE__ */ React.createElement("span", { className: "brand-mark", "aria-hidden": "true" }, "Σ"), /* @__PURE__ */ React.createElement("span", null, "BSA Study Desk")),shortcutMenu()), /* @__PURE__ */ React.createElement("div", { className: "rail-subject" }, /* @__PURE__ */ React.createElement("span", { className: "rail-label" }, "Subject"), subjectPicker("subj"), /* @__PURE__ */ React.createElement("button", { className: "link-btn", onClick: () => setModal("subjects") }, "+ Add new subject")), h("div",{className:"rail-nav-wrap"},h("label",{className:"nav-search-label",htmlFor:"desk-nav-search"},"Find a tool"),h("input",{id:"desk-nav-search",className:"nav-search",type:"search",placeholder:"Search tools…",value:navSearch,onChange:e=>setNavSearch(e.target.value),"aria-label":"Search dashboard tools"}),h("nav",{className:"rail-nav","aria-label":"Study Desk sections"},filteredNavGroups.map(group=>h("section",{className:"nav-group",key:group.name},h("button",{className:"nav-group-heading",type:"button","aria-expanded":navSearch?true:!collapsedNav[group.name],onClick:()=>setCollapsedNav(prev=>({...prev,[group.name]:!prev[group.name]}))},h("span",null,group.name),h("span",{className:"nav-chevron","aria-hidden":"true"},navSearch||!collapsedNav[group.name]?"⌄":"›")),(navSearch||!collapsedNav[group.name])?h("div",{className:"nav-group-links"},group.tabs.map(([k,l,ic,n])=>h("button",{key:k,className:nav.tab===k?"on":"","aria-current":nav.tab===k?"page":undefined,title:(DESK_FEATURE_GUIDE.find(f=>f.id===k)||{}).desc||l,onClick:()=>go(k)},h(Icon,{name:ic}),h("span",null,l),n?h("span",{className:"n"},n):null))):null)))), /* @__PURE__ */ React.createElement("div", { className: "rail-tools" }, /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("data") }, /* @__PURE__ */ React.createElement(Icon, { name: "data", size: 18 }), " Import & export"), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("look") }, /* @__PURE__ */ React.createElement(Icon, { name: "look", size: 18 }), " Appearance"), /* @__PURE__ */ React.createElement(ThemeDots, { settings: data.settings, setSettings })), React.createElement(SyncBadge, { onOpen: openSync })), /* @__PURE__ */ React.createElement("header", { className: "mobilebar" }, /* @__PURE__ */ h("div",{className:"bsa-shortcut-anchor mobile"},React.createElement("button", { className: "brand-mark mobile-home-button", type: "button", onClick: () => setShortcutsOpen(v=>!v), title: "Open quick shortcuts", "aria-label": "Open quick shortcuts", "aria-expanded":shortcutsOpen,"aria-haspopup":"menu" }, "Σ"),shortcutMenu()), subjectPicker("subj-m"), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal(syncAlert ? "sync" : "data"), "aria-label": syncAlert ? "Import, export and sync (needs attention)" : "Import and export", "data-sync": syncAlert }, /* @__PURE__ */ React.createElement(Icon, { name: "data" })), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal("look"), "aria-label": "Appearance" }, /* @__PURE__ */ React.createElement(Icon, { name: "look" }))), /* @__PURE__ */ React.createElement("main", { className: "content" },
       h("div",{className:"workspace-topbar"},
         h("div",{className:"workspace-context"},h("span",{className:"workspace-eyebrow"},"STUDY DESK"),h("strong",null,(tabs.find(t=>t[0]===nav.tab)||[null,"Today"])[1]),h("span",{className:"workspace-subject"},subject.code||subject.name)),
         h("div",{className:"workspace-actions"},h("button",{className:"btn ghost",onClick:()=>setModal("quick")},"Quick add"),h("button",{className:"btn primary",onClick:()=>go("ask")},"Ask tutor"))),
