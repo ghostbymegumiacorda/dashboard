@@ -2528,6 +2528,20 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .bsa-v155-audio-controls {display:flex;flex-wrap:wrap;gap:12px;align-items:center}
 .bsa-v155-audio-controls input[type=range] {min-width:min(280px,100%);accent-color:var(--accent,#399d82)}
 @media(max-width:700px){.bsa-v156-preview-row .btn {flex:1 1 42%}.bsa-v155-audio-controls {align-items:stretch;flex-direction:column}}
+</style><style id="bsa-v160-smart-engine">
+.bsa-study-audio-choices{display:flex;flex-wrap:wrap;gap:8px 16px;margin:12px 0}.bsa-study-audio-choices .check{font-size:.85rem}.bsa-smart-session{display:grid;gap:16px;padding:22px;min-width:0;background:linear-gradient(140deg,var(--surface,#fff),var(--card,#f4f8f7));}
+.bsa-smart-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}.bsa-smart-heading h2{margin:4px 0 6px;font-size:1.35rem}.bsa-smart-symbol{font-size:2rem;opacity:.8}
+.bsa-smart-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.bsa-smart-options label{display:grid;gap:6px;font-size:.85rem;font-weight:700}.bsa-smart-options select{min-width:0;width:100%}
+.bsa-smart-summary{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}.bsa-smart-summary span{opacity:.75;font-size:.85rem}.bsa-smart-reasons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.bsa-smart-reason{border:1px solid var(--line,#a8b7b1);border-radius:13px;padding:11px;min-width:0;display:grid;gap:5px}.bsa-smart-reason span{font-size:.78rem;opacity:.8;overflow-wrap:anywhere}.bsa-weekly-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:14px 0}.bsa-weekly-grid>div{border:1px solid var(--line,#a8b7b1);border-radius:14px;padding:14px;display:grid;gap:6px;min-width:0}.bsa-weekly-grid strong{font-size:1.55rem}.bsa-weekly-grid small{font-size:.77rem;overflow-wrap:anywhere}
+@media(max-width:850px){.bsa-smart-reasons,.bsa-weekly-grid{grid-template-columns:1fr}}
+@media(max-width:540px){.bsa-smart-options{grid-template-columns:1fr}.bsa-smart-session{padding:15px}}
+</style>
+<style id="bsa-v161-insights-styles">
+.bsa-v161-coach{display:grid;gap:14px}.bsa-v161-coach-head h2{margin:4px 0 6px}.bsa-v161-insight-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr));gap:12px}
+.bsa-v161-insight{border:1px solid var(--line,#abb7b3);border-radius:16px;padding:15px;min-width:0;background:var(--surface,#fff);display:flex;flex-direction:column;gap:6px}
+.bsa-v161-insight p{margin:0;overflow-wrap:anywhere}.bsa-v161-insight-top{display:flex;align-items:start;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.bsa-v161-confidence{border:1px solid var(--line,#abb7b3);font-size:.73rem;border-radius:100px;padding:4px 8px;white-space:nowrap}
+@media(max-width:700px){.bsa-v161-insight-list{grid-template-columns:minmax(0,1fr)}}
 </style></head>
 <body>
 <div id="root"><p class="boot">Opening your study desk… If this doesn’t load, connect to the internet once so the app can save itself for offline use.</p></div>
@@ -4829,6 +4843,42 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const hasProblems = (sub.psets||[]).some(p=>p.topicId===t.id);
     return {topic:t, kind:first.accuracy===null && hasLecture ? "lectures" : first.mistakes ? "mistakes" : first.dueCards ? "practice" : hasProblems ? "psets" : "practice",reason:first.accuracy===null?"Build first evidence":first.mistakes?"Revisit recorded mistakes":first.dueCards?"Review due flashcards":"Strengthen with another attempt"};
   }
+  /* v161: Evidence is not interchangeable. Correct MCQs are objective grading;
+     problem and card reviews are self-assessed, and assisted AI grading is weaker.
+     Repeated review of the same question on one day is counted once for topic trends.
+     No external API requests, no new persisted profile or guessing about untracked study. */
+  function bsaAdaptiveSignals(subject,topicId,now=Date.now()) {
+    const day=86400000, recentStart=now-7*day, previousStart=now-14*day;
+    const list=learningEvidence(subject,topicId).filter(e=>["correct","incorrect","partial"].includes(e.result));
+    const seen=new Set(),ev=[];
+    for(const x of list){
+      const t=Number(x.at)||Date.parse(x.at)||Date.parse(x.date)||0;
+      const source=String(x.sourceId||x.id||"unknown");
+      const key=[x.kind,source,t?Math.floor(t/day):String(x.id||"")].join(":");
+      if(seen.has(key))continue;seen.add(key);
+      const kind=x.kind||"other";
+      const weight=kind==="mcq"?1:kind==="problem"?.65:kind==="flashcard"?.4:kind==="ai"?.25:.45;
+      const w=x.assisted?weight*.6:weight;
+      ev.push({t,source,kind,w,correct:x.result==="correct"?1:x.result==="partial"?.5:0});
+    }
+    const weighted=arr=>{
+      const weight=arr.reduce((a,x)=>a+x.w,0);
+      return {n:arr.length,weight,percent:weight?Math.round(100*arr.reduce((a,x)=>a+x.w*x.correct,0)/weight):null};
+    };
+    const recent=weighted(ev.filter(x=>x.t>=recentStart&&x.t<=now+day));
+    const previous=weighted(ev.filter(x=>x.t>=previousStart&&x.t<recentStart));
+    const overall=weighted(ev);
+    const days=new Set(ev.filter(x=>x.t>0).map(x=>Math.floor(x.t/day))).size;
+    const sources=new Set(ev.map(x=>x.kind+":"+x.source)).size;
+    const objective=ev.filter(x=>x.kind==="mcq").length;
+    const confidence=overall.weight>=8&&days>=3&&sources>=5&&objective>=3?"Higher":overall.weight>=3&&days>=2&&sources>=3?"Moderate":"Limited";
+    let trend="Not enough comparable evidence",delta=null;
+    if(recent.n>=3&&previous.n>=3&&recent.weight>=1.5&&previous.weight>=1.5){
+      delta=recent.percent-previous.percent;
+      trend=delta>=10?"Improving":delta<=-10?"Needs attention":"Mostly steady";
+    }
+    return {recent,previous,overall,confidence,trend,delta,days,sources,objective,events:ev.length};
+  }
   /* Study intelligence: derived from existing records; no new synced schema. */
   function smartTopicStats(subject) {
     const exam = focusExam(subject);
@@ -4851,15 +4901,21 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       const recent = evidence.slice(0,30);
       const evidenceWeight = recent.reduce((sum,e)=>sum+(e.assisted?0.5:1),0);
       const evidenceCorrect = recent.reduce((sum,e)=>sum+(e.result==="correct"?1:e.result==="partial"?0.4:0)*(e.assisted?0.5:1),0);
+      const signals=bsaAdaptiveSignals(subject,t.id);
       const observations = legacyCount + evidenceWeight;
-      const accuracy = observations ? Math.round(100 * (legacyCorrect + evidenceCorrect) / observations) : null;
-      const mastery = accuracy === null ? (t.status === "Mastered" ? "Marked mastered (unverified)" : "Not assessed") : accuracy >= 80 && !mistakes.length ? "Strong" : accuracy >= 55 ? "Developing" : "Needs practice";
+      const legacyAccuracy = observations ? Math.round(100 * (legacyCorrect + evidenceCorrect) / observations) : null;
+      const accuracy = signals.overall.percent!==null ? signals.overall.percent : legacyAccuracy;
+      // High performance with little evidence is provisional, never proven mastery.
+      const mastery = accuracy === null ? (t.status === "Mastered" ? "Marked mastered (unverified)" : "Not assessed") :
+        accuracy>=80&&!mistakes.length&&signals.confidence!=="Limited" ? "Promising" : accuracy>=55 ? "Developing" : "Needs practice";
       const dueCards = cards.filter(c => c.srs && c.srs.due && c.srs.due <= today()).length;
       const days = exam && exam.due ? daysUntil(exam.due) : null;
       const relevant = !!exam && (examIds.has(t.id) || (!examIds.size && t.week <= exam.week));
       const urgency = relevant ? (days !== null && days <= 3 ? 30 : days !== null && days <= 7 ? 22 : 12) : 0;
-      const score = (accuracy === null ? 18 : Math.round((100 - accuracy) * .55)) + Math.min(25, mistakes.length * 9) + Math.min(18, dueCards * 3) + urgency + (t.status === "In progress" ? 8 : 0);
-      return { topic: t, accuracy, mastery, observations, mistakes: mistakes.length, dueCards, relevant, score };
+      const score = (accuracy === null ? 14 : Math.round((100 - accuracy) * .45)) + Math.min(28, mistakes.length * 9) + Math.min(18, dueCards * 3) + urgency + (t.status === "In progress" ? 8 : 0)
+        + (signals.trend==="Needs attention"?13:0) + (signals.confidence==="Limited"&&accuracy!==null?5:0);
+      const nextStep=mistakes.length?"Correct a recorded mistake and explain the rule":dueCards?"Review due flashcards, then attempt a different question":signals.trend==="Needs attention"?"Redo this topic with fresh questions":accuracy===null?"Try a first unassisted question":accuracy<75?"Solve a new problem without looking at notes":"Check retention with a different problem";
+      return { topic:t,accuracy,mastery,observations,mistakes:mistakes.length,dueCards,relevant,score,signals,nextStep };
     }).sort((a,b) => b.score - a.score);
   }
   /* AI Practice Lab: interactive, generated practice using the existing Gemini connection. */
@@ -6270,6 +6326,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
           }
         }
       });
+      playStudyFeedbackSound(g === "again" ? "wrong" : "correct", "cards");
       if (g === "again" && toast) toast("Flashcard added to Mistake Notebook");
       next(g !== "again", g === "again");
     };
@@ -6277,6 +6334,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const pickConf = (k) => { setConf(k); setShown(true); };
     const gradeMistake = (right) => {
       write((s) => gradeMistakeIn(s, mistake.id, right));
+      playStudyFeedbackSound(right ? "correct" : "wrong", "mistakes");
       if (right && mistake.rt && mistake.rt.streak >= 1 && mistake.rt.last !== today() && toast) toast("Mistake cleared: right on two different days");
       next(right, !right);
     };
@@ -6299,6 +6357,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
           }
         }
       });
+      playStudyFeedbackSound(right ? "correct" : "wrong", "problems");
       if (!right && toast) toast("Missed problem added to Mistake Notebook");
       if (clears && toast) toast("Problem cleared: right on two different days");
       next(right, false);
@@ -6963,6 +7022,10 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
   let bsaQuizAudioContext = null;
   let bsaQuizSoundLastAt = 0;
   let bsaQuizSoundSequence = 0;
+  function playStudyFeedbackSound(kind, activity) {
+    try { if (localStorage.getItem('bsa_study_sound_' + activity) === 'off') return; } catch(_) {}
+    playQuizFeedbackSound(kind);
+  }
   function playQuizFeedbackSound(kind, forcePreview = false) {
     try {
       if (!forcePreview && localStorage.getItem('bsa_quiz_audio_v154') !== 'on') return;
@@ -7104,6 +7167,13 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
           topicText: `Multiple-choice quiz · ${topic === "all" ? "All topics" : (topics.find(t => t.id === topic) || {}).title || "Topic"}`,
           date: today(), score, items: paper.length });
         bumpDay(s, { reviews: paper.length, right: score, mins: minutes });
+        s.learningEvents=s.learningEvents||[];
+        const recordedAt=Date.now();
+        for (const q of paper) {
+          if(q.topicId) s.learningEvents.push({id:uid("le"),topicId:q.topicId,
+            kind:"mcq",sourceId:q.id,result:answers[q.id]===q.key?"correct":"incorrect",
+            assisted:false,at:recordedAt,date:today(),note:"MCQ quiz · answer checked"});
+        }
         for (const q of paper) {
           if (answers[q.id] === q.key) continue;
           const question = psPlain(q.q).slice(0, 400);
@@ -7380,6 +7450,45 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
           h("div",{className:"bsa-v157-actions"},h("button",{className:"btn",onClick:()=>setEditingNote(null)},"Close without saving notes"),h("button",{className:"btn primary",onClick:saveMistake},"Save Mistake Log notes")))));
   }
 
+
+  /* v160: local, explainable study engine. No remote processing, new storage keys,
+     grade predictions, or dependence on the Focus Timer. */
+  function bsaSmartQueue(sub, focus, minutes) {
+    const ranked=smartTopicStats(sub).filter(x=>x.observations||x.mistakes||x.dueCards);
+    const preferred=new Set(ranked.slice(0,3).map(x=>x.topic.id));
+    const due=(sub.cards||[]).filter(c=>cardIsDue(c,today()));
+    const open=(sub.mistakes||[]).filter(m=>m.status!=="Cleared"&&(!m.rt||!m.rt.due||m.rt.due<=today()));
+    const weakCards=(sub.cards||[]).filter(c=>preferred.has(c.topicId)&&!due.some(d=>d.id===c.id));
+    const missedProblems=(sub.psets||[]).flatMap(set=>(set.problems||[]).filter(p=>p.st==="miss").map(p=>({...p,_smartTopic:p.topicId||set.topicId})));
+    const freshProblems=(sub.psets||[]).flatMap(set=>(set.problems||[]).filter(p=>p.st!=="miss"&&p.st!=="got").map(p=>({...p,_smartTopic:p.topicId||set.topicId})));
+    const limit=minutes<=10?6:minutes<=20?11:17;
+    const seen=new Set(),items=[];
+    function add(kind,list,max){let count=0;for(const x of list){const id=kind+":"+x.id;if(seen.has(id))continue;seen.add(id);items.push({kind,id:x.id});if(++count>=max||items.length>=limit)break;}}
+    const priority=(arr)=>arr.slice().sort((a,b)=>Number(preferred.has(b.topicId||b._smartTopic))-Number(preferred.has(a.topicId||a._smartTopic)));
+    if(focus==="due"){
+      add("mistake",priority(open),Math.ceil(limit*.4));add("card",priority(due),limit);add("prob",priority(missedProblems),4);
+    } else if(focus==="balanced") {
+      add("mistake",priority(open),Math.ceil(limit*.3));add("card",priority(due),Math.ceil(limit*.35));add("prob",priority(missedProblems),Math.ceil(limit*.3));add("card",priority(weakCards),3);
+    } else {
+      add("mistake",priority(open),Math.ceil(limit*.35));add("prob",priority(missedProblems),Math.ceil(limit*.3));add("card",priority(due),Math.ceil(limit*.25));add("card",priority(weakCards),limit);
+    }
+    add("prob",priority(freshProblems),limit);add("card",priority(due),limit);add("card",priority(weakCards),limit);
+    return {items:items.slice(0,limit),ranked:ranked.slice(0,3),dueCount:due.length,openCount:open.length};
+  }
+  function bsaWeeklyEvidence(subjects){
+    const now=Date.now(),day=86400000,start=now-7*day,prev=now-14*day;
+    function timestamp(v){if(typeof v==="number")return v>1e12?v:v>1e9?v*1000:0;if(!v)return 0;const d=Date.parse(v);return Number.isFinite(d)?d:0;}
+    const collect=(lo,hi)=>{let right=0,total=0,events=0,mistakes=0;
+      for(const sub of subjects){
+        for(const q of sub.quizzes||[]){const at=timestamp(q.date||q.at);if(at>=lo&&at<hi){const n=Math.max(0,Number(q.items)||0);total+=n;right+=Math.min(n,Math.max(0,Number(q.score)||0));}}
+        events+=(sub.learningEvents||[]).filter(e=>{const at=timestamp(e.at||e.date);return at>=lo&&at<hi}).length;
+        mistakes+=(sub.mistakes||[]).filter(m=>{const at=timestamp(m.date||m.at);return at>=lo&&at<hi}).length;
+      }
+      return {right,total,events,mistakes};
+    };
+    return {current:collect(start,now+1),previous:collect(prev,start)};
+  }
+
   function PracticeView({ subject, update, toast, go, init, settings, setSettings, openEditor, data }) {
     const [mode, setMode] = useState(null);
     const newPerDay = settings.newPerDay || 10;
@@ -7391,6 +7500,13 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const [timerMins, setTimerMins] = useState(() => localPref("timerMins", 25));
     const timer = useTimer();
     const [drMgr, setDrMgr] = useState(false);
+    const [smartMinutes,setSmartMinutes]=useState(20);
+    const [smartFocus,setSmartFocus]=useState("weak");
+    const smartPreview=useMemo(()=>bsaSmartQueue(subject,smartFocus,smartMinutes),[subject,smartFocus,smartMinutes]);
+    const startSmart=()=>{
+      if(!smartPreview.items.length){toast("No practice material is available yet. Add flashcards or problems first.");return;}
+      setMode({kind:"study",title:"Smart study session · "+smartMinutes+" min plan",items:smartPreview.items});
+    };
     const startReview = () => {
       // Problems come after a warm-up: they are slow, and a cold start on one
       // is how a session gets abandoned.
@@ -7401,7 +7517,8 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       setMode({ kind: "study", title: "Daily review", items });
     };
     useEffect(() => {
-      if (init.start === "review") startReview();
+      if (init.start === "smart") { const queue=bsaSmartQueue(subject,init.focus||"weak",Number(init.minutes)||20); if(queue.items.length)setMode({kind:"study",title:"Smart study session",items:queue.items}); }
+      else if (init.start === "review") startReview();
       else if (init.start === "exam" && exam) setMode({ kind: "study", title: `${exam.title} mix`, items: examMix(subject, exam).map((c) => ({ kind: "card", id: c.id })) });
       else if (init.start === "compute") setMode({ kind: "compute", set: "all" });
     }, []);
@@ -7432,6 +7549,16 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       "section",
       { className: "view" },
       h("div", { className: "page-head" }, h("div", null, h("h1", { className: "page-title" }, "Practice"), h("p", { className: "muted" }, "Short daily reviews beat cramming. Cards come back just before you’d forget them."))),
+
+      h("section",{className:"panel bsa-smart-session","aria-label":"Smart study engine"},
+        h("div",{className:"bsa-smart-heading"},h("div",null,h("span",{className:"panel-kicker"},"SMART STUDY ENGINE · DEVICE ONLY"),h("h2",null,"Your next best study session"),h("p",{className:"muted small"},"Uses actual mistakes, due reviews and attempts; no timer required. Suggestions are not predicted grades.")),h("span",{className:"bsa-smart-symbol","aria-hidden":"true"},"✦")),
+        h("div",{className:"bsa-smart-options"},
+          h("label",null,"Session length",h("select",{value:String(smartMinutes),onChange:e=>setSmartMinutes(Number(e.target.value))},[10,20,30].map(n=>h("option",{value:n,key:n},n+" minute plan")))),
+          h("label",null,"Prioritize",h("select",{value:smartFocus,onChange:e=>setSmartFocus(e.target.value)},h("option",{value:"weak"},"Weak topics"),h("option",{value:"due"},"Due reviews"),h("option",{value:"balanced"},"Balanced review")))),
+        h("div",{className:"bsa-smart-summary"},h("strong",null,smartPreview.items.length+" available activities"),h("span",null,smartPreview.openCount+" open mistakes · "+smartPreview.dueCount+" due cards")),
+        smartPreview.ranked.length?h("div",{className:"bsa-smart-reasons"},smartPreview.ranked.map(x=>h("div",{key:x.topic.id,className:"bsa-smart-reason"},h("strong",null,x.topic.code||x.topic.title),h("span",null,[x.mistakes?x.mistakes+" mistakes":"",x.dueCards?x.dueCards+" due":"",x.signals&&x.signals.events?x.signals.confidence.toLowerCase()+" evidence":"",x.signals&&x.signals.delta!==null?x.signals.trend:""] .filter(Boolean).join(" · ")||"More evidence needed")))):h("p",{className:"muted small"},"There isn't enough performance history to rank topics yet. You can still practice available materials."),
+        h("button",{className:"btn primary",disabled:!smartPreview.items.length,onClick:startSmart},"✦ Start personalized session")
+      ),
       h("section", { className:"panel bsa-study-priorities", "aria-label":"Recommended study actions" },
         h("div", {className:"bsa-study-priorities-head"},
           h("div",null,h("span",{className:"panel-kicker"},"PERSONAL STUDY PRIORITIES"),h("h2",null,"What to study next"),
@@ -7914,6 +8041,10 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
           h("input", { type: "checkbox", defaultChecked: (() => { try { return localStorage.getItem("bsa_quiz_audio_v154") === "on"; } catch (_) { return false; } })(),
             onChange: e => { try { localStorage.setItem("bsa_quiz_audio_v154", e.target.checked ? "on" : "off"); } catch (_) {} if (e.target.checked) playQuizFeedbackSound("select"); } }),
           h("span", null, "Enable quiz sounds"))),
+        h("div",{className:"bsa-study-audio-choices"},
+          [["cards","Flashcard review"],["problems","Problem drills"],["mistakes","Mistake retests"]].map(([key,label])=>
+            h("label",{className:"check",key},h("input",{type:"checkbox",defaultChecked:(()=>{try{return localStorage.getItem("bsa_study_sound_"+key)!=="off"}catch(_){return true}})(),onChange:e=>{try{localStorage.setItem("bsa_study_sound_"+key,e.target.checked?"on":"off")}catch(_){} }}),h("span",null,label)))),
+
         h("div", {className:"bsa-v156-theme-picker"},
           h("label",{htmlFor:"bsa-quiz-theme"},"Choose your sound theme"),
           h("select",{id:"bsa-quiz-theme", defaultValue:(()=>{try{return localStorage.getItem('bsa_quiz_audio_theme_v156')||'bubble';}catch(_){return 'bubble';}})(),
@@ -13639,9 +13770,10 @@ h('div',{className:'life-avatar-preview'},h('span',null,life.avatar.accessory===
     const unassessed=materialTopics.filter(x=>!x.observations).length;
     const logged=roll(s=>(s.days||[]).reduce((n,d)=>n+Math.max(0,Number(d.mins)||0),0));
     const finished=roll(s=>(s.sessions||[]).filter(x=>x.done).reduce((n,x)=>n+Math.max(0,Number(x.mins)||0),0));
+    const weekly=bsaWeeklyEvidence(subjects);
     const fmt=(n)=>n+'m';
     const pct=(a,b)=>b?Math.round(100*a/b)+'%':'Not enough data';
-    const reasons=(x)=>[x.mistakes?x.mistakes+' open mistake'+(x.mistakes===1?'':'s'):'',x.dueCards?x.dueCards+' due card'+(x.dueCards===1?'':'s'):'',x.accuracy!==null&&x.observations?x.accuracy+'% observed performance':'',x.observations?Math.round(x.observations)+' evidence points':''].filter(Boolean).join(' · ');
+    const reasons=(x)=>[x.mistakes?x.mistakes+' open mistake'+(x.mistakes===1?'':'s'):'',x.dueCards?x.dueCards+' due card'+(x.dueCards===1?'':'s'):'',x.signals&&x.signals.overall.weight?x.accuracy+'% weighted recorded outcomes':'',x.signals?'Evidence: '+x.signals.confidence.toLowerCase()+' ('+x.signals.sources+' unique activities)':'',x.signals&&x.signals.delta!==null?x.signals.trend+' ('+(x.signals.delta>0?'+':'')+x.signals.delta+' pp)':''].filter(Boolean).join(' · ');
     const action=(x)=>x.mistakes?'mistakes':x.dueCards?'practice':x.accuracy!==null&&x.accuracy<75?'psets':'lectures';
     const doReset=()=>{
       const targets=subjects.map(s=>s.id);
@@ -13660,6 +13792,24 @@ h('div',{className:'life-avatar-preview'},h('span',null,life.avatar.accessory===
         metric('Quiz accuracy',pct(qCorrect,qItems),qItems+' scored questions · '+qSessions+' quizzes'),
         metric('Recall confidence',pct(known,assessed),assessed+' rated cards · self-rated, not exam score'),
         metric('Topics without evidence',String(unassessed),'Not yet assessed; not necessarily weak')),
+      h('section',{className:'panel bsa-v161-coach',"aria-label":"Evidence-based study guidance"},
+        h('div',{className:'bsa-v161-coach-head'},h('div',null,h('span',{className:'panel-kicker'},'ADAPTIVE LEARNING INSIGHTS'),h('h2',null,'What your results are saying'),
+          h('p',{className:'muted small'},'Multiple attempts, different activities and recent trends matter more than one lucky answer.'))),
+        priority.length?h('div',{className:'bsa-v161-insight-list'},priority.slice(0,3).map(x=>
+          h('article',{className:'bsa-v161-insight',key:x.subject.id+':'+x.topic.id},
+            h('div',{className:'bsa-v161-insight-top'},h('strong',null,(x.topic.code||'Topic')+' · '+(x.topic.title||'')),
+              h('span',{className:'bsa-v161-confidence'},'Evidence: '+x.signals.confidence)),
+            h('p',{className:'muted small'},x.signals.trend+(x.signals.delta!==null?' · '+(x.signals.delta>=0?'+':'')+x.signals.delta+' percentage points vs previous week':'')),
+            h('p',null,h('strong',null,'Next: '),x.nextStep),
+            h('p',{className:'muted small'},reasons(x))))) : h('p',{className:'muted'},'Not enough recorded topic-level evidence yet. Start with a new MCQ quiz or a problem attempt; results will appear here.'),
+        h('p',{className:'muted small'},'Important: self-rated problems and flashcards are weighted less than objectively scored MCQs. This is a planning guide, not a predicted grade or proof of mastery.')),
+      h('section',{className:'panel bsa-weekly-report'},h('h2',null,'This week · Learning evidence'),
+        h('p',{className:'muted small'},'Last 7 rolling days compared with the preceding 7 days. Only in-app records with dates are counted.'),
+        h('div',{className:'bsa-weekly-grid'},
+          h('div',null,h('span',{className:'muted small'},'Quiz accuracy'),h('strong',null,weekly.current.total?Math.round(100*weekly.current.right/weekly.current.total)+'%':'Not measured'),h('small',{className:'muted'},weekly.previous.total?'Previous: '+Math.round(100*weekly.previous.right/weekly.previous.total)+'%':'No comparable previous quiz data')),
+          h('div',null,h('span',{className:'muted small'},'Recorded learning actions'),h('strong',null,String(weekly.current.events)),h('small',{className:'muted'},'Previous: '+weekly.previous.events)),
+          h('div',null,h('span',{className:'muted small'},'New mistake entries'),h('strong',null,String(weekly.current.mistakes)),h('small',{className:'muted'},'Previous: '+weekly.previous.mistakes))),
+        h('p',{className:'muted small'},'These are activity records, not total study time or proof of mastery. Repeated answers and self-rated attempts can affect the counts.')),
       h('div',{className:'panel bsa-report-priority'},h('div',{className:'bsa-report-section-title'},h('div',null,h('h2',null,'What should I work on?'),h('p',{className:'muted'},'Prioritized from mistakes, due reviews and actual attempts. These are indicators, not predicted grades.'))),
         priority.length ? priority.map((x,i)=>h('div',{className:'bsa-report-topic',key:x.subject.id+':'+x.topic.id},
           h('div',{className:'bsa-report-index'},String(i+1)),h('div',{className:'bsa-report-topic-main'},h('strong',null,[x.topic.code,x.topic.title||x.topic.standard].filter(Boolean).join(' · ')),scope==='all'?h('small',{className:'muted'},x.subject.code||x.subject.name):null,h('small',{className:'muted'},reasons(x)||'Review this topic')),
