@@ -3,6 +3,7 @@
   "subject": "Example Subject",
   "rules": [
     {
+      "collection": "Chapter 1 Reference",
       "code": "R1",
       "title": "Illustrative classification principle",
       "topic": "Topic 1",

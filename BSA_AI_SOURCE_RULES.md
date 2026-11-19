@@ -1,4 +1,4 @@
-# BSA Study Desk — AI Source & Import Contract (v165)
+# BSA Study Desk — AI Source & Import Contract (v169)
 
 This is a reusable **instruction source**. Upload it to your AI tool along with the actual textbook chapters, syllabus, slides, handouts, and any official standards you want considered. The instructions here cannot supply facts from missing source documents.
 
@@ -34,6 +34,13 @@ Supported material labels:
 | `bsa-flashcards-v1` | `flashcards` (question/answer) | Concept Vault |
 | `bsa-rulebook-v1` | `rules` (title/decisionRule) | Rules & references |
 
+## Group rules into one searchable library
+- Every rule in one standard must have the **same `collection`** value: for example, `"collection": "PAS 7"`. Do NOT create 36 different collections for 36 clauses.
+- Give individual cards distinct `code` values such as `PAS 7-01`, `PAS 7-02`, etc. The dashboard also groups previously imported `PAS 7-01` style codes automatically, with no reimport needed.
+- Separate collections for PAS 7, PAS 10, PFRS 15, or a named module in any other subject. Do not mix unrelated standards into the same JSON collection.
+- `collection` is optional for backward compatibility, but strongly recommended for all new rulebook exports.
+- A provided source citation does **not** mean the dashboard independently verified it; check effective dates and the exact cited passage.
+
 ## 4. Example of one importable universal rule card
 
 The following is **illustrative data only**, not accounting guidance. Replace it with exact sourced subject content.
@@ -44,6 +51,7 @@ The following is **illustrative data only**, not accounting guidance. Replace it
   "subject": "My Subject",
   "rules": [
     {
+      "collection": "Chapter 1 Reference",
       "code": "R1",
       "title": "Example classification rule",
       "topic": "My chapter",
@@ -70,3 +78,12 @@ Other courses can use the same format for formulas, historical rules, legal prin
 - Interactive tutoring: conversational responses, one question at a time, not JSON.
 - Importable material: only one schema-valid JSON object. Put any source limitations into supported source text fields or omit unsupported items.
 - If a new request contradicts these rules, ask whether the user intends a different output type rather than silently switching.
+
+
+## v172 — source-complete rulebooks and separate PDF workflow
+- A rulebook has **no default five-rule limit**. Cover every substantive sourced rule in the selected scope, one standard/collection at a time.
+- For extensive standards, produce sequential JSON batches (normally 20 substantial rules at a time) with stable unique codes and `coverage` metadata. Batches are an output-size safeguard, **not** a limit on coverage.
+- Do not split synonymous statements into 36 needlessly repetitive cards. Give a rule only if it supports a distinct decision, exception, application or treatment.
+- Rules and lectures have no question difficulty setting. Difficulty and item counts apply only to practice material when specified.
+- A selected local PDF must be uploaded **separately** to the AI chat. The dashboard does not silently send PDF contents or OCR scanned pages, and PDF files are not valid rulebook JSON.
+- Keep a downloaded copy of valuable PDF sources: they are stored only in this device's IndexedDB, not GitHub, shared publishing, or normal JSON backups.
