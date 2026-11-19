@@ -2436,7 +2436,67 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .bsa-v155-audio-controls input[type=range]{accent-color:var(--accent,#13966b);width:min(190px,55vw);cursor:pointer}
 .bsa-v155-audio-controls .btn{min-height:36px}
 @media(max-width:480px){.bsa-v155-audio-controls{align-items:stretch}.bsa-v155-audio-controls input[type=range]{width:100%}}
-</style></head>
+</style><style id="bsa-v156-cute-quiz-setup">
+.mcq-quiz .bsa-v156-setup{position:relative;overflow:hidden;border-radius:26px;padding:clamp(20px,3.5vw,36px);max-width:880px;background:var(--panel,var(--card-bg,var(--surface,#fff)))}
+.mcq-quiz .bsa-v156-setup::before{content:"";position:absolute;top:-65px;right:-55px;width:210px;height:210px;border-radius:50%;background:var(--accent,#17a876);opacity:.055;pointer-events:none}
+.bsa-v156-setup-head{display:flex;align-items:center;gap:16px;margin-bottom:24px}
+.bsa-v156-mascot{display:flex;align-items:center;justify-content:center;flex:0 0 64px;width:64px;height:64px;border-radius:20px;background:color-mix(in srgb,var(--accent,#17a876) 16%,transparent);color:var(--accent,#17a876);font-size:34px;box-shadow:0 4px 18px rgba(0,0,0,.035)}
+.bsa-v156-setup-head h2{font-size:clamp(22px,3vw,30px);margin:5px 0 7px;letter-spacing:-.04em;line-height:1.18}
+.bsa-v156-setup-head p{margin:0;line-height:1.5}
+.mcq-quiz .bsa-v156-setup .field{min-width:0;gap:9px}
+.mcq-quiz .bsa-v156-setup select{width:100%;min-width:0;border-radius:13px;min-height:46px;padding:10px 14px;background:var(--bg2,var(--input-bg,transparent));font-size:.95rem}
+.mcq-quiz .bsa-v156-setup .step-actions{margin-top:22px;gap:10px;flex-wrap:wrap}
+.mcq-quiz .bsa-v156-setup .step-actions>.btn{min-height:47px;border-radius:13px;padding-inline:18px}
+.mcq-quiz .bsa-v156-setup .step-actions>.btn.primary{box-shadow:0 7px 18px color-mix(in srgb,var(--accent,#17a876) 19%,transparent)}
+.bsa-mcq-classify{display:grid;gap:6px;padding:14px 16px;margin:13px 0;border-radius:15px;background:color-mix(in srgb,var(--accent,#16a578) 6%,transparent);border:1px solid color-mix(in srgb,var(--accent,#16a578) 24%,transparent)}
+.bsa-mcq-classify label{font-weight:700;display:grid;gap:8px}
+.bsa-mcq-classify select{width:100%;max-width:460px;min-height:40px;border-radius:10px}
+.bsa-mcq-classify p{margin:0}
+.bsa-v156-theme-picker{display:grid;gap:9px;margin:14px 0;padding:15px;border:1px solid var(--line,#ddd);border-radius:16px}
+.bsa-v156-theme-picker>label{font-weight:700}
+.bsa-v156-theme-picker select{max-width:360px;min-height:44px;width:100%;border-radius:12px;padding:8px 12px}
+.bsa-v156-preview-row{display:flex;flex-wrap:wrap;gap:8px}
+.bsa-v156-preview-row .btn{border-radius:999px;min-height:36px}
+@media(max-width:570px){.bsa-v156-setup-head{align-items:flex-start;gap:12px}.bsa-v156-mascot{flex-basis:48px;width:48px;height:48px;font-size:28px}.mcq-quiz .bsa-v156-setup .step-actions>.btn{flex:1 1 100%}}
+</style><style id="bsa-v157-problem-drill">
+.bsa-v157-drill{width:100%;max-width:1120px;margin-inline:auto;padding:clamp(16px,2.8vw,30px)!important;border-radius:22px!important;min-width:0}
+.bsa-v157-drill .ps-written-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:15px}
+.bsa-v157-drill .ps-written-top h2{font-size:clamp(21px,2.6vw,30px);letter-spacing:-.035em;margin:5px 0 2px}
+.bsa-v157-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:12px 0}
+.bsa-v157-position{display:flex;flex-direction:column;gap:3px}
+.bsa-v157-shuffle{border-radius:999px!important;font-size:13px!important}
+.bsa-v157-step{font-size:11px;font-weight:850;letter-spacing:.10em;text-transform:uppercase;color:var(--accent,var(--primary,#167e62));margin-bottom:13px}
+.bsa-v157-question,.bsa-v157-draft,.bsa-v157-results{min-width:0;margin-top:18px;padding:clamp(17px,2.5vw,26px);border:1px solid var(--border,#d8dfdc);border-radius:19px;background:var(--card,var(--surface,#fff))}
+.bsa-v157-question h3{font-size:clamp(18px,2vw,24px);margin:0 0 15px;line-height:1.35}
+.bsa-v157-problem-body{line-height:1.75;min-width:0;overflow-x:auto}
+.bsa-v157-draft textarea,.bsa-v157-notes textarea{display:block;width:100%;max-width:100%;min-width:0;border-radius:14px;padding:15px;font:inherit;line-height:1.65}
+.bsa-v157-actions,.bsa-v157-mark-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end;margin-top:14px}
+.bsa-v157-actions>.muted{margin-right:auto}
+.bsa-v157-result-status{display:flex;flex-direction:column;gap:5px;background:color-mix(in srgb,var(--accent,#168d69) 7%,transparent);border:1px solid color-mix(in srgb,var(--accent,#168d69) 25%,transparent);border-radius:14px;padding:14px 16px;margin-bottom:16px;line-height:1.5}
+.bsa-v157-result-status span{font-size:13px;opacity:.82}
+.bsa-v157-result-status.is-different{background:color-mix(in srgb,#d18c3e 10%,transparent);border-color:color-mix(in srgb,#d18c3e 35%,transparent)}
+.bsa-v157-compare{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:stretch}
+.bsa-v157-compare-panel{min-width:0;border:1px solid var(--border,#d9dedc);border-radius:16px;padding:16px;background:var(--bg,#f8faf9);overflow-x:auto}
+.bsa-v157-compare-panel.model{background:color-mix(in srgb,var(--accent,#168d69) 4%,var(--bg,#f8faf9))}
+.bsa-v157-compare-label{font-size:11px;letter-spacing:.09em;font-weight:850;margin-bottom:12px;color:var(--accent,#168d69)}
+.bsa-v157-user-answer{font:inherit;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;min-height:110px;margin:0 0 14px}
+.bsa-v157-compare-panel .ps-md,.bsa-v157-solution .ps-md{min-width:0;overflow-x:auto}
+.bsa-v157-method{border-top:1px solid var(--border,#d9dedc);margin-top:15px;padding-top:13px}
+.bsa-v157-solution{border:1px solid var(--border,#d9dedc);border-radius:16px;padding:15px 17px;margin-top:15px;overflow:hidden}
+.bsa-v157-solution summary{cursor:pointer;font-weight:750;padding:2px 0 12px}
+.bsa-v157-trap{background:color-mix(in srgb,#f4b157 12%,transparent);border-radius:14px;padding:16px;margin-top:14px;line-height:1.65}
+.bsa-v157-selfcheck{display:flex;flex-direction:column;gap:10px;border:1px solid var(--border,#d9dedc);border-radius:15px;padding:16px;margin-top:15px}
+.bsa-v157-selfcheck label{display:flex;align-items:center;gap:9px;font-size:14px;cursor:pointer}
+.bsa-v157-selfcheck input{accent-color:var(--accent,#168d69)}
+.bsa-v157-miss{border-color:color-mix(in srgb,#b96e58 45%,var(--border,#ddd))!important}
+.bsa-v157-saved-state{font-size:13px;opacity:.85;margin:8px 0}
+.bsa-v157-notes{background:color-mix(in srgb,var(--accent,#168d69) 5%,var(--card,#fff));border:1px solid color-mix(in srgb,var(--accent,#168d69) 25%,transparent);border-radius:17px;padding:clamp(14px,2vw,22px);margin-top:18px}
+.bsa-v157-notes label{display:block;margin-top:14px;font-size:13px;font-weight:700}
+.bsa-v157-notes textarea{margin-top:6px;font-weight:400}
+@media(max-width:750px){.bsa-v157-compare{grid-template-columns:minmax(0,1fr)}.bsa-v157-mark-row .btn{flex:1 1 auto}.bsa-v157-drill{padding:14px!important}}
+@media(prefers-reduced-motion:reduce){.bsa-v157-drill *{animation:none!important;transition:none!important}}
+</style>
+</head>
 <body>
 <div id="root"><p class="boot">Opening your study desk… If this doesn’t load, connect to the internet once so the app can save itself for offline use.</p></div>
 <script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
@@ -6852,67 +6912,125 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       return h("span", { key: d, className: `act${d === today() ? " today" : ""}`, title: `${fmtDay(d)}: ${x.reviews || 0} reviews, ${fmtMins(x.mins) || "0 min"} timed`, style: { "--h": `${v ? Math.max(12, v / max * 100) : 4}%` } }, h("i", null), h("b", null, parseD(d).toLocaleDateString(void 0, { weekday: "narrow" })));
     }));
   }
-  /* v155: Original, playful quiz feedback sound design.
-     Uses Web Audio only, runs on direct user interaction, respects mute and
-     reduced-motion preferences, and never touches study progress. */
+  /* v156: original selectable cute sound palettes, device-local, generated via Web Audio.
+     Sounds run only on user gestures and never interfere with scoring. */
+  const QUIZ_SOUND_THEMES = [
+    ['bubble','🫧 Bubble Pop','Bouncy, squishy little pops'],
+    ['starlight','🌟 Starlight','Bright sparkly chimes'],
+    ['cozy','🍵 Cozy Chimes','Soft and warm notes'],
+    ['pixel','🎮 Pixel Pals','Playful retro blips'],
+    ['bells','🔔 Tiny Bells','Delicate bell melodies']
+  ];
   let bsaQuizAudioContext = null;
   let bsaQuizSoundLastAt = 0;
   function playQuizFeedbackSound(kind, forcePreview = false) {
     try {
-      if (!forcePreview && localStorage.getItem("bsa_quiz_audio_v154") !== "on") return;
-      if (document.visibilityState === "hidden") return;
+      if (!forcePreview && localStorage.getItem('bsa_quiz_audio_v154') !== 'on') return;
+      if (document.visibilityState === 'hidden') return;
       const AudioCtor = window.AudioContext || window.webkitAudioContext;
       if (!AudioCtor) return;
       const ctx = bsaQuizAudioContext || (bsaQuizAudioContext = new AudioCtor());
-      if (ctx.state === "suspended") { ctx.resume().catch(() => {}); }
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
       const nowMs = Date.now();
-      if (!forcePreview && kind === "select" && nowMs - bsaQuizSoundLastAt < 65) return;
+      if (!forcePreview && kind === 'select' && nowMs - bsaQuizSoundLastAt < 70) return;
       bsaQuizSoundLastAt = nowMs;
-      const rawVolume = Number(localStorage.getItem("bsa_quiz_audio_volume_v155") || "45");
-      const master = Math.min(.20, Math.max(0, Number.isFinite(rawVolume) ? rawVolume : 45) / 100 * .17);
-      if (master <= 0) return;
-      const start = ctx.currentTime + .012;
-      function note(hz, delay, duration, amplitude = 1, wave = "sine", endingHz = null) {
-        const osc = ctx.createOscillator(), gain = ctx.createGain();
-        osc.type = wave;
-        osc.frequency.setValueAtTime(hz, start + delay);
-        if (endingHz != null) osc.frequency.exponentialRampToValueAtTime(Math.max(30, endingHz), start + delay + duration);
-        const attack = Math.min(.018, duration * .2);
-        const peak = Math.max(.00011, master * amplitude);
-        gain.gain.setValueAtTime(.0001, start + delay);
-        gain.gain.exponentialRampToValueAtTime(peak, start + delay + attack);
-        gain.gain.exponentialRampToValueAtTime(.0001, start + delay + duration);
+      const volume = Number(localStorage.getItem('bsa_quiz_audio_volume_v155') || '45');
+      const master = Math.min(.12, Math.max(0, Number.isFinite(volume) ? volume : 45) / 100 * .12);
+      if (!master) return;
+      const theme = localStorage.getItem('bsa_quiz_audio_theme_v156') || 'bubble';
+      const now = ctx.currentTime + .018;
+      function note(hz,delay,duration,amp=1,wave='sine',endHz=null) {
+        const osc=ctx.createOscillator(), gain=ctx.createGain();
+        osc.type=wave; osc.frequency.setValueAtTime(hz,now+delay);
+        if(endHz) osc.frequency.exponentialRampToValueAtTime(endHz,now+delay+duration);
+        const peak=Math.max(.00012,master*amp);
+        gain.gain.setValueAtTime(.0001,now+delay);
+        gain.gain.exponentialRampToValueAtTime(peak,now+delay+Math.min(.014,duration*.25));
+        gain.gain.exponentialRampToValueAtTime(.0001,now+delay+duration);
         osc.connect(gain); gain.connect(ctx.destination);
-        osc.start(start + delay); osc.stop(start + delay + duration + .025);
+        osc.start(now+delay); osc.stop(now+delay+duration+.025);
       }
-      if (kind === "select") {
-        note(650, 0, .07, .31, "sine", 880);
-        note(1260, .015, .045, .10, "sine");
-      } else if (kind === "correct") {
-        note(523.25, 0, .17, .54, "sine");
-        note(659.25, .095, .18, .60, "sine");
-        note(783.99, .20, .20, .65, "sine");
-        note(1046.5, .31, .27, .56, "triangle");
-        note(1568, .37, .16, .11, "sine");
-      } else if (kind === "wrong") {
-        note(392, 0, .16, .47, "triangle", 340);
-        note(294, .14, .22, .44, "sine", 245);
-      } else if (kind === "finish") {
-        [523.25,659.25,783.99,1046.5,1318.5].forEach((hz,i) => note(hz, i * .105, .19 + (i === 4 ? .26 : 0), .54, "sine"));
-        note(1568, .55, .28, .20, "triangle");
-      } else if (kind === "next") {
-        note(720, 0, .075, .27, "sine", 920);
-        note(960, .055, .09, .23, "sine", 1175);
+      const v = (notes, wave='sine') => notes.forEach(([freq,at,dur,amp,end])=>note(freq,at,dur,amp,wave,end));
+      if(theme==='starlight') {
+        if(kind==='select') v([[990,0,.07,.24],[1480,.055,.10,.18]]);
+        if(kind==='correct') v([[784,0,.18,.48],[1175,.11,.19,.5],[1568,.24,.28,.53],[2093,.35,.25,.22]]);
+        if(kind==='wrong') v([[659,0,.14,.35],[494,.17,.2,.27]]);
+        if(kind==='next') v([[988,0,.075,.2],[1318,.07,.1,.18]]);
+        if(kind==='finish') v([[784,0,.18,.44],[988,.12,.18,.5],[1175,.24,.18,.5],[1568,.36,.2,.5],[2093,.51,.35,.34]]);
+      } else if(theme==='cozy') {
+        if(kind==='select') v([[440,0,.12,.27,520]]);
+        if(kind==='correct') v([[392,0,.22,.46],[523,.18,.26,.49],[659,.37,.34,.4]]);
+        if(kind==='wrong') v([[392,0,.22,.34],[330,.24,.28,.28]]);
+        if(kind==='next') v([[523,0,.16,.26],[587,.12,.18,.2]]);
+        if(kind==='finish') v([[392,0,.24,.44],[494,.17,.24,.46],[587,.35,.25,.46],[784,.53,.42,.36]]);
+      } else if(theme==='pixel') {
+        if(kind==='select') v([[570,0,.055,.2,870]],'square');
+        if(kind==='correct') v([[523,0,.095,.25],[659,.09,.095,.25],[1047,.19,.20,.28]],'square');
+        if(kind==='wrong') v([[330,0,.10,.24],[247,.12,.20,.18]],'triangle');
+        if(kind==='next') v([[740,0,.055,.2],[980,.06,.09,.18]],'square');
+        if(kind==='finish') v([[523,0,.09,.26],[659,.11,.09,.26],[784,.22,.09,.26],[1047,.33,.12,.28],[1318,.48,.30,.24]],'square');
+      } else if(theme==='bells') {
+        if(kind==='select') v([[880,0,.15,.25],[1760,.02,.10,.07]]);
+        if(kind==='correct') v([[659,0,.28,.42],[880,.16,.32,.44],[1318,.34,.45,.38]]);
+        if(kind==='wrong') v([[587,0,.28,.28],[440,.20,.32,.25]]);
+        if(kind==='next') v([[784,0,.16,.26],[1047,.12,.23,.23]]);
+        if(kind==='finish') v([[523,0,.25,.35],[659,.19,.27,.35],[880,.39,.29,.4],[1318,.59,.50,.35]]);
+      } else { /* bubble */
+        if(kind==='select') v([[510,0,.09,.35,900],[1250,.025,.05,.09]]);
+        if(kind==='correct') v([[523,0,.13,.50,660],[659,.11,.16,.54,830],[880,.25,.24,.49,1100],[1320,.31,.13,.12]]);
+        if(kind==='wrong') v([[380,0,.18,.35,315],[290,.17,.22,.30,245]]);
+        if(kind==='next') v([[650,0,.09,.28,980],[980,.08,.10,.22,1175]]);
+        if(kind==='finish') v([[523,0,.15,.42,660],[659,.12,.15,.45,830],[784,.24,.15,.45,990],[1047,.36,.18,.47,1320],[1568,.55,.30,.32]]);
       }
-    } catch (_) { /* Audio is optional and must never block a quiz. */ }
+    } catch (_) { /* Optional audio must never block quiz interaction. */ }
+  }
+  /* v156: strict topical routing for the dedicated MCQ bank.
+     Unassigned material appears only under All topics until categorized. */
+  function mcqAssignedTopic(subject, set, question = null) {
+    const topics = studyTopics(subject);
+    const known = id => topics.some(t => t.id === id) ? id : null;
+    const explicit = question && known(question.topicId) || known(set.topicId);
+    if (explicit) return explicit;
+    const labels = [question && question.topicText, question && question.topic,
+      set.topicText, set.topic, set.title].filter(Boolean);
+    for (const text of labels) {
+      const matched = matchTopic(subject, String(text));
+      if (matched && known(matched)) return matched;
+      const normalized = norm(text);
+      const chapter = normalized.match(/\b(?:chapter|topic|module|t)\s*0?(\d+)\b/i);
+      if (chapter) {
+        const key = 't' + Number(chapter[1]);
+        if (known(key)) return key;
+        const mapped = topics.find(t => norm(t.code || '') === key);
+        if (mapped) return mapped.id;
+      }
+      const titleMatch = topics.find(t => {
+        const a = norm(t.title || '');
+        return a.length > 10 && normalized.length > 12 &&
+          (normalized.includes(a) || a.includes(normalized));
+      });
+      if (titleMatch) return titleMatch.id;
+    }
+    return null;
+  }
+  function mcqDedicatedPool(subject) {
+    const mcq = [];
+    for (const set of (subject.mcqSets || [])) {
+      for (const p of set.problems || []) {
+        const key = mxKey(p.answer);
+        if (!Array.isArray(p.choices) || p.choices.length < 2 || !key ||
+            !p.choices.some((choice,i) => mxChoiceKey(choice,i) === key)) continue;
+        mcq.push({ kind:'mcq', id:`x_${p.id}`, topicId:mcqAssignedTopic(subject,set,p),
+          q:p.problem, choices:p.choices, key, why:p.solution || p.approach || '',
+          trap:p.trap || '', src:`${set.title} · problem ${p.no || ''}`, setId:set.id });
+      }
+    }
+    return mcq;
   }
   /* v148 — focused, one-at-a-time multiple-choice practice. Uses the same
      authored question pool and progress schema as Mock Exam. */
   function MultipleChoiceQuiz({ subject, update, toast, go, onExit, initialSetId = "all" }) {
-    const all = useMemo(() => mxPool(subject, null).mcq.filter((q) =>
-      q.key && q.choices && q.choices.length >= 2 &&
-      q.choices.some((choice, i) => mxChoiceKey(choice, i) === q.key)
-    ), [subject]);
+    const all = useMemo(() => mcqDedicatedPool(subject), [subject]);
     const [topic, setTopic] = useState("all");
     const [collection, setCollection] = useState(initialSetId);
     const [count, setCount] = useState(10);
@@ -6962,22 +7080,26 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       h("div", { className: "page-head" }, h("div", null, h("h1", { className: "page-title" }, "Multiple-choice quiz"),
         h("p", { className: "muted" }, "One question at a time. See the explanation, then move on.")),
         h("button", { className: "btn", onClick: onExit }, "Back to Practice")),
-      phase === "setup" ? h("div", { className: "panel mcq-shell" },
-        h("h2", null, "Build your quiz"),
-        h("div", { className: "grid-2 tight" },
-          h(Field, { label: "Topic" }, h("select", { value: topic, onChange: e => setTopic(e.target.value) },
+      phase === "setup" ? h("div", { className: "panel mcq-shell bsa-v156-setup" },
+        h("div", { className:"bsa-v156-setup-head" },
+          h("span", {className:"bsa-v156-mascot", "aria-hidden":"true"},"✿"),
+          h("div", null, h("span", {className:"panel-kicker"},"YOUR MINI STUDY QUEST"),
+            h("h2", null, "Make a little quiz ✨"),
+            h("p", {className:"muted"},"Choose your chapter, pick a collection, and grow your confidence one question at a time."))),
+        h("div", { className: "grid-2 tight bsa-v156-quiz-grid" },
+          h(Field, { label: "📚 Choose your topic" }, h("select", { value: topic, onChange: e => { setTopic(e.target.value); setCollection("all"); } },
             h("option", { value: "all" }, "All topics"),
             topics.map(t => h("option", { key: t.id, value: t.id }, `${t.code ? t.code + " · " : ""}${t.title}`)))),
-          h(Field, { label: "Questions" }, h("select", { value: count, onChange: e => setCount(Number(e.target.value)) },
+          h(Field, { label: "✨ How many questions?" }, h("select", { value: count, onChange: e => setCount(Number(e.target.value)) },
             [5,10,15,20,30,50].map(n => h("option", { value: n, key: n }, n))))),
-        h(Field, { label: "Question collection" }, h("select", { value: collection, onChange: e => setCollection(e.target.value) },
+        h(Field, { label: "🗂️ MCQ collection" }, h("select", { value: collection, onChange: e => setCollection(e.target.value) },
           h("option", { value: "all" }, "All collections"),
-          [...(subject.mcqSets || []), ...(subject.psets || []).filter(x => (x.problems || []).some(q => (q.choices || []).length >= 2))].map(x => h("option", { key:x.id, value:x.id }, x.title)))),
-        h("p", { className: "muted" }, `${eligible.length} eligible questions from the dedicated MCQ bank and any legacy MCQs. Each needs an answer key (A–D).`),
+          (subject.mcqSets || []).filter(x => all.some(q => q.setId === x.id && (topic === "all" || q.topicId === topic))).map(x => h("option", { key:x.id, value:x.id }, `${x.title} · ${all.filter(q => q.setId === x.id && (topic === "all" || q.topicId === topic)).length} questions`)))),
+        h("p", { className: "muted" }, `${eligible.length} questions match your selected topic and collection. Only MCQ Library collections are included.`),
         h("div", { className: "step-actions" },
-          h("button", { className: "btn primary", disabled: !eligible.length, onClick: start }, "Start quiz"),
-          h("button", { className: "btn", onClick: () => go("nlm", { pid: "mcq-quiz" }) }, "Generate MCQ questions")),
-        !eligible.length && h("p", { className: "muted small" }, "No questions yet. Open AI Study Prompts, choose Multiple-choice quiz (importable), and import its JSON into your MCQ bank.")
+          h("button", { className: "btn primary", disabled: !eligible.length, onClick: start }, "Let's go! →"),
+          h("button", { className: "btn", onClick: () => go("nlm", { pid: "mcq-quiz" }) }, "Create more MCQs")),
+        !eligible.length && h("p", { className: "muted small" }, "No MCQs match this topic. Open the MCQ Library to assign your collection to T1, T2, etc., or import a new MCQ collection.")
       ) : phase === "run" && current ? h("div", { className: "panel mcq-shell" },
         h("div", { className: "mcq-progress bsa-quiz-progress" },
           h("span", { className: "bsa-quiz-count" }, "QUESTION ", h("strong", null, pos + 1), h("span", null, ` / ${paper.length}`)),
@@ -7049,6 +7171,13 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
           h("button",{className:"btn",onClick:()=>{setOpenId(null);setQuery("");setLimit(20);}},"← All collections"),
           h("button",{className:"btn primary",onClick:()=>onPractice(current.id)},"Practice this collection")),
         h("h3", {className:"mcq-library-title"},current.title),
+        h("div", {className:"bsa-mcq-classify"},
+          h("label", null, "Collection topic", h("select", {
+            value: current.topicId || mcqAssignedTopic(subject,current) || "",
+            onChange: e => update(st => { const entry=(st.mcqSets || []).find(x => x.id === current.id); if(entry) { entry.topicId=e.target.value || null; entry.topicText=e.target.value ? (studyTopics(st).find(t => t.id === e.target.value) || {}).title || "" : ""; } })
+          }, h("option",{value:""},"Unassigned — all topics only"),
+            studyTopics(subject).map(t => h("option",{key:t.id,value:t.id},`${t.code || t.id} · ${t.title}`)))),
+          h("p",{className:"muted small"},"Assign T1, T2, etc. once for older collections. Topic filters will then use only matching questions.")),
         current.source && h("p",{className:"muted small"},`Source: ${current.source}`),
         h("input",{className:"search mcq-library-search",type:"search",value:query,onChange:e=>{setQuery(e.target.value);setLimit(20);},placeholder:"Search questions or subtopics…","aria-label":"Search multiple-choice questions"}),
         h("div",{className:"mcq-library-questions"},entries.slice(0,limit).map((q,i)=>{
@@ -7098,13 +7227,23 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
   /* A written-answer drill is checked against the source solution. Only a
      single numeric answer is auto-compared; descriptive answers and entries
      require the student to evaluate their own work against the worked key. */
-  function PsWrittenDrill({set,onMark,onExit}){
-    const problems=(set.problems||[]).slice().sort((a,b)=>(a.no||0)-(b.no||0));
+  /* v157: self-assessed written problem drill. Keeps answers and IDs local,
+     reuses the existing Mistake Log, and never claims to auto-grade essays. */
+  function PsWrittenDrill({set,subject,update,onMark,onExit}){
+    const base=(set.problems||[]).slice().sort((a,b)=>(a.no||0)-(b.no||0));
+    const randomOrder=arr=>{const copy=arr.slice();for(let i=copy.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[copy[i],copy[j]]=[copy[j],copy[i]];}return copy;};
+    const [randomized,setRandomized]=useState(false);
+    const [problems,setProblems]=useState(()=>base);
     const [pos,setPos]=useState(0);
     const [drafts,setDrafts]=useState({});
     const [revealed,setRevealed]=useState({});
     const [marked,setMarked]=useState({});
+    const [editingNote,setEditingNote]=useState(null);
+    const [notes,setNotes]=useState({});
+    const [checks,setChecks]=useState({});
     const p=problems[pos];
+    const labelFor=p=>`${set.title}, problem ${p.no}: ${p.title}`;
+    const existingFor=p=>(subject.mistakes||[]).find(m=>m.question===labelFor(p)&&m.status!=="Cleared");
     if(!p)return h("div",{className:"panel ps-written-drill"},"This set has no problems yet.",h("button",{className:"btn",onClick:onExit},"Back to set"));
     const answer=drafts[p.id]||"";
     const checked=!!revealed[p.id];
@@ -7112,32 +7251,89 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const single=/^(?:₱|PHP\s*)?\s*[-(]?\s*[\d,]+(?:\.\d+)?\s*\)?\s*$/i;
     const num=t=>{const v=t.replace(/PHP|₱|,/gi,"").trim();return v.startsWith("(")&&v.endsWith(")")?-Number(v.slice(1,-1)):Number(v);};
     const numeric=single.test(answer.trim())&&single.test(expected);
-    const matches=numeric && Math.abs(num(answer)-num(expected))<=0.005;
-    const next=()=>{if(pos<problems.length-1)setPos(v=>v+1);else onExit();};
-    return h("div",{className:"ps-written-drill panel"},
-      h("div",{className:"ps-written-top"},h("div",null,h("span",{className:"panel-kicker"},"WRITE · CHECK · CORRECT"),h("h2",null,"Problem-solving drill"),h("p",{className:"muted small"},set.title)),
+    const matches=numeric&&Math.abs(num(answer)-num(expected))<=0.005;
+    const next=()=>{setEditingNote(null);if(pos<problems.length-1)setPos(v=>v+1);else onExit();};
+    const toggleRandom=()=>{
+      const newMode=!randomized;
+      if((pos>0||Object.keys(revealed).length>0)&&!window.confirm("Change question order and return to the first question? Your typed answers and marks will be kept."))return;
+      setRandomized(newMode);setProblems(newMode?randomOrder(base):base.slice());setPos(0);setEditingNote(null);
+    };
+    const startMistakeEditor=()=>{
+      const old=existingFor(p);
+      setNotes(v=>({...v,[p.id]:{wrong:v[p.id]?.wrong??old?.wrong??answer,correct:v[p.id]?.correct??old?.correct??psPlain(p.answer||""),trap:v[p.id]?.trap??old?.trap??""}}));
+      setEditingNote(p.id);
+    };
+    const saveMistake=()=>{
+      const data=notes[p.id]||{};
+      const name=labelFor(p);
+      update(s=>{
+        s.mistakes=s.mistakes||[];
+        let entry=s.mistakes.find(m=>m.question===name&&m.status!=="Cleared");
+        if(!entry){entry={id:uid("m"),date:today(),question:name,topicId:set.topicId||null,topicText:set.topicText||"",status:"Active"};s.mistakes.unshift(entry);}
+        entry.wrong=data.wrong||"";entry.correct=data.correct||"";entry.trap=data.trap||"";
+      });
+      setEditingNote(null);
+    };
+    const markMiss=()=>{
+      if(!marked[p.id])onMark(p.id,"miss");
+      setMarked(v=>({...v,[p.id]:"miss"}));
+      startMistakeEditor();
+    };
+    const markGot=()=>{if(!marked[p.id])onMark(p.id,"got");setMarked(v=>({...v,[p.id]:"got"}));};
+    const note=notes[p.id]||{};
+    const checklist=checks[p.id]||{};
+    return h("div",{className:"ps-written-drill panel bsa-v157-drill"},
+      h("div",{className:"ps-written-top"},
+        h("div",null,h("span",{className:"panel-kicker"},"PRACTICE STUDIO · PROBLEM SETS"),h("h2",null,"Solve. Compare. Improve."),h("p",{className:"muted small"},set.title)),
         h("button",{className:"btn",onClick:onExit},"Exit drill")),
-      h("div",{className:"muted small"},`Problem ${pos+1} of ${problems.length}`),
-      h("div",{className:"progress"},h("span",{style:{width:`${100*(pos+1)/problems.length}%`}})),
-      h("article",{className:"ps-written-question"},
+      h("div",{className:"bsa-v157-toolbar"},
+        h("div",{className:"bsa-v157-position"},h("strong",null,`Question ${pos+1} / ${problems.length}`),h("span",{className:"muted small"},`${Object.keys(marked).length} marked`)),
+        h("button",{type:"button",className:`btn bsa-v157-shuffle ${randomized?"primary":""}`,onClick:toggleRandom,"aria-pressed":randomized},randomized?"🔀 Shuffle on":"⇄ Shuffle questions")),
+      h("div",{className:"progress",role:"progressbar","aria-valuenow":pos+1,"aria-valuemin":1,"aria-valuemax":problems.length},h("span",{style:{width:`${100*(pos+1)/problems.length}%`}})),
+      h("article",{className:"bsa-v157-question"},
+        h("div",{className:"bsa-v157-step"},"01 · THE QUESTION"),
         h("h3",null,`#${p.no||pos+1} · ${p.title||"Accounting problem"}`),
-        h(PsMd,{text:p.problem||""}),
-        (p.req||[]).length>0&&h("div",{className:"ps-req"},h("strong",null,"Required"),h("ol",null,p.req.map((r,i)=>h("li",{key:i},psInline(r))))),
-        h("label",{className:"ps-written-label",htmlFor:"ps-written-entry"},"Your answer / computation / journal entry"),
-        h("textarea",{id:"ps-written-entry",rows:6,value:answer,disabled:checked,onChange:e=>setDrafts(v=>({...v,[p.id]:e.target.value})),placeholder:"Type your answer and supporting calculation here. You can use multiple lines."}),
-        !checked ? h("button",{className:"btn primary",disabled:!answer.trim(),onClick:()=>setRevealed(v=>({...v,[p.id]:true}))},"Check my answer") :
-        h("div",{className:"ps-written-feedback"},
-          h("div",{className:`ps-written-feedback-heading${numeric?(matches?" match":" no-match"):""}`},
-            numeric ? matches?"Amount matches the answer key":"Amount differs from the answer key":"Compare your work with the worked solution"),
-          !numeric&&h("p",{className:"muted small"},"Descriptions, multi-part computations, and journal entries cannot be reliably auto-graded here. Compare each part with the model answer before marking your result."),
-          p.answer&&h("div",{className:"study-answer-step"},h("strong",null,"Answer key"),h(PsMd,{text:p.answer})),
-          p.approach&&h("div",{className:"study-answer-step"},h("strong",null,"Approach"),h(PsMd,{text:p.approach})),
-          p.solution&&h("div",{className:"study-answer-step"},h("strong",null,"Worked solution"),h(PsMd,{text:p.solution})),
-          p.trap&&h("div",{className:"study-answer-trap"},h("strong",null,"Common mistake"),h(PsMd,{text:p.trap})),
-          h("div",{className:"ps-written-actions"},
-            h("button",{className:"btn",disabled:!!marked[p.id],onClick:()=>{onMark(p.id,"miss");setMarked(v=>({...v,[p.id]:"miss"}));}},"Missed it · review again"),
-            h("button",{className:"btn primary",disabled:!!marked[p.id],onClick:()=>{onMark(p.id,"got");setMarked(v=>({...v,[p.id]:"got"}));}},"Got it"),
-            h("button",{className:"btn",onClick:next},pos===problems.length-1?"Finish drill":"Next problem →")))));
+        h("div",{className:"bsa-v157-problem-body"},h(PsMd,{text:p.problem||""})),
+        (p.req||[]).length>0&&h("div",{className:"ps-req"},h("strong",null,"Required"),h("ol",null,p.req.map((r,i)=>h("li",{key:i},psInline(r)))))),
+      !checked&&h("section",{className:"bsa-v157-draft"},
+        h("div",{className:"bsa-v157-step"},"02 · YOUR ATTEMPT"),
+        h("label",{className:"ps-written-label",htmlFor:"ps-written-entry"},"Type your answer, computation, or journal entry"),
+        h("textarea",{id:"ps-written-entry",rows:7,value:answer,onChange:e=>setDrafts(v=>({...v,[p.id]:e.target.value})),placeholder:"Work it out first. Show your computations or journal entries here…"}),
+        h("div",{className:"bsa-v157-actions"},
+          h("span",{className:"muted small"},"Your answer stays on this device while the drill is open."),
+          h("button",{className:"btn primary",disabled:!answer.trim(),onClick:()=>setRevealed(v=>({...v,[p.id]:true}))},"Compare with solution →"))),
+      checked&&h("section",{className:"bsa-v157-results"},
+        h("div",{className:"bsa-v157-step"},"02 · COMPARE THE ANSWERS"),
+        h("div",{className:`bsa-v157-result-status ${numeric?(matches?"is-match":"is-different"):"is-manual"}`},
+          h("strong",null,numeric?(matches?"✓ Your numerical answer matches":"↗ Your numerical answer differs"):"Compare each part of your solution"),
+          h("span",null,numeric?"Check classifications, reasoning, and supporting calculations too.":"Multi-part answers and journal entries require self-checking; the dashboard does not pretend to grade them automatically.")),
+        h("div",{className:"bsa-v157-compare"},
+          h("div",{className:"bsa-v157-compare-panel"},
+            h("div",{className:"bsa-v157-compare-label"},"YOUR WORK"),
+            h("pre",{className:"bsa-v157-user-answer"},answer),
+            h("button",{className:"btn",onClick:()=>{setRevealed(v=>({...v,[p.id]:false}));setEditingNote(null);}},"Edit my answer")),
+          h("div",{className:"bsa-v157-compare-panel model"},
+            h("div",{className:"bsa-v157-compare-label"},"MODEL ANSWER"),
+            p.answer?h(PsMd,{text:p.answer}):h("p",{className:"muted"},"No answer key recorded."),
+            p.approach&&h("div",{className:"bsa-v157-method"},h("strong",null,"How to approach it"),h(PsMd,{text:p.approach})))),
+        p.solution&&h("details",{className:"bsa-v157-solution",open:true},h("summary",null,"Full worked solution"),h(PsMd,{text:p.solution})),
+        p.trap&&h("div",{className:"bsa-v157-trap"},h("strong",null,"⚠ Common trap"),h(PsMd,{text:p.trap})),
+        h("div",{className:"bsa-v157-selfcheck"},h("strong",null,"My comparison checklist"),
+          [ ["amount","Amounts and calculations"],["classification","Classification / accounting treatment"],["reasoning","Reasoning and required parts"] ].map(([key,title])=>
+            h("label",{key},h("input",{type:"checkbox",checked:!!checklist[key],onChange:e=>setChecks(v=>({...v,[p.id]:{...(v[p.id]||{}),[key]:e.target.checked}}))}),title))),
+        h("div",{className:"bsa-v157-mark-row"},
+          h("button",{className:"btn bsa-v157-miss",onClick:markMiss},marked[p.id]==="miss"?"✎ Edit my mistake notes":"Missed it · add notes"),
+          h("button",{className:"btn primary",disabled:!!marked[p.id],onClick:markGot},marked[p.id]==="got"?"✓ Marked as got it":"✓ Got it"),
+          h("button",{className:"btn",onClick:next},pos===problems.length-1?"Finish drill":"Next problem →")),
+        marked[p.id]&&h("p",{className:"bsa-v157-saved-state"},marked[p.id]==="miss"?"Marked for review. Add or edit your Mistake Log notes below.":"Marked as understood. You can continue to the next problem."),
+        editingNote===p.id&&h("div",{className:"bsa-v157-notes"},
+          h("div",{className:"bsa-v157-step"},"03 · LEARN FROM THE MISTAKE"),
+          h("h3",null,"Edit this Mistake Log entry"),
+          h("p",{className:"muted small"},"These notes are saved to the existing Mistake Log entry, not to a separate list."),
+          h("label",null,"My answer / what I did",h("textarea",{rows:3,value:note.wrong||"",onChange:e=>setNotes(v=>({...v,[p.id]:{...v[p.id],wrong:e.target.value}}))})),
+          h("label",null,"Correct answer / treatment",h("textarea",{rows:3,value:note.correct||"",onChange:e=>setNotes(v=>({...v,[p.id]:{...v[p.id],correct:e.target.value}}))})),
+          h("label",null,"Why I missed it / rule to remember",h("textarea",{rows:3,value:note.trap||"",onChange:e=>setNotes(v=>({...v,[p.id]:{...v[p.id],trap:e.target.value}}))})),
+          h("div",{className:"bsa-v157-actions"},h("button",{className:"btn",onClick:()=>setEditingNote(null)},"Close without saving notes"),h("button",{className:"btn primary",onClick:saveMistake},"Save Mistake Log notes")))));
   }
 
   function PracticeView({ subject, update, toast, go, init, settings, setSettings, openEditor, data }) {
@@ -7674,11 +7870,19 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
           h("input", { type: "checkbox", defaultChecked: (() => { try { return localStorage.getItem("bsa_quiz_audio_v154") === "on"; } catch (_) { return false; } })(),
             onChange: e => { try { localStorage.setItem("bsa_quiz_audio_v154", e.target.checked ? "on" : "off"); } catch (_) {} if (e.target.checked) playQuizFeedbackSound("select"); } }),
           h("span", null, "Enable quiz sounds"))),
+        h("div", {className:"bsa-v156-theme-picker"},
+          h("label",{htmlFor:"bsa-quiz-theme"},"Choose your sound theme"),
+          h("select",{id:"bsa-quiz-theme", defaultValue:(()=>{try{return localStorage.getItem('bsa_quiz_audio_theme_v156')||'bubble';}catch(_){return 'bubble';}})(),
+            onChange:e=>{try{localStorage.setItem('bsa_quiz_audio_theme_v156',e.target.value);}catch(_){} playQuizFeedbackSound('correct',true);}},
+            QUIZ_SOUND_THEMES.map(([id,title])=>h("option",{key:id,value:id},title))),
+          h("p",{className:"muted small"},"Bubble Pop, Starlight, Cozy Chimes, Pixel Pals or Tiny Bells. Choose the vibe you like."),
+          h("div",{className:"bsa-v156-preview-row"},
+            [["🫧 Tap","select"],["💚 Correct","correct"],["🌷 Try again","wrong"],["🏆 Finish","finish"]].map(([title,kind])=>h("button",{key:kind,type:"button",className:"btn",onClick:()=>playQuizFeedbackSound(kind,true)},title)))),
         h("div", { className: "bsa-v155-audio-controls" },
           h("label", { htmlFor: "bsa-quiz-volume" }, "Sound volume"),
           h("input", { id: "bsa-quiz-volume", type: "range", min: "0", max: "100", step: "5", defaultValue: (() => { try { return localStorage.getItem("bsa_quiz_audio_volume_v155") || "45"; } catch (_) { return "45"; } })(),
             onChange: e => { try { localStorage.setItem("bsa_quiz_audio_volume_v155", e.target.value); } catch (_) {} } }),
-          h("button", { type: "button", className: "btn", onClick: () => playQuizFeedbackSound("correct", true) }, "Preview sound")
+          h("button", { type: "button", className: "btn", onClick: () => playQuizFeedbackSound("correct", true) }, "Preview correct sound")
         ),
 
       sayOK() && h(Field, { label: `Reading speed: ${Math.round((settings.speakRate || 1) * 100)}%`, hint: "Used by Read aloud during a review." }, h("input", { type: "range", min: "0.6", max: "1.6", step: "0.1", value: settings.speakRate || 1, onChange: (e) => set("speakRate", Number(e.target.value)) })),
@@ -11486,7 +11690,7 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
       toast("Mistake saved (duplicates skipped)");
     };
     const toggleAll = () => { setReveal((v) => { setLocalPref("psRevealAll", !v); return !v; }); };
-    if(writtenDrill)return h("section",{className:"view ps-set"},h(PsWrittenDrill,{set,onMark:mark,onExit:()=>setWrittenDrill(false)}));
+    if(writtenDrill)return h("section",{className:"view ps-set"},h(PsWrittenDrill,{set,subject,update,onMark:mark,onExit:()=>setWrittenDrill(false)}));
     return h(
       "section",
       { className: "view ps-set" },
