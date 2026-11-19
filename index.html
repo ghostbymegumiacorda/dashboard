@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500..800&display=swap">
 <style>
-/* NotebookLM mathematical expressions: legible without external scripts. */
+/* AI mathematical expressions: legible without external scripts. */
 .math-inline { display:inline; font-family: Georgia, "Times New Roman", serif; font-size:1.04em; white-space:normal; }
 .math-display { display:block; width:fit-content; max-width:100%; margin:.6rem 0; overflow-x:auto; font-family:Georgia,"Times New Roman",serif; font-size:1.08em; line-height:1.5; }
 .math-frac { display:inline-flex; vertical-align:middle; flex-direction:column; text-align:center; line-height:1.3; margin:0 .15em; }
@@ -918,7 +918,7 @@ input.gc-name.big { font-family: var(--display); font-size: 1.1rem; }
 .gc-ret-state { font-weight: 700; font-size: .9rem; }
 .gc-ret-state.ok { color: var(--ok); } .gc-ret-state.warn { color: var(--warn); } .gc-ret-state.bad { color: var(--bad); }
 .gc-mini.risk { border-color: var(--bad); }
-/* ---------- NotebookLM prompt library ---------- */
+/* ---------- AI prompt library ---------- */
 .nlm-group { margin: .4rem 0 .7rem; }
 .nlm-group-head { display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; margin-bottom: .35rem; }
 .nlm-chips { display: flex; flex-wrap: wrap; gap: .4rem; }
@@ -2179,51 +2179,7 @@ html,body,#root{max-width:100%;overflow-x:clip}
 .bsa-shortcut-symbol{width:23px;text-align:center;font-size:18px}
 @media(max-width:700px){.bsa-shortcut-anchor.mobile .bsa-shortcut-menu{left:0;top:calc(100% + 10px)}}
 </style>
-<style id="bsa-v139-responsive-recovery">
-*,*::before,*::after{box-sizing:border-box}
-html,body,#root{width:100%;height:100%;margin:0;padding:0;min-height:0}
-body{overflow:hidden}
-#root>.shell{display:grid;grid-template-columns:clamp(210px,18vw,260px) minmax(0,1fr);grid-template-rows:minmax(0,1fr);width:100%;height:100dvh;min-height:0;max-width:none;overflow:hidden}
-#root>.shell>.rail{grid-column:1;grid-row:1;display:flex;flex-direction:column;min-width:0;min-height:0;height:100%;overflow-y:auto;overflow-x:hidden}
-#root>.shell>.mobilebar{display:none}
-#root>.shell>.content{grid-column:2;grid-row:1;display:block;width:100%;max-width:none;min-width:0;min-height:0;height:100%;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(32px + env(safe-area-inset-bottom,0px))}
-#root>.shell>.content .view{min-width:0;max-width:100%}
-#root>.shell>.content>.workspace-topbar{max-width:none!important;box-sizing:border-box}
-.bsa-v108-top-grid{display:grid!important;grid-template-columns:minmax(0,1.6fr) minmax(270px,1fr)!important;gap:16px!important;min-width:0}
-.bsa-v108-top-grid>*{min-width:0;max-width:100%}
-.bsa-v108-top-grid>.life-home-widget{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:12px!important;min-width:0!important;max-width:100%!important;overflow:hidden!important}
-.bsa-v108-top-grid .life-home-character,.bsa-v108-top-grid .life-home-copy{width:100%!important;min-width:0!important;max-width:100%!important;flex:0 0 auto!important;overflow-wrap:anywhere}
-.bsa-v108-top-grid .life-launch-actions{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:8px!important;width:100%!important;min-width:0!important}
-.bsa-v108-top-grid .life-launch-actions>*{min-width:0!important;max-width:100%!important;width:100%!important;white-space:normal!important}
-.ai-wrap{min-width:0;width:100%;max-width:100%}
-.ai-log{min-height:clamp(220px,42dvh,560px)!important;min-width:0;overflow-wrap:anywhere}
-.ai-bar,.ai-row{min-width:0;max-width:100%}
-.ai-row textarea{min-width:0}
-@media(max-width:1150px){.bsa-v108-top-grid{grid-template-columns:minmax(0,1fr)!important}}
-@media(min-width:701px) and (max-width:1024px){
- #root>.shell{grid-template-columns:210px minmax(0,1fr)}
- #root>.shell>.rail{display:flex!important}
- #root>.shell>.mobilebar{display:none!important}
- #root>.shell>.content{grid-column:2!important;grid-row:1!important}
-}
-@media(max-width:700px){
- #root>.shell{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);height:100dvh}
- #root>.shell>.rail{display:none!important}
- #root>.shell>.mobilebar{display:flex!important;grid-column:1;grid-row:1;min-width:0}
- #root>.shell>.content{grid-column:1!important;grid-row:2!important;width:100%;height:100%;min-height:0;padding-bottom:calc(90px + env(safe-area-inset-bottom,0px))}
- .bsa-v108-top-grid{grid-template-columns:minmax(0,1fr)!important}
- .ai-log{min-height:30dvh!important}
-}
-</style><style id="bsa-v140-tested-grid">
-html,body,#root{height:100%!important;min-height:0!important;margin:0!important;padding:0!important}
-#root>.shell{display:grid!important;grid-template-columns:clamp(210px,18vw,260px) minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr)!important;height:100dvh!important;min-height:0!important;overflow:hidden!important}
-#root>.shell>.rail{display:flex!important;grid-column:1!important;grid-row:1!important;width:100%!important;max-width:100%!important;min-width:0!important;height:100%!important;min-height:0!important;overflow-y:auto!important}
-#root>.shell>.mobilebar{display:none!important}
-#root>.shell>.content{display:block!important;grid-column:2!important;grid-row:1!important;min-width:0!important;min-height:0!important;width:100%!important;height:100%!important;max-height:100%!important;overflow-y:auto!important;overflow-x:hidden!important}
-#root>.shell>.content>.workspace-topbar{width:calc(100% + 2 * var(--app-pad,24px))!important;max-width:none!important;box-sizing:border-box!important}
-@media(min-width:701px) and (max-width:1024px){#root>.shell{grid-template-columns:210px minmax(0,1fr)!important}}
-@media(max-width:700px){#root>.shell{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto minmax(0,1fr)!important}#root>.shell>.rail{display:none!important}#root>.shell>.mobilebar{display:flex!important;grid-column:1!important;grid-row:1!important}#root>.shell>.content{grid-column:1!important;grid-row:2!important;height:100%!important}}
-</style><style id="bsa-v143-update-in-navigation">
+<style id="bsa-v143-update-in-navigation">
 /* Update actions belong to the navigation, not a floating screen overlay. */
 #bsa-update-control{position:relative;display:block;z-index:25;width:100%;font:inherit;min-width:0}
 #bsa-update-control button{font:inherit;cursor:pointer;touch-action:manipulation}
@@ -2241,72 +2197,6 @@ html,body,#root{height:100%!important;min-height:0!important;margin:0!important;
 #bsa-update-control[data-place="mobile"] #bsa-update-button{width:36px;height:36px;min-height:36px;padding:0;justify-content:center;border:1px solid currentColor;border-radius:10px}
 #bsa-update-control[data-place="mobile"] .bsa-update-text{display:none}
 #bsa-update-control[data-place="mobile"] .bsa-update-symbol{font-size:19px}
-</style>
-<style id="bsa-v142-tutor-flex-repair">
-/* Repair the specific regression: v140's display:block on .content was
-   overriding the Ask workspace flex container from v122. */
-#root>.shell>.content:has(> .ai-wrap) {
-  display:flex!important;
-  flex-direction:column!important;
-  align-items:stretch!important;
-  min-height:0!important;
-  overflow:hidden!important;
-  padding-bottom:env(safe-area-inset-bottom,0px)!important;
-}
-#root>.shell>.content:has(> .ai-wrap)>.workspace-topbar {
-  flex:0 0 auto!important;
-  width:100%!important;
-  max-width:none!important;
-  margin-left:0!important;
-  margin-right:0!important;
-}
-#root>.shell>.content>.ai-wrap {
-  display:flex!important;
-  flex-direction:column!important;
-  flex:1 1 0!important;
-  height:auto!important;
-  min-height:0!important;
-  max-height:none!important;
-  min-width:0!important;
-  width:100%!important;
-  max-width:1480px!important;
-  overflow:hidden!important;
-  margin:0 auto!important;
-  padding:clamp(12px,2vw,24px)!important;
-  gap:10px!important;
-}
-#root>.shell>.content>.ai-wrap>.ai-log {
-  flex:1 1 0!important;
-  display:flex!important;
-  flex-direction:column!important;
-  min-height:0!important;
-  height:auto!important;
-  max-height:none!important;
-  overflow-y:auto!important;
-  overflow-x:hidden!important;
-  overscroll-behavior:contain;
-  border:1px solid var(--line)!important;
-  border-radius:12px!important;
-  padding:12px!important;
-}
-#root>.shell>.content>.ai-wrap>.ai-bar {
-  flex:0 0 auto!important;
-  position:relative!important;
-  bottom:auto!important;
-  margin:0!important;
-  max-width:100%!important;
-}
-#root>.shell>.content>.ai-wrap>.ask-compact-head,
-#root>.shell>.content>.ai-wrap>.ai-ctx,
-#root>.shell>.content>.ai-wrap>.ask-context-details {
-  flex:0 0 auto!important;
-  min-width:0!important;
-}
-@media (max-width:700px) {
- #root>.shell>.content:has(> .ai-wrap){height:100%!important}
- #root>.shell>.content>.ai-wrap {padding:12px!important}
- #root>.shell>.content>.ai-wrap>.ai-log {min-height:0!important;max-height:none!important}
-}
 </style>
 <style id="bsa-v145-sharing-actions">
 .bsa-publish-hero{display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding:16px 18px;margin-bottom:20px;border:1px solid var(--line);border-radius:var(--r-lg,16px);background:var(--surface-2,var(--surface));}
@@ -2342,6 +2232,121 @@ html,body,#root{height:100%!important;min-height:0!important;margin:0!important;
 .mcq-feedback{border-top:1px solid var(--line,rgba(127,127,127,.3));padding:16px 0;margin:16px 0;line-height:1.6}
 .mcq-feedback>strong{display:block;margin-bottom:8px}
 @media(max-width:700px){.mcq-entry{align-items:stretch}.mcq-entry>.step-actions{width:100%;flex-wrap:wrap}.mcq-shell{padding:14px}.mcq-choice{padding:12px}}
+</style>
+<style id="bsa-v149-unified-layout">
+/* One layout owner. Main content and navigation scroll independently. */
+*,*::before,*::after {box-sizing:border-box}
+html,body,#root{margin:0!important;padding:0!important;width:100%!important;height:100%!important;min-height:0!important}
+html,body{overflow:hidden!important;background:var(--bg)}
+#root>.shell{
+ display:grid!important;grid-template-columns:clamp(210px,18vw,260px) minmax(0,1fr)!important;
+ grid-template-rows:minmax(0,1fr)!important;width:100%!important;max-width:none!important;
+ height:100vh!important;height:100dvh!important;min-height:0!important;
+ overflow:hidden!important;margin:0!important;padding:0!important;
+}
+#root>.shell>.rail{
+ display:flex!important;flex-direction:column!important;grid-column:1!important;grid-row:1!important;
+ width:100%!important;min-width:0!important;max-width:100%!important;min-height:0!important;
+ height:100%!important;overflow-x:hidden!important;overflow-y:auto!important;
+ -webkit-overflow-scrolling:touch;
+}
+#root>.shell>.mobilebar{display:none!important}
+#root>.shell>.content{
+ display:block!important;grid-column:2!important;grid-row:1!important;
+ width:100%!important;max-width:none!important;min-width:0!important;min-height:0!important;
+ height:100%!important;max-height:100%!important;
+ overflow-x:hidden!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch;
+ padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))!important;
+}
+#root>.shell>.content>.workspace-topbar{
+ display:flex;flex-wrap:wrap;max-width:100%!important;width:100%!important;
+ margin-left:0!important;margin-right:0!important;box-sizing:border-box!important;
+}
+#root>.shell>.content .view{min-width:0;max-width:100%}
+.bsa-v108-top-grid{display:grid!important;grid-template-columns:minmax(0,1.6fr) minmax(270px,1fr)!important;gap:16px!important;min-width:0}
+.bsa-v108-top-grid>*{min-width:0;max-width:100%}
+.bsa-v108-top-grid>.life-home-widget{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:12px!important;min-width:0!important;max-width:100%!important;overflow:hidden!important}
+.bsa-v108-top-grid .life-home-character,.bsa-v108-top-grid .life-home-copy{width:100%!important;min-width:0!important;max-width:100%!important;flex:0 0 auto!important;overflow-wrap:anywhere}
+.bsa-v108-top-grid .life-launch-actions{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:8px!important;width:100%!important;min-width:0!important}
+.bsa-v108-top-grid .life-launch-actions>*{min-width:0!important;max-width:100%!important;width:100%!important;white-space:normal!important}
+/* Tutor: make the transcript flexible and its input always reachable. */
+#root>.shell>.content:has(> .ai-wrap){display:flex!important;flex-direction:column!important;align-items:stretch!important;overflow:hidden!important;padding-bottom:env(safe-area-inset-bottom,0px)!important}
+#root>.shell>.content:has(> .ai-wrap)>.workspace-topbar{flex:0 0 auto!important}
+#root>.shell>.content>.ai-wrap{
+ display:flex!important;flex-direction:column!important;flex:1 1 0!important;
+ width:100%!important;max-width:1480px!important;min-width:0!important;min-height:0!important;
+ height:auto!important;max-height:none!important;overflow:hidden!important;
+ margin:0 auto!important;padding:clamp(12px,2vw,24px)!important;gap:10px!important;
+}
+#root>.shell>.content>.ai-wrap>.ai-log{
+ display:flex!important;flex-direction:column!important;flex:1 1 0!important;
+ min-height:0!important;height:auto!important;max-height:none!important;
+ overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior:contain;
+ border:1px solid var(--line)!important;border-radius:12px!important;padding:12px!important;
+}
+#root>.shell>.content>.ai-wrap>.ai-bar{flex:0 0 auto!important;position:relative!important;bottom:auto!important;max-width:100%!important;margin:0!important}
+#root>.shell>.content>.ai-wrap>.ask-compact-head,
+#root>.shell>.content>.ai-wrap>.ai-ctx,
+#root>.shell>.content>.ai-wrap>.ask-context-details{flex:0 0 auto!important;min-width:0!important}
+@media(max-width:1150px){.bsa-v108-top-grid{grid-template-columns:minmax(0,1fr)!important}}
+@media(min-width:701px) and (max-width:1024px){
+ #root>.shell{grid-template-columns:210px minmax(0,1fr)!important}
+}
+@media(max-width:700px){
+ #root>.shell{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto minmax(0,1fr)!important}
+ #root>.shell>.rail{display:none!important}
+ #root>.shell>.mobilebar{display:flex!important;grid-column:1!important;grid-row:1!important;min-width:0!important}
+ #root>.shell>.content{grid-column:1!important;grid-row:2!important;height:100%!important;max-height:100%!important;padding-bottom:calc(72px + env(safe-area-inset-bottom,0px))!important}
+ #root>.shell>.content:has(> .ai-wrap){padding-bottom:env(safe-area-inset-bottom,0px)!important}
+ #root>.shell>.content>.ai-wrap{padding:12px!important}
+ .bsa-v108-top-grid{grid-template-columns:minmax(0,1fr)!important}
+}
+</style>
+<style id="bsa-v150-practice-design">
+/* Design tokens are derived from active theme; no fixed light-only panels. */
+.mcq-quiz{--study-stroke:var(--line,rgba(127,127,127,.26));--study-wash:var(--card,var(--surface,transparent));--study-accent:var(--accent,#0b835b)}
+.mcq-quiz .page-head{margin-bottom:22px}
+.mcq-quiz .mcq-shell{max-width:960px;width:100%;border-radius:22px;padding:clamp(20px,3.2vw,38px);box-shadow:0 10px 30px rgba(0,0,0,.035)}
+.mcq-quiz .mcq-progress{font-size:.94rem;gap:16px}
+.mcq-quiz .mcq-progress strong{font-size:1.03rem}
+.mcq-quiz .mcq-track{height:8px;margin:16px 0 25px;border-radius:100px}
+.mcq-quiz .mcq-track>span{border-radius:100px}
+.mcq-quiz .mcq-question{font-size:clamp(1.12rem,1.3vw,1.38rem);line-height:1.6;font-weight:750;letter-spacing:-.018em;border-left:4px solid var(--study-accent);padding:14px 17px;margin:17px 0 24px;background:color-mix(in srgb,var(--study-accent) 7%,transparent);border-radius:0 12px 12px 0}
+.mcq-quiz .mcq-options{gap:12px}
+.mcq-quiz .mcq-choice{position:relative;border-radius:15px;padding:16px 18px;min-height:64px;align-items:center;gap:15px;transition:border-color .15s,background .15s,transform .15s,box-shadow .15s;background:var(--study-wash)}
+.mcq-quiz .mcq-choice>strong{border-radius:10px;width:36px;height:36px;flex-basis:36px;font-size:.92rem;border:1px solid var(--study-stroke)}
+.mcq-quiz .mcq-choice:hover:not(:disabled){border-color:var(--study-accent);transform:translateY(-1px);box-shadow:0 5px 14px rgba(0,0,0,.06)}
+.mcq-quiz .mcq-choice:focus-visible,.ps-prob button:focus-visible{outline:3px solid var(--study-accent);outline-offset:3px}
+.mcq-quiz .mcq-choice.selected{background:color-mix(in srgb,var(--study-accent) 8%,var(--study-wash));border-width:2px}
+.mcq-quiz .mcq-choice.correct{background:color-mix(in srgb,#16a56e 11%,var(--study-wash));border-color:#16a56e}
+.mcq-quiz .mcq-choice.wrong{background:color-mix(in srgb,#de6268 10%,var(--study-wash));border-color:#de6268}
+.mcq-quiz .mcq-choice:disabled{opacity:1}
+.study-feedback-card{margin:22px 0!important;padding:21px!important;border:1px solid var(--study-stroke)!important;border-left:4px solid #16a56e!important;border-radius:16px;background:color-mix(in srgb,#16a56e 6%,var(--study-wash));line-height:1.7}
+.study-feedback-card.is-incorrect{border-left-color:#de6268!important;background:color-mix(in srgb,#de6268 6%,var(--study-wash))}
+.study-feedback-head{display:flex;gap:5px;flex-direction:column;margin-bottom:12px}.study-feedback-head strong{font-size:1.1rem}.study-feedback-head>span{font-size:.84rem;opacity:.8}
+.study-feedback-card p{margin:.5em 0}.study-feedback-card .md{overflow-wrap:anywhere}
+.mcq-bank{margin-bottom:18px}.mcq-bank summary{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;cursor:pointer}.mcq-bank-line{display:flex;gap:12px;justify-content:space-between;align-items:center;padding:12px 0;border-top:1px solid var(--line,rgba(127,127,127,.2))}.mcq-bank-line small{display:inline-block;margin-left:7px}
+/* Real problem sets and all practice review modes */
+.ps-prob.study-question-card{border:1px solid var(--line,rgba(127,127,127,.26));border-radius:18px;overflow:hidden;padding:clamp(16px,2.2vw,26px);margin-bottom:18px;background:var(--card,var(--surface,transparent));box-shadow:0 5px 23px rgba(0,0,0,.035)}
+.study-question-card>.ps-prob-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-bottom:17px;margin-bottom:18px;border-bottom:1px solid var(--line,rgba(127,127,127,.2))}
+.study-question-card .ps-no{border-radius:9px;display:inline-grid;place-items:center;min-width:34px;min-height:34px;font-size:.9rem}
+.study-question-card>.md{font-size:1.02rem;line-height:1.72;overflow-wrap:anywhere}
+.study-question-card .ps-req{border-radius:12px;margin:18px 0;padding:14px 17px;background:color-mix(in srgb,var(--accent,#0b835b) 6%,transparent)}
+.study-question-card .ps-choices{display:grid;gap:9px;margin:18px 0;padding:0;list-style:none}
+.study-question-card .ps-choices li{padding:12px 15px;border:1px solid var(--line,rgba(127,127,127,.25));border-radius:11px}
+.study-question-card .ps-acts{border-top:1px solid var(--line,rgba(127,127,127,.2));padding-top:16px;margin-top:19px;gap:9px;flex-wrap:wrap}
+.study-answer-panel{margin-top:18px!important;padding:0!important;border:1px solid var(--line,rgba(127,127,127,.24));border-radius:16px;overflow:hidden;background:color-mix(in srgb,var(--accent,#0b835b) 3%,var(--card,var(--surface,transparent)))}
+.study-answer-panel>div{padding:17px 21px!important;margin:0!important;border-bottom:1px solid var(--line,rgba(127,127,127,.15))}.study-answer-panel>div:last-child{border-bottom:0}
+.study-answer-panel .ps-label{display:block;font-size:.75rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-bottom:9px;opacity:.78}
+.study-answer-panel .ps-answer{border-left:4px solid #16a56e;background:color-mix(in srgb,#16a56e 7%,transparent)}
+.study-answer-panel .study-answer-trap{border-left:4px solid #e0a045;background:color-mix(in srgb,#e0a045 7%,transparent)}
+.study-answer-panel .md{line-height:1.73;overflow-wrap:anywhere}
+.drill,.drill.compute{max-width:930px;margin-inline:auto}.drill .drill-q,.drill .drill-a,.drill .calc-result{border-radius:16px;overflow-wrap:anywhere}
+.calc-result{padding:20px!important;margin-top:18px!important;border:1px solid var(--line,rgba(127,127,127,.26));box-shadow:0 6px 19px rgba(0,0,0,.03)}
+.calc-result.ok{border-left:4px solid #16a56e}.calc-result.bad{border-left:4px solid #de6268}
+.calc-result>strong{display:block;font-size:1.12rem;margin-bottom:12px}.calc-steps{line-height:1.75}
+@media(max-width:700px){.mcq-quiz .mcq-shell{border-radius:15px;padding:16px}.mcq-quiz .mcq-choice{padding:13px;min-height:58px}.mcq-quiz .mcq-question{font-size:1.1rem}.study-question-card .ps-acts{gap:8px}.study-answer-panel>div{padding:14px!important}.mcq-bank-line{align-items:flex-start;flex-wrap:wrap}}
+@media(prefers-reduced-motion:reduce){.mcq-quiz .mcq-choice{transition:none!important;transform:none!important}}
 </style>
 </head>
 <body>
@@ -2925,9 +2930,10 @@ if(!window.React||!window.ReactDOM){document.getElementById('root').innerHTML='<
       drills: drillsIn.ok,
       drillBad: drillsIn.bad,
       lectures: lp.lectures,
-      psets: lp.psets
+      psets: lp.psets,
+      mcqSets: lp.mcqSets || []
     };
-    if (!res.topics.length && !res.cards.length && !res.mistakes.length && !res.quizzes.length && !res.grading && !res.book && !res.drills.length && !res.lectures.length && !res.psets.length) {
+    if (!res.topics.length && !res.cards.length && !res.mistakes.length && !res.quizzes.length && !res.grading && !res.book && !res.drills.length && !res.lectures.length && !res.psets.length && !res.mcqSets.length) {
       if (res.drillBad.length) throw new Error(`None of the computation drills could be used. ${res.drillBad[0]}`);
       throw new Error("The JSON was read, but no topics, flashcards, mistakes, quiz scores, grading system, textbook map, computation drills, lectures or problem sets were recognised. Compare it with the template on the right.");
     }
@@ -2979,14 +2985,14 @@ if(!window.React||!window.ReactDOM){document.getElementById('root').innerHTML='<
       s.grading = gcMergeStructure(s.grading, p.grading);
       addedGrading = true;
     }
-    const lpr = (p.lectures && p.lectures.length) || (p.psets && p.psets.length) ? psApply(s, p) : { addedLectures: 0, updatedLectures: 0, addedSets: 0, addedProblems: 0 };
+    const lpr = (p.lectures && p.lectures.length) || (p.psets && p.psets.length) || (p.mcqSets && p.mcqSets.length) ? psApply(s, p) : { addedLectures: 0, updatedLectures: 0, addedSets: 0, addedProblems: 0 };
     return { addedTopics, addedCards, addedMistakes: p.mistakes.length, addedQuizzes: p.quizzes.length, addedGrading, addedBook, addedDrills, skipped, ...lpr };
   }
   function previewPartial(subject, p) {
     const unmatched = p.cards.filter((c) => !matchTopic(subject, c.topicText) && !p.topics.some((t) => norm(t.title) === norm(c.topicText))).length;
     return { ...p, unmatched };
   }
-  const NOTEBOOKLM_PROMPT = `Using my uploaded sources, create study material for [TOPIC, e.g. PAS 37 Provisions].
+  const NOTEBOOKLM_PROMPT = `Using the materials I provide, create study material for [TOPIC, e.g. PAS 37 Provisions].
 Reply with valid JSON only — no commentary and no code fences — in exactly this shape:
 
 {
@@ -3294,7 +3300,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
      - Offline edits are counted and kept; they upload as soon as a connection is back. */
   const GH_KEYS = { user: "bsa_gh_user", repo: "bsa_gh_repo", token: "bsa_gh_key", path: "bsa_gh_path" };
   const SYNC_META_KEY = "bsa_sync_meta";
-  const COLLS = ["topics", "cards", "mistakes", "quizzes", "sessions", "days", "lectures", "psets", "classes", "attend", "tasks", "aiAttempts", "learningEvents"];
+  const COLLS = ["topics", "cards", "mistakes", "quizzes", "sessions", "days", "lectures", "psets", "mcqSets", "classes", "attend", "tasks", "aiAttempts", "learningEvents"];
   const TOMB_DAYS = 120;
   const POLL_MS = 3e4;
   const lsGet = (k) => {
@@ -3351,6 +3357,20 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         if (!Array.isArray(s[c])) s[c] = [];
         s[c] = s[c].filter((x) => x && typeof x === "object");
         for (const x of s[c]) if (!x.id) x.id = uid(c[0]);
+      }
+      // Legacy imports titled "Multiple-choice practice" are stored separately.
+      // All question IDs, marks and set IDs are preserved; mixed problem sets stay put.
+      s.mcqSets = s.mcqSets || [];
+      if (Array.isArray(s.psets)) {
+        const keep = [];
+        for (const set of s.psets) {
+          const isMcq = /^(?:multiple[ -]?choice (?:practice|quiz)|mcq (?:practice|quiz|bank))/i.test(String(set.title || ""));
+          const valid = Array.isArray(set.problems) && set.problems.length > 0 && set.problems.every(p => Array.isArray(p.choices) && p.choices.length >= 2 && /^[A-D]\b/i.test(String(p.answer || "").trim()));
+          if (isMcq && valid) {
+            if (!s.mcqSets.some(x => x.id === set.id || norm(x.title) === norm(set.title))) s.mcqSets.push(set);
+          } else keep.push(set);
+        }
+        s.psets = keep;
       }
       for (const t of s.topics) if (Array.isArray(t.sub)) for (const x of t.sub) if (x && !x.id) x.id = uid("s");
     }
@@ -4134,7 +4154,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         h("div", { className: "pack-main" }, h("strong", null, p.name), h("span", { className: "muted small" }, p.blurb), h("span", { className: "muted small" }, `${plural(p.topics.length, "topic")} · ${plural(p.cards.length, "flashcard")}`)),
         h("div", { className: "dr-acts" }, h("button", { className: "btn primary", disabled: !!busy, onClick: () => add(p, "new") }, "Add as new subject"), h("button", { className: "btn ghost", disabled: !!busy, onClick: () => add(p, "current") }, `Into ${drShort(active ? active.name : "this", 16)}`))
       ))),
-      h("p", { className: "muted small" }, "Want a subject that isn't here? Open the NotebookLM prompts tab, use \u201cSyllabus \u2192 roadmap\u201d with your course outline loaded, and paste the reply into Import.")
+      h("p", { className: "muted small" }, "Want a subject that isn't here? Open the AI prompts tab, use \u201cSyllabus \u2192 roadmap\u201d with your course outline loaded, and paste the reply into Import.")
     );
   }
   function DataModal({ data, update, replaceAll, onClose, toast, downloads, initTab, prefill }) {
@@ -4262,7 +4282,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       }
     };
     const preview = parsed && parsed.kind === "partial" ? previewPartial(target === "__new" ? { topics: parsed.topics } : data.subjects.find((s) => s.id === target) || active, parsed) : null;
-    return /* @__PURE__ */ React.createElement(Modal, { title: "Import & export data", onClose, wide: true }, /* @__PURE__ */ React.createElement("div", { className: "tabs small", role: "tablist" }, [["import", "Import"], ["packs", "Starter packs"], ["github", "GitHub sync"], ["export", "Export backup"], ["prompt", "NotebookLM prompts"]].map(([k, l]) => /* @__PURE__ */ React.createElement("button", { key: k, role: "tab", "aria-selected": tab === k, className: tab === k ? "on" : "", onClick: () => setTab(k) }, l))), tab === "import" && /* @__PURE__ */ React.createElement("div", { className: "import" }, /* @__PURE__ */ React.createElement("p", { className: "muted" }, "Paste JSON from NotebookLM (or any AI tutor), a backup file’s contents, or plain text with lines starting “Q:” and “A:”."), /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React.createElement(Modal, { title: "Import & export data", onClose, wide: true }, /* @__PURE__ */ React.createElement("div", { className: "tabs small", role: "tablist" }, [["import", "Import"], ["packs", "Starter packs"], ["github", "GitHub sync"], ["export", "Export backup"], ["prompt", "AI Study Prompts"]].map(([k, l]) => /* @__PURE__ */ React.createElement("button", { key: k, role: "tab", "aria-selected": tab === k, className: tab === k ? "on" : "", onClick: () => setTab(k) }, l))), tab === "import" && /* @__PURE__ */ React.createElement("div", { className: "import" }, /* @__PURE__ */ React.createElement("p", { className: "muted" }, "Paste JSON from AI (or any AI tutor), a backup file’s contents, or plain text with lines starting “Q:” and “A:”."), /* @__PURE__ */ React.createElement(
       "textarea",
       {
         className: "code",
@@ -5034,7 +5054,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const rated = subject.cards.filter((c) => c.conf).length;
     const recall = rated ? Math.round(subject.cards.filter((c) => c.conf === "known").length / rated * 100) : null;
     if (!topics.length) {
-      return /* @__PURE__ */ React.createElement("section", { className: "view bsa-v108-home" }, /* @__PURE__ */ welcomeJohn, newcomerCard, dailyPath, h("div",{className:"bsa-v108-top-grid"},academicOverview,lifeWidget), academicQuickActions, React.createElement("div", { className: "hero" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h1", null, subject.name), subject.code && /* @__PURE__ */ React.createElement("p", { className: "muted" }, subject.code))), /* @__PURE__ */ React.createElement("div", { className: "empty big" }, /* @__PURE__ */ React.createElement(Icon, { name: "roadmap", size: 32 }), /* @__PURE__ */ React.createElement("h2", null, "Set up ", subject.name), /* @__PURE__ */ React.createElement("p", { className: "muted" }, "Add your syllabus topics one by one, or paste them as JSON from NotebookLM. Today’s plan appears once you have topics."), /* @__PURE__ */ React.createElement("div", { className: "row-center" }, /* @__PURE__ */ React.createElement("button", { className: "btn primary", onClick: () => go("roadmap", { add: true }) }, "Add a topic"), h("button", { className: "btn", onClick: () => go("data", { tab: "packs" }) }, "Browse starter packs"), /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: () => go("data") }, "Import data"))));
+      return /* @__PURE__ */ React.createElement("section", { className: "view bsa-v108-home" }, /* @__PURE__ */ welcomeJohn, newcomerCard, dailyPath, h("div",{className:"bsa-v108-top-grid"},academicOverview,lifeWidget), academicQuickActions, React.createElement("div", { className: "hero" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h1", null, subject.name), subject.code && /* @__PURE__ */ React.createElement("p", { className: "muted" }, subject.code))), /* @__PURE__ */ React.createElement("div", { className: "empty big" }, /* @__PURE__ */ React.createElement(Icon, { name: "roadmap", size: 32 }), /* @__PURE__ */ React.createElement("h2", null, "Set up ", subject.name), /* @__PURE__ */ React.createElement("p", { className: "muted" }, "Add your syllabus topics one by one, or paste them as JSON from AI. Today’s plan appears once you have topics."), /* @__PURE__ */ React.createElement("div", { className: "row-center" }, /* @__PURE__ */ React.createElement("button", { className: "btn primary", onClick: () => go("roadmap", { add: true }) }, "Add a topic"), h("button", { className: "btn", onClick: () => go("data", { tab: "packs" }) }, "Browse starter packs"), /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: () => go("data") }, "Import data"))));
     }
     const done = current ? current.sub.filter((s) => s.done).length : 0;
     const planned = (subject.sessions || []).filter((s) => s.date === today() && !s.done).sort(byTime);
@@ -5311,7 +5331,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     list.length ? /* @__PURE__ */ React.createElement("div", { className: "cards" }, list.map((c) => selectMode ? /* @__PURE__ */ React.createElement("label", { key: c.id, className: `vault-select-card${selected.includes(c.id) ? " is-selected" : ""}` },
       /* @__PURE__ */ React.createElement("input", { type: "checkbox", checked: selected.includes(c.id), onChange: () => toggleSelected(c.id), "aria-label": `Select ${c.q}` }),
       /* @__PURE__ */ React.createElement("span", { className: "vault-select-content" }, /* @__PURE__ */ React.createElement("strong", null, c.q), /* @__PURE__ */ React.createElement("span", null, c.a))
-    ) : /* @__PURE__ */ React.createElement(FlipCard, { key: c.id, subject, card: c, onRate: rate, onEdit: (card) => openEditor("card", card) }))) : /* @__PURE__ */ React.createElement("div", { className: "empty" }, /* @__PURE__ */ React.createElement("p", null, subject.cards.length ? "No cards match these filters." : "No flashcards yet."), /* @__PURE__ */ React.createElement("p", { className: "muted" }, subject.cards.length ? "Pick “All” or another topic." : "Add one, or paste a batch from NotebookLM through Import data.")));
+    ) : /* @__PURE__ */ React.createElement(FlipCard, { key: c.id, subject, card: c, onRate: rate, onEdit: (card) => openEditor("card", card) }))) : /* @__PURE__ */ React.createElement("div", { className: "empty" }, /* @__PURE__ */ React.createElement("p", null, subject.cards.length ? "No cards match these filters." : "No flashcards yet."), /* @__PURE__ */ React.createElement("p", { className: "muted" }, subject.cards.length ? "Pick “All” or another topic." : "Add one, or paste a batch from AI through Import data.")));
   }
   function MistakesView({ subject, update, toast, openEditor, init }) {
     var _a, _b;
@@ -5382,7 +5402,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     return /* @__PURE__ */ React.createElement(Modal, { title: "Quick add", onClose }, /* @__PURE__ */ React.createElement("div", { className: "big-options" }, items.map(([k, ic, l, d]) => /* @__PURE__ */ React.createElement("button", { key: k, className: "big-option", onClick: () => onPick(k) }, /* @__PURE__ */ React.createElement(Icon, { name: ic, size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, l), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, d))))));
   }
   function MoreSheet({ onPick, onClose, settings, setSettings, go }) {
-    return /* @__PURE__ */ React.createElement(Modal, { title: "More", onClose }, /* @__PURE__ */ React.createElement("div", { className: "big-options" }, h("button", { className: "big-option", onClick: () => go("ask") }, h(Icon, { name: "ask", size: 22 }), h("span", null, h("strong", null, "Ask"), h("br", null), h("span", { className: "muted" }, "A Gemini tutor that can see your roadmap, mistakes and grades"))), h("button", { className: "big-option", onClick: () => go("lectures") }, h(Icon, { name: "lecture", size: 22 }), h("span", null, h("strong", null, "Lectures"), h("br", null), h("span", { className: "muted" }, "Rules, treatments and traps for each topic"))), h("button", { className: "big-option", onClick: () => go("psets") }, h(Icon, { name: "pset", size: 22 }), h("span", null, h("strong", null, "Problem sets"), h("br", null), h("span", { className: "muted" }, "Problems by subtopic, with how to solve each one"))), h("button", { className: "big-option", onClick: () => go("class") }, h(Icon, { name: "subjects", size: 22 }), h("span", null, h("strong", null, "Class"), h("br", null), h("span", { className: "muted" }, "Timetable, attendance and what is due"))), h("button", { className: "big-option", onClick: () => go("grades") }, h(Icon, { name: "grade", size: 22 }), h("span", null, h("strong", null, "Grades"), h("br", null), h("span", { className: "muted" }, "Grade calculator, what-if, QPI summary and export"))), h("button", { className: "big-option", onClick: () => go("vault") }, h(Icon, { name: "cards", size: 22 }), h("span", null, h("strong", null, "Concept vault"), h("br", null), h("span", { className: "muted" }, "Browse, search and edit your flashcards"))), /* @__PURE__ */ React.createElement("button", { className: "big-option", onClick: () => onPick("subjects") }, /* @__PURE__ */ React.createElement(Icon, { name: "subjects", size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, "Subjects"), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "Add, rename or delete a subject"))), /* @__PURE__ */ React.createElement("button", { className: "big-option", onClick: () => onPick("data") }, /* @__PURE__ */ React.createElement(Icon, { name: "data", size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, "Import & export"), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "NotebookLM JSON, backups"))), /* @__PURE__ */ React.createElement("button", { className: "big-option", onClick: () => onPick("look") }, /* @__PURE__ */ React.createElement(Icon, { name: "look", size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, "Appearance"), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "Themes, text size, contrast")))), /* @__PURE__ */ React.createElement("p", { className: "field-label", style: { marginTop: "1rem" } }, "Quick theme"), /* @__PURE__ */ React.createElement(ThemeDots, { settings, setSettings }));
+    return /* @__PURE__ */ React.createElement(Modal, { title: "More", onClose }, /* @__PURE__ */ React.createElement("div", { className: "big-options" }, h("button", { className: "big-option", onClick: () => go("ask") }, h(Icon, { name: "ask", size: 22 }), h("span", null, h("strong", null, "Ask"), h("br", null), h("span", { className: "muted" }, "A Gemini tutor that can see your roadmap, mistakes and grades"))), h("button", { className: "big-option", onClick: () => go("lectures") }, h(Icon, { name: "lecture", size: 22 }), h("span", null, h("strong", null, "Lectures"), h("br", null), h("span", { className: "muted" }, "Rules, treatments and traps for each topic"))), h("button", { className: "big-option", onClick: () => go("psets") }, h(Icon, { name: "pset", size: 22 }), h("span", null, h("strong", null, "Problem sets"), h("br", null), h("span", { className: "muted" }, "Problems by subtopic, with how to solve each one"))), h("button", { className: "big-option", onClick: () => go("class") }, h(Icon, { name: "subjects", size: 22 }), h("span", null, h("strong", null, "Class"), h("br", null), h("span", { className: "muted" }, "Timetable, attendance and what is due"))), h("button", { className: "big-option", onClick: () => go("grades") }, h(Icon, { name: "grade", size: 22 }), h("span", null, h("strong", null, "Grades"), h("br", null), h("span", { className: "muted" }, "Grade calculator, what-if, QPI summary and export"))), h("button", { className: "big-option", onClick: () => go("vault") }, h(Icon, { name: "cards", size: 22 }), h("span", null, h("strong", null, "Concept vault"), h("br", null), h("span", { className: "muted" }, "Browse, search and edit your flashcards"))), /* @__PURE__ */ React.createElement("button", { className: "big-option", onClick: () => onPick("subjects") }, /* @__PURE__ */ React.createElement(Icon, { name: "subjects", size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, "Subjects"), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "Add, rename or delete a subject"))), /* @__PURE__ */ React.createElement("button", { className: "big-option", onClick: () => onPick("data") }, /* @__PURE__ */ React.createElement(Icon, { name: "data", size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, "Import & export"), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "AI JSON, backups"))), /* @__PURE__ */ React.createElement("button", { className: "big-option", onClick: () => onPick("look") }, /* @__PURE__ */ React.createElement(Icon, { name: "look", size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, "Appearance"), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "Themes, text size, contrast")))), /* @__PURE__ */ React.createElement("p", { className: "field-label", style: { marginTop: "1rem" } }, "Quick theme"), /* @__PURE__ */ React.createElement(ThemeDots, { settings, setSettings }));
   }
   /* =====================================================================
      Study features: spaced repetition, mistake retests, exam readiness,
@@ -6178,7 +6198,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         ),
         card && h(React.Fragment, null, h("span", { className: "muted small" }, "Answer", conf && h("span", { className: "cf-chip" }, "you said: " + CONF.find((x) => x.k === conf).label.toLowerCase())), h("p", { className: "drill-ans" }, card.a), card.tip && h("p", { className: "flash-tip" }, card.tip)),
         mistake && h(React.Fragment, null, h("span", { className: "muted small" }, "Correct answer"), h("p", { className: "drill-ans" }, mistake.correct || "(not recorded)"), mistake.wrong && h("p", { className: "muted small" }, "You first answered: ", mistake.wrong), mistake.trap && h("p", { className: "flash-tip" }, mistake.trap)),
-        prob && h(React.Fragment, null, prob.answer && h("div", { className: "ps-answer" }, h("span", { className: "ps-label" }, "Answer"), h(PsMd, { text: prob.answer })), prob.approach && h("div", { className: "ps-approach" }, h("span", { className: "ps-label" }, "How to approach it"), h(PsMd, { text: prob.approach })), prob.solution && h(PsMd, { text: prob.solution }), prob.trap && h("div", { className: "ps-trap" }, h("span", { className: "ps-label" }, "Watch out"), h(PsMd, { text: prob.trap }))),
+        prob && h(React.Fragment, null, prob.answer && h("div", { className: "ps-answer" }, h("span", { className: "ps-label" }, "Answer"), h(PsMd, { text: prob.answer })), prob.approach && h("div", { className: "ps-approach study-answer-step" }, h("span", { className: "ps-label" }, "How to approach it"), h(PsMd, { text: prob.approach })), prob.solution && h(PsMd, { text: prob.solution }), prob.trap && h("div", { className: "ps-trap study-answer-trap" }, h("span", { className: "ps-label" }, "Watch out"), h(PsMd, { text: prob.trap }))),
         card ? h(
           "div",
           { className: "grade-row" },
@@ -6807,11 +6827,11 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
             topics.map(t => h("option", { key: t.id, value: t.id }, `${t.code ? t.code + " · " : ""}${t.title}`)))),
           h(Field, { label: "Questions" }, h("select", { value: count, onChange: e => setCount(Number(e.target.value)) },
             [5,10,15,20,30,50].map(n => h("option", { value: n, key: n }, n))))),
-        h("p", { className: "muted" }, `${eligible.length} eligible multiple-choice questions from your problem sets. Each needs answer key A, B, C, or D.`),
+        h("p", { className: "muted" }, `${eligible.length} eligible questions from the dedicated MCQ bank and any legacy MCQs. Each needs an answer key (A–D).`),
         h("div", { className: "step-actions" },
           h("button", { className: "btn primary", disabled: !eligible.length, onClick: start }, "Start quiz"),
-          h("button", { className: "btn", onClick: () => go("nlm", { pid: "mcq-quiz" }) }, "Get NotebookLM MCQ prompt")),
-        !eligible.length && h("p", { className: "muted small" }, "No multiple-choice questions for this topic yet. Import a NotebookLM MCQ problem set, or add one in Problem sets.")
+          h("button", { className: "btn", onClick: () => go("nlm", { pid: "mcq-quiz" }) }, "Generate MCQ questions")),
+        !eligible.length && h("p", { className: "muted small" }, "No questions yet. Open AI Study Prompts, choose Multiple-choice quiz (importable), and import its JSON into your MCQ bank.")
       ) : phase === "run" && current ? h("div", { className: "panel mcq-shell" },
         h("div", { className: "mcq-progress" }, h("strong", null, `Question ${pos+1} of ${paper.length}`),
           h("span", { className: "muted" }, `${paper.filter(q => revealed[q.id]).length} reviewed`)),
@@ -6827,8 +6847,8 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
             onClick: () => setAnswers(a => ({...a, [current.id]: key})) },
             h("strong", null, String.fromCharCode(65+i)), h("span", null, h("span", { dangerouslySetInnerHTML: { __html: psMdHtml(String(choice).replace(/^\s*[A-Da-d]\s*[.)\]]\s*/, "")) } })));
         })),
-        revealed[current.id] && h("div", { className: "mcq-feedback", role: "status" },
-          h("strong", null, answers[current.id] === current.key ? "Correct" : `Correct answer: ${current.key.toUpperCase()}`),
+        revealed[current.id] && h("div", { className: `mcq-feedback study-feedback-card ${answers[current.id] === current.key ? "is-correct" : "is-incorrect"}`, role: "status" },
+          h("div", { className: "study-feedback-head" }, h("strong", null, answers[current.id] === current.key ? "✓ Correct answer" : `Review answer · ${current.key.toUpperCase()}`), h("span", null, answers[current.id] === current.key ? "You identified the right rule" : "Learn from this attempt")),
           current.why && h("div", null, h("div", { dangerouslySetInnerHTML: { __html: psMdHtml(current.why) } })),
           current.trap && h("p", null, h("strong", null, "Watch out: "), h("span", { dangerouslySetInnerHTML: { __html: psMdHtml(current.trap) } }))),
         h("div", { className: "step-actions" },
@@ -6888,7 +6908,15 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
           h("p", { className: "muted" }, "Choose a topic, answer one at a time, see why, and save missed questions to your Mistake Log.")),
         h("div", { className: "step-actions" },
           h("button", { className: "btn primary", onClick: () => setMode({kind:"mcq"}) }, "Start MCQ quiz"),
-          h("button", { className: "btn", onClick: () => go("nlm", {pid:"mcq-quiz"}) }, "NotebookLM quiz prompt"))),
+          h("button", { className: "btn", onClick: () => go("nlm", {pid:"mcq-quiz"}) }, "Generate quiz questions"))),
+      h("details", { className: "panel mcq-bank" },
+        h("summary", null, h("strong", null, "Multiple-choice question bank"),
+          h("span", { className: "muted small" }, `${(subject.mcqSets || []).length} collections · ${(subject.mcqSets || []).reduce((n, x) => n + (x.problems || []).length, 0)} questions`)),
+        h("p", { className: "muted small" }, "MCQ collections are saved separately from long-form Problem Sets. Existing questions in older mixed problem sets remain available for quizzes."),
+        (subject.mcqSets || []).map(set => h("div", { className: "mcq-bank-line", key: set.id },
+          h("span", null, h("strong", null, set.title), h("small", { className: "muted" }, ` · ${(set.problems || []).length} questions`)),
+          h("button", { className: "btn ghost", onClick: () => { if (!window.confirm(`Remove MCQ collection “${set.title}”? Export your data first if you need a backup.`)) return; update(s => { s.mcqSets = (s.mcqSets || []).filter(x => x.id !== set.id); }); } }, "Remove"))),
+        !(subject.mcqSets || []).length && h("p", { className: "muted small" }, "Import a generated MCQ collection to fill this bank.")),
       h(
         "div",
         { className: "practice-grid" },
@@ -6973,7 +7001,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const ids = new Set(exam && exam.covers && exam.covers.length ? exam.covers : studyTopics(subject).map((t) => t.id));
     const ok = (tid) => !tid || ids.has(tid);
     const mcq = [];
-    for (const s of subject.psets || []) {
+    for (const s of [...(subject.mcqSets || []), ...(subject.psets || [])]) {
       if (!ok(s.topicId)) continue;
       for (const p of s.problems) {
         const key = mxKey(p.answer);
@@ -7176,8 +7204,8 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
           h("div", { className: "ps-answer" }, h("span", { className: "ps-label" }, "Model answer"), h(PsMd, { text: p.ans })),
           h("div", { className: "grade-row two" }, h("button", { className: `grade g-again${mark[p.id] === "w" ? " on" : ""}`, onClick: () => setMark({ ...mark, [p.id]: "w" }) }, h("strong", null, "I missed it")), h("button", { className: `grade g-good${mark[p.id] === "r" ? " on" : ""}`, onClick: () => setMark({ ...mark, [p.id]: "r" }) }, h("strong", null, "I had it")))
         ),
-        p.why && !right(p) && h("div", { className: "ps-approach" }, h("span", { className: "ps-label" }, "How to get it"), h(PsMd, { text: p.why })),
-        p.trap && !right(p) && h("div", { className: "ps-trap" }, h("span", { className: "ps-label" }, "Watch out"), h(PsMd, { text: p.trap })),
+        p.why && !right(p) && h("div", { className: "ps-approach study-answer-step" }, h("span", { className: "ps-label" }, "How to get it"), h(PsMd, { text: p.why })),
+        p.trap && !right(p) && h("div", { className: "ps-trap study-answer-trap" }, h("span", { className: "ps-label" }, "Watch out"), h(PsMd, { text: p.trap })),
         h("p", { className: "muted small" }, p.src)
       ))
     );
@@ -7625,7 +7653,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     }
     return u > 0 ? { qpi: q / u, units: u, n } : null;
   }
-  // Read a grading system pasted from NotebookLM (or any AI), tolerant of key names and "30%" strings.
+  // Read a grading system pasted from AI (or any AI), tolerant of key names and "30%" strings.
   function gcFromJSON(src) {
     const o = src && (src.grading || src.gradingSystem || src.grading_system || src);
     if (!o || typeof o !== "object") return null;
@@ -7832,7 +7860,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     ];
     return gcZip(files);
   }
-  /* ----- NotebookLM prompt library: fills in your subject, topic and exam, for any course ----- */
+  /* ----- AI prompt library: fills in your subject, topic and exam, for any course ----- */
   const NLM_KINDS = [
     ["general", "General / mixed", "Adapt everything to how this subject is actually taught and tested in my sources."],
     ["calc", "Computation (accounting, math, stats, econ, finance)", "This subject is computation-heavy: include formulas, worked examples with real numbers, the order of steps, and the most common computation errors."],
@@ -7873,16 +7901,23 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
   const NLM_GROUPS = [
     ["setup", "Set up a subject", "Paste the reply into the Import tab"],
     ["make", "Make study material", "Paste the reply into the Import tab"],
-    ["chat", "Study in NotebookLM chat", "Use it right in NotebookLM"]
+    ["chat", "Interactive study coaching", "Use in any AI chat with your sources attached"]
   ];
-  const NLM_SOURCE_RULES = `SOURCE-ACCURACY RULES (apply throughout): Use ONLY the sources uploaded to this NotebookLM notebook. Follow their actual terminology, page/chapter scope and emphasis. Never invent definitions, dates, figures, citations, examples, standards or answer keys. If a required fact is not supported, omit the item rather than guess. Distinguish source-stated information from any newly constructed application problem; derive the answer carefully and check every number and distractor. Preserve key exceptions and qualifying conditions. Avoid duplicate questions and ambiguous wording. Prioritize understanding, discriminating similar concepts, retrieval practice and feedback on why tempting wrong answers fail. For each explanation, ground the rule in a named source title/chapter/page when identifiable; do not fabricate page numbers. For JSON outputs, place source references only in existing compatible text fields (e.g., tip, approach or solution), not in extra schema keys, and output strictly import-compatible JSON with no markdown fences.`;
+  const NLM_SOURCE_RULES = `SOURCE-ACCURACY RULES (apply throughout): Use ONLY the sources supplied or attached in this AI conversation. Follow their actual terminology, page/chapter scope and emphasis. Never invent definitions, dates, figures, citations, examples, standards or answer keys. If a required fact is not supported, omit the item rather than guess. Distinguish source-stated information from any newly constructed application problem; derive the answer carefully and check every number and distractor. Preserve key exceptions and qualifying conditions. Avoid duplicate questions and ambiguous wording. Prioritize understanding, discriminating similar concepts, retrieval practice and feedback on why tempting wrong answers fail. For each explanation, ground the rule in a named source title/chapter/page when identifiable; do not fabricate page numbers. For JSON outputs, place source references only in existing compatible text fields (e.g., tip, approach or solution), not in extra schema keys, and output strictly import-compatible JSON with no markdown fences.`;
   const NLM_PROMPTS = [
+    { id: "socratic", group: "chat", json: false, title: "Socratic tutor · one question", desc: "Never spoils the answer; probes your reasoning step by step.", make: (c) => `Act as my patient but demanding accountancy tutor for ${c.focus} in ${c.subject}. Use my attached sources. Assume I need the basics explained first, then use accurate formal terms. Ask ONE focused question at a time and wait. Do not reveal the answer even if I struggle; give a small clue, then ask me to try. After I answer, assess both correctness and reasoning, correct gaps, and ask one transfer question using a different example. Track recurring misconceptions within this chat. Do not invent material absent from the sources. ${c.kindHint}` },
+    { id: "why-wrong", group: "chat", json: false, title: "Why I got it wrong", desc: "Diagnose the exact misunderstanding before re-teaching it.", make: (c) => `I am studying ${c.focus} in ${c.subject}. I will paste a question, my answer and the official key. Diagnose my actual reasoning error rather than just repeating the correct answer. Separate misread facts, missing concept, wrong rule, arithmetic errors and careless slips. Explain the minimal rule I need using simple English then formal terminology. Contrast my answer with the correct answer, give one new example to test transfer, and ask me to retry WITHOUT giving the answer first. Use my source material as authority; if missing, say so. ${c.kindHint}` },
+    { id: "compare", group: "chat", json: false, title: "Confusing concepts comparator", desc: "Distinguishes near-identical standards, treatments and terms.", make: (c) => `For ${c.focus} in ${c.subject}, find concepts students commonly confuse in my supplied materials. Build a comparison table with definitions, recognition trigger or decision rule, core differences, exceptions, one realistic example per concept and exam traps. Then ask me one short scenario at a time where I must choose the correct rule AND defend why close alternatives fail. Check my answer before proceeding. Cite only available source sections. ${c.kindHint}` },
+    { id: "exam-map", group: "chat", json: false, title: "Exam coverage & gap analysis", desc: "Maps sources to testable rules and exposes uncovered areas.", make: (c) => `Audit coverage for ${c.focus} in ${c.subject} using my attached sources and any syllabus or test coverage. Make a checklist of every testable concept, prerequisite, exception, formula, and typical computation. Label each as covered, partially covered or absent from the provided sources—do not guess missing content. Rank weak areas by prerequisite importance and testability, not by invented exam probabilities. Propose a 30-minute active-recall plan and quiz me on the highest-value gap first, one question at a time. ${c.kindHint}` },
+    { id: "case-transfer", group: "chat", json: false, title: "Application & transfer cases", desc: "Builds new scenarios that require choosing the right treatment.", make: (c) => `Teach me to apply ${c.focus} in ${c.subject} to unfamiliar but source-consistent situations. Create five short cases increasing in difficulty, each with all needed facts, dates, numbers and assumptions. Ask only case 1 first. Require me to identify the rule, justify it, and compute or journalize if appropriate. When I answer, verify against the provided source and independently recheck arithmetic; explain the decision tree and an exception before moving on. Avoid scenarios you cannot support with the supplied material. ${c.kindHint}` },
+    { id: "teachback", group: "chat", json: false, title: "Teach-back mastery check", desc: "Tests whether you can explain the concept in your own words.", make: (c) => `Use the supplied materials for ${c.focus} in ${c.subject}. Ask me to teach the concept back in my own words, without notes. Assess my explanation for accuracy, missing conditions and overgeneralizations. Do not insist on textbook wording. Ask one precise follow-up question to expose gaps, then have me explain again in fewer words with one original example. Finish with a short, memorable distinction or checklist sourced from the material. ${c.kindHint}` },
+
     { id: "mcq-quiz", group: "make", json: true, title: "Multiple-choice quiz (importable)", desc: "High-quality, source-checked MCQs for the dedicated Practice quiz and Mock Exam.", make: (c) => `Create 20 original, rigorous multiple-choice questions on ${c.focus} for ${c.subject}, using my uploaded sources. Give 4 plausible choices per question; only ONE may be correct. Cover definitions, subtle distinctions, rule exceptions, short scenarios and numerical application if supported. Mix easy, medium and challenging questions, without repeating the same learning objective. The choices must not reveal the key by length, grammatical cues or obvious nonsense. Double-check each answer against the source and independently recompute numerical questions.
 ${NLM_JSON}
 
 {
   "subject": "${c.subject}",
-  "problemSets": [
+  "mcqSets": [
     { "topic": "${c.topicExample}", "title": "Multiple-choice practice — ${c.topicExample}", "source": "Actual titles or chapters of the supplied sources", "instructions": "Select one answer (A–D) for each item.", "problems": [
       { "no": 1, "subtopic": "Precise topic or skill", "title": "Short tested concept", "difficulty": "medium", "problem": "Complete standalone question with all necessary facts and amounts", "requirements": ["Select the ONE best answer."], "choices": ["A. Plausible option", "B. Plausible option", "C. Plausible option", "D. Plausible option"], "answer": "B. Correct answer text", "approach": "Rule that decides the answer and why it applies", "solution": "Correct: B. Explain the reasoning, show computations if applicable, and say why A, C, D are wrong. Name the source chapter/section where identifiable.", "trap": "A realistic misconception this question targets" }
     ] }
@@ -7905,7 +7940,7 @@ ${NLM_JSON}
 
 Rules: list topics in the order they are taught. Include every exam (prelim, midterm, semi-final, final, long tests) as its own entry with "kind": "exam". Use short codes T1, T2, T3… Only use dates that appear in my sources; otherwise leave "due" empty. ${c.kindHint}` },
     { id: "grading", group: "setup", json: true, title: "Syllabus → grade calculator", desc: "Reads the grading system (weights, class standing, letter grades, QPI) so the Grades calculator sets itself up.", make: (c) => GC_PROMPT(c.subject) },
-    { id: "cards", group: "make", json: true, title: "Core flashcards", desc: "15–25 cards on the ideas most likely to be tested.", make: (c) => `Using my uploaded sources, create 15 to 25 flashcards for ${c.focus} in ${c.subject}. Cover the ideas most likely to be tested, from basic to tricky.
+    { id: "cards", group: "make", json: true, title: "Core flashcards", desc: "15–25 cards on the ideas most likely to be tested.", make: (c) => `Using the materials I provide, create 15 to 25 flashcards for ${c.focus} in ${c.subject}. Cover the ideas most likely to be tested, from basic to tricky.
 ${NLM_JSON}
 
 {
@@ -7991,7 +8026,7 @@ Rules: ${c.topicRule} "score" is the number I got right and "items" is the total
 
 THE QUESTIONS AND MY ANSWERS:
 [Paste them here]` },
-    { id: "quiz", group: "chat", json: false, title: "Quiz me, one at a time", desc: "An interactive quiz in NotebookLM. At the end it gives JSON you can import.", make: (c) => `Quiz me on ${c.focus} for ${c.subject} using only my sources. Ask one question at a time and wait for my answer before continuing. Mix question types the way my teacher would: multiple choice, true or false, identification${c.kind === "calc" ? ", and short computations" : ", and short explanation"}. Start with an accessible question, adapt difficulty based on demonstrated accuracy, and revisit concepts I miss with a different scenario. Never reveal the answer before I respond. Ask questions that separate memorization from application.
+    { id: "quiz", group: "chat", json: false, title: "Quiz me, one at a time", desc: "An interactive quiz in AI. At the end it gives JSON you can import.", make: (c) => `Quiz me on ${c.focus} for ${c.subject} using only my sources. Ask one question at a time and wait for my answer before continuing. Mix question types the way my teacher would: multiple choice, true or false, identification${c.kind === "calc" ? ", and short computations" : ", and short explanation"}. Start with an accessible question, adapt difficulty based on demonstrated accuracy, and revisit concepts I miss with a different scenario. Never reveal the answer before I respond. Ask questions that separate memorization from application.
 
 After each answer: check my reasoning, explain the underlying rule in plain English first and formal terminology second, explain why other options are wrong, and cite the exact available source. Avoid overpraising guesses; ask me to explain a correct answer if my reasoning seems weak.
 
@@ -8064,11 +8099,11 @@ THE PART I'M STUCK ON:
     return h(
       "div",
       { className: "nlm" },
-      h("p", { className: "muted" }, "Pick a prompt. Your subject, topic list and next exam are filled in for you, so these work for any course, not just CFAS. Copy it into NotebookLM with your sources loaded."),
+      h("p", { className: "muted" }, "Choose a reusable AI study prompt. Your subject and topic are filled in automatically. Use any AI tool with your materials attached; verify that its response follows the source before importing JSON."),
       h(
         "div",
         { className: "grid-2" },
-        h(Field, { label: "Subject type", hint: "Changes what the prompt asks NotebookLM to focus on" }, h("select", { value: kind, onChange: (e) => pickKind(e.target.value) }, NLM_KINDS.map(([k, l]) => h("option", { key: k, value: k }, l)))),
+        h(Field, { label: "Subject type", hint: "Changes what the prompt asks AI to focus on" }, h("select", { value: kind, onChange: (e) => pickKind(e.target.value) }, NLM_KINDS.map(([k, l]) => h("option", { key: k, value: k }, l)))),
         h(Field, { label: "Topic" }, h("select", { value: topicId, onChange: (e) => setTopicId(e.target.value) }, h("option", { value: "" }, `Whole subject (${subject.name})`), studyTopics(subject).map((t) => h("option", { key: t.id, value: t.id }, `${t.code ? t.code + " " : ""}${t.title}`))))
       ),
       NLM_GROUPS.map(([g, gl, gh]) => h(
@@ -8601,7 +8636,7 @@ Rules: the numbers above are only an example of the format; use the real ones fr
         const s = others.find((x) => x.id === src);
         if (s) onStart(gcBlank(gcNorm(s.grading)));
       } }, "Copy weights from this subject")),
-      h("p", { className: "muted small" }, "Or open Setup after starting and paste your syllabus’s grading system from NotebookLM.")
+      h("p", { className: "muted small" }, "Or open Setup after starting and paste your syllabus’s grading system from AI.")
     );
   }
   function GcImportBox({ subject, change, toast }) {
@@ -8623,7 +8658,7 @@ Rules: the numbers above are only an example of the format; use the real ones fr
       }
       const inc = obj && gcFromJSON(obj);
       if (!inc) {
-        setErr("That doesn’t look like a grading system. Copy only the JSON part of NotebookLM’s reply.");
+        setErr("That doesn’t look like a grading system. Copy only the JSON part of AI’s reply.");
         return;
       }
       change((n) => {
@@ -8637,8 +8672,8 @@ Rules: the numbers above are only an example of the format; use the real ones fr
     return h(
       "div",
       null,
-      h("p", { className: "muted small" }, "1. Copy the prompt and send it to NotebookLM with your syllabus loaded. 2. Paste the JSON it returns here. Scores you already typed are kept wherever the names match."),
-      h("div", { className: "row-end", style: { justifyContent: "flex-start", marginBottom: ".5rem" } }, h("button", { className: "btn", onClick: async () => toast(await copyText(GC_PROMPT(`${subject.name}${subject.code ? ` (${subject.code})` : ""}`)) ? "Prompt copied. Paste it in NotebookLM." : "Couldn’t copy. Try the NotebookLM prompts in Import & export.") }, "Copy NotebookLM prompt")),
+      h("p", { className: "muted small" }, "1. Copy the prompt and send it to AI with your syllabus loaded. 2. Paste the JSON it returns here. Scores you already typed are kept wherever the names match."),
+      h("div", { className: "row-end", style: { justifyContent: "flex-start", marginBottom: ".5rem" } }, h("button", { className: "btn", onClick: async () => toast(await copyText(GC_PROMPT(`${subject.name}${subject.code ? ` (${subject.code})` : ""}`)) ? "Prompt copied. Paste it in AI." : "Couldn’t copy. Try the AI prompts in Import & export.") }, "Copy AI prompt")),
       h("textarea", { className: "code", rows: 6, value: raw, spellCheck: false, placeholder: '{ "grading": { "terms": [ … ], "scale": [ … ] } }', onChange: (e) => {
         setRaw(e.target.value);
         setErr("");
@@ -9284,7 +9319,7 @@ Rules: the numbers above are only an example of the format; use the real ones fr
   }
   const drEval = (src, scope) => drCompile(src)(scope || {});
 
-  /* ----- drill templates: read anything NotebookLM sends, store one clean shape ----- */
+  /* ----- drill templates: read anything AI sends, store one clean shape ----- */
   const DR_FMT = { money: "money", peso: "money", pesos: "money", php: "money", currency: "money", "₱": "money", count: "count", integer: "count", int: "count", units: "count", whole: "count", percent: "percent", percentage: "percent", pct: "percent", "%": "percent", number: "number", decimal: "number", plain: "number", numeric: "number" };
   const drFmtOf = (v, dflt) => DR_FMT[norm(v).replace(/ /g, "")] || DR_FMT[String(v || "").trim()] || dflt;
   const drDecimals = (x) => { const m = String(x).match(/\.(\d+)$/); return m ? m[1].length : 0; };
@@ -9547,7 +9582,7 @@ Rules: the numbers above are only an example of the format; use the real ones fr
     }
     return sets;
   }
-  // Pulls drill templates out of any JSON NotebookLM sends: { drills: [...] }, a bare list, or one template.
+  // Pulls drill templates out of any JSON AI sends: { drills: [...] }, a bare list, or one template.
   function drFromJSON(obj) {
     let raw = [];
     if (Array.isArray(obj)) raw = obj;
@@ -9626,7 +9661,7 @@ Rules: the numbers above are only an example of the format; use the real ones fr
   }
   const bkIsPages = (cs) => cs.length > 1 && cs.every((c) => typeof c.page === "number");
   // Adds or updates chapters by name. Links a chapter to a roadmap topic from its "topic" field,
-  // or from its own name when NotebookLM didn't send a "topic" field at all.
+  // or from its own name when AI didn't send a "topic" field at all.
   function bkMerge(subject, base, inc) {
     const out = { title: inc.title || base && base.title || "", author: inc.author || base && base.author || "", chapters: (base ? base.chapters : []).map(({ topicText, ...c }) => ({ ...c, id: /^bk_cfas_/.test(c.id) ? uid("bk") : c.id })) };
     let added = 0, updated = 0;
@@ -9674,7 +9709,7 @@ Rules: the numbers above are only an example of the format; use the real ones fr
     return b && b.chapters.length ? b : null;
   }
 
-  /* ----- NotebookLM prompts for both features (they also appear in Import & export → NotebookLM prompts) ----- */
+  /* ----- AI prompts for both features (they also appear in Import & export → AI prompts) ----- */
   const DR_EXAMPLES = {
     money: `{
       "topic": "TOPIC",
@@ -9790,7 +9825,7 @@ ${c.kindHint}` }
   function BkPanel({ subject, show, setShow, onEdit }) {
     const book = bkOf(subject);
     if (!book) {
-      return h("div", { className: "book panel" }, h("button", { className: "disclosure", onClick: onEdit }, h(Icon, { name: "book", size: 18 }), " Textbook map ", h("span", { className: "muted" }, "Not set up yet. Add the chapters, or import them from NotebookLM."), h("span", { className: "chev-i" }, h(Icon, { name: "plus", size: 16 }))));
+      return h("div", { className: "book panel" }, h("button", { className: "disclosure", onClick: onEdit }, h(Icon, { name: "book", size: 18 }), " Textbook map ", h("span", { className: "muted" }, "Not set up yet. Add the chapters, or import them from AI."), h("span", { className: "chev-i" }, h(Icon, { name: "plus", size: 16 }))));
     }
     const inScope = book.chapters.filter((c) => bkInScope(subject, c)).length;
     return h(
@@ -9833,10 +9868,10 @@ ${c.kindHint}` }
     const applyJSON = () => {
       const inc = bkFromJSON(bkParseJSON(raw), true);
       if (!inc) {
-        setMsg({ err: "That doesn’t look like a textbook map. Copy only the JSON part of NotebookLM’s reply.", note: "" });
+        setMsg({ err: "That doesn’t look like a textbook map. Copy only the JSON part of AI’s reply.", note: "" });
         return;
       }
-      merge(inc, "From NotebookLM");
+      merge(inc, "From AI");
       setRaw("");
     };
     const save = () => {
@@ -9874,11 +9909,11 @@ ${c.kindHint}` }
       },
       h("p", { className: "muted small" }, "List the chapters of your textbook with the page each one starts on. Link a chapter to a roadmap topic and it counts as “in your scope”."),
       h("div", { className: "grid-2" }, h(Field, { label: "Book title" }, h("input", { value: f.title, placeholder: "e.g. Conceptual Framework and Accounting Standards", onChange: (e) => setF((x) => ({ ...x, title: e.target.value })) })), h(Field, { label: "Author and edition", hint: "Optional" }, h("input", { value: f.author, placeholder: "e.g. Valix, 2024 edition", onChange: (e) => setF((x) => ({ ...x, author: e.target.value })) }))),
-      h("details", { className: "bk-box", open: !f.chapters.length }, h("summary", null, "Import from NotebookLM"), h(
+      h("details", { className: "bk-box", open: !f.chapters.length }, h("summary", null, "Import from AI"), h(
         "div",
         { className: "bk-box-body" },
-        h("p", { className: "muted small" }, "1. Copy the prompt and send it to NotebookLM with your textbook or syllabus loaded. 2. Paste the JSON it returns here. Chapters with the same title are updated, not doubled."),
-        h("div", { className: "row-end", style: { justifyContent: "flex-start" } }, h("button", { className: "btn", onClick: async () => toast(await copyText(nlmPromptFor(subject, "book")) ? "Prompt copied. Paste it in NotebookLM." : "Couldn’t copy. Try Import & export → NotebookLM prompts.") }, "Copy NotebookLM prompt")),
+        h("p", { className: "muted small" }, "1. Copy the prompt and send it to AI with your textbook or syllabus loaded. 2. Paste the JSON it returns here. Chapters with the same title are updated, not doubled."),
+        h("div", { className: "row-end", style: { justifyContent: "flex-start" } }, h("button", { className: "btn", onClick: async () => toast(await copyText(nlmPromptFor(subject, "book")) ? "Prompt copied. Paste it in AI." : "Couldn’t copy. Try Import & export → AI prompts.") }, "Copy AI prompt")),
         h("textarea", { className: "code", rows: 5, value: raw, spellCheck: false, placeholder: '{ "textbook": { "title": "…", "chapters": [ … ] } }', onChange: (e) => setRaw(e.target.value) }),
         h("div", { className: "row-end" }, h("button", { className: "btn primary", disabled: !raw.trim(), onClick: applyJSON }, "Add chapters"))
       )),
@@ -9914,7 +9949,7 @@ ${c.kindHint}` }
       "div",
       { className: "panel" },
       h("span", { className: "panel-kicker" }, h(Icon, { name: "chart", size: 16 }), " Computation drills"),
-      pool.length ? h("p", { className: "muted" }, anyRandom ? "Five problems with new numbers every time. Your score is saved as a quiz." : "Up to five problems from your list. Your score is saved as a quiz.") : h("p", { className: "muted" }, "No drills for this subject yet. Get problem templates from NotebookLM, or write your own."),
+      pool.length ? h("p", { className: "muted" }, anyRandom ? "Five problems with new numbers every time. Your score is saved as a quiz." : "Up to five problems from your list. Your score is saved as a quiz.") : h("p", { className: "muted" }, "No drills for this subject yet. Get problem templates from AI, or write your own."),
       pool.length > 0 && h("div", { className: "compute-sets" }, sets.map(([k, l]) => h("button", { key: k, className: "btn", onClick: () => onStart(k) }, l))),
       h("div", { className: "dr-panel-foot" }, h("button", { className: pool.length ? "link-btn" : "btn primary", onClick: onManage }, pool.length ? `Manage drills${drList(subject).length ? ` (${drList(subject).length})` : ""}` : "Set up drills"))
     );
@@ -10051,7 +10086,7 @@ ${c.kindHint}` }
       const obj = bkParseJSON(raw);
       const r = obj ? drFromJSON(obj) : { ok: [], bad: [] };
       if (!r.ok.length) {
-        setMsg({ err: r.bad.length ? `None of the drills could be used. ${r.bad[0]}` : "That doesn’t look like drills. Copy only the JSON part of NotebookLM’s reply.", note: "", bad: r.bad.slice(1, 6) });
+        setMsg({ err: r.bad.length ? `None of the drills could be used. ${r.bad[0]}` : "That doesn’t look like drills. Copy only the JSON part of AI’s reply.", note: "", bad: r.bad.slice(1, 6) });
         return;
       }
       const res = drApply(clone({ topics: subject.topics, drills: subject.drills || [] }), r.ok);
@@ -10081,11 +10116,11 @@ ${c.kindHint}` }
         footer: h(React.Fragment, null, h("button", { className: "btn", onClick: () => openEdit(null) }, h(Icon, { name: "plus", size: 16 }), " Add a drill"), h("span", { className: "spacer" }), h("button", { className: "btn ghost", onClick: onClose }, "Close"), (list.length > 0 || builtins > 0) && h("button", { className: "btn primary", onClick: () => onRun("all") }, "Start a mixed drill"))
       },
       h("p", { className: "muted small" }, "Each drill is a template: the app picks new numbers every time, checks your answer and shows the steps. Your score is saved as a quiz."),
-      h("details", { className: "bk-box", open: !list.length }, h("summary", null, "Get drills from NotebookLM"), h(
+      h("details", { className: "bk-box", open: !list.length }, h("summary", null, "Get drills from AI"), h(
         "div",
         { className: "bk-box-body" },
-        h("p", { className: "muted small" }, "1. Pick a topic and copy the prompt. 2. Send it to NotebookLM with your sources loaded. 3. Paste the JSON it returns here. Broken problems are skipped and listed, so nothing bad gets in."),
-        h("div", { className: "dr-prompt-row" }, h("select", { value: topicId, "aria-label": "Topic for the prompt", onChange: (e) => setTopicId(e.target.value) }, h("option", { value: "" }, `Whole subject (${subject.name})`), studyTopics(subject).map((t) => h("option", { key: t.id, value: t.id }, `${t.code ? t.code + " " : ""}${drShort(t.title, 44)}`))), h("button", { className: "btn", onClick: async () => toast(await copyText(nlmPromptFor(subject, "drills", topicId)) ? "Prompt copied. Paste it in NotebookLM." : "Couldn’t copy. Try Import & export → NotebookLM prompts.") }, "Copy NotebookLM prompt")),
+        h("p", { className: "muted small" }, "1. Pick a topic and copy the prompt. 2. Send it to AI with your sources loaded. 3. Paste the JSON it returns here. Broken problems are skipped and listed, so nothing bad gets in."),
+        h("div", { className: "dr-prompt-row" }, h("select", { value: topicId, "aria-label": "Topic for the prompt", onChange: (e) => setTopicId(e.target.value) }, h("option", { value: "" }, `Whole subject (${subject.name})`), studyTopics(subject).map((t) => h("option", { key: t.id, value: t.id }, `${t.code ? t.code + " " : ""}${drShort(t.title, 44)}`))), h("button", { className: "btn", onClick: async () => toast(await copyText(nlmPromptFor(subject, "drills", topicId)) ? "Prompt copied. Paste it in AI." : "Couldn’t copy. Try Import & export → AI prompts.") }, "Copy AI prompt")),
         h("textarea", { className: "code", rows: 5, value: raw, spellCheck: false, placeholder: '{ "drills": [ { "name": "…", "vars": { … }, "answer": "…" } ] }', onChange: (e) => setRaw(e.target.value) }),
         h("div", { className: "row-end" }, h("button", { className: "btn primary", disabled: !raw.trim(), onClick: importJSON }, "Add drills"))
       )),
@@ -10103,16 +10138,16 @@ ${c.kindHint}` }
           h("div", { className: "dr-row" }, h("div", { className: "dr-main" }, h("strong", null, t.name), h("span", { className: "muted small" }, tp ? `${tp.code ? tp.code + " " : ""}${drShort(tp.title, 40)}` : t.topicText ? `${drShort(t.topicText, 40)} (not on your roadmap)` : "Unsorted", " · ", drIsRandom(t) ? "new numbers each time" : "fixed numbers")), h("div", { className: "dr-acts" }, h("button", { className: "btn ghost", "aria-expanded": open, onClick: () => { setTryId(open ? null : t.id); setRoll((x) => x + 1); } }, open ? "Hide" : "Try"), h("button", { className: "btn ghost", onClick: () => openEdit(t) }, "Edit"), h("button", { className: "icon-btn", "aria-label": `Delete ${t.name}`, title: "Delete", onClick: () => del(t) }, "✕"))),
           open && trySample && (trySample.error ? h("p", { className: "error" }, trySample.error) : h(React.Fragment, null, h(DrSample, { p: trySample }), h("div", { className: "row-end" }, h("button", { className: "btn ghost", onClick: () => setRoll((x) => x + 1) }, "New numbers"))))
         );
-      })) : h("p", { className: "muted" }, builtins ? "You haven’t added any of your own yet." : "No drills yet. Import them from NotebookLM above, or add one by hand.")
+      })) : h("p", { className: "muted" }, builtins ? "You haven’t added any of your own yet." : "No drills yet. Import them from AI above, or add one by hand.")
     );
   }
 
   /* =====================================================================
      Lectures & problem sets (November 2026). Prefixes: ps / lx.
      Stored as subject.lectures and subject.psets (both in COLLS, so they
-     merge item by item across devices). Imported from NotebookLM JSON.
+     merge item by item across devices). Imported from AI JSON.
      ===================================================================== */
-  // NotebookLM often puts real line breaks inside JSON strings and leaves trailing commas.
+  // AI often puts real line breaks inside JSON strings and leaves trailing commas.
   function psRepairJSON(text) {
     let out = "", inStr = false, esc = false;
     for (const ch of String(text)) {
@@ -10143,7 +10178,7 @@ ${c.kindHint}` }
     return void 0;
   };
   const psArr = (v) => v === void 0 || v === null ? [] : Array.isArray(v) ? v : [v];
-  // Any value NotebookLM might send (string, list of steps, {a:…, b:…}) → markdown text.
+  // Any value AI might send (string, list of steps, {a:…, b:…}) → markdown text.
   function psS(v) {
     if (v === void 0 || v === null) return "";
     if (typeof v === "string") return v.replace(/\\n/g, "\n").replace(/\r\n?/g, "\n").trim();
@@ -10284,15 +10319,15 @@ ${c.kindHint}` }
   const psLooksSet = (x) => x && typeof x === "object" && Array.isArray(x.problems);
   const psLooksLecture = (x) => x && typeof x === "object" && (Array.isArray(x.sections) || Array.isArray(x.keyTerms)) && !Array.isArray(x.problems);
   function psFromJSON(obj) {
-    const lectures = [], psets = [];
+    const lectures = [], psets = [], mcqSets = [];
     if (Array.isArray(obj)) {
       for (const x of obj) {
-        if (psLooksSet(x)) { const s = psNormSet(x); if (s) psets.push(s); }
+        if (psLooksSet(x)) { const s = psNormSet(x); if (s) (/^(?:multiple[ -]?choice|mcq)/i.test(s.title) ? mcqSets : psets).push(s); }
         else if (psLooksLecture(x)) { const l = psNormLecture(x); if (l) lectures.push(l); }
       }
-      return { lectures, psets };
+      return { lectures, psets, mcqSets };
     }
-    if (!obj || typeof obj !== "object") return { lectures, psets };
+    if (!obj || typeof obj !== "object") return { lectures, psets, mcqSets };
     const topic = psPlain(psPick(obj, ["topic", "standard"]));
     for (const l of psArr(psPick(obj, ["lectures", "lecture", "lectureNotes", "lessons", "lessonNotes"]))) {
       const n = psNormLecture(l, topic);
@@ -10300,13 +10335,17 @@ ${c.kindHint}` }
     }
     for (const s of psArr(psPick(obj, ["problemSets", "problem_sets", "psets", "practiceSets", "problemSet", "sets"]))) {
       const n = psNormSet(s, topic);
-      if (n) psets.push(n);
+      if (n) (/^(?:multiple[ -]?choice|mcq)/i.test(n.title) ? mcqSets : psets).push(n);
+    }
+    for (const s of psArr(psPick(obj, ["mcqSets", "multipleChoiceSets", "questionBanks"]))) {
+      const n = psNormSet(s, topic);
+      if (n) mcqSets.push(n);
     }
     if (!psets.length && Array.isArray(obj.problems) && obj.problems.some((p) => p && typeof p === "object" && psPick(p, ["solution", "answer", "howToSolve", "steps"]))) {
       const n = psNormSet(obj, topic);
       if (n) psets.push(n);
     }
-    return { lectures, psets };
+    return { lectures, psets, mcqSets };
   }
   // Adds or updates lectures and problem sets in a subject. Same title = same item:
   // a lecture is refreshed, a set gets the new problems appended (for "continue" replies).
@@ -10356,6 +10395,21 @@ ${c.kindHint}` }
         addedSets++;
         addedProblems += S.problems.length;
       }
+    }
+    s.mcqSets = s.mcqSets || [];
+    for (const S of p.mcqSets || []) {
+      const topicId = matchTopic(s, S.topicText) || matchTopic(s, S.title);
+      const dup = s.mcqSets.find(x => norm(x.title) === norm(S.title));
+      if (dup) {
+        const have = new Set(dup.problems.map(x => norm(x.problem)));
+        let maxNo = Math.max(0, ...dup.problems.map(x => x.no || 0));
+        for (const q of S.problems) {
+          if (have.has(norm(q.problem))) continue;
+          dup.problems.push({...q, no: ++maxNo});
+          have.add(norm(q.problem));
+          addedProblems++;
+        }
+      } else { s.mcqSets.push({...S, topicId}); addedSets++; addedProblems += S.problems.length; }
     }
     return { addedLectures, updatedLectures, addedSets, addedProblems };
   }
@@ -10416,7 +10470,7 @@ ${c.kindHint}` }
     }
     return blocks;
   }
-  // NotebookLM formulas: render familiar LaTeX without showing raw $$ or backslashes.
+  // AI formulas: render familiar LaTeX without showing raw $$ or backslashes.
   // All content is HTML-escaped before conversion; unknown commands stay readable.
   function psMathHtml(source) {
     let x = psEsc(String(source || '').trim());
@@ -10590,7 +10644,7 @@ a[href]::after,a[href]::before{content:none!important}
 `;
   const PDF_BRAND_CSS = `.pdf-identity{margin-top:22pt;padding-top:9pt;border-top:1px solid #ded8e9;display:flex;flex-wrap:wrap;gap:5pt 12pt;align-items:baseline;break-inside:avoid}.pdf-identity-label{font:700 7pt Arial,sans-serif;letter-spacing:1.2pt;color:#847896}.pdf-identity-name{font:700 9pt Arial,sans-serif;color:#5a4589}.pdf-signature{font:italic 9pt Georgia,serif;color:#6f5a9b;margin-left:auto}.pdf-kicker{font:700 8pt/1.4 Arial,sans-serif;letter-spacing:1.6pt;text-transform:uppercase;color:#7056a7;margin:0 0 8pt}.pdf-meta{font:9pt/1.5 Arial,sans-serif;color:#746d80;margin:0 0 15pt}.pdf-rule{height:2px;background:#8268ba;margin:0 0 18pt}.pdf-footer{margin-top:24pt;padding-top:8pt;border-top:1px solid #ded8e9;font:8pt Arial,sans-serif;color:#847b91}`;
   const PS_PRINT_CSS = `
-/* NotebookLM mathematical expressions: legible without external scripts. */
+/* AI mathematical expressions: legible without external scripts. */
 .math-inline { display:inline; font-family: Georgia, "Times New Roman", serif; font-size:1.04em; white-space:normal; }
 .math-display { display:block; width:fit-content; max-width:100%; margin:.6rem 0; overflow-x:auto; font-family:Georgia,"Times New Roman",serif; font-size:1.08em; line-height:1.5; }
 .math-frac { display:inline-flex; vertical-align:middle; flex-direction:column; text-align:center; line-height:1.3; margin:0 .15em; }
@@ -10616,7 +10670,7 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
     }
     gcPrint(html + pdfProfileMarkup() + "</div>");
   }
-  /* ----- plain-text copies (to paste into NotebookLM as a source) ----- */
+  /* ----- plain-text copies (to paste into AI as a source) ----- */
   function psSetText(set, withKey) {
     const L = [`# ${set.title}`, [set.topicText, set.source].filter(Boolean).join(". "), set.intro || ""];
     for (const p of set.problems) {
@@ -10688,7 +10742,7 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
   }
   /* =====================================================================
      Cloze cards from bolded rules.
-     The lecture prompt already tells NotebookLM to bold the rule itself, so
+     The lecture prompt already tells AI to bold the rule itself, so
      every bold span is a human-curated key phrase. Blanking one out turns
      prose you would otherwise only re-read into something you have to recall.
      Free content from a convention you already follow.
@@ -10869,15 +10923,15 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
     return h(
       "section",
       { className: "view" },
-      h("div", { className: "page-head" }, h("div", null, h("h1", { className: "page-title" }, "Lectures"), h("p", { className: "muted" }, "The rules, how to treat or apply them, and the traps, one topic at a time. Each ends with check questions.")), h("div", { className: "head-actions" }, h("button", { className: "btn", onClick: () => setEdit("new") }, h(Icon, { name: "plus", size: 16 }), " Write one"), h("button", { className: "btn", onClick: () => go("nlm", { pid: "lecture" }) }, "Get the NotebookLM prompt"), h("button", { className: "btn primary", onClick: () => go("data") }, "Paste NotebookLM reply"))),
+      h("div", { className: "page-head" }, h("div", null, h("h1", { className: "page-title" }, "Lectures"), h("p", { className: "muted" }, "The rules, how to treat or apply them, and the traps, one topic at a time. Each ends with check questions.")), h("div", { className: "head-actions" }, h("button", { className: "btn", onClick: () => setEdit("new") }, h(Icon, { name: "plus", size: 16 }), " Write one"), h("button", { className: "btn", onClick: () => go("nlm", { pid: "lecture" }) }, "Get the AI prompt"), h("button", { className: "btn primary", onClick: () => go("data") }, "Paste AI reply"))),
       h(PsSampleCard, { subject, update, toast }),
       lectures.length > 0 && h("div", { className: "filters" }, h("input", { className: "search", type: "search", placeholder: "Search lectures", value: query, onChange: (e) => setQuery(e.target.value), "aria-label": "Search lectures" }), usedTopics.length > 0 && h("div", { className: "chip-scroll", role: "group", "aria-label": "Filter by topic" }, h("button", { className: `chip${topic === "all" ? " on" : ""}`, onClick: () => setTopic("all") }, "All topics"), usedTopics.map((t) => h("button", { key: t.id, className: `chip${topic === t.id ? " on" : ""}`, onClick: () => setTopic(t.id), title: t.title }, t.code || t.title.slice(0, 18))), lectures.some((l) => !l.topicId) && h("button", { className: `chip${topic === "" ? " on" : ""}`, onClick: () => setTopic("") }, "Unsorted"))),
-      !lectures.length ? h(PsEmpty, { icon: "lecture", title: "No lectures yet", text: "Copy the lecture prompt into NotebookLM with your book or slides loaded, then paste its reply here. It works for any subject: standards, laws, science, history, programming.", go, pid: "lecture" }) : !shown.length ? h("div", { className: "empty" }, h("p", null, "No lectures match."), h("p", { className: "muted" }, "Clear the search or pick “All topics”.")) : groups.map((g) => h("div", { key: g.key, className: "ps-group" }, h("h2", { className: "ps-group-h" }, g.label, g.std && h("span", { className: "std" }, g.std)), h("div", { className: "lx-list" }, g.items.map((l) => h("button", { key: l.id, className: "lx-row", onClick: () => { setOpen(l.id); const workspace=document.querySelector(".shell > .content"); if(workspace)workspace.scrollTop=0; else window.scrollTo({top:0}); } }, h("span", { className: "lx-row-main" }, h("strong", null, l.title), h("span", { className: "muted small" }, [l.source, `${l.sections.length} sections`, l.terms.length ? `${l.terms.length} key terms` : ""].filter(Boolean).join(", "))), l.done ? h("span", { className: "ps-st got" }, h(Icon, { name: "check", size: 14 }), " Studied") : h("span", { className: "chev-i" }, h(Icon, { name: "chevron", size: 16 }))))))),
+      !lectures.length ? h(PsEmpty, { icon: "lecture", title: "No lectures yet", text: "Copy the lecture prompt into AI with your book or slides loaded, then paste its reply here. It works for any subject: standards, laws, science, history, programming.", go, pid: "lecture" }) : !shown.length ? h("div", { className: "empty" }, h("p", null, "No lectures match."), h("p", { className: "muted" }, "Clear the search or pick “All topics”.")) : groups.map((g) => h("div", { key: g.key, className: "ps-group" }, h("h2", { className: "ps-group-h" }, g.label, g.std && h("span", { className: "std" }, g.std)), h("div", { className: "lx-list" }, g.items.map((l) => h("button", { key: l.id, className: "lx-row", onClick: () => { setOpen(l.id); const workspace=document.querySelector(".shell > .content"); if(workspace)workspace.scrollTop=0; else window.scrollTo({top:0}); } }, h("span", { className: "lx-row-main" }, h("strong", null, l.title), h("span", { className: "muted small" }, [l.source, `${l.sections.length} sections`, l.terms.length ? `${l.terms.length} key terms` : ""].filter(Boolean).join(", "))), l.done ? h("span", { className: "ps-st got" }, h(Icon, { name: "check", size: 14 }), " Studied") : h("span", { className: "chev-i" }, h(Icon, { name: "chevron", size: 16 }))))))),
       edit && h(LxEditor, { subject, item: edit === "new" ? null : edit, update, toast, onClose: () => setEdit(null), onDeleted: () => setEdit(null) })
     );
   }
   function PsEmpty({ icon, title, text, go, pid }) {
-    return h("div", { className: "empty big" }, h(Icon, { name: icon, size: 32 }), h("h2", null, title), h("p", { className: "muted", style: { maxWidth: "34rem" } }, text), h("div", { className: "row-end", style: { justifyContent: "center" } }, h("button", { className: "btn", onClick: () => go("nlm", { pid }) }, "Get the NotebookLM prompt"), h("button", { className: "btn primary", onClick: () => go("data") }, "Paste NotebookLM reply")));
+    return h("div", { className: "empty big" }, h(Icon, { name: icon, size: 32 }), h("h2", null, title), h("p", { className: "muted", style: { maxWidth: "34rem" } }, text), h("div", { className: "row-end", style: { justifyContent: "center" } }, h("button", { className: "btn", onClick: () => go("nlm", { pid }) }, "Get the AI prompt"), h("button", { className: "btn primary", onClick: () => go("data") }, "Paste AI reply")));
   }
   function LxReader({ subject, l, update, toast, go, onBack, onEdit, jumpTo }) {
     // cloze and addCloze are defined below, next to addCards.
@@ -10935,7 +10989,7 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
             h("button", { className: "btn bad", onClick: () => { set((x) => { x.rv = lxStudied(x, true); }); toast("Back in 3 days."); } }, "Shaky, show me sooner"))
         : h("button", { className: `btn${l.done ? "" : " primary"}`, onClick: () => { const was = l.done; set((x) => { x.done = !was; x.rv = was ? null : lxStudied(x, false); }); toast(was ? "Marked as not studied" : "Studied. It comes back in 3 days for a quick re-skim."); } }, l.done ? "Studied ✓ (undo)" : "Mark as studied")),
       h(LecturePracticeGenerator,{subject,lecture:l,update,toast,go}),
-      h("div", { className: "lx-foot panel", style: { marginTop: "-.4rem" } }, l.terms.length > 0 && h("button", { className: "btn", onClick: addCards }, `Make ${l.terms.length} flashcards`), cloze.length > 0 && h("button", { className: "btn", onClick: addCloze, title: "One card per bolded rule, with the rule blanked out" }, `Make ${cloze.length} cloze cards`), h("button", { className: "btn", onClick: () => go("ask", { focus: { kind: "lecture", id: l.id } }) }, h(Icon, { name: "ask", size: 16 }), " Ask about this lecture"), h("button", { className: "btn", onClick: () => go("nlm", { pid: "pset", topicId: l.topicId || "" }) }, "Problem set prompt for this topic"), h("button", { className: "btn ghost", onClick: async () => toast(await copyText(lxText(l)) ? "Lecture copied. Paste it into NotebookLM as a source" : "Couldn’t copy") }, "Copy as text"), h("button", { className: "btn ghost", onClick: onEdit }, "Edit"))
+      h("div", { className: "lx-foot panel", style: { marginTop: "-.4rem" } }, l.terms.length > 0 && h("button", { className: "btn", onClick: addCards }, `Make ${l.terms.length} flashcards`), cloze.length > 0 && h("button", { className: "btn", onClick: addCloze, title: "One card per bolded rule, with the rule blanked out" }, `Make ${cloze.length} cloze cards`), h("button", { className: "btn", onClick: () => go("ask", { focus: { kind: "lecture", id: l.id } }) }, h(Icon, { name: "ask", size: 16 }), " Ask about this lecture"), h("button", { className: "btn", onClick: () => go("nlm", { pid: "pset", topicId: l.topicId || "" }) }, "Problem set prompt for this topic"), h("button", { className: "btn ghost", onClick: async () => toast(await copyText(lxText(l)) ? "Lecture copied. Paste it into AI as a source" : "Couldn’t copy") }, "Copy as text"), h("button", { className: "btn ghost", onClick: onEdit }, "Edit"))
     );
   }
   function LxEditor({ subject, item, update, toast, onClose, onDeleted }) {
@@ -10990,11 +11044,11 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
     return h(
       "section",
       { className: "view" },
-      h("div", { className: "page-head" }, h("div", null, h("h1", { className: "page-title" }, "Problem sets"), h("p", { className: "muted" }, "Problems grouped by subtopic. Each one hides its answer and the full way to solve it until you’re ready.")), h("div", { className: "head-actions" }, h("button", { className: "btn", onClick: () => go("nlm", { pid: "pset" }) }, "Get the NotebookLM prompt"), h("button", { className: "btn primary", onClick: () => go("data") }, "Paste NotebookLM reply"))),
+      h("div", { className: "page-head" }, h("div", null, h("h1", { className: "page-title" }, "Problem sets"), h("p", { className: "muted" }, "Problems grouped by subtopic. Each one hides its answer and the full way to solve it until you’re ready.")), h("div", { className: "head-actions" }, h("button", { className: "btn", onClick: () => go("nlm", { pid: "pset" }) }, "Get the AI prompt"), h("button", { className: "btn primary", onClick: () => go("data") }, "Paste AI reply"))),
       h(PsSampleCard, { subject, update, toast }),
       sets.length > 0 && h("div", { className: "stats ps-stats" }, h("div", { className: "stat lead" }, h("span", { className: "stat-label" }, "Problems"), h("span", { className: "big-num" }, all.n), h("span", { className: "muted" }, `in ${plural(sets.length, "set")}`)), h("div", { className: "stat" }, h("span", { className: "stat-label" }, "Tried"), h("span", { className: "big-num" }, tried), h("span", { className: "muted" }, `${all.n - tried} still to try`)), h("div", { className: "stat" }, h("span", { className: "stat-label" }, "Got it"), h("span", { className: "big-num" }, tried ? `${Math.round(all.got / tried * 100)}%` : "—"), h("span", { className: "muted" }, `${all.got} of ${tried} tried`)), h("div", { className: "stat" }, h("span", { className: "stat-label" }, "Missed"), h("span", { className: `big-num${all.miss ? " bad-text" : ""}` }, all.miss), h("span", { className: "muted" }, "Redo these first"))),
       sets.length > 0 && h("div", { className: "filters" }, h("input", { className: "search", type: "search", placeholder: "Search sets and problems", value: query, onChange: (e) => setQuery(e.target.value), "aria-label": "Search problem sets" }), usedTopics.length > 0 && h("div", { className: "chip-scroll", role: "group", "aria-label": "Filter by topic" }, h("button", { className: `chip${topic === "all" ? " on" : ""}`, onClick: () => setTopic("all") }, "All topics"), usedTopics.map((t) => h("button", { key: t.id, className: `chip${topic === t.id ? " on" : ""}`, onClick: () => setTopic(t.id), title: t.title }, t.code || t.title.slice(0, 18))), sets.some((s) => !s.topicId) && h("button", { className: `chip${topic === "" ? " on" : ""}`, onClick: () => setTopic("") }, "Unsorted"))),
-      !sets.length ? h(PsEmpty, { icon: "pset", title: "No problem sets yet", text: "Copy the problem set prompt into NotebookLM with your sources loaded, then paste its reply here. You’ll get problems sorted by subtopic, each with the answer and step-by-step solution.", go, pid: "pset" }) : !shown.length ? h("div", { className: "empty" }, h("p", null, "No sets match."), h("p", { className: "muted" }, "Clear the search or pick “All topics”.")) : psByTopic(subject, shown).map((g) => h("div", { key: g.key, className: "ps-group" }, h("h2", { className: "ps-group-h" }, g.label, g.std && h("span", { className: "std" }, g.std)), h("div", { className: "lx-list" }, g.items.map((s) => {
+      !sets.length ? h(PsEmpty, { icon: "pset", title: "No problem sets yet", text: "Copy the problem set prompt into AI with your sources loaded, then paste its reply here. You’ll get problems sorted by subtopic, each with the answer and step-by-step solution.", go, pid: "pset" }) : !shown.length ? h("div", { className: "empty" }, h("p", null, "No sets match."), h("p", { className: "muted" }, "Clear the search or pick “All topics”.")) : psByTopic(subject, shown).map((g) => h("div", { key: g.key, className: "ps-group" }, h("h2", { className: "ps-group-h" }, g.label, g.std && h("span", { className: "std" }, g.std)), h("div", { className: "lx-list" }, g.items.map((s) => {
         const t = psTally(s);
         const subs = psGroupProblems(s.problems).map(([k]) => k).filter(Boolean);
         return h("button", { key: s.id, className: "lx-row ps-row", onClick: () => { setOpen(s.id); const workspace=document.querySelector(".shell > .content"); if(workspace)workspace.scrollTop=0; else window.scrollTo({top:0}); } }, h("span", { className: "lx-row-main" }, h("strong", null, s.title), h("span", { className: "muted small" }, `${plural(t.n, "problem")}${subs.length ? `: ${subs.slice(0, 4).join(", ")}${subs.length > 4 ? `, +${subs.length - 4} more` : ""}` : ""}`), h(PsBar, { t })), h("span", { className: "ps-row-n" }, t.got + t.miss ? `${t.got}/${t.n}` : "New"));
@@ -11102,7 +11156,7 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
       h("div", { className: "ps-tools" }, h("div", { className: "seg-filter", role: "group", "aria-label": "Show problems" }, [["all", "All", t.n], ["todo", "Not tried", t.todo], ["miss", "Missed", t.miss], ["got", "Got it", t.got]].map(([k, l, n]) => h("button", { key: k, className: filter === k ? "on" : "", "aria-pressed": filter === k, onClick: () => setFilter(k) }, l, " ", h("span", { className: "n" }, n)))), h("label", { className: "ps-switch" }, h("input", { type: "checkbox", checked: reveal, onChange: toggleAll }), " Show all solutions"), h("span", { className: "spacer" }), h("button", { className: "btn primary", onClick: () => setExportOpen(true) }, "Customize PDF"), h("button", { className: "btn ghost", onClick: () => psPrint(set, false) }, "Print problems"), h("button", { className: "btn ghost", onClick: () => psPrint(set, true) }, "Print with answer key"), h("button", { className: "btn ghost", disabled: !visibleProblems.length, onClick: () => printVisible(false) }, "Print filtered"), h("button", { className: "btn ghost", disabled: !visibleProblems.length, onClick: () => printVisible(true) }, "Filtered answer key"), h("button", { className: "btn ghost", onClick: () => go("ask", { focus: { kind: "pset", id: set.id } }) }, "Ask about my misses"), h("button", { className: "btn ghost", onClick: () => setMeta(true) }, "Set options")),
       allGroups.length > 1 && allGroups.some(([k]) => k) && h("nav", { className: "lx-toc ps-toc", "aria-label": "Subtopics in this set" }, h("span", { className: "muted small" }, "In this set"), h("ul", null, allGroups.map(([k, list]) => h("li", { key: k || "_" }, h("a", { href: "#", onClick: (e) => { e.preventDefault(); setFilter("all"); setTimeout(() => { const el = document.getElementById(`sub-${norm(k) || "other"}`); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }, 30); } }, k || "Other problems"), h("span", { className: "muted small" }, ` ${list.length}`))))),
       !groups.length ? h("div", { className: "empty" }, h("p", null, "Nothing here."), h("p", { className: "muted" }, "Pick “All” to see every problem.")) : groups.map(([k, list]) => h("div", { key: k || "_", className: "ps-sub", id: `sub-${norm(k) || "other"}` }, k && h("h2", { className: "ps-sub-h" }, k), list.map((p) => h(PsProblem, { key: p.id, p, revealAll: reveal, onMark: (st) => mark(p.id, st), onLog: () => logMistake(p), onEdit: () => setEdit(p) })))),
-      h("div", { className: "row-end" }, h("button", { className: "btn", onClick: () => setEdit("new") }, h(Icon, { name: "plus", size: 16 }), " Add a problem"), h("button", { className: "btn", onClick: () => go("nlm", { pid: "pset", topicId: set.topicId || "" }) }, "Get more from NotebookLM")),
+      h("div", { className: "row-end" }, h("button", { className: "btn", onClick: () => setEdit("new") }, h(Icon, { name: "plus", size: 16 }), " Add a problem"), h("button", { className: "btn", onClick: () => go("nlm", { pid: "pset", topicId: set.topicId || "" }) }, "Generate more questions")),
       exportOpen && h(PsExportCustomizer,{set,onClose:()=>setExportOpen(false)}),
       edit && h(PsProblemEditor, { set, item: edit === "new" ? null : edit, update, toast, onClose: () => setEdit(null) }),
       meta && h(PsSetEditor, { subject, set, update, toast, onClose: () => setMeta(false), onDeleted: () => { setMeta(false); onBack(); } })
@@ -11114,14 +11168,14 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
     const hasSol = p.answer || p.solution || p.approach;
     return h(
       "article",
-      { className: `ps-prob${p.st ? ` st-${p.st}` : ""}`, "aria-labelledby": `pt-${p.id}` },
+      { className: `ps-prob study-question-card${p.st ? ` st-${p.st}` : ""}`, "aria-labelledby": `pt-${p.id}` },
       h("header", { className: "ps-prob-head" }, h("span", { className: "ps-no" }, p.no), h("h3", { id: `pt-${p.id}` }, p.title), p.difficulty && h("span", { className: `ps-diff d-${p.difficulty}` }, p.difficulty === "difficult" ? "Difficult" : p.difficulty === "easy" ? "Easy" : "Average"), p.st && h("span", { className: `ps-st ${p.st}` }, p.st === "got" ? "Got it" : "Missed")),
       h(PsMd, { text: p.problem }),
       p.req.length > 0 && h("div", { className: "ps-req" }, h("strong", null, "Required"), h("ol", null, p.req.map((r, i) => h("li", { key: i }, psInline(r))))),
       p.choices.length > 0 && h("ul", { className: "ps-choices" }, p.choices.map((c, i) => h("li", { key: i }, psInline(c)))),
       p.source && h("p", { className: "muted small" }, p.source),
       h("div", { className: "ps-acts" }, hasSol && !revealAll && h("button", { className: `btn${open ? "" : " primary"}`, "aria-expanded": open, onClick: () => setOpen((v) => !v) }, open ? "Hide solution" : "Show how to solve"), h("button", { className: `chip${p.st === "got" ? " on ok" : ""}`, "aria-pressed": p.st === "got", onClick: () => onMark("got") }, "Got it"), h("button", { className: `chip${p.st === "miss" ? " on bad" : ""}`, "aria-pressed": p.st === "miss", onClick: () => onMark("miss") }, "Missed it"), p.st === "miss" && h("button", { className: "link-btn", onClick: onLog }, "Log in Mistake log"), h("span", { className: "spacer" }), h("button", { className: "link-btn", onClick: () => psPrint({ title: p.title || `Problem ${p.no}`, problems: [p], topicText: "", source: "" }, false) }, "PDF"), h("button", { className: "link-btn", onClick: () => psPrint({ title: p.title || `Problem ${p.no}`, problems: [p], topicText: "", source: "" }, true) }, "PDF + key"), h("button", { className: "link-btn", onClick: onEdit }, "Edit")),
-      show && hasSol && h("div", { className: "ps-sol" }, p.answer && h("div", { className: "ps-answer" }, h("span", { className: "ps-label" }, "Answer"), h(PsMd, { text: p.answer })), p.approach && h("div", { className: "ps-approach" }, h("span", { className: "ps-label" }, "How to approach it"), h(PsMd, { text: p.approach })), p.solution && h("div", { className: "ps-steps" }, h("span", { className: "ps-label" }, "Solution"), h(PsMd, { text: p.solution })), p.trap && h("div", { className: "ps-trap" }, h("span", { className: "ps-label" }, "Watch out"), h(PsMd, { text: p.trap })))
+      show && hasSol && h("div", { className: "ps-sol study-answer-panel" }, p.answer && h("div", { className: "ps-answer" }, h("span", { className: "ps-label" }, "Answer"), h(PsMd, { text: p.answer })), p.approach && h("div", { className: "ps-approach study-answer-step" }, h("span", { className: "ps-label" }, "How to approach it"), h(PsMd, { text: p.approach })), p.solution && h("div", { className: "ps-steps study-answer-step" }, h("span", { className: "ps-label" }, "Solution"), h(PsMd, { text: p.solution })), p.trap && h("div", { className: "ps-trap study-answer-trap" }, h("span", { className: "ps-label" }, "Watch out"), h(PsMd, { text: p.trap })))
     );
   }
   function PsProblemEditor({ set, item, update, toast, onClose }) {
@@ -11172,9 +11226,9 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
       toast("Problem set deleted");
       onDeleted();
     };
-    return h(Modal, { title: "Set options", onClose, footer: h(React.Fragment, null, h("button", { className: "btn danger", onClick: del }, "Delete set"), h("span", { className: "spacer" }), h("button", { className: "btn", onClick: onClose }, "Cancel"), h("button", { className: "btn primary", onClick: save }, "Save")) }, h(Field, { label: "Title" }, h("input", { value: f.title, onChange: (e) => setv("title", e.target.value) })), h(Field, { label: "Topic" }, h(TopicSelect, { subject, value: f.topicId, onChange: (v) => setv("topicId", v || "") })), h(Field, { label: "Source" }, h("input", { value: f.source, onChange: (e) => setv("source", e.target.value) })), h(Field, { label: "Instructions" }, h("textarea", { rows: 3, value: f.intro, onChange: (e) => setv("intro", e.target.value) })), h("div", { className: "row-end", style: { justifyContent: "flex-start" } }, h("button", { className: "btn ghost", onClick: async () => toast(await copyText(psSetText(set, false)) ? "Problems copied" : "Couldn’t copy") }, "Copy problems as text"), h("button", { className: "btn ghost", onClick: async () => toast(await copyText(psSetText(set, true)) ? "Set with solutions copied. Paste it into NotebookLM as a source" : "Couldn’t copy") }, "Copy with solutions"), h("button", { className: "btn ghost", onClick: reset }, "Clear my marks")));
+    return h(Modal, { title: "Set options", onClose, footer: h(React.Fragment, null, h("button", { className: "btn danger", onClick: del }, "Delete set"), h("span", { className: "spacer" }), h("button", { className: "btn", onClick: onClose }, "Cancel"), h("button", { className: "btn primary", onClick: save }, "Save")) }, h(Field, { label: "Title" }, h("input", { value: f.title, onChange: (e) => setv("title", e.target.value) })), h(Field, { label: "Topic" }, h(TopicSelect, { subject, value: f.topicId, onChange: (v) => setv("topicId", v || "") })), h(Field, { label: "Source" }, h("input", { value: f.source, onChange: (e) => setv("source", e.target.value) })), h(Field, { label: "Instructions" }, h("textarea", { rows: 3, value: f.intro, onChange: (e) => setv("intro", e.target.value) })), h("div", { className: "row-end", style: { justifyContent: "flex-start" } }, h("button", { className: "btn ghost", onClick: async () => toast(await copyText(psSetText(set, false)) ? "Problems copied" : "Couldn’t copy") }, "Copy problems as text"), h("button", { className: "btn ghost", onClick: async () => toast(await copyText(psSetText(set, true)) ? "Set with solutions copied. Paste it into your preferred AI tool as a reference" : "Couldn’t copy") }, "Copy with solutions"), h("button", { className: "btn ghost", onClick: reset }, "Clear my marks")));
   }
-  /* ----- NotebookLM prompts for lectures and problem sets ----- */
+  /* ----- AI prompts for lectures and problem sets ----- */
   const PS_PLAN = {
     calc: "If the topic is an accounting, auditing or reporting standard (PAS, PFRS, IFRS, PSA, tax law): Overview and objective; Scope (what it covers and what it excludes); Key definitions; Recognition (when to record it); Initial measurement; Subsequent measurement; Derecognition (if it applies); Presentation and disclosure; Special cases and exceptions; Journal entries or illustrations with numbers; How to compute (formulas, the order of steps, and which T-accounts or schedules to use); Common exam traps; Summary table. For any other computation topic: Overview; Key concepts; Formulas and when to use each; Step-by-step method; Worked examples with numbers; Common errors; Summary table.",
     theory: "Overview and purpose; Key definitions; Requisites, elements or criteria; General rules; How the rule is applied (with short situations); Exceptions; Effects or consequences; Distinctions from related concepts; Common exam traps; Summary table.",
@@ -11268,7 +11322,7 @@ ${NLM_JSON}
 ${PS_SET_SHAPE(c)}
 
 Rules: ${c.topicRule} Every item has exactly 4 "choices" ("a. …" to "d. …") with one best answer and plausible distractors built from common mistakes. "requirements" is []. "answer" is the letter and the correct choice. "solution" explains why it is right${c.kind === "calc" ? " with the computation" : ""}, and "trap" says why the most tempting wrong choice is wrong. ${PS_FORMAT_MC} ${PS_LONG} ${c.kindHint}` },
-    { id: "lecture-chat", group: "lp", json: false, title: "Lecture me (in chat)", desc: "NotebookLM teaches the topic section by section and checks you along the way.", make: (c) => `Lecture me on ${c.focus} for ${c.subject} using only my sources, like a professor in class. Go in this order: ${PS_PLAN[c.kind] || PS_PLAN.general} Teach one section at a time: explain the general rule, show how it is applied or treated with an example${c.kind === "calc" ? " with numbers" : ""}, then point out the exception or trap. After each section ask me one quick question and wait for my answer before moving on. Cite where in my sources each point comes from. At the end, give a summary table. ${c.kindHint}` },
+    { id: "lecture-chat", group: "lp", json: false, title: "Lecture me (in chat)", desc: "AI teaches the topic section by section and checks you along the way.", make: (c) => `Lecture me on ${c.focus} for ${c.subject} using only my sources, like a professor in class. Go in this order: ${PS_PLAN[c.kind] || PS_PLAN.general} Teach one section at a time: explain the general rule, show how it is applied or treated with an example${c.kind === "calc" ? " with numbers" : ""}, then point out the exception or trap. After each section ask me one quick question and wait for my answer before moving on. Cite where in my sources each point comes from. At the end, give a summary table. ${c.kindHint}` },
     { id: "pset-chat", group: "lp", json: false, title: "Problem set in chat (answer key last)", desc: "Problems first, answer key and solutions at the end. Type “export” to get it as JSON for the dashboard.", make: (c) => `Give me a problem set on ${c.focus} for ${c.subject} from my sources, with 10 to 15 problems grouped under subtopic headings, from basic to difficult. Show only the problems first, with all given data in tables. Then, after a line that says ANSWER KEY, give for each problem: the final answer, how to approach it, a step-by-step solution${c.kind === "calc" ? " (show T-accounts or schedules for every squeezed figure)" : ""}, and the common trap. ${psProbHint(c.kind)}
 
 If I type "export" later, give the same set as JSON only, in this shape, so I can import it into my study dashboard:
@@ -12134,6 +12188,10 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
           source:set.source,intro:set.intro,problems:(set.problems||[]).map(p=>({id:p.id,no:p.no,title:p.title,
           subtopic:p.subtopic,difficulty:p.difficulty,problem:p.problem,req:clone(p.req||[]),choices:clone(p.choices||[]),
           answer:p.answer,approach:p.approach,solution:p.solution,trap:p.trap,source:p.source,st:''}))}));
+        clean.mcqSets=(x.mcqSets||[]).map(set=>({id:set.id,topicId:set.topicId,topicText:set.topicText,title:set.title,
+          source:set.source,intro:set.intro,problems:(set.problems||[]).map(p=>({id:p.id,no:p.no,title:p.title,
+          subtopic:p.subtopic,difficulty:p.difficulty,problem:p.problem,req:clone(p.req||[]),choices:clone(p.choices||[]),
+          answer:p.answer,approach:p.approach,solution:p.solution,trap:p.trap,source:p.source,st:''}))}));
         clean.drills=(x.drills||[]).map(d=>({id:d.id,topicId:d.topicId,topicText:d.topicText,name:d.name,q:d.q,vars:clone(d.vars||[]),given:clone(d.given||[]),ans:d.ans,fmt:d.fmt,dp:d.dp,unit:d.unit,cur:d.cur,steps:clone(d.steps||[]),req:clone(d.req||[]),tol:d.tol}));
         clean.quizzes=[];
         clean.mistakes=[];clean.sessions=[];clean.grades=[];
@@ -12173,7 +12231,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       app=app.replace("tab:'stats-clean',button:'View progress'","tab:'path',button:'Review routine'");
       // No quiz authoring or personal publishing controls are exposed to students.
       // A student may log their own quiz score or mistake using the existing editors.
-      const boot="window.__BSA_SHARED_MODE__=true;\nwindow.__BSA_PUBLISHED__=__SNAPSHOT__;\n(function(){\n const raw=window.localStorage;\n const prefix=\"bsa_shared_student_v144:\";\n const mainKey=\"bsa-study-dashboard:v1\";\n const progressKeys=[\"conf\",\"due\",\"last\",\"interval\",\"ease\",\"reps\",\"streak\",\"seen\",\"rating\",\"lastReviewed\",\"nextReview\",\"attempts\",\"lastAttempt\",\"st\",\"done\",\"srs\"];\n const copy=x=>JSON.parse(JSON.stringify(x));\n const read=()=>{try{return JSON.parse(raw.getItem(prefix+mainKey)||\"null\")}catch(_){return null}};\n function mergePublished(){\n   const old=read(), published=window.__BSA_PUBLISHED__;\n   if(!published||!Array.isArray(published.subjects))return old;\n   const doc=copy(published);\n   if(!old||!Array.isArray(old.subjects))return doc;\n   for(const sub of doc.subjects){\n      const prev=old.subjects.find(v=>v.id===sub.id);if(!prev)continue;\n      for(const kind of [\"cards\",\"lectures\"]){\n       for(const item of sub[kind]||[]){\n        const before=(prev[kind]||[]).find(v=>v.id===item.id);\n        if(before)for(const key of progressKeys)if(Object.prototype.hasOwnProperty.call(before,key))item[key]=before[key];\n       }\n      }\n      for(const set of sub.psets||[]){\n       const oldSet=(prev.psets||[]).find(v=>v.id===set.id);if(!oldSet)continue;\n       for(const pr of set.problems||[]){\n        const oldPr=(oldSet.problems||[]).find(v=>v.id===pr.id);if(!oldPr)continue;\n        for(const key of progressKeys)if(Object.prototype.hasOwnProperty.call(oldPr,key))pr[key]=oldPr[key];\n       }\n      }\n      // Learner-created flashcards (e.g. from corrected mistakes) stay personal.\n      const publishedCardIds=new Set((sub.cards||[]).map(x=>x.id));\n      for(const personal of prev.cards||[]){\n        if(!publishedCardIds.has(personal.id)&&personal.id){sub.cards.push(copy(personal));publishedCardIds.add(personal.id);}\n      }\n      // These are the STUDENT'S records, not the publisher's data.\n      for(const key of [\"mistakes\",\"sessions\",\"quizzes\",\"learningEvents\",\"days\",\"aiAttempts\"]){if(Array.isArray(prev[key]))sub[key]=copy(prev[key]);}\n   }\n   if(old.activeId&&doc.subjects.some(v=>v.id===old.activeId))doc.activeId=old.activeId;\n   if(old.settings&&typeof old.settings===\"object\")doc.settings={...doc.settings,...old.settings};\n   return doc;\n }\n window.__BSA_RESTORE_CONTENT__=doc=>{\n   const published=window.__BSA_PUBLISHED__;\n   if(!published||!Array.isArray(published.subjects))return doc;\n   const old=read();\n   try{raw.setItem(prefix+mainKey,JSON.stringify(doc));return mergePublished();}\n   finally{try{if(old)raw.setItem(prefix+mainKey,JSON.stringify(old));else raw.removeItem(prefix+mainKey)}catch(_){}}\n };\n window.__BSA_SHARED_STORAGE__={\n   getItem(key){key=String(key);if(key===mainKey){const v=mergePublished();return v?JSON.stringify(v):null;}return raw.getItem(prefix+key)},\n   setItem(key,value){raw.setItem(prefix+String(key),String(value))},\n   removeItem(key){raw.removeItem(prefix+String(key))},\n   clear(){for(let i=raw.length-1;i>=0;i--){const k=raw.key(i);if(k&&k.startsWith(prefix))raw.removeItem(k)}},\n   key(i){let out=[];for(let n=0;n<raw.length;n++){const k=raw.key(n);if(k&&k.startsWith(prefix))out.push(k.slice(prefix.length));}return out[i]||null},\n   get length(){let count=0;for(let n=0;n<raw.length;n++)if((raw.key(n)||\"\").startsWith(prefix))count++;return count;}\n };\n})();".replace('__SNAPSHOT__',JSON.stringify(snapshot).replace(/</g,'\\u003c'));
+      const boot="window.__BSA_SHARED_MODE__=true;\nwindow.__BSA_PUBLISHED__=__SNAPSHOT__;\n(function(){\n const raw=window.localStorage;\n const prefix=\"bsa_shared_student_v144:\";\n const mainKey=\"bsa-study-dashboard:v1\";\n const progressKeys=[\"conf\",\"due\",\"last\",\"interval\",\"ease\",\"reps\",\"streak\",\"seen\",\"rating\",\"lastReviewed\",\"nextReview\",\"attempts\",\"lastAttempt\",\"st\",\"done\",\"srs\"];\n const copy=x=>JSON.parse(JSON.stringify(x));\n const read=()=>{try{return JSON.parse(raw.getItem(prefix+mainKey)||\"null\")}catch(_){return null}};\n function mergePublished(){\n   const old=read(), published=window.__BSA_PUBLISHED__;\n   if(!published||!Array.isArray(published.subjects))return old;\n   const doc=copy(published);\n   if(!old||!Array.isArray(old.subjects))return doc;\n   for(const sub of doc.subjects){\n      const prev=old.subjects.find(v=>v.id===sub.id);if(!prev)continue;\n      for(const kind of [\"cards\",\"lectures\"]){\n       for(const item of sub[kind]||[]){\n        const before=(prev[kind]||[]).find(v=>v.id===item.id);\n        if(before)for(const key of progressKeys)if(Object.prototype.hasOwnProperty.call(before,key))item[key]=before[key];\n       }\n      }\n      for(const set of [...(sub.psets||[]),...(sub.mcqSets||[])]){\n       const oldSet=[...(prev.psets||[]),...(prev.mcqSets||[])].find(v=>v.id===set.id);if(!oldSet)continue;\n       for(const pr of set.problems||[]){\n        const oldPr=(oldSet.problems||[]).find(v=>v.id===pr.id);if(!oldPr)continue;\n        for(const key of progressKeys)if(Object.prototype.hasOwnProperty.call(oldPr,key))pr[key]=oldPr[key];\n       }\n      }\n      // Learner-created flashcards (e.g. from corrected mistakes) stay personal.\n      const publishedCardIds=new Set((sub.cards||[]).map(x=>x.id));\n      for(const personal of prev.cards||[]){\n        if(!publishedCardIds.has(personal.id)&&personal.id){sub.cards.push(copy(personal));publishedCardIds.add(personal.id);}\n      }\n      // These are the STUDENT'S records, not the publisher's data.\n      for(const key of [\"mistakes\",\"sessions\",\"quizzes\",\"learningEvents\",\"days\",\"aiAttempts\"]){if(Array.isArray(prev[key]))sub[key]=copy(prev[key]);}\n   }\n   if(old.activeId&&doc.subjects.some(v=>v.id===old.activeId))doc.activeId=old.activeId;\n   if(old.settings&&typeof old.settings===\"object\")doc.settings={...doc.settings,...old.settings};\n   return doc;\n }\n window.__BSA_RESTORE_CONTENT__=doc=>{\n   const published=window.__BSA_PUBLISHED__;\n   if(!published||!Array.isArray(published.subjects))return doc;\n   const old=read();\n   try{raw.setItem(prefix+mainKey,JSON.stringify(doc));return mergePublished();}\n   finally{try{if(old)raw.setItem(prefix+mainKey,JSON.stringify(old));else raw.removeItem(prefix+mainKey)}catch(_){}}\n };\n window.__BSA_SHARED_STORAGE__={\n   getItem(key){key=String(key);if(key===mainKey){const v=mergePublished();return v?JSON.stringify(v):null;}return raw.getItem(prefix+key)},\n   setItem(key,value){raw.setItem(prefix+String(key),String(value))},\n   removeItem(key){raw.removeItem(prefix+String(key))},\n   clear(){for(let i=raw.length-1;i>=0;i--){const k=raw.key(i);if(k&&k.startsWith(prefix))raw.removeItem(k)}},\n   key(i){let out=[];for(let n=0;n<raw.length;n++){const k=raw.key(n);if(k&&k.startsWith(prefix))out.push(k.slice(prefix.length));}return out[i]||null},\n   get length(){let count=0;for(let n=0;n<raw.length;n++)if((raw.key(n)||\"\").startsWith(prefix))count++;return count;}\n };\n})();".replace('__SNAPSHOT__',JSON.stringify(snapshot).replace(/</g,'\\u003c'));
       const styles=[...document.querySelectorAll('style')].map(el=>el.outerHTML).join('\n');
       return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0d1320"><title>BSA Study Desk · Shared</title>'+styles+"<style id=\"bsa-shared-student-ui\">\n/* Same component design tokens as the owner's app; limited navigation and no author tools. */\n.rail-footer,.sync-badge,.sync-bar,.save-note,.rail-search,.study-life-card,.life-home-widget,\n.dashboard-settings,.share-panel,.bottom-nav,.fab,.focus-bar,.study-path,.study-life,.bsa-v141-update-control,\n[data-personal-only],[data-shared-authoring]{display:none!important}\n/* Keep the existing Appearance modal and theme controls available to students. */\n.rail-tools{display:flex!important;flex-direction:column!important}\n.rail-tools>button:first-child{display:none!important} /* Import/export is owner-only */\n.workspace-actions,.workspace-topbar .btn{display:none!important}\n.mobilebar>button.icon-btn:not([aria-label=\"Appearance\"]){display:none!important}\n.mobilebar>button.icon-btn[aria-label=\"Appearance\"]{display:inline-flex!important}\n.rail-nav{min-height:0;flex:1;overflow-y:auto}\n.shell>.content{padding-bottom:max(24px,env(safe-area-inset-bottom,0px))!important}\n.shared-ribbon{padding:8px 16px;background:var(--surface,#e8f2ed);border-bottom:1px solid var(--line,#bed1c6);color:var(--muted,#34463f);font-size:12px}\n@media(max-width:700px){.bottom-nav{display:none!important}.shell>.content{padding-bottom:24px!important}.mobilebar{display:flex!important}}\n</style>"+'</head><body><div id="root"></div>'+
        '<script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"><'+'/script>'+
@@ -13103,7 +13161,7 @@ h('div',{className:'life-avatar-preview'},h('span',null,life.avatar.accessory===
       }
     }, [data]);
     // A home-screen shortcut lands on ?go=practice and so on. Text shared from
-    // another app (NotebookLM, Notes) arrives as ?shared= and goes straight to Import.
+    // another app (AI, Notes) arrives as ?shared= and goes straight to Import.
     useEffect(() => {
       try {
         const qs = new URLSearchParams(location.search);
@@ -13257,7 +13315,7 @@ h('div',{className:'life-avatar-preview'},h('span',null,life.avatar.accessory===
     } }), modal === "more" && /* @__PURE__ */ React.createElement(MoreSheet, { onClose: () => setModal(null), onPick: (k) => setModal(k), settings: data.settings, setSettings, go: (t) => {
       setModal(null);
       go(t);
-    } }), modal && modal.nlm && h(Modal, { title: "NotebookLM prompts", wide: true, onClose: () => setModal(null) }, h(NotebookLMPrompts, { subject, toast, initPid: modal.nlm.pid, initTopic: modal.nlm.topicId, onImport: () => setModal("data") })), modal === "look" && /* @__PURE__ */ React.createElement(AppearanceModal, { settings: data.settings, setSettings, onClose: () => setModal(null) }), modal === "subjects" && /* @__PURE__ */ React.createElement(SubjectModal, { data, update, onClose: () => setModal(null), toast }), (modal === "data" || modal === "sync" || modal && modal.data) && /* @__PURE__ */ React.createElement(DataModal, { data, update, replaceAll, onClose: () => setModal(null), toast, downloads, initTab: modal && modal.data ? modal.data : modal === "sync" ? "github" : "import", prefill: modal && modal.prefill }), (editor == null ? void 0 : editor.type) === "card" && /* @__PURE__ */ React.createElement(
+    } }), modal && modal.nlm && h(Modal, { title: "AI Study Prompts", wide: true, onClose: () => setModal(null) }, h(NotebookLMPrompts, { subject, toast, initPid: modal.nlm.pid, initTopic: modal.nlm.topicId, onImport: () => setModal("data") })), modal === "look" && /* @__PURE__ */ React.createElement(AppearanceModal, { settings: data.settings, setSettings, onClose: () => setModal(null) }), modal === "subjects" && /* @__PURE__ */ React.createElement(SubjectModal, { data, update, onClose: () => setModal(null), toast }), (modal === "data" || modal === "sync" || modal && modal.data) && /* @__PURE__ */ React.createElement(DataModal, { data, update, replaceAll, onClose: () => setModal(null), toast, downloads, initTab: modal && modal.data ? modal.data : modal === "sync" ? "github" : "import", prefill: modal && modal.prefill }), (editor == null ? void 0 : editor.type) === "card" && /* @__PURE__ */ React.createElement(
       CardEditor,
       {
         subject,
