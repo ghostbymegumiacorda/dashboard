@@ -2163,68 +2163,11 @@ html,body,#root{max-width:100%;overflow-x:clip}
 
 
 
-<style id="bsa-v134-layout">
-/* Shell has three DOM children: sidebar, mobile header, main. Explicit placement prevents implicit grid rows. */
-*,*::before,*::after{box-sizing:border-box}
-html,body,#root{width:100%;height:100%;margin:0;padding:0;min-height:0}
-body{overflow:hidden}
-#root>.shell{display:grid!important;grid-template-columns:clamp(210px,18vw,260px) minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr)!important;width:100%!important;height:100dvh!important;min-height:0!important;overflow:hidden!important;background:var(--bg)!important}
-#root>.shell>.rail{display:flex!important;grid-column:1!important;grid-row:1!important;flex-direction:column!important;min-width:0!important;min-height:0!important;height:100%!important;max-height:100%!important;overflow-y:auto!important;overflow-x:hidden!important}
-#root>.shell>.mobilebar{display:none!important}
-#root>.shell>.content{grid-column:2!important;grid-row:1!important;min-width:0!important;min-height:0!important;width:100%!important;max-width:none!important;height:100%!important;overflow-y:auto!important;overflow-x:hidden!important;padding-bottom:calc(40px + env(safe-area-inset-bottom,0px))!important;-webkit-overflow-scrolling:touch}
-#root>.shell>.content>*{min-width:0;max-width:100%}
-.bsa-v108-top-grid{display:grid!important;grid-template-columns:minmax(0,1.6fr) minmax(285px,1fr)!important;gap:16px!important;min-width:0!important}
-.bsa-v108-top-grid>*{min-width:0!important;max-width:100%!important}
-.bsa-v108-top-grid>.life-home-widget{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:12px!important;min-width:0!important;max-width:100%!important;padding:18px!important;overflow:hidden!important;text-align:center!important}
-.bsa-v108-top-grid .life-home-character{display:flex!important;justify-content:center!important;align-items:center!important;min-width:0!important;max-width:100%!important;width:100%!important;flex:0 0 auto!important}
-.bsa-v108-top-grid .life-home-copy{display:block!important;min-width:0!important;max-width:100%!important;width:100%!important;flex:0 0 auto!important;text-align:center!important;overflow-wrap:anywhere!important;white-space:normal!important}
-.bsa-v108-top-grid .life-home-copy *{max-width:100%!important;overflow-wrap:anywhere!important;white-space:normal!important;word-break:normal!important}
-.bsa-v108-top-grid .life-launch-actions{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:9px!important;min-width:0!important;width:100%!important;flex:0 0 auto!important}
-.bsa-v108-top-grid .life-launch-actions>*{width:100%!important;max-width:100%!important;min-width:0!important;margin:0!important;white-space:normal!important;overflow-wrap:anywhere!important}
-@media(max-width:1150px){.bsa-v108-top-grid{grid-template-columns:minmax(0,1fr)!important}}
-@media(max-width:700px){
- #root>.shell{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto minmax(0,1fr)!important}
- #root>.shell>.rail{display:none!important}
- #root>.shell>.mobilebar{display:flex!important;grid-column:1!important;grid-row:1!important;position:relative!important;top:auto!important;margin:0!important;min-width:0!important}
- #root>.shell>.content{grid-column:1!important;grid-row:2!important;width:100%!important;height:100%!important;padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))!important}
-}
-</style>
 <style id="bsa-v135-home-shortcut">
 .brand-home-button{width:100%;appearance:none;border:0;background:transparent;color:inherit;text-align:left;cursor:pointer;font:inherit}
 .brand-home-button:hover,.brand-home-button:focus-visible{background:var(--surface,#fff);border-radius:10px}
 .mobile-home-button{appearance:none;border:0;cursor:pointer;font:inherit;flex-shrink:0}
 .mobile-home-button:focus-visible,.brand-home-button:focus-visible{outline:2px solid var(--accent,#23856e);outline-offset:2px}
-</style><style id="bsa-v136-desktop-full-width">
-/* Desktop: prevent legacy fixed widths, clipping and auto-placement gaps. */
-@media (min-width: 701px) {
- html,body,#root {width:100%!important;max-width:none!important;margin:0!important;padding:0!important;overflow-x:hidden!important}
- #root>.shell {
-   display:grid!important;
-   grid-template-columns:clamp(210px,18vw,260px) minmax(0,1fr)!important;
-   grid-template-rows:minmax(0,1fr)!important;
-   width:100vw!important;max-width:none!important;
-   margin:0!important;padding:0!important;
-   overflow:hidden!important;
- }
- #root>.shell>.rail {
-   display:flex!important;visibility:visible!important;
-   grid-column:1!important;grid-row:1!important;
-   width:100%!important;min-width:0!important;max-width:none!important;
-   transform:none!important;margin:0!important;
- }
- #root>.shell>.mobilebar {display:none!important}
- #root>.shell>.content {
-   display:block!important;grid-column:2!important;grid-row:1!important;
-   width:100%!important;max-width:none!important;min-width:0!important;
-   margin:0!important;transform:none!important;
-   overflow-x:hidden!important;overflow-y:auto!important;
- }
- #root>.shell>.content>.topbar,
- #root>.shell>.content>.view,
- #root>.shell>.content>main {
-   width:100%!important;max-width:none!important;min-width:0!important;
- }
-}
 </style><style id="bsa-v137-shortcuts">
 .bsa-shortcut-anchor{position:relative;min-width:0;z-index:100}
 .bsa-shortcut-anchor>.brand{width:100%;cursor:pointer}
@@ -2236,21 +2179,51 @@ body{overflow:hidden}
 .bsa-shortcut-symbol{width:23px;text-align:center;font-size:18px}
 @media(max-width:700px){.bsa-shortcut-anchor.mobile .bsa-shortcut-menu{left:0;top:calc(100% + 10px)}}
 </style>
-<style id="bsa-v138-header-edge-fix">
-/* The v133 generic child max-width:100% clamps the topbar even though
-   its negative side margins intentionally extend across the content padding.
-   Fix that element alone, without changing sidebar, grid or iPad heights. */
-@media (min-width:701px) {
-  #root > .shell > .content > .workspace-topbar {
-    box-sizing:border-box!important;
-    width:calc(100% + 2 * var(--app-pad, 32px))!important;
-    max-width:none!important;
-    margin-left:calc(-1 * var(--app-pad, 32px))!important;
-    margin-right:calc(-1 * var(--app-pad, 32px))!important;
-  }
+<style id="bsa-v139-responsive-recovery">
+*,*::before,*::after{box-sizing:border-box}
+html,body,#root{width:100%;height:100%;margin:0;padding:0;min-height:0}
+body{overflow:hidden}
+#root>.shell{display:grid;grid-template-columns:clamp(210px,18vw,260px) minmax(0,1fr);grid-template-rows:minmax(0,1fr);width:100%;height:100dvh;min-height:0;max-width:none;overflow:hidden}
+#root>.shell>.rail{grid-column:1;grid-row:1;display:flex;flex-direction:column;min-width:0;min-height:0;height:100%;overflow-y:auto;overflow-x:hidden}
+#root>.shell>.mobilebar{display:none}
+#root>.shell>.content{grid-column:2;grid-row:1;display:block;width:100%;max-width:none;min-width:0;min-height:0;height:100%;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(32px + env(safe-area-inset-bottom,0px))}
+#root>.shell>.content .view{min-width:0;max-width:100%}
+#root>.shell>.content>.workspace-topbar{max-width:none!important;box-sizing:border-box}
+.bsa-v108-top-grid{display:grid!important;grid-template-columns:minmax(0,1.6fr) minmax(270px,1fr)!important;gap:16px!important;min-width:0}
+.bsa-v108-top-grid>*{min-width:0;max-width:100%}
+.bsa-v108-top-grid>.life-home-widget{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:12px!important;min-width:0!important;max-width:100%!important;overflow:hidden!important}
+.bsa-v108-top-grid .life-home-character,.bsa-v108-top-grid .life-home-copy{width:100%!important;min-width:0!important;max-width:100%!important;flex:0 0 auto!important;overflow-wrap:anywhere}
+.bsa-v108-top-grid .life-launch-actions{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:8px!important;width:100%!important;min-width:0!important}
+.bsa-v108-top-grid .life-launch-actions>*{min-width:0!important;max-width:100%!important;width:100%!important;white-space:normal!important}
+.ai-wrap{min-width:0;width:100%;max-width:100%}
+.ai-log{min-height:clamp(220px,42dvh,560px)!important;min-width:0;overflow-wrap:anywhere}
+.ai-bar,.ai-row{min-width:0;max-width:100%}
+.ai-row textarea{min-width:0}
+@media(max-width:1150px){.bsa-v108-top-grid{grid-template-columns:minmax(0,1fr)!important}}
+@media(min-width:701px) and (max-width:1024px){
+ #root>.shell{grid-template-columns:210px minmax(0,1fr)}
+ #root>.shell>.rail{display:flex!important}
+ #root>.shell>.mobilebar{display:none!important}
+ #root>.shell>.content{grid-column:2!important;grid-row:1!important}
 }
-</style>
-</head>
+@media(max-width:700px){
+ #root>.shell{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);height:100dvh}
+ #root>.shell>.rail{display:none!important}
+ #root>.shell>.mobilebar{display:flex!important;grid-column:1;grid-row:1;min-width:0}
+ #root>.shell>.content{grid-column:1!important;grid-row:2!important;width:100%;height:100%;min-height:0;padding-bottom:calc(90px + env(safe-area-inset-bottom,0px))}
+ .bsa-v108-top-grid{grid-template-columns:minmax(0,1fr)!important}
+ .ai-log{min-height:30dvh!important}
+}
+</style><style id="bsa-v140-tested-grid">
+html,body,#root{height:100%!important;min-height:0!important;margin:0!important;padding:0!important}
+#root>.shell{display:grid!important;grid-template-columns:clamp(210px,18vw,260px) minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr)!important;height:100dvh!important;min-height:0!important;overflow:hidden!important}
+#root>.shell>.rail{display:flex!important;grid-column:1!important;grid-row:1!important;width:100%!important;max-width:100%!important;min-width:0!important;height:100%!important;min-height:0!important;overflow-y:auto!important}
+#root>.shell>.mobilebar{display:none!important}
+#root>.shell>.content{display:block!important;grid-column:2!important;grid-row:1!important;min-width:0!important;min-height:0!important;width:100%!important;height:100%!important;max-height:100%!important;overflow-y:auto!important;overflow-x:hidden!important}
+#root>.shell>.content>.workspace-topbar{width:calc(100% + 2 * var(--app-pad,24px))!important;max-width:none!important;box-sizing:border-box!important}
+@media(min-width:701px) and (max-width:1024px){#root>.shell{grid-template-columns:210px minmax(0,1fr)!important}}
+@media(max-width:700px){#root>.shell{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto minmax(0,1fr)!important}#root>.shell>.rail{display:none!important}#root>.shell>.mobilebar{display:flex!important;grid-column:1!important;grid-row:1!important}#root>.shell>.content{grid-column:1!important;grid-row:2!important;height:100%!important}}
+</style></head>
 <body>
 <div id="root"><p class="boot">Opening your study desk… If this doesn’t load, connect to the internet once so the app can save itself for offline use.</p></div>
 <script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
