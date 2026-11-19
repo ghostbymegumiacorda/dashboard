@@ -11978,101 +11978,40 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
           source:set.source,intro:set.intro,problems:(set.problems||[]).map(p=>({id:p.id,no:p.no,title:p.title,
           subtopic:p.subtopic,difficulty:p.difficulty,problem:p.problem,req:clone(p.req||[]),choices:clone(p.choices||[]),
           answer:p.answer,approach:p.approach,solution:p.solution,trap:p.trap,source:p.source,st:''}))}));
+        clean.drills=(x.drills||[]).map(d=>({id:d.id,topicId:d.topicId,topicText:d.topicText,name:d.name,q:d.q,vars:clone(d.vars||[]),given:clone(d.given||[]),ans:d.ans,fmt:d.fmt,dp:d.dp,unit:d.unit,cur:d.cur,steps:clone(d.steps||[]),req:clone(d.req||[]),tol:d.tol}));
         clean.quizzes=[];
         clean.mistakes=[];clean.sessions=[];clean.grades=[];
         return clean;
       });
       return {version:1,updatedAt:Date.now(),activeId:subjects[0]?.id||'',settings:{...DEFAULT_SETTINGS},subjects};
     };
-    // Same React dashboard and study logic, but all classmate state lives in a
-    // private namespace. The publisher owns teaching content; classmates own
-    // their independent ratings, quiz attempts and progress.
     const makeFullSharedHtml=async()=>{
       const snapshot=sharedSnapshot();
-      // Only source scripts and static styles are copied. NEVER serialize the
-      // rendered DOM: it could contain the owner's private information.
-      const scripts=[...document.scripts];
-      const appScript=scripts.filter(x=>!x.src).sort((a,b)=>b.textContent.length-a.textContent.length)[0];
-      if(!appScript||appScript.textContent.length<100000)throw Error('Main dashboard code unavailable');
-      const checkScript=scripts.filter(x=>!x.src&&x!==appScript).map(x=>x.textContent).join('\n');
-      const styles=[...document.querySelectorAll('style')].map(x=>x.outerHTML).join('\n');
-      const bootSnapshot=JSON.stringify(snapshot).replace(/</g,'\\u003c').replace(/>/g,'\\u003e');
-      const boot=`window.__BSA_SHARED_MODE__=true;
-const published=${bootSnapshot};
-const raw=window.localStorage;
-const prefix='bsa_shared_classmate_v115:';
-const mainKey='bsa-study-dashboard:v1';
-const localCopy=()=>{try{return JSON.parse(raw.getItem(prefix+mainKey)||'null')}catch(e){return null}};
-function mergePublished(){
- const old=localCopy();
- const doc=JSON.parse(JSON.stringify(published));
- if(!old||!Array.isArray(old.subjects))return doc;
- for(const sub of doc.subjects){
-  const prev=old.subjects.find(x=>x.id===sub.id);if(!prev)continue;
-  // Review status is local; questions, answers and teaching material are owner-controlled.
-  const keys=['conf','due','last','interval','ease','reps','streak','seen','rating','lastReviewed','nextReview'];
-  for(const c of sub.cards||[]){const was=(prev.cards||[]).find(x=>x.id===c.id);if(was)for(const k of keys)if(Object.prototype.hasOwnProperty.call(was,k))c[k]=was[k]}
-  for(const set of sub.psets||[]){const was=(prev.psets||[]).find(x=>x.id===set.id);if(!was)continue;
-   for(const pr of set.problems||[]){const oldPr=(was.problems||[]).find(x=>x.id===pr.id);if(oldPr)for(const k of ['st','attempts','lastAttempt'])if(Object.prototype.hasOwnProperty.call(oldPr,k))pr[k]=oldPr[k]}}
-  sub.mistakes=Array.isArray(prev.mistakes)?prev.mistakes:[];
-  sub.sessions=Array.isArray(prev.sessions)?prev.sessions:[];
-  sub.quizzes=Array.isArray(prev.quizzes)?prev.quizzes:[];
- }
- if(old.activeId&&doc.subjects.some(s=>s.id===old.activeId))doc.activeId=old.activeId;
- // Appearance is personal to the classmate; never inherit the owner's settings.
- if(old.settings&&typeof old.settings==='object')doc.settings={...doc.settings,...old.settings};
- return doc;
-}
-const scoped={
- getItem(key){key=String(key);if(key===mainKey)return JSON.stringify(mergePublished());return raw.getItem(prefix+key)},
- setItem(key,value){raw.setItem(prefix+String(key),String(value))},
- removeItem(key){raw.removeItem(prefix+String(key))},
- clear(){for(const k of Object.keys(raw))if(k.startsWith(prefix))raw.removeItem(k)},
- key(i){return Object.keys(raw).filter(k=>k.startsWith(prefix))[i]?.slice(prefix.length)||null},
- get length(){return Object.keys(raw).filter(k=>k.startsWith(prefix)).length}
-};
-window.__BSA_SHARED_STORAGE__=scoped;
-window.__BSA_READ_ONLY__=true;
-`;
-      // Use the original application code, not a separately rebuilt study library.
-      let app=appScript.textContent;
-      app=app.replace('(() => {','(() => {\n  const localStorage = window.__BSA_SHARED_STORAGE__;\n  const sessionStorage = window.__BSA_SHARED_STORAGE__;',1);
-      // Hide authoring/navigation features but keep exactly the study components.
-      const oldGroups=`{name:"Study", items:["home","guide","vault","psets","lectures","practice"]},
-      {name:"Tools", items:["toolkit","roadmap","ask","curriculum","howto"]},
-      {name:"Progress", items:["stats-clean","mistakes","grades","achievements"]},
-      {name:"Plan", items:["calendar","class"]},
-      {name:"Your space", items:["life","break","personalize"]}`;
-      const newGroups=`{name:"Study",items:["home","vault","practice","psets","lectures"]},
-      {name:"Reference",items:["toolkit"]}`;
-      if(!app.includes(oldGroups))throw Error('Shared dashboard navigation compatibility check failed');
-      app=app.replace(oldGroups,newGroups);
-      app=app.replace('["share","Classmate sharing"],','');
-      app=app.replace('if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {','if (!window.__BSA_SHARED_MODE__ && "serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {');
-      // Prevent owner-only tools and account controls from being displayed in shared Home.
-      const cssExtra=`<style id="shared-study-view">
-       .rail-tools,.rail-footer,.sync-badge,.sync-bar,.rail-search,.study-life-card,.life-home-widget,
-       [data-personal-only],.backup-guidance,.dashboard-settings,.share-panel{display:none!important}
-       .shell{min-height:100vh}
-       .shared-ribbon{padding:10px 18px;background:var(--surface-2,#eeeaf8);color:var(--text,#282636);font-size:13px;border-bottom:1px solid var(--line,#ddd)}
-       button[data-shared-authoring]{display:none!important}
-      </style>`;
-      // A well-defined editable authoring-action blocklist, without interfering
-      // with Check, Flip, Submit, Review, Next or Start actions.
-      const readonlyControls=`<script>(function(){
-       const re=/^(add (?:subject|card|flashcard|lecture|problem|question|topic)|new (?:subject|flashcard|lecture|problem|topic)|edit(?: subject| card| lecture| problem| topic)?|delete(?: .*)?|remove(?: .*)?|import(?: .*)?|sync(?: .*)?|publish(?: .*)?|share dashboard|restore(?: .*)?|clear all|reset all|quick add)$/i;
-       function mask(){document.querySelectorAll('button').forEach(b=>{if(re.test((b.textContent||'').trim())){b.hidden=true;b.disabled=true;b.setAttribute('data-shared-authoring','')}})}
-       const mo=new MutationObserver(mask);mo.observe(document.getElementById('root'),{subtree:true,childList:true});mask();
-      })();<`+'/script>';
-      const head=`<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>BSA Study Desk · Shared</title>${styles}${cssExtra}`;
-      // Script text is constructed from trusted bundled app source and a
-      // JSON-escaped allowlisted snapshot. No live DOM or GitHub token included.
-      return '<!doctype html><html lang="en"><head>'+head+'</head><body><div class="shared-ribbon">Shared BSA Study Desk · Your reviews and quiz attempts stay on this device · Materials update when the owner republishes</div><div id="root"></div>'+
+      const appScript=[...document.scripts].filter(el=>!el.src).sort((a,b)=>b.textContent.length-a.textContent.length)[0];
+      if(!appScript||appScript.textContent.length<100000)throw Error('Main dashboard source unavailable');
+      let app=appScript.textContent.trimStart();
+      const swaps=[["const [nav, setNav] = useState({ tab: \"home\", opts: {}, key: 0 });", "const [nav, setNav] = useState({ tab: \"lectures\", opts: {}, key: 0 });"], ["const [shortcutsOpen,setShortcutsOpen] = useState(false);", "const [shortcutsOpen,setShortcutsOpen] = useState(false);"], ["const stop = startSyncLoop();", "const stop = () => {};"], ["function markDirty() {", "function markDirty() { if(window.__BSA_SHARED_MODE__)return;"], ["function startSyncLoop() {", "function startSyncLoop() { if(window.__BSA_SHARED_MODE__)return ()=>{};"], ["function ghConfig() {", "function ghConfig() { if(window.__BSA_SHARED_MODE__)return null;"], ["const shortcutItems = [[\"home\",\"Home\",\"⌂\"],[\"subjects\",\"Subjects\",\"▤\"],[\"practice\",\"Practice\",\"✦\"],[\"ask\",\"Tutor\",\"✧\"],[\"life\",\"Study Life\",\"☀\"]];", "const shortcutItems = [[\"lectures\",\"Lectures\",\"▤\"],[\"vault\",\"Flashcards\",\"◇\"],[\"psets\",\"Problem sets\",\"□\"],[\"practice\",\"Practice & quizzes\",\"✦\"],[\"toolkit\",\"Accounting toolkit\",\"∑\"]];"], ["const go = (tab, opts = {}) => {", "const go = (tab, opts = {}) => { if(window.__BSA_SHARED_MODE__ && ![\"lectures\",\"vault\",\"psets\",\"practice\",\"toolkit\"].includes(tab))return;"], ["const [tool,setTool]=useState(\"notes\");", "const [tool,setTool]=useState(\"foundation\");"], ["[\"share\",\"Classmate sharing\"],", ""], ["const [modal, setModal] = useState(null);", "const [modal, setModal] = useState(null);"], ["const openEditor = (type, item = null, defaults = {}) => {", "const openEditor = (type, item = null, defaults = {}) => { if(window.__BSA_SHARED_MODE__)return;"], ["const okTabs = [\"curriculum\", \"home\", \"break\", \"life\", \"achievements\", \"stats-clean\", \"practice\", \"roadmap\", \"calendar\", \"vault\", \"mistakes\", \"grades\", \"lectures\", \"psets\", \"class\", \"toolkit\", \"howto\"];", "const okTabs = window.__BSA_SHARED_MODE__ ? [\"lectures\",\"vault\",\"psets\",\"practice\",\"toolkit\"] : [\"curriculum\", \"home\", \"break\", \"life\", \"achievements\", \"stats-clean\", \"practice\", \"roadmap\", \"calendar\", \"vault\", \"mistakes\", \"grades\", \"lectures\", \"psets\", \"class\", \"toolkit\", \"howto\"];"]];
+      if(!app.startsWith('(() => {'))throw Error('Unexpected shared app format');
+      app=app.replace('(() => {','(() => {\n const localStorage=window.__BSA_SHARED_STORAGE__;\n const sessionStorage=window.__BSA_SHARED_STORAGE__;\n');
+      const pub=app.indexOf('\n  function ClassmatePublisher('),retention=app.indexOf('\n  function RetentionTools(',pub);
+      if(pub<0||retention<0)throw Error('Cannot publish: publisher boundary changed');
+      app=app.slice(0,pub)+'\n  function ClassmatePublisher(){return null;}'+app.slice(retention);
+      for(const [before,after] of swaps){if(!app.includes(before))throw Error('Cannot publish: app compatibility changed ('+before.slice(0,40)+')');app=(before==='["share","Classmate sharing"],' ? app.split(before).join(after) : app.replace(before,after));}
+      if(!app.includes("{name:\"Study\", items:[\"home\",\"guide\",\"vault\",\"psets\",\"lectures\",\"practice\"]},\n      {name:\"Tools\", items:[\"toolkit\",\"roadmap\",\"ask\",\"curriculum\",\"howto\"]},\n      {name:\"Progress\", items:[\"stats-clean\",\"mistakes\",\"grades\",\"achievements\"]},\n      {name:\"Plan\", items:[\"calendar\",\"class\"]},\n      {name:\"Your space\", items:[\"life\",\"break\",\"personalize\"]}"))throw Error('Cannot publish: navigation compatibility changed');
+      app=app.replace("{name:\"Study\", items:[\"home\",\"guide\",\"vault\",\"psets\",\"lectures\",\"practice\"]},\n      {name:\"Tools\", items:[\"toolkit\",\"roadmap\",\"ask\",\"curriculum\",\"howto\"]},\n      {name:\"Progress\", items:[\"stats-clean\",\"mistakes\",\"grades\",\"achievements\"]},\n      {name:\"Plan\", items:[\"calendar\",\"class\"]},\n      {name:\"Your space\", items:[\"life\",\"break\",\"personalize\"]}","{name:\"Study materials\", items:[\"lectures\",\"vault\",\"psets\",\"practice\"]},\n      {name:\"Accounting tools\", items:[\"toolkit\"]}");
+      app=app.replaceAll('Welcome back, John Angel 👋','Welcome to Study Desk 👋').replaceAll('John Angel','Student');
+      const checkpoint='        learningCapture(d, n, now);\n        stampChanges(d, n, now);\n        n.updatedAt = now;\n        return n;';
+      if(!app.includes(checkpoint))throw Error('Cannot publish: progress system changed');
+      app=app.replace(checkpoint,'        learningCapture(d, n, now);\n        stampChanges(d, n, now);\n        n.updatedAt = now;\n        return window.__BSA_SHARED_MODE__ ? window.__BSA_RESTORE_CONTENT__(n) : n;');
+      const swreg='if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {';
+      if(!app.includes(swreg))throw Error('Cannot publish: service worker structure changed');
+      app=app.replace(swreg,'if (!window.__BSA_SHARED_MODE__ && "serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {');
+      const boot="window.__BSA_SHARED_MODE__=true;\nwindow.__BSA_PUBLISHED__=__SNAPSHOT__;\n(function(){\n const raw=window.localStorage;\n const prefix=\"bsa_shared_student_v144:\";\n const mainKey=\"bsa-study-dashboard:v1\";\n const progressKeys=[\"conf\",\"due\",\"last\",\"interval\",\"ease\",\"reps\",\"streak\",\"seen\",\"rating\",\"lastReviewed\",\"nextReview\",\"attempts\",\"lastAttempt\",\"st\",\"done\",\"srs\"];\n const copy=x=>JSON.parse(JSON.stringify(x));\n const read=()=>{try{return JSON.parse(raw.getItem(prefix+mainKey)||\"null\")}catch(_){return null}};\n function mergePublished(){\n   const old=read(), published=window.__BSA_PUBLISHED__;\n   if(!published||!Array.isArray(published.subjects))return old;\n   const doc=copy(published);\n   if(!old||!Array.isArray(old.subjects))return doc;\n   for(const sub of doc.subjects){\n      const prev=old.subjects.find(v=>v.id===sub.id);if(!prev)continue;\n      for(const kind of [\"cards\",\"lectures\"]){\n       for(const item of sub[kind]||[]){\n        const before=(prev[kind]||[]).find(v=>v.id===item.id);\n        if(before)for(const key of progressKeys)if(Object.prototype.hasOwnProperty.call(before,key))item[key]=before[key];\n       }\n      }\n      for(const set of sub.psets||[]){\n       const oldSet=(prev.psets||[]).find(v=>v.id===set.id);if(!oldSet)continue;\n       for(const pr of set.problems||[]){\n        const oldPr=(oldSet.problems||[]).find(v=>v.id===pr.id);if(!oldPr)continue;\n        for(const key of progressKeys)if(Object.prototype.hasOwnProperty.call(oldPr,key))pr[key]=oldPr[key];\n       }\n      }\n      // These are the STUDENT'S records, not the publisher's data.\n      for(const key of [\"mistakes\",\"sessions\",\"quizzes\",\"learningEvents\",\"days\",\"aiAttempts\"]){if(Array.isArray(prev[key]))sub[key]=copy(prev[key]);}\n   }\n   if(old.activeId&&doc.subjects.some(v=>v.id===old.activeId))doc.activeId=old.activeId;\n   if(old.settings&&typeof old.settings===\"object\")doc.settings={...doc.settings,...old.settings};\n   return doc;\n }\n window.__BSA_RESTORE_CONTENT__=doc=>{\n   const published=window.__BSA_PUBLISHED__;\n   if(!published||!Array.isArray(published.subjects))return doc;\n   const old=read();\n   try{raw.setItem(prefix+mainKey,JSON.stringify(doc));return mergePublished();}\n   finally{try{if(old)raw.setItem(prefix+mainKey,JSON.stringify(old));else raw.removeItem(prefix+mainKey)}catch(_){}}\n };\n window.__BSA_SHARED_STORAGE__={\n   getItem(key){key=String(key);if(key===mainKey){const v=mergePublished();return v?JSON.stringify(v):null;}return raw.getItem(prefix+key)},\n   setItem(key,value){raw.setItem(prefix+String(key),String(value))},\n   removeItem(key){raw.removeItem(prefix+String(key))},\n   clear(){for(let i=raw.length-1;i>=0;i--){const k=raw.key(i);if(k&&k.startsWith(prefix))raw.removeItem(k)}},\n   key(i){let out=[];for(let n=0;n<raw.length;n++){const k=raw.key(n);if(k&&k.startsWith(prefix))out.push(k.slice(prefix.length));}return out[i]||null},\n   get length(){let count=0;for(let n=0;n<raw.length;n++)if((raw.key(n)||\"\").startsWith(prefix))count++;return count;}\n };\n})();".replace('__SNAPSHOT__',JSON.stringify(snapshot).replace(/</g,'\\u003c'));
+      const styles=[...document.querySelectorAll('style')].map(el=>el.outerHTML).join('\n');
+      return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0d1320"><title>BSA Study Desk · Shared</title>'+styles+"<style id=\"bsa-shared-student-ui\">\n/* Same component design tokens as the owner's app; limited navigation and no author tools. */\n.rail-tools,.rail-footer,.sync-badge,.sync-bar,.save-note,.rail-search,.study-life-card,.life-home-widget,\n.dashboard-settings,.share-panel,.bottom-nav,.fab,.focus-bar,.study-path,.study-life,.bsa-v141-update-control,\n[data-personal-only],[data-shared-authoring]{display:none!important}\n.workspace-actions,.workspace-topbar .btn,.mobilebar>.icon-btn{display:none!important}\n.rail-nav{min-height:0;flex:1;overflow-y:auto}\n.shell>.content{padding-bottom:max(24px,env(safe-area-inset-bottom,0px))!important}\n.shared-ribbon{padding:8px 16px;background:var(--surface,#e8f2ed);border-bottom:1px solid var(--line,#bed1c6);color:var(--muted,#34463f);font-size:12px}\n@media(max-width:700px){.bottom-nav{display:none!important}.shell>.content{padding-bottom:24px!important}.mobilebar{display:flex!important}}\n</style>"+'</head><body><div id="root"></div>'+
        '<script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"><'+'/script>'+
        '<script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"><'+'/script>'+
-       '<script>'+boot+'<'+'/script>'+
-       '<script>'+checkScript+'<'+'/script>'+
-       '<script>'+app+'<'+'/script>'+readonlyControls+'</body></html>';
+       '<script>'+boot+'<'+'/script><script>'+app+'<'+'/script>'+"<script id=\"shared-readonly-controls\">(function(){\nconst deny=/^(?:add|new|edit|delete|remove|import|export|publish|sync|restore|quick add|clear all|reset all|change topic|manage subjects|classmate sharing)(?:\\b|\\s|$)/i;\nfunction mask(){const root=document.getElementById('root');if(!root)return;root.querySelectorAll('button').forEach(b=>{\nconst text=(b.textContent||'').trim();const label=(b.getAttribute('aria-label')||'').trim();\nif(deny.test(text)||deny.test(label)){b.hidden=true;b.disabled=true;b.setAttribute('data-shared-authoring','');}\n});}\nconst root=document.getElementById('root');if(root){const observer=new MutationObserver(mask);observer.observe(root,{subtree:true,childList:true});mask();}\n})();<\/script>"+'</body></html>';
     };
     const safeSharedHtml=()=>{
       const selected=data.subjects.filter(sub=>allowed.includes(sub.id));
