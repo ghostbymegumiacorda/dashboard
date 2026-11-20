@@ -1071,3 +1071,91 @@
   .bsa33-content :is(.bsa33-route-nav,.bsa33-study,.bsa33-study-crest,.bsa33-reflect,.bsa33-path-card,.bsa33-button,.bsa33-proposal-list>div,.bsa33-session-meter span,.bsa33-inline-progress i){animation:none!important;transition:none!important;transform:none!important}
   .bsa33-content :is(.bsa33-path-card,.bsa33-button):hover{transform:none!important}
 }
+
+/* ============================================================
+   BSA Study Desk V3.4 — connected study, expressive but light motion
+   Performance: only transforms/opacity animate; no blur or layout animations.
+   Theme colors stay inherited, no hard-coded light/dark surface colors.
+   ============================================================ */
+:root{--bsa34-spring:cubic-bezier(.2,.85,.25,1)}
+.bsa33-content :is(.view,.bsa3-deep-practice){animation:bsa34-page-in .32s var(--bsa34-spring) both}
+.bsa33-content :is(.page-head,.bsa205-page-head){position:relative;isolation:isolate}
+.bsa33-content :is(.page-head,.bsa205-page-head) .page-title{letter-spacing:-.04em}
+/* Older screens get the same elevated-but-readable app controls. */
+.bsa33-content .view :is(.panel,.v2-panel,.bsa205-card){border-radius:clamp(14px,1.6vw,20px);min-width:0}
+.bsa33-content .view .btn{border-radius:11px;min-height:37px;transition:transform .17s var(--bsa34-spring),box-shadow .17s,border-color .17s,background-color .17s}
+.bsa33-content .view .btn:hover:not(:disabled){transform:translateY(-1px)}
+.bsa33-content .view :is(input:not([type='checkbox']):not([type='radio']),select,textarea){max-width:100%;accent-color:var(--accent)}
+.bsa33-content .view :is(.panel,.v2-panel,.bsa205-card):focus-within{border-color:color-mix(in srgb,var(--accent) 22%,var(--line))}
+.bsa33-content .view :is(.btn,.bsa33-button,.bsa31-route-card,.bsa31-practice-tile,.bsa3-topic-folder):active{transform:scale(.985)}
+/* Topic-first session selector: desktop keeps it beside the timer. */
+.bsa34-focus-field{grid-column:2;grid-row:2;display:grid;gap:9px;min-width:0;padding:14px 15px 15px;background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 8%,var(--surface-2)),var(--surface-2));border:1px solid color-mix(in srgb,var(--accent) 24%,var(--line));border-radius:16px;font-size:.78rem;font-weight:800;color:var(--text)}
+.bsa34-focus-field:before{content:'✦  YOUR FOCUS';color:var(--accent);font-size:.63rem;letter-spacing:.10em;font-weight:880}
+.bsa34-focus-field select{min-height:45px;width:100%;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--text);padding:10px 13px;font:720 .83rem/1.2 inherit;text-overflow:ellipsis}
+.bsa33-create-board>.bsa33-time-field{grid-column:2;grid-row:3}
+.bsa33-create-board>.bsa33-proposal-list{grid-column:1;grid-row:2 / span 3}
+.bsa33-create-board>.bsa33-button{grid-column:2;grid-row:4}
+.bsa34-focus-field select:focus-visible{outline:3px solid var(--v33-focus);outline-offset:2px}
+/* Plan tasks read like a connected activity rail, not dozens of equal buttons. */
+.bsa33-task{transition:border-color .19s,background-color .19s,transform .19s var(--bsa34-spring)}
+.bsa33-task.is-next{border-color:color-mix(in srgb,var(--accent) 45%,var(--line));background:linear-gradient(110deg,color-mix(in srgb,var(--accent) 8%,var(--surface)),var(--surface) 75%)}
+.bsa33-task.is-done{opacity:.76}
+.bsa33-task.is-next .bsa33-task-index{animation:bsa34-next-pulse 3.6s ease-in-out infinite}
+.bsa33-next-block{position:relative;overflow:hidden;isolation:isolate}
+.bsa33-next-block:after{content:'';position:absolute;pointer-events:none;right:-28px;top:-55px;width:190px;height:190px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--accent) 11%,transparent),transparent 72%);z-index:-1}
+/* Topic organizer assists without moving or duplicating source records. */
+.bsa34-library-tools,.bsa34-topic-header{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.bsa34-topic-header{margin:0 0 13px}
+.bsa34-topic-header h3{margin:0!important}
+.bsa33-content .view .bsa34-topic-session,.bsa33-content .view .bsa34-sort-cta{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid color-mix(in srgb,var(--accent) 34%,var(--line));border-radius:12px;color:var(--text);background:var(--accent-soft);font-size:.76rem;font-weight:800;min-height:36px;padding:8px 12px;cursor:pointer;transition:transform .2s var(--bsa34-spring),border-color .2s}
+.bsa33-content .view .bsa34-topic-session:hover,.bsa33-content .view .bsa34-sort-cta:hover{transform:translateY(-2px);border-color:var(--accent)}
+.bsa3-topic-folder,.bsa3-question-row{transition:transform .18s var(--bsa34-spring),box-shadow .18s,border-color .18s}
+.bsa3-topic-folder:hover{transform:translateY(-2px);box-shadow:0 10px 25px -23px var(--text);border-color:color-mix(in srgb,var(--accent) 40%,var(--line))}
+/* Learning memory: one visual hierarchy, not another multi-dashboard. */
+.bsa34-memory-panel{position:relative;isolation:isolate;overflow:hidden;margin:4px 0 18px;padding:clamp(16px,2.4vw,25px);border:1px solid color-mix(in srgb,var(--accent) 26%,var(--line));background:linear-gradient(132deg,color-mix(in srgb,var(--accent) 8%,var(--surface)),var(--surface) 66%);border-radius:23px;box-shadow:0 22px 46px -47px var(--text)}
+.bsa34-memory-panel:before{content:'';position:absolute;width:220px;height:220px;right:-110px;top:-150px;pointer-events:none;border:1px solid color-mix(in srgb,var(--accent) 25%,transparent);border-radius:50%}
+.bsa34-memory-heading{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.bsa34-memory-heading h2{font:840 clamp(1.4rem,2.4vw,1.9rem)/1.17 var(--display,inherit);letter-spacing:-.04em;margin:5px 0}
+.bsa34-memory-heading p{color:var(--muted);font-size:.8rem;line-height:1.5;margin:0}
+.bsa34-memory-action{border:1px solid color-mix(in srgb,var(--accent) 30%,var(--line));border-radius:12px;background:var(--accent-soft);color:var(--text);padding:11px 14px;font-weight:800;font-size:.78rem;cursor:pointer}
+.bsa34-memory-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:17px}
+.bsa34-memory-card{display:flex;flex-direction:column;gap:4px;min-width:0;border-radius:14px;padding:13px 12px;border:1px solid color-mix(in srgb,var(--accent) 12%,var(--line));background:var(--surface)}
+.bsa34-memory-card strong{font:850 clamp(1.4rem,3vw,2rem)/1 var(--display,inherit);letter-spacing:-.04em;color:var(--accent)}
+.bsa34-memory-card>span{font-size:.81rem;font-weight:820;color:var(--text)}
+.bsa34-memory-card small{font-size:.69rem;color:var(--muted);line-height:1.35}
+.bsa34-weekly{display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,1fr);gap:17px;align-items:center;margin:19px 0 12px;padding:17px;border:1px solid var(--line);border-radius:16px;background:var(--surface)}
+.bsa34-weekly>div:first-child{display:grid;gap:5px}
+.bsa34-weekly>div:first-child strong{font-size:.91rem}
+.bsa34-weekly>div:first-child small{color:var(--muted);font-size:.75rem;line-height:1.48}
+.bsa34-week-bars{display:flex;justify-content:space-around;align-items:end;gap:9px}
+.bsa34-week{flex:1 1 0;display:grid;justify-items:center;gap:4px}
+.bsa34-week-track{position:relative;display:flex;align-items:end;width:100%;max-width:55px;height:67px;border-radius:9px 9px 3px 3px;background:color-mix(in srgb,var(--accent) 8%,var(--surface-2));overflow:hidden}
+.bsa34-week-track span{display:block;width:100%;min-height:0;background:linear-gradient(0deg,color-mix(in srgb,var(--accent) 67%,#60b9b2),var(--accent));border-radius:8px 8px 2px 2px;transition:height .36s var(--bsa34-spring)}
+.bsa34-week strong{font-size:.7rem;white-space:nowrap;font-variant-numeric:tabular-nums}
+.bsa34-week small{font-size:.65rem;color:var(--muted)}
+.bsa34-memory-note{color:var(--muted);font-size:.72rem;line-height:1.4;margin:0}
+.bsa205-master-row>.bsa34-topic-session{grid-column:1 / -1;justify-self:start}
+/* Large Journal libraries render a manageable first batch, with explicit more. */
+.bsa34-load-queue{margin:9px!important;width:calc(100% - 18px);min-height:39px!important}
+@keyframes bsa34-page-in{from{opacity:0;transform:translate3d(0,8px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+@keyframes bsa34-next-pulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 26%,transparent)}50%{box-shadow:0 0 0 6px transparent}}
+@media(max-width:1050px){.bsa34-memory-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:900px){.bsa33-create-board>.bsa34-focus-field{grid-column:2;grid-row:2}}
+@media(max-width:670px){
+  .bsa33-content :is(.view,.bsa3-deep-practice){animation-duration:.23s}
+  .bsa33-create-board>.bsa34-focus-field,.bsa33-create-board>.bsa33-time-field,.bsa33-create-board>.bsa33-proposal-list,.bsa33-create-board>.bsa33-button{grid-column:1;grid-row:auto}
+  .bsa34-focus-field{padding:12px}
+  .bsa34-memory-panel{padding:16px;border-radius:18px}
+  .bsa34-memory-cards{gap:8px;margin-top:14px}
+  .bsa34-memory-card{padding:11px;min-height:95px}
+  .bsa34-weekly{grid-template-columns:1fr;gap:12px;padding:13px}
+  .bsa34-week-track{height:53px}
+  .bsa34-memory-heading{align-items:start}
+  .bsa34-memory-action{width:100%}
+  .bsa34-topic-header{align-items:start}
+}
+@media(max-width:350px){.bsa34-memory-cards{grid-template-columns:1fr 1fr}.bsa34-memory-card>span{font-size:.74rem}.bsa34-memory-card small{font-size:.64rem}}
+@media(hover:none){.bsa3-topic-folder:hover,.bsa33-content .view .btn:hover:not(:disabled),.bsa33-content .view .bsa34-topic-session:hover{transform:none}}
+@media(prefers-reduced-motion:reduce){
+  .bsa33-content :is(.view,.bsa3-deep-practice,.bsa33-task-index,.bsa34-week-track span,.btn,.bsa3-topic-folder,.bsa3-question-row,.bsa34-topic-session,.bsa34-sort-cta){animation:none!important;transition:none!important;transform:none!important}
+}
