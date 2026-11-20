@@ -162,3 +162,42 @@
   .v2-home *, .v2-home *::before,.v2-home *::after,.rail .nav-group-links button,.v2-top-actions button {animation:none!important;transition:none!important;transform:none!important;}
 }
 @media print {.v2-topbar,.v2-bottom-nav,.v2-hero-actions,.v2-details-toggle{display:none!important}.v2-home-hero,.v2-stat,.v2-panel,.v2-tool-tile{break-inside:avoid}}
+
+/* v184 — Device-layout QA fix.
+   v183's older tablet shell rules kept the desktop rail visible at 701–899px,
+   while the V2 bottom navigation was also visible. Match the mobile/tablet
+   shell's existing two-row layout throughout the V2 mobile breakpoint. */
+@media (max-width:899px) {
+  #root > .shell {
+    grid-template-columns:minmax(0,1fr)!important;
+    grid-template-rows:auto minmax(0,1fr)!important;
+  }
+  #root > .shell > .rail { display:none!important; }
+  #root > .shell > .mobilebar {
+    display:flex!important;
+    grid-column:1!important;
+    grid-row:1!important;
+    min-width:0!important;
+  }
+  #root > .shell > .content {
+    grid-column:1!important;
+    grid-row:2!important;
+    height:100%!important;
+    max-height:100%!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+    padding-bottom:calc(88px + env(safe-area-inset-bottom,0px))!important;
+  }
+  /* The content area scrolls independently of the 60px mobilebar. A prior
+     top:52px sticky offset shifted this header over its own page contents. */
+  #root > .shell > .content > .v2-topbar {
+    position:sticky!important;
+    top:0!important;
+    margin-bottom:12px!important;
+    min-height:48px!important;
+  }
+  /* On Today, the hero already identifies the page; avoid duplicate headers
+     that waste valuable space on smaller screens. */
+  #root > .shell > .content:has(> .v2-home) > .v2-topbar { display:none!important; }
+  #root > .shell > .content:has(> .v2-home) > .v2-home { padding-top:16px; }
+}
