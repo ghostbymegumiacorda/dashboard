@@ -13580,7 +13580,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
             x.kind==='problem'&&h('label',{className:'bsa3-choose-row'},h('input',{type:'checkbox',checked:selectedProblems.includes(x.key),onChange:e=>setSelectedProblems(prev=>e.target.checked?[...new Set([...prev,x.key])]:prev.filter(k=>k!==x.key)),'aria-label':'Select problem '+bsa205Short(x.title,70)})),
             h('div',{className:'bsa3-question-copy'},h('span',{className:'bsa205-tag'},x.type),h('strong',null,bsa205Short(x.title,120)),x.setTitle&&h('small',null,'Set: '+x.setTitle),h('p',null,bsa205Short(x.text,170)),x.source&&h('small',null,'Source: '+bsa205Short(x.source,100))),
             h('div',{className:'bsa3-question-actions'},
-              h('button',{className:'btn primary',onClick:()=>go(x.route,x.opts||{})},'Open problem'),
+              h('button',{className:'btn primary',onClick:()=>go(x.route,x.opts||{})},x.kind==='problem'?'Open original problem':'Open source'),
               x.kind==='problem'&&h('label',{className:'bsa3-topic-change'},'Move topic',h('select',{value:'',onChange:e=>{const value=e.target.value;if(!value||!updateProblemTopic(x,value))return;setActiveGroup('');setTopicFilter('All topics');setVisibleCount(20)},'aria-label':'Assign topic for '+bsa205Short(x.title,60)},
                 h('option',{value:''},'Choose topic…'),h('option',{value:'inherit'},'Use set topic'),(subject.topics||[]).map(t=>h('option',{key:t.id,value:t.id},[t.code,t.title].filter(Boolean).join(' · '))),h('option',{value:'custom'},'Custom topic…')))),
               h('button',{className:'btn ghost',onClick:()=>toggleHide(x.key)},hidden.has(x.key)?'Restore':'Hide from Library')))),
@@ -13774,15 +13774,15 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const archive=id=>{update(s=>{const x=(s.practiceSessions||[]).find(r=>r.id===id);if(x)x.archived=true});toast('Plan filed in session history. Study progress and grades are unchanged.');};
     const listed=active||sessions[0]||null;
     return h('section',{className:'view bsa205-page'},
-      h('div',{className:'bsa205-page-head'},h('div',null,h('span',{className:'bsa205-overline'},'ONE STUDY FLOW · NO DUPLICATE QUESTIONS'),h('h1',null,'Study Session Builder'),h('p',null,'Use your current lectures, due reviews, mistakes, written problems and journal exercises in one guided session.'))),
+      h('div',{className:'bsa205-page-head'},h('div',null,h('span',{className:'bsa205-overline'},'ONE STUDY FLOW · NO DUPLICATE QUESTIONS'),h('h1',null,'Plan your study session'),h('p',null,'Step 1: pick your available time. Save a plan and open its blocks. When ready, go to Practice.'))),
       h('div',{className:'bsa205-study-grid'},
         h('div',{className:'bsa205-card'},h('h2',null,'Build your next session'),h('label',null,'Time available',h('select',{value:budget,onChange:e=>setBudget(Number(e.target.value))},[20,40,60,90].map(m=>h('option',{key:m,value:m},m+' minutes')))),
           h('div',{className:'bsa205-session-proposal'},proposal.map(x=>h('div',{key:x.key},h('span',null,x.mins+'m'),h('div',null,h('strong',null,x.title),h('small',null,x.detail))))),
-          h('button',{className:'btn primary',onClick:create},'Create study session'),h('p',{className:'muted small'},'The plan only links to existing material. It never makes a new problem set or records study minutes automatically.')),
+          h('button',{className:'btn primary',onClick:create},'Save this study plan'),h('p',{className:'muted small'},'The plan only links to existing material. It never makes a new problem set or records study minutes automatically.')),
         h('div',{className:'bsa205-card'},h('div',{className:'bsa205-card-head'},h('h2',null,'Continue your plan'),listed&&h('span',{className:'bsa205-tag'},(listed.blocks||[]).filter(x=>x.done).length+'/'+(listed.blocks||[]).length+' finished')),
           listed?h('div',{className:'bsa205-live-session'},h('p',{className:'muted small'},'Created '+bsa205Date(listed.createdAt)+' · '+listed.budget+'-min target'),
             (listed.blocks||[]).map(b=>h('div',{className:'bsa205-session-block'+(b.done?' done':''),key:b.key},h('label',null,h('input',{type:'checkbox',checked:!!b.done,onChange:()=>toggle(listed.id,b.key),'aria-label':'Mark '+b.title+' done'})),
-              h('div',null,h('strong',null,b.title),h('small',null,b.detail)),h('button',{className:'btn',onClick:()=>go(b.route,b.opts||{})},'Open'))),
+              h('div',null,h('strong',null,b.title),h('small',null,b.detail)),h('button',{className:'btn',onClick:()=>go(b.route,b.opts||{})},'Open: '+b.title))),
             h('div',{className:'bsa205-action-row'},h('button',{className:'btn ghost',onClick:()=>archive(listed.id)},'File this plan'),h('button',{className:'btn ghost',onClick:()=>setShowMore(v=>!v)},showMore?'Hide past sessions':'Session history'))):h('p',{className:'muted'},'Your next session will appear here when you create one.'),
           showMore&&sessions.slice(0,20).map(s=>h('div',{className:'bsa205-history-row',key:s.id},h('span',null,bsa205Date(s.createdAt)),h('span',null,(s.blocks||[]).filter(b=>b.done).length+' / '+(s.blocks||[]).length+' blocks'),h('span',null,s.archived?'Filed':'Active'))))),
       h('details',{className:'bsa205-card bsa3-study-other'},h('summary',null,'Other study tools (optional)'),h('div',{className:'bsa205-route-grid'},[
@@ -13818,67 +13818,172 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
           h('p',{className:'muted small'},'Self-rated completion, calendar plans, and XP are deliberately excluded from answer accuracy. Guessed and assisted answers are not counted as confident independent recall.'))));
   }
   /* V3.0: one landing page, focused workspaces. All existing work areas remain reachable. */
-  function BSA3Today({subject,go,settings}){
+  /* V3.1: Restore the richer V2 visual language while connecting the task flow. */
+  function BSA31StudyPath({tab,opts,go}){
+    const step=(tab==='study'||tab==='lectures'||tab==='ask'||tab==='split')?1:
+      (tab==='mistakes'||(tab==='practice'&&opts?.start==='review'))?3:
+      (['practice','mcq','psets','accounting-lab','accounting-cycle','vault'].includes(tab))?2:0;
+    if(!step)return null;
+    const route=(n)=>n===1?go('study'):n===2?go('practice'):go('mistakes');
+    return h('nav',{className:'bsa31-flowbar','aria-label':'Three-step learning path'},
+      h('span',{className:'bsa31-flow-label'},'YOUR STUDY ROUTE'),
+      [
+        ['01','Learn & plan','study'],['02','Practice','practice'],['03','Review mistakes','mistakes']
+      ].map(([number,title,target],i)=>h('button',{key:target,type:'button',className:'bsa31-flow-step'+(step===i+1?' current':''), 'aria-current':step===i+1?'step':undefined,
+        title:'Go to '+title,onClick:()=>route(i+1)},
+        h('span',{className:'bsa31-flow-n'},number),h('span',null,title))),
+      h('span',{className:'bsa31-flow-hint'},step===1?'Next: choose a practice activity':step===2?'Next: revisit errors':'Review finished? Continue learning'));
+  }
+  /* V3.2: daily encouragement uses the Manila calendar day, so it stays
+     consistent across the user's desktop, iPad and Android devices. It is
+     deliberately separate from the actual, data-based study recommendation. */
+  const BSA32_DAILY_LINES = [
+    ['One topic at a time.','One step stronger.','Learning is easier when you give yourself room to understand.'],
+    ['Progress takes practice.','You are building it.','You do not need to master everything in one sitting.'],
+    ['Start with curiosity.','Keep the momentum.','A question you explore today can become a strength tomorrow.'],
+    ['Small wins add up.','Keep going.','Finish a manageable step, then choose the next one.'],
+    ['Confusion is a starting point.','Not the finish line.','Find the part you do not understand and work from there.'],
+    ['Every attempt teaches.','Even the tricky ones.','Notice what changed between your first try and your next.'],
+    ['Your pace is valid.','Your effort matters.','Steady understanding is worth more than rushing ahead.'],
+    ['Ask better questions.','Find clearer answers.','Try explaining the idea in your own words.'],
+    ['Keep it simple today.','Learn one useful thing.','One clear concept can make the next topic easier.'],
+    ['A little review today.','More confidence later.','Revisit one thing you almost forgot.'],
+    ['Practice with purpose.','Not just for a score.','Pay attention to why an answer works.'],
+    ['You can begin again.','Right where you are.','Your next study session does not need to be perfect.'],
+    ['Understand the why.','Remember the how.','Focus on the reasoning behind each step.'],
+    ['Make room for mistakes.','Then learn from them.','Corrections are part of good practice.'],
+    ['Little by little.','It starts to click.','A difficult chapter can become manageable in pieces.'],
+    ['Focus on one step.','The rest can wait.','Choose a task that fits the time you have.'],
+    ['Try it yourself first.','Then check your work.','An honest attempt reveals what to study next.'],
+    ['Knowledge grows quietly.','Keep showing up.','Consistent practice can be more useful than a perfect session.'],
+    ['Turn uncertainty.','Into understanding.','Start with the question that feels hardest to explain.'],
+    ['Build the foundation.','One idea at a time.','Strong basics make unfamiliar problems less intimidating.'],
+    ['Today is for learning.','Not proving anything.','Give yourself time to think through the problem.'],
+    ['Your effort has direction.','Follow the next step.','Learn, practice, then review what still needs work.'],
+    ['You are allowed to pause.','And come back stronger.','A short, focused session is still useful.'],
+    ['Take the next question.','Not the whole mountain.','Concentrate on what you can work through now.'],
+    ['Read with intention.','Practice with patience.','Understanding grows when reading becomes active.'],
+    ['Do the thinking.','Own the progress.','Explain each answer before checking the solution.'],
+    ['Start small.','Finish meaningfully.','One complete practice problem beats a dozen rushed guesses.'],
+    ['A fresh day.','A fresh perspective.','Try the topic again with a different example.'],
+    ['Learning is not a race.','Clarity is the goal.','Work toward an answer you can explain, not just recognize.'],
+    ['Stay open to learning.','You might surprise yourself.','Return to something that used to feel difficult.'],
+    ['Turn notes into knowledge.','Try a question.','Recall what you learned without looking at the page.']
+  ];
+  function bsa32ManilaDay(now=new Date()){
+    try{
+      const parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Manila',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(now);
+      const get=key=>Number(parts.find(p=>p.type===key)?.value||0);
+      const y=get('year'),m=get('month'),d=get('day');
+      if(y&&m&&d)return Math.floor(Date.UTC(y,m-1,d)/86400000);
+    }catch(e){}
+    return Math.floor(Date.UTC(now.getFullYear(),now.getMonth(),now.getDate())/86400000);
+  }
+  function bsa32DailyLine(now=new Date()){
+    const day=bsa32ManilaDay(now);
+    const i=((day%BSA32_DAILY_LINES.length)+BSA32_DAILY_LINES.length)%BSA32_DAILY_LINES.length;
+    const line=BSA32_DAILY_LINES[i];
+    return {day,lead:line[0],highlight:line[1],support:line[2]};
+  }
+  function BSA3Today({subject,go,settings,openEditor,update,toast}){
+    const [dailyLine,setDailyLine]=useState(()=>bsa32DailyLine());
+    useEffect(()=>{
+      // Refresh only if the Manila date has changed; no network or saved data needed.
+      const tick=()=>setDailyLine(old=>{const next=bsa32DailyLine();return old.day===next.day?old:next});
+      const timer=setInterval(tick,5*60*1000);
+      return ()=>clearInterval(timer);
+    },[]);
     const review=buildReview(subject,settings?.newPerDay||10,settings?.maxPerDay||0);
     const due=(review.due||[]).length+(review.mist||[]).length+(review.prob||[]).length;
     const mistakes=(subject.mistakes||[]).filter(x=>x.status!=='Cleared').length;
     const inbox=(subject.studyInbox||[]).filter(x=>x.status==='new').length;
-    const recent=bsa181Read().recent.filter(x=>x.subjectId===subject.id&&x.tab!=='home'&&x.tab!=='guide').slice(0,2);
-    const next=mistakes?{label:'Continue with your mistakes',detail:mistakes+' saved mistakes to revisit',tab:'mistakes'}:
-      due?{label:'Continue your review',detail:due+' review items due',tab:'practice',opts:{mode:'advanced',start:'review'}}:
-      inbox?{label:'Organize your Study Inbox',detail:inbox+' unsorted items',tab:'library',opts:{tab:'inbox'}}:
-      {label:'Start a focused study session',detail:'Choose a manageable plan for today',tab:'study'};
-    return h('section',{className:'view bsa3-today'},
-      h('div',{className:'bsa3-today-header'},h('span',{className:'bsa205-overline'},'YOUR STUDY SPACE'),h('h1',null,'Today'),h('p',null,subject.name||'Choose your subject and continue learning.')),
-      h('article',{className:'bsa3-today-next'},h('div',null,h('span',{className:'bsa205-overline'},'SUGGESTED NEXT STEP'),h('h2',null,next.label),h('p',null,next.detail)),h('button',{className:'btn primary',onClick:()=>go(next.tab,next.opts||{})},'Continue →')),
-      h('div',{className:'bsa3-today-choices','aria-label':'Choose your next task'},[
-        ['practice','Practice','Take a quiz or solve an exercise'],
-        ['library','Find a question','Browse written problems by topic'],
-        ['study','Study','Read and plan a focused session']
-      ].map(([tab,label,desc])=>h('button',{key:tab,className:'bsa3-today-choice',onClick:()=>go(tab)},h('strong',null,label),h('span',null,desc),h('span',{'aria-hidden':'true'},'→')))),
-      recent.length>0&&h('section',{className:'bsa3-today-recent'},h('h2',null,'Recently opened'),recent.map(x=>h('button',{key:x.tab+String(x.open||''),className:'bsa3-today-recent-link',onClick:()=>go(x.tab,x.open?{open:x.open}:{})},x.label||x.tab,' →'))),
-      h('div',{className:'bsa3-today-guide'},h('span',null,'Not sure where to go?'),h('button',{className:'btn',onClick:()=>go('guide')},'Start the walkthrough')),
-      h('details',{className:'bsa3-today-extra'},h('summary',null,'Planning, progress & other tools'),
-        h('div',null,[['week','Weekly plan'],['insights','Learning progress'],['safety','Device & data safety'],['accounting-cycle','Accounting Cycle'],['split','Split Study']].map(([tab,label])=>h('button',{key:tab,className:'btn',onClick:()=>go(tab)},label)))));
+    const written=(subject.psets||[]).reduce((n,set)=>n+(set.problems||[]).filter(p=>!bsa198StoredKeyValid(p)).length,0);
+    const recent=bsa181Read().recent.filter(x=>x.subjectId===subject.id&&!['home','guide'].includes(x.tab)).slice(0,2);
+    const next=mistakes?{title:'Revisit your saved mistakes',description:mistakes+' unresolved question'+(mistakes===1?'':'s')+' to learn from.',route:'mistakes',label:'Open mistake review'}:
+      due?{title:'Your spaced review is ready',description:due+' review items are waiting.',route:'practice',opts:{start:'review'},label:'Start due reviews'}:
+      inbox?{title:'Sort your new materials',description:inbox+' item'+(inbox===1?'':'s')+' need a topic or destination.',route:'library',opts:{tab:'inbox'},label:'Open Study Inbox'}:
+      {title:'Plan a focused study session',description:'Choose a realistic session, then follow its saved study blocks.',route:'study',label:'Build a study plan'};
+    const steps=[
+      {number:'01',icon:'✦',title:'Learn & plan',tag:'STEP ONE',detail:'Read a lesson or create a focused study plan.',action:'Open study planner',route:'study'},
+      {number:'02',icon:'✎',title:'Try a problem',tag:'STEP TWO',detail:'Choose MCQ, written problems, journal entries, or flashcards.',action:'Choose practice',route:'practice'},
+      {number:'03',icon:'↻',title:'Fix & remember',tag:'STEP THREE',detail:due?due+' review items due. Return to tricky concepts.':'Revisit mistakes or browse your review tools.',action:due?'Start due reviews':'Open mistake log',route:due?'practice':'mistakes',opts:due?{start:'review'}:{}}
+    ];
+    return h('section',{className:'view bsa205-page bsa205-home bsa31-home'},
+      h('div',{className:'bsa205-hero bsa31-hero'},
+        h('div',{className:'bsa205-hero-copy'},
+          h('span',{className:'bsa205-hero-eyebrow'},'TODAY’S ENCOURAGEMENT  /  '+new Date().toLocaleDateString('en-PH',{weekday:'long',month:'long',day:'numeric',timeZone:'Asia/Manila'})),
+          h('h1',null,dailyLine.lead,h('span',null,' '+dailyLine.highlight)),
+          h('p',null,dailyLine.support+' Your suggested next step for '+(subject.name||'your subject')+' is right below.'),
+          h('div',{className:'bsa31-hero-next'},h('span',null,'RECOMMENDED FOR YOU'),h('strong',null,next.title),h('small',null,next.description)),
+          h('div',{className:'bsa205-hero-actions'},
+            h('button',{className:'bsa205-primary-action',onClick:()=>go(next.route,next.opts||{})},next.label,'  ↗'),
+            h('button',{className:'bsa205-hero-secondary',onClick:()=>go('guide')},'How the study flow works'))),
+        h('div',{className:'bsa205-hero-orb bsa31-hero-orb','aria-hidden':'true'},h('span',null,'Σ'),h('small',null,subject.code||'BSA'))),
+      h('div',{className:'bsa31-overview'},
+        h('div',{className:'bsa31-overview-title'},h('div',null,h('span',{className:'bsa205-overline'},'ONE CONNECTED WORKFLOW'),h('h2',null,'Learn → Practice → Review'),h('p',null,'Use the steps in order, or jump to the part you need.')),h('span',{className:'bsa31-journey-mark'},'01  →  02  →  03')),
+        h('div',{className:'bsa31-route-cards'},steps.map(x=>h('button',{className:'bsa31-route-card',type:'button',key:x.number,onClick:()=>go(x.route,x.opts||{}), 'aria-label':x.action+' — '+x.detail},
+          h('span',{className:'bsa31-route-head'},h('span',null,x.number+' / '+x.tag),h('span',{className:'bsa31-route-icon','aria-hidden':'true'},x.icon)),
+          h('strong',null,x.title),h('p',null,x.detail),h('span',{className:'bsa31-route-link'},x.action+'  ↗'))))),
+      h('div',{className:'bsa31-secondary-grid'},
+        h('section',{className:'bsa205-card bsa31-recent'},
+          h('div',{className:'bsa205-card-head'},h('h2',null,'Continue where you left off'),h('span',{className:'bsa205-tag'},'Your activity')),
+          recent.length?recent.map((x,i)=>h('button',{className:'bsa205-recent-row',key:i,onClick:()=>go(x.tab,x.open?{open:x.open}:{})},h('span',{className:'bsa205-number'},String(i+1).padStart(2,'0')),h('span',null,x.label||x.tab),h('span',null,'↗'))):h('p',{className:'muted small'},'The materials you open will appear here, so you can return to them.'),
+          h('button',{className:'bsa31-quiet-link',onClick:()=>go('library',{tab:'all'})},'Find a written problem by topic  ↗')),
+        h('section',{className:'bsa31-at-glance'},
+          h('span',{className:'bsa205-overline'},'YOUR MATERIALS AT A GLANCE'),
+          h('div',{className:'bsa31-mini-metrics'},[
+            [written,'Written problems'],[due,'Due reviews'],[mistakes,'Open mistakes']
+          ].map(([n,label])=>h('div',{key:label},h('strong',null,n),h('span',null,label)))),
+          h('p',null,'These are counts, not extra places to start. Use the three study steps above.'))),
+      h('details',{className:'bsa31-home-extras'},h('summary',null,'Looking for an advanced feature?'),h('div',{className:'bsa205-action-row'},[
+        ['Library & materials','library'],['Accounting Cycle Studio','accounting-cycle'],['Weekly study plan','week'],['Learning insights','insights'],['iPad Split Study','split'],['Data safety','safety']
+      ].map(([label,route])=>h('button',{className:'btn',key:route,onClick:()=>go(route)},label)))),
+      h('p',{className:'bsa31-data-note'},'Your existing problems, quiz history and study records are unchanged.'));
   }
   function BSA3Practice({subject,update,toast,go,init,settings,setSettings,data,openEditor}){
     if(init?.mode==='advanced'||init?.start)return h('section',{className:'bsa3-deep-practice'},
       h('button',{className:'btn ghost bsa3-back-to-practice',onClick:()=>go('practice')},'← Back to practice choices'),
       h(PracticeView,{subject,update,toast,go,init,settings,setSettings,data,openEditor}));
-    const mcqTotal=(subject.mcqSets||[]).reduce((n,x)=>n+(x.problems||[]).length,0);
+    const mcq=(subject.mcqSets||[]).reduce((n,x)=>n+(x.problems||[]).length,0);
     const written=(subject.psets||[]).reduce((n,x)=>n+(x.problems||[]).filter(p=>!bsa198StoredKeyValid(p)).length,0);
     const reviews=buildReview(subject,settings?.newPerDay||10,settings?.maxPerDay||0);
-    const totalReview=(reviews.due||[]).length+(reviews.mist||[]).length+(reviews.prob||[]).length;
-    return h('section',{className:'view bsa3-practice'},
-      h('header',{className:'bsa3-focus-head'},h('span',{className:'bsa205-overline'},'PRACTICE WORKSPACE'),h('h1',null,'What would you like to practice?'),h('p',null,'Choose one method. Each button goes directly to the activity—not another dashboard.')),
-      h('div',{className:'bsa3-practice-actions'},[
-        {title:'Multiple-choice quiz',help:'Answer questions and review explanations',metric:mcqTotal+' questions in your library',tab:'mcq'},
-        {title:'Written problems',help:'Find calculation and accounting problems by topic',metric:written+' written problems',tab:'library',opts:{tab:'all'}},
-        {title:'Accounting Lab',help:'Practice and check debit/credit entries',metric:'Interactive journal entries',tab:'accounting-lab'},
-        {title:'Flashcards & daily review',help:'Recall topics and return to past mistakes',metric:totalReview+' items due',tab:'practice',opts:{mode:'advanced',start:totalReview?'review':undefined}}
-      ].map((x,i)=>h('button',{key:x.title,className:'bsa3-practice-action',onClick:()=>go(x.tab,x.opts||{})},
-          h('span',{className:'bsa3-practice-number'},String(i+1).padStart(2,'0')),h('span',{className:'bsa3-practice-action-copy'},h('strong',null,x.title),h('small',null,x.help),h('span',null,x.metric)),h('span',{'aria-hidden':'true'},'→')))),
-      h('details',{className:'bsa3-practice-more'},h('summary',null,'More ways to practice'),h('div',{className:'bsa3-practice-more-links'},[
-        ['mistakes','Review mistakes'],['accounting-cycle','Full Accounting Cycle'],['psets','Original Problem Sets'],['vault','Flashcard library']
-      ].map(([tab,label])=>h('button',{className:'btn',key:tab,onClick:()=>go(tab)},label)),h('button',{className:'btn',onClick:()=>go('practice',{mode:'advanced'})},'Advanced review tools'))));
+    const due=(reviews.due||[]).length+(reviews.mist||[]).length+(reviews.prob||[]).length;
+    const activities=[
+      {icon:'A',theme:'quiz',title:'Multiple-choice questions',desc:'Choose a quiz set and answer one question at a time.',meta:mcq+' questions available',action:'Open MCQ library',tab:'mcq'},
+      {icon:'✎',theme:'written',title:'Written & calculation problems',desc:'Choose a topic folder, then solve a problem from its original set.',meta:written+' written problems',action:'Browse topic folders',tab:'library',opts:{tab:'all'}},
+      {icon:'Σ',theme:'journal',title:'Journal entries & Accounting Lab',desc:'Enter debits and credits and check them against saved answer keys.',meta:'Interactive accounting practice',action:'Open Accounting Lab',tab:'accounting-lab'},
+      {icon:'↻',theme:'review',title:'Flashcards & spaced review',desc:due?'Resume questions due for review.':'Open your flashcards and study what you want to remember.',meta:due+' review items due',action:due?'Start due reviews':'Open flashcards',tab:due?'practice':'vault',opts:due?{start:'review'}:{}}
+    ];
+    return h('section',{className:'view bsa3-practice bsa31-practice'},
+      h('header',{className:'bsa31-practice-hero'},h('span',{className:'bsa205-overline'},'STEP 02 / ACTIVE PRACTICE'),h('h1',null,'Choose how you want to ',h('span',null,'practice.')),
+        h('p',null,'Four answer formats, four clear destinations. Your results and mistakes feed into the same review system.')),
+      h('div',{className:'bsa31-practice-grid'},activities.map((x,i)=>h('button',{type:'button',key:x.theme,className:'bsa31-practice-tile '+x.theme,onClick:()=>go(x.tab,x.opts||{}), 'aria-label':x.action},
+        h('span',{className:'bsa31-practice-tile-top'},h('span',{className:'bsa31-practice-icon','aria-hidden':'true'},x.icon),h('small',null,'OPTION 0'+(i+1))),
+        h('strong',null,x.title),h('p',null,x.desc),h('span',{className:'bsa31-practice-meta'},x.meta),h('span',{className:'bsa31-practice-cta'},x.action+'  ↗')))),
+      h('div',{className:'bsa31-after-practice'},
+        h('div',null,h('strong',null,'Finished a practice session?'),h('p',null,'Review incorrect answers so they become tomorrow’s stronger topics.')),
+        h('button',{className:'btn primary',onClick:()=>go('mistakes')},'Open mistake review  ↗')),
+      h('details',{className:'bsa3-practice-more'},h('summary',null,'Specialized practice tools'),h('div',{className:'bsa3-practice-more-links'},[
+        ['accounting-cycle','Full Accounting Cycle'],['psets','Original Problem Sets'],['practice','Advanced review options']
+      ].map(([tab,label])=>h('button',{className:'btn',key:label,onClick:()=>go(tab,tab==='practice'?{mode:'advanced'}:{})},label)))));
   }
-  /* v3: Manual orientation checklist. This does not claim tests happened merely because pages load. */
+  /* Guided walkthrough carried forward from V3.0; no data migration. */
   const BSA3_GUIDE=[
-    {title:'Find a written problem',where:'Library → Browse',steps:'Choose Written problems, tap a topic folder, then open one question. Try search if you know a keyword.',tab:'library',opts:{tab:'all'}},
-    {title:'Try a quiz',where:'Practice',steps:'Choose Smart Mix, answer a few questions, then check whether mistakes are saved in review history.',tab:'practice'},
-    {title:'Try Accounting Lab',where:'Practice → Accounting Lab',steps:'Open an exercise, enter debit and credit lines, check the feedback, and reveal the model solution.',tab:'accounting-lab'},
-    {title:'Check a source link',where:'Library → Source links',steps:'Paste one Google Drive PDF link and open it. No PDF upload to the dashboard is required.',tab:'library',opts:{tab:'sources'}},
-    {title:'Check your data backup',where:'Import & export',steps:'Export your academic data and keep the file in a safe location. The website source ZIP is not a personal-data backup.',tab:'data',opts:{tab:'export'}}
+    {title:'Find a written problem',where:'Library → Written problems',steps:'Open a topic folder, choose a written question, and use search when needed.',tab:'library',opts:{tab:'all'}},
+    {title:'Try multiple-choice practice',where:'Practice → Multiple-choice questions',steps:'Choose an MCQ set, answer a question, and review its explanation.',tab:'mcq'},
+    {title:'Try journal entries',where:'Practice → Accounting Lab',steps:'Open an exercise, enter debit and credit lines, and compare your work with the answer key.',tab:'accounting-lab'},
+    {title:'Check a textbook source',where:'Library → PDF links',steps:'Save a Google Drive link to a large textbook. Keep the original PDF in your cloud drive.',tab:'library',opts:{tab:'sources'}},
+    {title:'Protect your records',where:'Data safety',steps:'Export your study-data backup. Website source ZIPs do not include your saved progress.',tab:'safety'}
   ];
   function BSA3StartGuide({go}){
     const [done,setDone]=useState(()=>{try{return JSON.parse(localStorage.getItem('bsa-v3-guide-tested')||'[]')}catch(_){return []}});
     const mark=(i)=>{const next=done.includes(i)?done.filter(x=>x!==i):[...done,i];setDone(next);try{localStorage.setItem('bsa-v3-guide-tested',JSON.stringify(next))}catch(_){}};
     return h('section',{className:'view bsa3-guide'},
-      h('header',{className:'bsa3-guide-head'},h('span',{className:'bsa205-overline'},'BSA STUDY DESK V3.0'),h('h1',null,'Start here'),h('p',null,'You do not have to learn every tool. Test these five everyday workflows, one at a time.'),h('div',{className:'bsa3-guide-progress'},h('strong',null,done.length+' of '+BSA3_GUIDE.length+' checked'),h('span',null,'Only you can mark a step tested. This checklist does not change XP, scores or course records.'))),
+      h('header',{className:'bsa3-guide-head'},h('span',{className:'bsa205-overline'},'BSA STUDY DESK V3.1'),h('h1',null,'Start here'),h('p',null,'You do not have to learn every tool. Test these five everyday workflows, one at a time.'),h('div',{className:'bsa3-guide-progress'},h('strong',null,done.length+' of '+BSA3_GUIDE.length+' checked'),h('span',null,'Only you can mark a step tested. This checklist does not change XP, scores or course records.'))),
       h('div',{className:'bsa3-guide-steps'},BSA3_GUIDE.map((step,i)=>h('article',{key:i,className:'bsa3-guide-step'},
         h('span',{className:'bsa3-guide-n'},String(i+1).padStart(2,'0')),
         h('div',null,h('h2',null,step.title),h('small',null,step.where),h('p',null,step.steps),
-          h('div',{className:'bsa3-guide-actions'},h('button',{className:'btn primary',onClick:()=>go(step.tab,step.opts||{})},'Open this feature'),
+          h('div',{className:'bsa3-guide-actions'},h('button',{className:'btn primary',onClick:()=>go(step.tab,step.opts||{})},'Go to: '+step.where),
           h('label',null,h('input',{type:'checkbox',checked:done.includes(i),onChange:()=>mark(i)}),'I tested this')))))),
       h('details',{className:'bsa3-guide-more'},h('summary',null,'What about the other tools?'),h('p',null,'They are still available inside Study, Practice, Library, Progress and the expanded navigation. You can ignore them until you need them.')));
   }
@@ -14017,7 +14122,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       setNav((n) => ({ tab, opts, key: n.key + 1 }));
       if (!opts.open) { const workspace=document.querySelector(".shell > .content"); if (workspace) workspace.scrollTop=0; else window.scrollTo({top:0}); }
     };
-    const shortcutItems = [["home","Today","⌂"],["study","Study studio","✦"],["practice","Practice","✓"],["library","Library","▤"],["insights","Insights","◈"],["subjects","Switch subject","∑"]];
+    const shortcutItems = [["home","Today","⌂"],["study","Learn & plan","✦"],["practice","Practice","✓"],["library","Library","▤"],["insights","Insights","◈"],["subjects","Switch subject","∑"]];
     const shortcutGo = (tab) => {
       setShortcutsOpen(false);
       if (tab === "subjects") setModal("subjects");
@@ -14144,8 +14249,8 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     useEffect(() => { setBadge(reviewCount); }, [reviewCount]);
     const tabs = [
       ["home", "Today", "home"],
-      ["study", "Study session", "lecture"],
-      ["library", "Find materials", "book"],
+      ["study", "Learn", "lecture"],
+      ["library", "Library", "book"],
       ["insights", "Progress", "grade"],
       ["accounting-cycle", "Accounting Cycle", "pset"],
       ["workspace", "Study Workspace", "book"],
@@ -14176,7 +14281,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     ];
     // v205: Five useful destinations first; advanced tools stay one tap away.
     const navGroups = [
-      {name:"Main",items:["home","study","practice","library","insights"]},
+      {name:"Your workflow",items:["home","study","practice","library","insights"]},
       {name:"Learning tools",items:["lectures","rules","vault","split","ask","workspace"]},
       {name:"Accounting tools",items:["accounting-lab","accounting-cycle","mcq","psets","mistakes"]},
       {name:"Plan & progress",items:["week","calendar","grades","stats-clean","class","roadmap","knowledge","achievements"]},
@@ -14211,11 +14316,12 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
         h("div",{className:"workspace-context"},h("span",{className:"workspace-eyebrow"},"STUDY SPACE  /"),h("strong",null,(tabs.find(t=>t[0]===nav.tab)||[null,"Today"])[1]),h("span",{className:"workspace-subject"},subject.code||subject.name)),
         h("div",{className:"workspace-actions v2-top-actions"},h("button",{className:"v2-top-search",onClick:()=>setSpotlightOpen(true),title:"Search · Ctrl/⌘ + K","aria-label":"Search all study materials"},"⌕  Search",h("kbd",null,"⌘ K")))),
       h(ScreenBoundary,{key:nav.tab,route:nav.tab,onHome:()=>go("home")},h(React.Fragment,null,
+      h(BSA31StudyPath,{tab:nav.tab,opts:nav.opts,go}),
       nav.tab === "guide" && h(BSA3StartGuide,{go}), nav.tab === "break" && h(BreakCorner), nav.tab === "joy" && h(JoyHub,{go}), nav.tab === "life" && h(StudyLife,{go}), nav.tab === "achievements" && h(AcademicProgress,{go}), nav.tab === "stats-clean" && h(StudyReport,{data,update,toast,go}), nav.tab === "private-vault" && !window.__BSA_SHARED_MODE__ && h(PrivateVault,{toast}), nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data,initialTool:nav.opts?.tool})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), nav.tab === "home" && h(BSA3Today, { ...viewProps }), nav.tab === "study" && h(BSA205Study,{...viewProps}), nav.tab === "library" && h(BSA205Library,{...viewProps}), nav.tab === "insights" && h(BSA205Mastery,{...viewProps}), nav.tab === "accounting-cycle" && h(BSA205Cycle,{...viewProps}), nav.tab === "split" && h(BSA186SplitStudy,{subject,toast,go,init:nav.opts}), nav.tab === "accounting-lab" && h(BSA187AccountingLab,{subject,update,toast,go}), nav.tab === "week" && h(BSA191WeeklyPlanner,{subject,update,go,openEditor,toast}), nav.tab === "knowledge" && h(BSA192KnowledgeMap,{subject,go}), nav.tab === "safety" && h(BSA193DeviceSafety,{data,go,toast}), nav.tab === "practice" && h(BSA3Practice, { ...viewProps, data }), nav.tab === "mcq" && h(MCQPage,{...viewProps}), nav.tab === "rules" && h(RulesLibrary,{...viewProps}), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(CalendarView, { ...viewProps }), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "workspace" && h(BSA181Workspace, { ...viewProps, initialTab:nav.opts?.tab, undoAvailable:!!undo, onGlobalUndo:doUndo }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(PsView, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps, key:subject.id }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })))),
       h(BSA181HighlightTool,{subject,tab:nav.tab,go,toast}),
       spotlightOpen && h(BSA181Spotlight,{data,go,onSwitch:(id,tab,opts)=>{setData(d=>({...d,activeId:id}));go(tab,opts)},onClose:()=>setSpotlightOpen(false)}),
       /* @__PURE__ */ h("nav",{className:"bottom-nav v2-bottom-nav","aria-label":"Mobile navigation",onTouchStart:touchNavStart,onTouchEnd:touchNavEnd},
-        [["home","Today","home"],["study","Study","lecture"],["practice","Practice","bolt"],["library","Library","book"]].map(([k,l,ic])=>h("button",{type:"button",key:k,className:nav.tab===k?"on":"","aria-current":nav.tab===k?"page":undefined,onClick:()=>go(k)},h(Icon,{name:ic}),h("span",null,l))),
+        [["home","Today","home"],["study","Learn","lecture"],["practice","Practice","bolt"],["library","Library","book"]].map(([k,l,ic])=>h("button",{type:"button",key:k,className:nav.tab===k?"on":"","aria-current":nav.tab===k?"page":undefined,onClick:()=>go(k)},h(Icon,{name:ic}),h("span",null,l))),
         h("button",{type:"button",onClick:()=>setModal("more"),className:"v2-more-mobile","aria-label":"More tools"},h(Icon,{name:"more"}),h("span",null,"More"))), /* @__PURE__ */ React.createElement("div", { className: `toast${msg ? " show" : ""}`, role: "status", "aria-live": "polite" }, msg), h(FocusBar, { data, update, toast }), modal === "quick" && /* @__PURE__ */ React.createElement(QuickAdd, { onClose: () => setModal(null), onPick: (k) => {
       if (k === "grade") {
         setModal(null);
@@ -14320,7 +14426,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
   function bsaDownloadSafeDiagnostics(error) {
     try {
       const keys=bsaBackupKeys();
-      const report={app:'BSA Study Desk',build:'V3.0',time:new Date().toISOString(),
+      const report={app:'BSA Study Desk',build:'V3.1',time:new Date().toISOString(),
         page:location.pathname,online:navigator.onLine,
         userAgent:navigator.userAgent,
         studyStorageKeyCount:keys.length,
@@ -14328,7 +14434,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
         academicProgressRecordPresent:localStorage.getItem(PROGRESS_KEY)!==null,
         error:String(error&&error.message||'Unknown display error').slice(0,600)};
       const u=URL.createObjectURL(new Blob([JSON.stringify(report,null,2)],{type:'application/json'}));
-      const a=document.createElement('a');a.href=u;a.download='BSA-Desk-Diagnostics-V3.0.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),5000);
+      const a=document.createElement('a');a.href=u;a.download='BSA-Desk-Diagnostics-V3.1.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),5000);
     } catch(e){alert('Diagnostic export unavailable: '+String(e.message||e))}
   }
   class DashboardBoundary extends React.Component {
