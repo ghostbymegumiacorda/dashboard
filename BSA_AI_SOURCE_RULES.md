@@ -87,3 +87,17 @@ Other courses can use the same format for formulas, historical rules, legal prin
 - Rules and lectures have no question difficulty setting. Difficulty and item counts apply only to practice material when specified.
 - A selected local PDF must be uploaded **separately** to the AI chat. The dashboard does not silently send PDF contents or OCR scanned pages, and PDF files are not valid rulebook JSON.
 - Keep a downloaded copy of valuable PDF sources: they are stored only in this device's IndexedDB, not GitHub, shared publishing, or normal JSON backups.
+
+
+## v175: Copy-ready imported JSON and lecture citations
+- When asked for dashboard-importable JSON, return exactly **one `json` fenced code block** and nothing else. Use the chat's **Copy code** button: it copies the raw JSON without the fence. If the AI interface has no copy-code button, return only one raw JSON object.
+- Ensure valid JSON syntax, including escaped newlines inside quoted strings, before sending. Never mix lectures, rule cards, MCQs, flashcards, and problem sets into one typed import response.
+- For **lectures**, cite the provided reference in each lecture object's **`source`** field. Do not put repeated `SOURCE:` or `REFERENCES:` lines at the start of each section. Explain concepts in `sections[].body`; keep `problems` exclusively in problem-set or MCQ formats.
+- For rulebook cards, source references still belong on each individual rule (`sourceTitle` and `sourceLocator`/`sourceUrl`), because rules may have different authorities.
+
+## v176: Lecture readability and print/PDF pagination
+- Treat a lecture as a guided chapter, not a single long essay. Every major topic should have a clear section heading and explanatory paragraphs.
+- In `sections[].body`, use Markdown only when it improves learning: **bold** essential rules, `##` meaningful subheadings, ordered steps, concise bullets, `>` worked illustrations and Markdown tables for genuine comparisons or calculations.
+- Put full worked computations, journal entries and distinctions in properly separated blocks. Include a concrete example after difficult rules, and add relevant questions and checked answers to `checks` without turning the lecture into a problem set.
+- Do not add a repeated source line in every section; keep genuine citations in the lecture-level `source` field.
+- For print/PDF, keep illustrations, tables, headings and their first explanations together when practical. Avoid enormous tables or giant uninterrupted sections that cannot fit on a page. Do not delete important material just to shorten the output.
