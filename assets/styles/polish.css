@@ -1,0 +1,23 @@
+/* v30: practical foundation workspace and clean form layout */
+.foundation-panel{max-width:100%;}.foundation-fields{display:grid;gap:12px;margin:14px 0 22px;max-width:850px}.foundation-fields label{display:grid;gap:6px;font-weight:650}.foundation-fields input,.foundation-fields textarea,.foundation-fields select{width:100%;min-width:0;padding:10px;border:1px solid var(--line,#bfd4c6);border-radius:9px;background:var(--card,#fff);color:inherit;font:inherit}.foundation-fields textarea{resize:vertical;line-height:1.5}.foundation-attempt{border:1px solid var(--line,#d3e1d8);border-radius:12px;padding:14px;margin:12px 0;background:var(--card,#fff)}.foundation-attempt pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}.foundation-attempt details{margin:10px 0}.foundation-attempt summary{cursor:pointer;font-weight:650}.toolkit-tabs{flex-wrap:wrap}
+
+/* -------- retained original stylesheet layer -------- */
+
+.break-corner .break-tabs,.break-actions{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0}.break-panel{max-width:750px;padding:24px;text-align:center}.break-clock{font-size:clamp(3rem,9vw,6rem);font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.06em;margin:24px auto;color:var(--text,#fff)}.break-memory-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;max-width:450px;margin:20px auto}.break-tile{aspect-ratio:1;min-height:65px;border:1px solid var(--line,#555);border-radius:14px;background:var(--surface,#1b263c);color:var(--text,#fff);font-size:2rem;cursor:pointer}.break-tile.revealed{background:var(--card,#29384e)}.break-tile:focus-visible{outline:3px solid #4dcfe8}.break-orb{display:grid;place-items:center;margin:30px auto;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,#a9e9d4,#367b78);font-size:4rem;animation:break-breathe 14s ease-in-out infinite}@keyframes break-breathe{0%,100%{transform:scale(.78)}28%{transform:scale(1.08)}55%{transform:scale(1.08)}}
+
+/* v182: isolated screen failures and safe startup recovery */
+.bsa-screen-recovery{margin:24px auto;max-width:700px;padding:clamp(22px,4vw,34px);border:1px solid var(--line);border-radius:var(--r-lg,18px);background:var(--surface);color:var(--text);box-shadow:var(--lift)}
+.bsa-screen-recovery h2{font-size:clamp(22px,3vw,27px);margin:8px 0}
+.bsa-screen-recovery p{line-height:1.55}
+.bsa-screen-recovery-icon{width:54px;height:54px;display:grid;place-items:center;border-radius:17px;background:var(--surface-2);font-size:27px;color:var(--accent)}
+.bsa-screen-recovery-actions{display:flex;flex-wrap:wrap;gap:10px;margin:20px 0}
+.bsa-screen-recovery-actions button{min-height:42px}
+.bsa-startup-recovery{margin:10vh auto!important;width:min(94vw,760px);padding:clamp(25px,5vw,48px);background:var(--surface);color:var(--text);border:1px solid var(--line);border-radius:22px}
+.bsa-startup-recovery details{margin-top:24px;max-width:100%}
+.bsa-startup-recovery summary{cursor:pointer;font-weight:650}
+@media(max-width:680px){.bsa-screen-recovery-actions{flex-direction:column}.bsa-screen-recovery-actions button{width:100%}}
+
+/* v182: unified basic interaction affordances across all skin presets. */
+:where(.content,.rail,.mobilebar,.modal,.bsa181) :is(button,a,input,select,textarea):focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+:where(.content,.rail,.mobilebar,.modal,.bsa181) :is(input,textarea,select){max-width:100%}
+@media(prefers-reduced-motion:reduce){.bsa-screen-recovery,.bsa-startup-recovery{scroll-behavior:auto}}
