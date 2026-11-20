@@ -614,7 +614,9 @@
   async function bsaPdfRemove(id){const db=await bsaPdfDatabase();try{return await new Promise((resolve,reject)=>{const tx=db.transaction('files','readwrite');tx.objectStore('files').delete(id);tx.oncomplete=()=>resolve(true);tx.onerror=()=>reject(tx.error)})}finally{db.close()}}
   async function bsaPdfAdd(subjectId,file){
     if(!file||!(/\.pdf$/i.test(file.name)||file.type==='application/pdf'))throw Error('Choose a .pdf file.');
-    if(file.size>25*1024*1024)throw Error('This PDF exceeds 25 MB. Keep larger books in your files app and attach them directly to the AI tool.');
+    if(file.size>120*1024*1024)throw Error('This PDF is over 120 MB. Keep the original in Google Drive and save a source link in Study Library instead.');
+    if(file.size>50*1024*1024&&!window.confirm('This PDF uses '+(file.size/1048576).toFixed(1)+' MB on this device, is not included in dashboard backups, and may be removed when browser storage is cleared. For textbooks this large, a Google Drive link is safer. Store it offline in this browser anyway?'))throw Error('Local import cancelled. Your original PDF was not changed.');
+    if(navigator.storage?.estimate){try{const estimate=await navigator.storage.estimate();if(estimate.quota&&estimate.usage&&estimate.quota-estimate.usage<file.size*1.25)throw Error('Not enough browser storage for this PDF. Use Google Drive, or free some space first.');}catch(e){if(e.message?.includes('Not enough'))throw e;}}
     if(file.size<10)throw Error('The selected file is too small to be a valid PDF.');
     const bytes=await file.arrayBuffer();const first=new Uint8Array(bytes,0,Math.min(1024,bytes.byteLength));
     const header=new TextDecoder('ascii').decode(first);
@@ -1330,7 +1332,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
      - Offline edits are counted and kept; they upload as soon as a connection is back. */
   const GH_KEYS = { user: "bsa_gh_user", repo: "bsa_gh_repo", token: "bsa_gh_key", path: "bsa_gh_path" };
   const SYNC_META_KEY = "bsa_sync_meta";
-  const COLLS = ["topics", "cards", "mistakes", "quizzes", "sessions", "days", "lectures", "psets", "mcqSets", "classes", "attend", "tasks", "aiAttempts", "learningEvents", "labAttempts", "todayChecks"];
+  const COLLS = ["topics", "cards", "mistakes", "quizzes", "sessions", "days", "lectures", "psets", "mcqSets", "classes", "attend", "tasks", "aiAttempts", "learningEvents", "labAttempts", "todayChecks", "tutorMemories", "studyInbox", "driveSources", "libraryFlags", "cycleRuns", "cycleCases", "practiceSessions", "problemWork"];
   const TOMB_DAYS = 120;
   const POLL_MS = 3e4;
   const lsGet = (k) => {
@@ -1434,6 +1436,20 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
             }
             for (const id of psub.keys()) if (!subIds.has(id)) next.deleted[id] = now;
           } else if (!pit || sigOf(pit) !== sigOf(it)) it._u = now;
+          // v198: track individual problem edits within existing sets as well.
+          // A different device updating another problem must not overwrite it.
+          if((c === 'psets' || c === 'mcqSets') && Array.isArray(it.problems)){
+            const oldProblems=new Map((pit&&Array.isArray(pit.problems)?pit.problems:[]).filter(x=>x&&x.id).map(x=>[x.id,x]));
+            const live=new Set();
+            for(const problem of it.problems){
+              if(!problem || typeof problem!=='object')continue;
+              if(!problem.id)problem.id=uid('pp');
+              live.add(problem.id);
+              const previous=oldProblems.get(problem.id);
+              if(!previous||sigOf(previous)!==sigOf(problem))problem._u=now;
+            }
+            for(const id of oldProblems.keys())if(!live.has(id))next.deleted[id]=now;
+          }
         }
         for (const id of pmap.keys()) if (!ids.has(id)) next.deleted[id] = now;
       }
@@ -1479,7 +1495,9 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       const a = lm.get(id), b = rm.get(id);
       const m = { ...pickNewer(a, b, preferR) };
       if (level === "subject") {
-        for (const c of COLLS) m[c] = mergeList(a && a[c], b && b[c], deleted, preferR, c === "topics" ? "topic" : c === "days" ? "day" : "item");
+        for (const c of COLLS) m[c] = mergeList(a && a[c], b && b[c], deleted, preferR, c === "topics" ? "topic" : c === "days" ? "day" : c === "psets" || c === "mcqSets" ? "pset" : "item");
+      } else if (level === 'pset' && (a && a.problems || b && b.problems)) {
+        m.problems=mergeList(a&&a.problems,b&&b.problems,deleted,preferR,'item');
       } else if (level === "day" && a && b) {
         for (const k of ["reviews", "right", "mins"]) m[k] = Math.max(a[k] || 0, b[k] || 0);
       } else if (level === "topic" && (a && a.sub || b && b.sub)) {
@@ -2329,7 +2347,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       if (summary.updatedLectures) parts.push(`${summary.updatedLectures} lecture${summary.updatedLectures === 1 ? "" : "s"} updated`);
       if (summary.addedSets) parts.push(`${summary.addedSets} problem set${summary.addedSets === 1 ? "" : "s"}`);
       if (summary.addedProblems) parts.push(`${summary.addedProblems} problem${summary.addedProblems === 1 ? "" : "s"}`);
-      toast(`Imported ${parts.join(", ") || "nothing new"}${summary.skipped ? ` (${summary.skipped} duplicates skipped)` : ""}`);
+      toast(`Imported ${parts.join(", ") || "nothing new"}${(summary.skipped||0)+(summary.skippedProblems||0) ? ` (${(summary.skipped||0)+(summary.skippedProblems||0)} duplicates skipped)` : ""}`);
       onClose();
     };
     const backup = (mode) => {
@@ -3568,8 +3586,22 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     ];
     return /* @__PURE__ */ React.createElement(Modal, { title: "Quick add", onClose }, /* @__PURE__ */ React.createElement("div", { className: "big-options" }, items.map(([k, ic, l, d]) => /* @__PURE__ */ React.createElement("button", { key: k, className: "big-option", onClick: () => onPick(k) }, /* @__PURE__ */ React.createElement(Icon, { name: ic, size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, l), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, d))))));
   }
-  function MoreSheet({ onPick, onClose, settings, setSettings, go }) {
-    return /* @__PURE__ */ React.createElement(Modal, { title: "More", onClose }, /* @__PURE__ */ React.createElement("div", { className: "big-options" }, h("button", { className: "big-option", onClick: () => go("ask") }, h(Icon, { name: "ask", size: 22 }), h("span", null, h("strong", null, "Ask"), h("br", null), h("span", { className: "muted" }, "A Gemini tutor that can see your roadmap, mistakes and grades"))), h("button", { className: "big-option", onClick: () => go("lectures") }, h(Icon, { name: "lecture", size: 22 }), h("span", null, h("strong", null, "Lectures"), h("br", null), h("span", { className: "muted" }, "Rules, treatments and traps for each topic"))), h("button", { className: "big-option", onClick: () => go("psets") }, h(Icon, { name: "pset", size: 22 }), h("span", null, h("strong", null, "Problem sets"), h("br", null), h("span", { className: "muted" }, "Problems by subtopic, with how to solve each one"))), h("button", { className: "big-option", onClick: () => go("class") }, h(Icon, { name: "subjects", size: 22 }), h("span", null, h("strong", null, "Class"), h("br", null), h("span", { className: "muted" }, "Timetable, attendance and what is due"))), h("button", { className: "big-option", onClick: () => go("grades") }, h(Icon, { name: "grade", size: 22 }), h("span", null, h("strong", null, "Grades"), h("br", null), h("span", { className: "muted" }, "Grade calculator, what-if, QPI summary and export"))), h("button", { className: "big-option", onClick: () => go("vault") }, h(Icon, { name: "cards", size: 22 }), h("span", null, h("strong", null, "Concept vault"), h("br", null), h("span", { className: "muted" }, "Browse, search and edit your flashcards"))), /* @__PURE__ */ React.createElement("button", { className: "big-option", onClick: () => onPick("subjects") }, /* @__PURE__ */ React.createElement(Icon, { name: "subjects", size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, "Subjects"), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "Add, rename or delete a subject"))), /* @__PURE__ */ React.createElement("button", { className: "big-option", onClick: () => onPick("data") }, /* @__PURE__ */ React.createElement(Icon, { name: "data", size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, "Import & export"), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "AI JSON, backups"))), /* @__PURE__ */ React.createElement("button", { className: "big-option", onClick: () => onPick("look") }, /* @__PURE__ */ React.createElement(Icon, { name: "look", size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, "Appearance"), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, "Themes, text size, contrast")))), /* @__PURE__ */ React.createElement("p", { className: "field-label", style: { marginTop: "1rem" } }, "Quick theme"), /* @__PURE__ */ React.createElement(ThemeDots, { settings, setSettings }));
+  function MoreSheet({onPick,onClose,settings,setSettings,go}){
+    const sections=[
+      ['CORE WORKFLOWS',[['home','Today','home'],['study','Study Studio','lecture'],['practice','Practice','bolt'],['library','Study Library','book'],['insights','Learning Insights','grade']]],
+      ['LEARN & SOLVE',[['accounting-lab','Accounting Lab','pset'],['accounting-cycle','Accounting Cycle','pset'],['split','Split Study','book'],['ask','Ask Tutor','ask'],['lectures','Lectures','lecture'],['vault','Flashcards','cards'],['mcq','MCQ Library','cards'],['psets','Problem Sets','pset'],['mistakes','Mistake Log','mistakes'],['rules','Rules','book']]],
+      ['PLAN & PERSONALIZE',[['week','Weekly Planner','calendar'],['calendar','Calendar','calendar'],['grades','Grades','grade'],['class','Class','subjects'],['knowledge','Knowledge Map','roadmap'],['life','Study Room','look'],['workspace','Workspace','book'],['safety','Device & Data Safety','data'],['toolkit','Toolkit','book']]]
+    ];
+    const sectionViews=sections.map(([label,links])=>h('section',{key:label},
+      h('h3',null,label),
+      h('div',{className:'bsa205-more-grid'},links.map(([route,title,icon])=>
+        h('button',{key:route,onClick:()=>go(route)},h(Icon,{name:icon,size:17}),h('span',null,title),h('span',{className:'bsa205-more-arrow'},'↗'))))));
+    const settingsButtons=[['subjects','Manage subjects','subjects'],['data','Import, export and sync','data'],['look','Appearance','look']].map(([route,title,icon])=>
+      h('button',{key:route,onClick:()=>onPick(route)},h(Icon,{name:icon,size:17}),h('span',null,title),h('span',null,'↗')));
+    return h(Modal,{title:'Explore all tools',onClose},
+      h('div',{className:'bsa205-more-menu'},
+        ...sectionViews,
+        h('section',null,h('h3',null,'SETTINGS & BACKUPS'),h('div',{className:'bsa205-more-grid'},settingsButtons),h(ThemeDots,{settings,setSettings}))));
   }
   /* =====================================================================
      Study features: spaced repetition, mistake retests, exam readiness,
@@ -5055,130 +5087,249 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     }
     return mcq;
   }
-  /* v148 — focused, one-at-a-time multiple-choice practice. Uses the same
-     authored question pool and progress schema as Mock Exam. */
-  function MultipleChoiceQuiz({ subject, update, toast, go, onExit, initialSetId = "all" }) {
-    const all = useMemo(() => mcqDedicatedPool(subject), [subject]);
-    const [topic, setTopic] = useState("all");
-    const [collection, setCollection] = useState(initialSetId);
-    const [count, setCount] = useState(10);
-    const [phase, setPhase] = useState("setup");
-    const [paper, setPaper] = useState([]);
-    const [pos, setPos] = useState(0);
-    const [answers, setAnswers] = useState({});
-    const [revealed, setRevealed] = useState({});
-    const saved = useRef(false);
-    const started = useRef(0);
-    const topics = studyTopics(subject);
-    const eligible = all.filter((q) => (topic === "all" || q.topicId === topic) && (collection === "all" || q.setId === collection));
-    const start = () => {
-      const items = shuffle(eligible).slice(0, Math.max(1, Math.min(count, eligible.length)));
-      if (!items.length) return;
-      setPaper(items); setPos(0); setAnswers({}); setRevealed({});
-      saved.current = false; started.current = Date.now(); setPhase("run");
+  /* v197: Smart Quiz. Reuse the existing per-subject learningEvents collection:
+     it already has GitHub merge stamps, offline storage and JSON backup coverage.
+     No changes to the schema for grades, cards, XP or older MCQ records. */
+  const BSA197_DAY = 86400000;
+  const BSA197_MODES = [
+    ['smart','Smart mix','New material first; review weak or due questions when useful'],
+    ['fresh','Unseen first','Prioritize questions you have not answered'],
+    ['due','Due reviews','Only questions ready for spaced review'],
+    ['weak','Weak spots','Revisit missed or guessed questions'],
+    ['all','All questions','Use the full bank, avoiding recent repeats where possible']
+  ];
+  function bsa197QuizKey(q) {
+    const prompt = String(psPlain(q && q.q || '')).normalize('NFKC').toLowerCase().replace(/\s+/g,' ').trim();
+    const answer = q && Array.isArray(q.choices) ? psPlain(q.choices.find((c,i)=>mxChoiceKey(c,i)===q.key)||'').replace(/^\s*[A-Da-d]\s*[.)\]]\s*/, '') : '';
+    const stem = prompt+'\n'+String(answer).normalize('NFKC').toLowerCase().replace(/\s+/g,' ').trim();
+    if (!stem) return 'id:'+String(q && q.id || '');
+    // Two independent 32-bit rolling hashes with length, to keep records small.
+    let h1=2166136261,h2=5381;
+    for(let i=0;i<stem.length;i++){const c=stem.charCodeAt(i);h1=Math.imul(h1^c,16777619);h2=(Math.imul(h2,33)^c)>>>0;}
+    return 'stem:'+stem.length+':'+(h1>>>0).toString(36)+':'+(h2>>>0).toString(36);
+  }
+  function bsa197History(events) {
+    const keys=new Map(), ids=new Map();
+    for(const e of Array.isArray(events)?events:[]){
+      if(!e||e.kind!=='mcq'||!['correct','incorrect','partial'].includes(e.result))continue;
+      if(e.memoryKey){if(!keys.has(e.memoryKey))keys.set(e.memoryKey,[]);keys.get(e.memoryKey).push(e);}
+      else if(e.sourceId){if(!ids.has(e.sourceId))ids.set(e.sourceId,[]);ids.get(e.sourceId).push(e);}
+    }
+    return {keys,ids};
+  }
+  function bsa197Recall(q,history,now=Date.now()) {
+    const key=bsa197QuizKey(q);
+    const items=[...(history.keys.get(key)||[]),...(history.ids.get(q.id)||[])].sort((a,b)=>(Number(a.at)||0)-(Number(b.at)||0));
+    let streak=0,wrong=0;
+    for(const e of items){if(e.result==='correct'&&!e.guessed)streak++;else{streak=0;wrong++;}}
+    const last=items.length?items[items.length-1]:null;
+    const at=last?Number(last.at)||Date.parse(last.date||'')||0:0;
+    // A guess is a correct score, but not evidence of durable recall.
+    const span=!last?0:last.result==='correct'&&!last.guessed?[1,3,7,14,30][Math.min(streak-1,4)]||30:1;
+    return {key,seen:items.length,streak,wrong,at,due:!!last&&at>0&&now>=at+span*BSA197_DAY,
+      weak:!!last&&(wrong>0||!!last.guessed)&&streak<3,mastered:streak>=3,
+      recent:!!last&&at>0&&now-at<2*BSA197_DAY};
+  }
+  function bsa197Pool(pool,events,now=Date.now()){
+    const history=bsa197History(events), seenKeys=new Set(), result=[];
+    for(const q of pool||[]){const key=bsa197QuizKey(q);if(seenKeys.has(key))continue;seenKeys.add(key);result.push({...q,_recall:bsa197Recall(q,history,now)});}
+    return result;
+  }
+  function bsa197Pick(pool,mode,count){
+    const n=Math.max(1,Math.min(Number(count)||10,pool.length));
+    const unseen=shuffle(pool.filter(q=>!q._recall.seen));
+    const due=shuffle(pool.filter(q=>q._recall.due));
+    const weak=shuffle(pool.filter(q=>q._recall.weak));
+    const older=shuffle(pool.filter(q=>!q._recall.recent));
+    const recent=shuffle(pool.filter(q=>q._recall.recent));
+    const chosen=[],ids=new Set();
+    const take=(group,limit=n)=>{for(const q of group){if(chosen.length>=n||limit<=0)break;if(ids.has(q.id))continue;chosen.push(q);ids.add(q.id);limit--;}};
+    if(mode==='due'){take(due);return chosen;}
+    if(mode==='weak'){take(weak);return chosen;}
+    if(mode==='fresh'){take(unseen);take(due);take(older);take(recent);return chosen;}
+    if(mode==='smart'){
+      take(unseen,Math.ceil(n*.6));take(due,Math.ceil(n*.3));take(weak);
+      take(unseen);take(older);take(recent);return chosen;
+    }
+    take(older);take(recent);return chosen;
+  }
+  function bsa197DraftKey(subjectId){return (window.__BSA_SHARED_MODE__?'bsa_shared_':'bsa_')+'mcq_draft_v197_'+subjectId;}
+  function bsa197LoadDraft(subjectId){
+    try{const d=JSON.parse(localStorage.getItem(bsa197DraftKey(subjectId))||'null');
+      if(!d||d.subjectId!==subjectId||!Array.isArray(d.ids)||!d.ids.length||
+        !Number.isFinite(d.updatedAt)||Date.now()-d.updatedAt>30*BSA197_DAY||d.updatedAt>Date.now()+BSA197_DAY)return null;
+      return d;
+    }catch(_){return null;}
+  }
+  function bsa197SaveDraft(subjectId,data){
+    try{localStorage.setItem(bsa197DraftKey(subjectId),JSON.stringify({...data,subjectId,updatedAt:Date.now()}));return true;}
+    catch(_){return false;}
+  }
+  function bsa197DeleteDraft(subjectId){try{localStorage.removeItem(bsa197DraftKey(subjectId));}catch(_){}}
+  function MultipleChoiceQuiz({ subject, update, toast, go, onExit, initialSetId = 'all' }) {
+    const all=useMemo(()=>mcqDedicatedPool(subject),[subject]);
+    const [topic,setTopic]=useState('all'),[collection,setCollection]=useState(initialSetId);
+    const [count,setCount]=useState(10),[mode,setMode]=useState('smart');
+    const [phase,setPhase]=useState('setup'),[paper,setPaper]=useState([]),[pos,setPos]=useState(0);
+    const [answers,setAnswers]=useState({}),[revealed,setRevealed]=useState({}),[guessed,setGuessed]=useState({});
+    const [draft,setDraft]=useState(()=>bsa197LoadDraft(subject.id));
+    const [feedbackExpanded,setFeedbackExpanded]=useState(false);
+    const saved=useRef(false),started=useRef(0),runId=useRef('');
+    const topics=studyTopics(subject);
+    const eligible=all.filter(q=>(topic==='all'||q.topicId===topic)&&(collection==='all'||q.setId===collection));
+    const catalog=useMemo(()=>bsa197Pool(eligible,subject.learningEvents||[]),[all,topic,collection,subject.learningEvents]);
+    const newCount=catalog.filter(q=>!q._recall.seen).length;
+    const dueCount=catalog.filter(q=>q._recall.due).length;
+    const weakCount=catalog.filter(q=>q._recall.weak).length;
+    const strongCount=catalog.filter(q=>q._recall.mastered).length;
+    const available=mode==='due'?dueCount:mode==='weak'?weakCount:catalog.length;
+    const current=paper[pos];
+    const score=paper.filter(q=>answers[q.id]&&answers[q.id]===q.key).length;
+    const start=()=>{
+      const picks=bsa197Pick(catalog,mode,count);
+      if(!picks.length)return;
+      bsa197DeleteDraft(subject.id);
+      setDraft(null);setPaper(picks);setPos(0);setAnswers({});setRevealed({});setGuessed({});
+      setFeedbackExpanded(false);saved.current=false;started.current=Date.now();runId.current=uid('quizrun');setPhase('run');
     };
-    const current = paper[pos];
-    const score = paper.filter((q) => answers[q.id] && answers[q.id] === q.key).length;
-    const record = () => {
-      if (saved.current || !paper.length) return;
-      saved.current = true;
-      const minutes = Math.max(1, Math.round((Date.now() - started.current) / 60000));
-      update((s) => {
-        s.quizzes.unshift({ id: uid("q"), topicId: topic === "all" ? null : topic,
-          topicText: `Multiple-choice quiz · ${topic === "all" ? "All topics" : (topics.find(t => t.id === topic) || {}).title || "Topic"}`,
-          date: today(), score, items: paper.length });
-        bumpDay(s, { reviews: paper.length, right: score, mins: minutes });
+    const resume=()=>{
+      if(!draft)return;
+      const hist=bsa197History(subject.learningEvents||[]);
+      const byId=new Map(all.map(q=>[q.id,{...q,_recall:bsa197Recall(q,hist)}]));
+      const match=draft.ids.map(id=>byId.get(id)).filter(Boolean);
+      if(!match.length){bsa197DeleteDraft(subject.id);setDraft(null);toast('This quiz collection changed. Please start a fresh quiz.');return;}
+      setPaper(match);setTopic(draft.topic||'all');setCollection(draft.collection||'all');
+      setMode(BSA197_MODES.some(x=>x[0]===draft.mode)?draft.mode:'smart');setCount(draft.count||10);
+      setPos(Math.max(0,Math.min(match.length-1,Number(draft.pos)||0)));
+      setAnswers(draft.answers||{});setRevealed(draft.revealed||{});setGuessed(draft.guessed||{});
+      started.current=Number(draft.startedAt)||Date.now();runId.current=draft.runId||uid('quizrun');
+      saved.current=false;setFeedbackExpanded(false);setDraft(null);setPhase('run');
+    };
+    useEffect(()=>{
+      if(phase!=='run'||!paper.length)return;
+      bsa197SaveDraft(subject.id,{ids:paper.map(q=>q.id),topic,collection,mode,count,pos,
+        answers,revealed,guessed,startedAt:started.current,runId:runId.current});
+    },[phase,paper,pos,answers,revealed,guessed,subject.id]);
+    const record=()=>{
+      if(saved.current||!paper.length)return;
+      saved.current=true;
+      const duration=Math.max(1,Math.round((Date.now()-started.current)/60000));
+      const sessionKey=runId.current||uid('quizrun');
+      update(s=>{
+        s.quizzes=s.quizzes||[];
+        if(s.quizzes.some(x=>x.sessionKey===sessionKey))return;
+        s.quizzes.unshift({id:uid('q'),sessionKey,topicId:topic==='all'?null:topic,
+          topicText:'MCQ · '+(BSA197_MODES.find(x=>x[0]===mode)?.[1]||'Practice')+' · '+(topic==='all'?'All topics':topics.find(t=>t.id===topic)?.title||'Topic'),
+          date:today(),score,items:paper.length});
+        bumpDay(s,{reviews:paper.length,right:score,mins:duration});
         s.learningEvents=s.learningEvents||[];
-        const recordedAt=Date.now();
-        for (const q of paper) {
-          if(q.topicId) s.learningEvents.push({id:uid("le"),topicId:q.topicId,
-            kind:"mcq",sourceId:q.id,result:answers[q.id]===q.key?"correct":"incorrect",
-            assisted:false,at:recordedAt,date:today(),note:"MCQ quiz · answer checked"});
-        }
-        for (const q of paper) {
-          if (answers[q.id] === q.key) continue;
-          const question = psPlain(q.q).slice(0, 400);
-          const correct = psPlain(q.choices.find((c, i) => mxChoiceKey(c, i) === q.key) || q.key.toUpperCase()).slice(0, 400);
-          const wrongChoice = q.choices.find((c, i) => mxChoiceKey(c, i) === answers[q.id]);
-          const wrong = answers[q.id] ? psPlain(wrongChoice || answers[q.id]).slice(0, 200) : "Left blank";
-          bsaUpsertMistake(s, {topicId:q.topicId || null, topicText:"", date:today(),question,
-            wrong,correct,trap:psPlain(q.trap || q.why || "Review the explanation and the source.").slice(0,400),
-            status:"Active",sourceMcqId:q.id});
+        const at=Date.now();
+        for(const q of paper){
+          const correct=answers[q.id]===q.key;
+          s.learningEvents.push({id:uid('le'),topicId:q.topicId||'',kind:'mcq',sourceId:q.id,
+            memoryKey:bsa197QuizKey(q),sessionKey,result:correct?'correct':'incorrect',
+            guessed:!!guessed[q.id],assisted:false,at,date:today(),note:'MCQ · '+mode});
+          if(correct)continue;
+          const wrongChoice=q.choices.find((c,i)=>mxChoiceKey(c,i)===answers[q.id]);
+          bsaUpsertMistake(s,{topicId:q.topicId||null,topicText:'',date:today(),question:psPlain(q.q).slice(0,400),
+            wrong:answers[q.id]?psPlain(wrongChoice||answers[q.id]).slice(0,200):'Left blank',
+            correct:psPlain(q.choices.find((c,i)=>mxChoiceKey(c,i)===q.key)||q.key).slice(0,400),
+            trap:psPlain(q.trap||q.why||'Review the original explanation.').slice(0,400),
+            status:'Active',sourceMcqId:q.id});
         }
       });
-      toast(`Quiz saved: ${score}/${paper.length}. Missed answers added to your Mistake Log.`);
+      bsa197DeleteDraft(subject.id);
+      setDraft(null);
+      toast('Saved '+score+'/'+paper.length+'. Your quiz history now guides future review.');
     };
-    useEffect(() => { if (phase === "done") record(); }, [phase]);
-    return h("div", { className: "mcq-quiz" },
-      h("div", { className: "page-head" }, h("div", null, h("h1", { className: "page-title" }, "Multiple-choice quiz"),
-        h("p", { className: "muted" }, "One question at a time. See the explanation, then move on.")),
-        h("button", { className: "btn", onClick: onExit }, "Back to Practice")),
-      phase === "setup" ? h("div", { className: "panel mcq-shell bsa-v156-setup" },
-        h("div", { className:"bsa-v156-setup-head" },
-          h("span", {className:"bsa-v156-mascot", "aria-hidden":"true"},"✿"),
-          h("div", null, h("span", {className:"panel-kicker"},"YOUR MINI STUDY QUEST"),
-            h("h2", null, "Make a little quiz ✨"),
-            h("p", {className:"muted"},"Choose your chapter, pick a collection, and grow your confidence one question at a time."))),
-        h("div", { className: "grid-2 tight bsa-v156-quiz-grid" },
-          h(Field, { label: "📚 Choose your topic" }, h("select", { value: topic, onChange: e => { setTopic(e.target.value); setCollection("all"); } },
-            h("option", { value: "all" }, "All topics"),
-            topics.map(t => h("option", { key: t.id, value: t.id }, `${t.code ? t.code + " · " : ""}${t.title}`)))),
-          h(Field, { label: "✨ How many questions?" }, h("select", { value: count, onChange: e => setCount(Number(e.target.value)) },
-            [5,10,15,20,30,50].map(n => h("option", { value: n, key: n }, n))))),
-        h(Field, { label: "🗂️ MCQ collection" }, h("select", { value: collection, onChange: e => setCollection(e.target.value) },
-          h("option", { value: "all" }, "All collections"),
-          (subject.mcqSets || []).filter(x => all.some(q => q.setId === x.id && (topic === "all" || q.topicId === topic))).map(x => h("option", { key:x.id, value:x.id }, `${x.title} · ${all.filter(q => q.setId === x.id && (topic === "all" || q.topicId === topic)).length} questions`)))),
-        h("p", { className: "muted" }, `${eligible.length} questions match your selected topic and collection. Only MCQ Library collections are included.`),
-        h("div", { className: "step-actions" },
-          h("button", { className: "btn primary", disabled: !eligible.length, onClick: start }, "Let's go! →"),
-          h("button", { className: "btn", onClick: () => go("nlm", { pid: "mcq-quiz" }) }, "Create more MCQs")),
-        !eligible.length && h("p", { className: "muted small" }, "No MCQs match this topic. Open the MCQ Library to assign your collection to T1, T2, etc., or import a new MCQ collection.")
-      ) : phase === "run" && current ? h("div", { className: "panel mcq-shell" },
-        h("div", { className: "mcq-progress bsa-quiz-progress" },
-          h("span", { className: "bsa-quiz-count" }, "QUESTION ", h("strong", null, pos + 1), h("span", null, ` / ${paper.length}`)),
-          h("span", { className: "bsa-quiz-reviewed" }, `${paper.filter(q => revealed[q.id]).length} reviewed`)),
-        h("div", { className: "mcq-track" }, h("span", { style: { width: `${(pos+1)/paper.length*100}%` } })),
-        h("div", { className: "bsa-quiz-source" }, "STUDY MATERIAL · ", current.src || "Question bank"),
-        h("div", { className: "mcq-question" }, h("div", { dangerouslySetInnerHTML: { __html: psMdHtml(current.q) } })),
-        h("div", { className: "mcq-options", role: "group", "aria-label": "Select one answer" }, current.choices.map((choice, i) => {
-          const key = mxChoiceKey(choice, i);
-          const selected = answers[current.id] === key;
-          const visible = revealed[current.id];
-          return h("button", { key: i, type: "button", disabled: !!visible,
-            className: `mcq-choice${selected ? " selected" : ""}${visible && key === current.key ? " correct" : ""}${visible && selected && key !== current.key ? " wrong" : ""}`,
-            onClick: () => { playQuizFeedbackSound("select"); setAnswers(a => ({...a, [current.id]: key})); } },
-            h("strong", null, String.fromCharCode(65+i)), h("span", null, h("span", { dangerouslySetInnerHTML: { __html: psMdHtml(String(choice).replace(/^\s*[A-Da-d]\s*[.)\]]\s*/, "")) } })));
+    const finish=()=>{playQuizFeedbackSound('finish');record();setPhase('done');};
+    const leave=()=>{if(phase==='run'&&paper.length){
+      // Persist synchronously before unmounting, even with browser storage disabled.
+      const ok=bsa197SaveDraft(subject.id,{ids:paper.map(q=>q.id),topic,collection,mode,count,pos,answers,revealed,guessed,startedAt:started.current,runId:runId.current});
+      if(!ok){toast('Could not save this unfinished quiz on this device.');return;}
+    }onExit();};
+    const discard=()=>{if(!window.confirm('Discard only this unfinished quiz? Saved scores and older study history are unaffected.'))return;
+      bsa197DeleteDraft(subject.id);setDraft(null);setPaper([]);setPhase('setup');};
+    return h('div',{className:'mcq-quiz bsa197-quiz'},
+      h('div',{className:'page-head'},h('div',null,h('span',{className:'panel-kicker'},'SMART QUIZ · v197'),
+        h('h1',{className:'page-title'},'Quiz & recall'),
+        h('p',{className:'muted'},'Less repeating. Better review. One question at a time.')),
+        h('button',{className:'btn',onClick:leave},phase==='run'?'Save & leave':'Back to library')),
+      phase==='setup'?h('div',{className:'panel mcq-shell bsa-v156-setup'},
+        h('div',{className:'bsa-v156-setup-head'},h('span',{className:'bsa-v156-mascot','aria-hidden':'true'},'✦'),
+          h('div',null,h('span',{className:'panel-kicker'},'YOUR REVIEW SESSION'),h('h2',null,'What should we work on?'),
+            h('p',{className:'muted'},'Your previous answers help choose the next questions.'))),
+        draft&&h('div',{className:'bsa197-resume',role:'status'},
+          h('div',null,h('strong',null,'Continue your last quiz?'),
+            h('p',{className:'muted small'},`${Math.min((draft.pos||0)+1,(draft.ids||[]).length)} of ${(draft.ids||[]).length} questions · saved on this device`)),
+          h('div',{className:'bsa197-row'},h('button',{className:'btn primary',onClick:resume},'Resume quiz'),
+            h('button',{className:'btn ghost',onClick:()=>{if(!window.confirm('Remove this unfinished quiz? Completed scores remain saved.'))return;bsa197DeleteDraft(subject.id);setDraft(null);}},'Discard draft'))),
+        h('div',{className:'grid-2 tight bsa-v156-quiz-grid'},
+          h(Field,{label:'📚 Topic'},h('select',{value:topic,onChange:e=>{setTopic(e.target.value);setCollection('all');}},
+            h('option',{value:'all'},'All topics'),topics.map(t=>h('option',{key:t.id,value:t.id},`${t.code?t.code+' · ':''}${t.title}`)))),
+          h(Field,{label:'Questions'},h('select',{value:count,onChange:e=>setCount(Number(e.target.value))},[5,10,15,20,30,50].map(n=>h('option',{key:n,value:n},n))))),
+        h(Field,{label:'Collection'},h('select',{value:collection,onChange:e=>setCollection(e.target.value)},
+          h('option',{value:'all'},'All collections'),
+          (subject.mcqSets||[]).filter(x=>all.some(q=>q.setId===x.id&&(topic==='all'||q.topicId===topic))).map(x=>h('option',{key:x.id,value:x.id},x.title)))),
+        h('fieldset',{className:'bsa197-mode-field'},h('legend',null,'Choose your practice style'),
+          h('div',{className:'bsa197-mode-grid'},BSA197_MODES.map(([id,label,desc])=>
+            h('label',{key:id,className:'bsa197-mode'+(mode===id?' chosen':'')},
+              h('input',{type:'radio',name:'bsa197-quiz-mode',value:id,checked:mode===id,onChange:()=>setMode(id)}),
+              h('span',null,h('strong',null,label)))))),
+          h('p',{className:'muted small bsa197-mode-description'},BSA197_MODES.find(x=>x[0]===mode)?.[2]||''),
+        h('div',{className:'bsa197-memory-grid','aria-label':'Question memory summary'},
+          [['Available',catalog.length],['Not seen',newCount],['Due',dueCount],['Weak',weakCount],['Strong',strongCount]].map(([name,value])=>h('div',{key:name},h('strong',null,value),h('small',null,name)))),
+        h('p',{className:'muted small'},'Memory is based on recorded question-level attempts. Older scores without answer details cannot show what you missed. A correct guess is scheduled for review, not counted as mastered.'),
+        h('div',{className:'step-actions'},h('button',{className:'btn primary',disabled:!available,onClick:start},
+          `Start ${Math.min(count,available)} question${Math.min(count,available)===1?'':'s'} →`),
+          h('button',{className:'btn',onClick:()=>go('nlm',{pid:'mcq-quiz'})},'Add new MCQs')),
+        !available&&h('p',{className:'muted small'},mode==='due'?'Nothing is due yet. Try Smart mix or Unseen first.':mode==='weak'?'No weak questions recorded yet. Try Smart mix.':'No questions in this collection. Import or assign a question set.'))
+      :phase==='run'&&current?h('div',{className:'panel mcq-shell'},
+        h('div',{className:'mcq-progress bsa-quiz-progress'},h('span',{className:'bsa-quiz-count'},'QUESTION ',h('strong',null,pos+1),` / ${paper.length}`),
+          h('span',{className:'bsa-quiz-reviewed'},`${paper.filter(q=>revealed[q.id]).length} checked`)),
+        h('div',{className:'mcq-track'},h('span',{style:{width:`${(pos+1)/paper.length*100}%`}})),
+        h('div',{className:'bsa197-question-meta'},h('span',{className:'bsa-quiz-source'},current.src||'Your MCQ library'),
+          h('span',{className:'bsa197-question-tag'},!current._recall?.seen?'New':current._recall?.due?'Due review':current._recall?.weak?'Weak spot':'Practice')),
+        h('div',{className:'mcq-question'},h('div',{dangerouslySetInnerHTML:{__html:psMdHtml(current.q)}})),
+        h('div',{className:'mcq-options',role:'group','aria-label':'Choose one answer'},current.choices.map((choice,i)=>{
+          const key=mxChoiceKey(choice,i),selected=answers[current.id]===key,visible=!!revealed[current.id];
+          return h('button',{key:i,type:'button',disabled:visible,'aria-pressed':selected,
+            className:`mcq-choice${selected?' selected':''}${visible&&key===current.key?' correct':''}${visible&&selected&&key!==current.key?' wrong':''}`,
+            onClick:()=>{playQuizFeedbackSound('select');setAnswers(a=>({...a,[current.id]:key}));}},
+            h('strong',null,String.fromCharCode(65+i)),h('span',null,h('span',{dangerouslySetInnerHTML:{__html:psMdHtml(String(choice).replace(/^\s*[A-Da-d]\s*[.)\]]\s*/,''))}})));
         })),
-        revealed[current.id] && h("section", { className: `mcq-feedback bsa-quiz-result ${answers[current.id] === current.key ? "is-correct" : "is-incorrect"}`, role: "status", "aria-live": "polite" },
-          h("div", { className: "bsa-result-banner" },
-            h("span", { className: "bsa-result-icon", "aria-hidden": "true" }, answers[current.id] === current.key ? "✓" : "↻"),
-            h("div", null,
-              h("span", { className: "bsa-result-eyebrow" }, "ANSWER FEEDBACK"),
-              h("h3", null, answers[current.id] === current.key ? "Excellent — you got it!" : "Good attempt — review this one"),
-              h("p", null, answers[current.id] === current.key ? "Your understanding is on track." : "Use the explanation to learn the correct reasoning."))),
-          h("div", { className: "bsa-result-content" },
-            h("div", { className: "bsa-answer-summary" },
-              h("span", { className: "bsa-result-eyebrow" }, "CORRECT ANSWER"),
-              h("div", { className: "bsa-answer-row" },
-                h("strong", { className: "bsa-answer-letter" }, current.key.toUpperCase()),
-                h("div", { dangerouslySetInnerHTML: { __html: psMdHtml(String(current.choices.find((c, ix) => mxChoiceKey(c, ix) === current.key) || "").replace(/^\s*[A-Da-d]\s*[.)\]]\s*/, "")) } }))),
-            current.why && h("div", { className: "bsa-explanation-block" },
-              h("span", { className: "bsa-result-eyebrow" }, "WHY THIS IS CORRECT"),
-              h("div", { dangerouslySetInnerHTML: { __html: psMdHtml(current.why) } })),
-            current.trap && h("div", { className: "bsa-trap-block" },
-              h("span", { className: "bsa-result-eyebrow" }, "COMMON TRAP TO AVOID"),
-              h("div", { dangerouslySetInnerHTML: { __html: psMdHtml(current.trap) } })))),
-        h("div", { className: "step-actions" },
-          !revealed[current.id] && h("button", { className: "btn primary", disabled: !answers[current.id], onClick: () => { playQuizFeedbackSound(answers[current.id] === current.key ? "correct" : "wrong"); setRevealed(v => ({ ...v, [current.id]: true })); } }, "Check answer"),
-          !!revealed[current.id] && h("button", { className: "btn primary", onClick: () => { if (pos === paper.length-1) { playQuizFeedbackSound("finish"); setPhase("done"); } else { playQuizFeedbackSound("next"); setPos(i => i+1); } } }, pos === paper.length-1 ? "See results" : "Next question"),
-          h("button", { className: "btn", onClick: () => { if(window.confirm("End this quiz without saving?")) onExit(); } }, "Exit"))
-      ) : h("div", { className: "panel mcq-shell" },
-        h("div", { className: "bsa-finish-heading" }, h("span", { className: "bsa-finish-medal", "aria-hidden": "true" }, "★"), h("h2", null, "Quiz complete!"), h("p", { className: "muted" }, "You showed up and practiced. That's progress.")),
-        h("p", { className: "big-num bsa-finish-score" }, `${score} / ${paper.length}`),
-        h("p", { className: "muted" }, `${paper.length ? Math.round(score / paper.length * 100) : 0}% correct. Your score and mistakes were saved locally.`),
-        h("div", { className: "step-actions" }, h("button", { className: "btn primary", onClick: start }, "Try another set"),
-          h("button", { className: "btn", onClick: onExit }, "Back to Practice")))
-    );
+        !revealed[current.id]&&h('label',{className:'bsa197-guess'},h('input',{type:'checkbox',checked:!!guessed[current.id],onChange:e=>setGuessed(x=>({...x,[current.id]:e.target.checked}))}),
+          h('span',null,'I guessed / I am not sure',h('small',null,'Optional · review sooner even if you get it right'))),
+        revealed[current.id]&&h('section',{className:`mcq-feedback bsa-quiz-result ${answers[current.id]===current.key?'is-correct':'is-incorrect'}`,role:'status','aria-live':'polite'},
+          h('div',{className:'bsa-result-banner'},h('span',{className:'bsa-result-icon','aria-hidden':true},answers[current.id]===current.key?'✓':'↻'),
+            h('div',null,h('span',{className:'bsa-result-eyebrow'},'ANSWER FEEDBACK'),
+              h('h3',null,answers[current.id]===current.key?(guessed[current.id]?'Correct — let’s revisit it later':'You got it'):'Review this idea'),
+              h('p',null,answers[current.id]===current.key?(guessed[current.id]?'This counts toward your score, but not long-term mastery.':'Move on when ready; no need to reread a long explanation.'):'See the explanation, then try a new question.'))),
+          h('div',{className:'bsa-result-content'},
+            h('div',{className:'bsa-answer-summary'},h('span',{className:'bsa-result-eyebrow'},'CORRECT ANSWER'),
+              h('div',{className:'bsa-answer-row'},h('strong',{className:'bsa-answer-letter'},current.key.toUpperCase()),
+                h('div',{dangerouslySetInnerHTML:{__html:psMdHtml(String(current.choices.find((c,i)=>mxChoiceKey(c,i)===current.key)||'').replace(/^\s*[A-Da-d]\s*[.)\]]\s*/,''))}}))),
+            (answers[current.id]!==current.key||feedbackExpanded)?h(React.Fragment,null,
+              current.why&&h('div',{className:'bsa-explanation-block'},h('span',{className:'bsa-result-eyebrow'},'EXPLANATION'),h('div',{dangerouslySetInnerHTML:{__html:psMdHtml(current.why)}})),
+              current.trap&&h('div',{className:'bsa-trap-block'},h('span',{className:'bsa-result-eyebrow'},'EXAM TRAP'),h('div',{dangerouslySetInnerHTML:{__html:psMdHtml(current.trap)}}))):
+              !!(current.why||current.trap)&&h('button',{className:'btn ghost bsa197-expand','aria-expanded':false,onClick:()=>setFeedbackExpanded(true)},'Show explanation & exam trap'))),
+        h('div',{className:'step-actions'},!revealed[current.id]?h('button',{className:'btn primary',disabled:!answers[current.id],onClick:()=>{
+          playQuizFeedbackSound(answers[current.id]===current.key?'correct':'wrong');setFeedbackExpanded(false);setRevealed(x=>({...x,[current.id]:true}));
+        }},'Check answer'):h('button',{className:'btn primary',onClick:()=>{
+          if(pos===paper.length-1)finish();else{playQuizFeedbackSound('next');setPos(x=>x+1);setFeedbackExpanded(false);}
+        }},pos===paper.length-1?'Finish & save':'Next question →'),
+          h('button',{className:'btn ghost',onClick:leave},'Save & leave'),
+          h('button',{className:'btn ghost',onClick:discard},'Discard'))
+      ):h('div',{className:'panel mcq-shell'},
+        h('div',{className:'bsa-finish-heading'},h('span',{className:'bsa-finish-medal','aria-hidden':true},'★'),
+          h('h2',null,'Quiz complete'),h('p',{className:'muted'},'Your question-level history has been updated.')),
+        h('p',{className:'big-num bsa-finish-score'},`${score} / ${paper.length}`),
+        h('p',{className:'muted bsa197-done-summary'},`${paper.length?Math.round(score/paper.length*100):0}% correct · ${paper.filter(q=>!q._recall?.seen).length} new · ${paper.filter(q=>q._recall?.seen).length} reviewed`),
+        paper.some(q=>answers[q.id]!==q.key||guessed[q.id])&&h('div',{className:'bsa197-next-tip'},
+          h('strong',null,'What the app will remember'),
+          h('p',null,'Missed and guessed items are scheduled sooner. Correct, confident answers are gradually spaced further apart.')), 
+        h('div',{className:'step-actions'},h('button',{className:'btn primary',onClick:()=>setPhase('setup')},'Choose next session'),
+          h('button',{className:'btn',onClick:onExit},'Back to library'))));
   }
 
   /* v151 — a real MCQ library, not just a count/remove list.
@@ -5668,6 +5819,14 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       update((s) => {
         s.quizzes.unshift({ id: uid("q"), topicId: exam && exam.covers && exam.covers.length === 1 ? exam.covers[0] : null, topicText: `Mock exam: ${exam ? exam.title : "all topics"}`, date: today(), score, items: paper.length });
         bumpDay(s, { reviews: paper.length, right: score, mins: usedMins.current });
+        s.learningEvents=s.learningEvents||[];
+        const reviewedAt=Date.now();
+        for(const question of paper){
+          if(question.kind!=='mcq')continue;
+          s.learningEvents.push({id:uid('le'),topicId:question.topicId||'',kind:'mcq',sourceId:question.id,
+            memoryKey:bsa197QuizKey(question),result:right(question)?'correct':'incorrect',
+            guessed:false,assisted:false,at:reviewedAt,date:today(),note:'Mock exam · MCQ'});
+        }
         for (const p of misses) {
           if (p.kind === "open" && p.cardId) gradeCardIn(s, p.cardId, "again");
           const missQuestion=psPlain(p.q).slice(0,400);
@@ -9232,44 +9391,39 @@ ${c.kindHint}` }
         addedLectures++;
       }
     }
-    for (const S of p.psets || []) {
-      const topicId = matchTopic(s, S.topicText) || matchTopic(s, S.title);
-      const dup = s.psets.find((x) => norm(x.title) === norm(S.title));
-      if (dup) {
-        const have = new Set(dup.problems.map((x) => norm(x.problem)));
-        let maxNo = Math.max(0, ...dup.problems.map((x) => x.no || 0));
-        const nos = new Set(dup.problems.map((x) => x.no));
-        for (const pr of S.problems) {
-          if (have.has(norm(pr.problem))) continue;
-          if (nos.has(pr.no)) pr.no = ++maxNo;
-          else maxNo = Math.max(maxNo, pr.no);
-          nos.add(pr.no);
-          dup.problems.push(pr);
-          addedProblems++;
-        }
-        if (!dup.topicId) dup.topicId = topicId;
-      } else {
-        s.psets.push({ ...S, topicId });
-        addedSets++;
-        addedProblems += S.problems.length;
+    // v198: content-level deduplication across all existing sets, not just
+    // matching set titles. Existing IDs, answers, marks and sources stay intact.
+    let skippedProblems=0;
+    const problemKeys=new Set(s.psets.flatMap(set=>(set.problems||[]).map(q=>bsa198Fingerprint(q.problem)).filter(Boolean)));
+    for(const S of p.psets||[]){
+      const topicId=matchTopic(s,S.topicText)||matchTopic(s,S.title);
+      const dup=s.psets.find(x=>norm(x.title)===norm(S.title));
+      const fresh=[];
+      for(const pr of S.problems||[]){
+        const key=bsa198Fingerprint(pr.problem);
+        if(!key||problemKeys.has(key)){skippedProblems++;continue;}
+        problemKeys.add(key);fresh.push(pr);
       }
+      if(!fresh.length)continue;
+      if(dup){
+        let maxNo=Math.max(0,...(dup.problems||[]).map(x=>Number(x.no)||0));
+        const nos=new Set((dup.problems||[]).map(x=>Number(x.no)));
+        for(const pr of fresh){if(nos.has(Number(pr.no))||!(Number(pr.no)>0))pr.no=++maxNo;else maxNo=Math.max(maxNo,Number(pr.no));nos.add(Number(pr.no));dup.problems.push(pr);addedProblems++;}
+        if(!dup.topicId)dup.topicId=topicId;
+      }else{s.psets.push({...S,topicId,problems:fresh});addedSets++;addedProblems+=fresh.length;}
     }
-    s.mcqSets = s.mcqSets || [];
-    for (const S of p.mcqSets || []) {
-      const topicId = matchTopic(s, S.topicText) || matchTopic(s, S.title);
-      const dup = s.mcqSets.find(x => norm(x.title) === norm(S.title));
-      if (dup) {
-        const have = new Set(dup.problems.map(x => norm(x.problem)));
-        let maxNo = Math.max(0, ...dup.problems.map(x => x.no || 0));
-        for (const q of S.problems) {
-          if (have.has(norm(q.problem))) continue;
-          dup.problems.push({...q, no: ++maxNo});
-          have.add(norm(q.problem));
-          addedProblems++;
-        }
-      } else { s.mcqSets.push({...S, topicId}); addedSets++; addedProblems += S.problems.length; }
+    s.mcqSets=s.mcqSets||[];
+    const mcqKeys=new Set(s.mcqSets.flatMap(set=>(set.problems||[]).map(q=>bsa198Fingerprint(q.problem)).filter(Boolean)));
+    for(const S of p.mcqSets||[]){
+      const topicId=matchTopic(s,S.topicText)||matchTopic(s,S.title);
+      const dup=s.mcqSets.find(x=>norm(x.title)===norm(S.title));
+      const fresh=[];
+      for(const q of S.problems||[]){const key=bsa198Fingerprint(q.problem);if(!key||mcqKeys.has(key)){skippedProblems++;continue;}mcqKeys.add(key);fresh.push(q);}
+      if(!fresh.length)continue;
+      if(dup){let maxNo=Math.max(0,...(dup.problems||[]).map(q=>Number(q.no)||0));for(const q of fresh){dup.problems.push({...q,no:++maxNo});addedProblems++;}}
+      else{s.mcqSets.push({...S,topicId,problems:fresh});addedSets++;addedProblems+=fresh.length;}
     }
-    return { addedLectures, updatedLectures, addedSets, addedProblems };
+    return { addedLectures, updatedLectures, addedSets, addedProblems, skippedProblems };
   }
   /* ----- markdown-lite renderer (no innerHTML; tables, lists, T-accounts) ----- */
   const PS_NUM = /^\(?[-−]?\s?₱?\s?[\d,]+(\.\d+)?\)?%?$/;
@@ -10489,7 +10643,7 @@ ${c.kindHint}` }
   const GEM_CHIPS = [
     ["What should I study today?", "Look at my roadmap, my weakest topics and my next exam. Tell me exactly what to study today and for how long, in order, and why that order. Name real topics, not generic advice."],
     ["Teach my weakest topic", "Take my weakest topic from my data and teach it from scratch: the rule in plain words first, then at exam level with the exact terms, then one worked example, then the two traps examiners use on it. End with three questions and wait for my answers."],
-    ["Quiz me", "Quiz me on my weakest topics, one question at a time, and wait for my answer before continuing. After each answer say whether I'm right, give the correct answer, and explain in one or two sentences why the wrong choice was tempting. Ask ten, then give my score and the three things to review first."],
+    ["Quiz me", "Use the weak-topic and mistake evidence available in this dashboard to choose a topic. Ask one fresh question at a time. Track which concepts you have tested in this conversation, vary question scenarios after mistakes, avoid repeating correct questions unnecessarily, and wait for my answer. Ask ten total. At the end summarize my score, what I missed and the next review priorities."],
     ["Why do I keep missing these?", "Look at my uncleared mistakes. Find the pattern: is it one concept I never learned, careless reading, or two similar rules I keep confusing? Name the pattern, give me the single rule that fixes most of them, and three questions that test exactly that."],
     ["Make flashcards", "Make 15 flashcards on my weakest topic. Reply with ONLY valid JSON, no code fences, in this shape: { \"flashcards\": [ { \"topic\": \"...\", \"question\": \"...\", \"answer\": \"...\", \"tip\": \"...\" } ] }. Keep every answer under 60 words."],
     ["Am I on track?", "Given my grades, my exam readiness and the days left, am I on track? Be honest, including if the answer is no. If not, say precisely what has to change this week."]
@@ -10579,7 +10733,38 @@ Ask: three tutor modes. Focused = saved lectures/problem sets; General = open qu
 Storage: local browser storage. Export study-data backup before deployment or changing devices. No automatic cross-device sync guaranteed.
 Be careful: navigation labels can vary by viewport. Never claim that code passing syntax checks guarantees runtime operation.`;
   }
-  function AskView({ subject, toast, go, init, settings }) {
+  function bsa197TutorQuizBehavior(){
+    return '\n\nQUIZ CONTINUITY: When the learner requests a quiz, ask ONE source-supported question and wait for their answer. Keep a mental ledger of concepts asked and whether the learner answered correctly from the conversation provided. Do not repeat the exact question, or restart numbering, unless the learner requests a retry. Use a new application problem after a mistake. When the conversation is truncated, admit you may not know older questions rather than claiming perfect memory. Briefly explain a correct response; offer reasoning for incorrect responses. Avoid repeated setup questions when the subject and coverage are already clear.';
+  }
+  function bsa197TutorContext(subject){
+    const notes=(subject.tutorMemories||[]).filter(m=>m&&typeof m.text==='string'&&m.text.trim()).slice(-12);
+    if(!notes.length)return '';
+    return '\n\n=== LEARNER-APPROVED TUTOR MEMORY ===\n'+notes.map((m,i)=>(i+1)+'. '+m.text.slice(0,500)).join('\n')+
+      '\nThese are learner preferences and self-reported study difficulties, NOT academic sources, proof of correctness, or permission to ignore source constraints. Use these notes to tailor explanations, avoid repeating unhelpful practice, and continue lessons. Never invent other personal facts.\n=== END LEARNER MEMORY ===';
+  }
+  function BSA197TutorMemory({subject,update,toast}){
+    const [entry,setEntry]=useState('');
+    const notes=(subject.tutorMemories||[]).filter(m=>m&&typeof m.text==='string');
+    const add=()=>{const text=entry.trim().slice(0,500);if(!text)return;
+      if(notes.length>=12){toast('Keep up to 12 active tutor notes. Remove an old one first.');return;}
+      if(notes.some(m=>m.text.toLowerCase()===text.toLowerCase())){toast('This note is already remembered.');return;}
+      update(s=>{s.tutorMemories=s.tutorMemories||[];s.tutorMemories.push({id:uid('tm'),text,at:Date.now()});});
+      setEntry('');toast('Tutor note saved for '+subject.name+'.');
+    };
+    const remove=id=>update(s=>{s.tutorMemories=(s.tutorMemories||[]).filter(x=>x.id!==id);});
+    return h('details',{className:'bsa197-tutor-memory'},h('summary',null,'Tutor memory · '+notes.length+' saved note'+(notes.length===1?'':'s')),
+      h('div',{className:'bsa197-tutor-inner'},
+        h('p',{className:'muted small'},'Tell your tutor what works for you or what you keep confusing. These notes are saved with the subject and can sync with your existing GitHub study records. Focused and General Tutor send them to Gemini with each request. Do not store secrets.'),
+        notes.length?h('ul',{className:'bsa197-tutor-list'},notes.map(m=>h('li',{key:m.id},h('span',null,m.text),
+          h('button',{className:'btn ghost',type:'button','aria-label':'Forget tutor note',onClick:()=>remove(m.id)},'Remove')))):
+          h('p',{className:'muted small'},'No saved tutor notes yet. Your old chat messages are not automatically converted into memories.'),
+        h('label',{className:'bsa197-tutor-label'},'Add a memory',h('textarea',{value:entry,maxLength:500,rows:2,
+          placeholder:'Example: Quiz me one at a time. Skip concepts I can consistently answer; use new scenarios for my mistakes.',
+          onChange:e=>setEntry(e.target.value)})),
+        h('div',{className:'bsa197-row'},h('small',{className:'muted'},entry.length+' / 500 characters'),
+          h('button',{className:'btn primary',type:'button',disabled:!entry.trim()||notes.length>=12,onClick:add},'Remember this'))));
+  }
+  function AskView({ subject, toast, go, init, settings, update }) {
     const [mode, setMode] = useState(() => { const m=localPref("askMode"); return ["sources","general","dashboard"].includes(m)?m:"sources"; });
     const CHAT = "bsa_chat_" + subject.id + "_" + mode;
     const [msgs, setMsgs] = useState(() => { try { return JSON.parse(lsGet(CHAT) || "[]") || []; } catch (e) { return []; } });
@@ -10627,7 +10812,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       abort.current = ctrl;
       let acc = "";
       gemSend({
-        key: gemKey(), model: selectedModel, system: mode === "sources" ? gemSourceSystem(subject, focus) : mode === "dashboard" ? gemDashboardSystem() : gemGeneralSystem(), turns: history, signal: ctrl.signal,
+        key: gemKey(), model: selectedModel, system: mode === "dashboard" ? gemDashboardSystem() : (mode === "sources" ? gemSourceSystem(subject, focus) : gemGeneralSystem()) + bsa197TutorQuizBehavior() + bsa197TutorContext(subject), turns: history, signal: ctrl.signal,
         onText: (t) => {
           acc += t;
           setMsgs((v) => v.map((m) => m.id === reply.id ? { ...m, text: acc } : m));
@@ -10661,6 +10846,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
           msgs.length > 0 && h("button", { className: "btn ghost ask-clear-button", disabled: busy, onClick: clear, title: "Clear this conversation" }, "Clear")
         )
       ),
+      h(BSA197TutorMemory,{subject,update,toast}),
       ready && h("details", { className: "ask-context-details" },
         h("summary", { title: "Change model, tutor mode, and source" },
           h("span", { className: "ask-context-label" }, mode === "sources" ? "📚 Saved sources" : mode === "dashboard" ? "🧭 Dashboard guide" : "💬 General questions"),
@@ -11306,7 +11492,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
   }
   /* v49: unified local study backup. Never export API keys or sync credentials. */
   const BSA_BACKUP_PREFIXES = ["bsa_", "bsa-"];
-  const BSA_BACKUP_EXCLUDE = /(?:api.?key|secret|token|credential|password|github|gemini|auth|sync.?config|^bsa_gh_|^bsa_sync_|^bsa[_-].*(?:login[_-]?session|auth[_-]?session|session[_-]?token))/i;
+  const BSA_BACKUP_EXCLUDE = /(?:api.?key|secret|token|credential|password|github|gemini|auth|sync.?config|^bsa_drive_(?:client|api|project)|^bsa_gh_|^bsa_sync_|^bsa[_-].*(?:login[_-]?session|auth[_-]?session|session[_-]?token))/i;
   const BSA_BACKUP_LOCAL_ONLY = /^(?:bsa_shared_|bsa-shared-|bsa_shared_v67_|bsa_shared_guest_|bsa_shared_personal_)/i;
   const BSA_BACKUP_REQUIRE_JSON = new Set([STORE_KEY,'bsa-academic-progress-v1','bsa-study-life-v1','bsa-joy-v1']);
   function bsaBackupKeys() {
@@ -11323,9 +11509,10 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     for(const sub of doc.subjects){
       if(!sub||typeof sub!=='object'||Array.isArray(sub)||typeof sub.id!=='string'||!sub.id.trim()||sub.id.length>=500||ids.has(sub.id)||typeof sub.name!=='string'||!sub.name.trim()||sub.name.length>=1000)return false;
       ids.add(sub.id);
-      for(const field of ['topics','cards','mistakes','quizzes','sessions','lectures','psets','labAttempts','todayChecks'])if(sub[field]!==undefined&&!Array.isArray(sub[field]))return false;
+      for(const field of ['topics','cards','mistakes','quizzes','sessions','lectures','psets','labAttempts','todayChecks','tutorMemories','studyInbox','driveSources','libraryFlags','cycleRuns','cycleCases','practiceSessions','problemWork'])if(sub[field]!==undefined&&!Array.isArray(sub[field]))return false;
       for(const attempt of sub.labAttempts||[])if(!attempt||typeof attempt.id!=='string'||!Number.isFinite(Number(attempt.exercise))||!Number.isFinite(Number(attempt.date))||typeof attempt.correct!=='boolean')return false;
       for(const check of sub.todayChecks||[])if(!check||typeof check.id!=='string'||typeof check.day!=='string'||!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(check.day)||typeof check.taskId!=='string')return false;
+      if((sub.tutorMemories||[]).length>50||(sub.tutorMemories||[]).some(m=>!m||typeof m.id!=='string'||typeof m.text!=='string'||m.text.length>600))return false;
     }
     return true;
   }
@@ -12596,7 +12783,9 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
 
   /* v186: two panes reuse the existing IndexedDB PDF shelf and v33 InkPad.
      PDF object URLs are temporary and are revoked when the selection changes. */
-  function BSA186SplitStudy({subject,toast}){
+  function BSA186SplitStudy({subject,toast,go,init}){
+    const scopedProblem=init?.problemId?String(init.problemId):"";
+    const inkSubject=scopedProblem?{...subject,id:subject.id+":problem:"+scopedProblem}:subject;
     const [pdfs,setPdfs]=useState([]),[chosen,setChosen]=useState(''),[url,setUrl]=useState(''),[split,setSplit]=useState(48),[error,setError]=useState(''),[busy,setBusy]=useState(false);
     const layoutKey=bsaNextKey('split_layout_v195');
     const [arrangement,setArrangement]=useState(()=>bsaNextRead(layoutKey,{arrangement:'auto'}).arrangement||'auto');
@@ -12607,6 +12796,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     useEffect(()=>{if(!chosenPdf?.blob){setUrl('');return}const next=URL.createObjectURL(chosenPdf.blob);setUrl(next);return()=>URL.revokeObjectURL(next)},[chosenPdf?.id,chosenPdf?.blob]);
     const upload=async e=>{const files=Array.from(e.target.files||[]);e.target.value='';if(!files.length)return;setBusy(true);setError('');try{for(const f of files)await bsaPdfAdd(subject.id,f);await refresh();toast('Your PDFs are ready in Split Study.')}catch(err){setError(String(err.message||err))}finally{setBusy(false)}};
     return h('section',{className:'view bsa186-page'},h('div',{className:'page-head'},h('div',null,h('span',{className:'v2-eyebrow'},'v186 · IPAD STUDY MODE'),h('h1',{className:'page-title'},'Split Study'),h('p',{className:'muted'},'Read a saved PDF while using the existing handwriting notebook. Both panes stay on this device.'))),
+      scopedProblem&&h('div',{className:'bsa205-problem-work'},h('div',null,h('strong',null,'Working on: '+(init?.title||'Accounting problem')),h('p',{className:'muted small'},init?.prompt||'Your dedicated, local handwriting pages are attached to this problem.')),h('button',{className:'btn',onClick:()=>go?.('accounting-lab')},'Back to Accounting Lab')),
       h('div',{className:'bsa186-bar'},h('label',null,'Source PDF',h('select',{value:chosen,onChange:e=>setChosen(e.target.value),'aria-label':'Source PDF'},h('option',{value:''},pdfs.length?'Choose a PDF':'No saved PDF yet'),pdfs.map(x=>h('option',{key:x.id,value:x.id},x.name)))),
         h('label',{className:'btn bsa186-upload'},busy?'Adding…':'＋ Add PDF',h('input',{type:'file',accept:'.pdf,application/pdf',multiple:true,disabled:busy,onChange:upload})),
         url&&h('button',{type:'button',className:'btn ghost',onClick:()=>bsaPdfOpenFile(chosenPdf,false)},'Open PDF separately'),
@@ -12617,8 +12807,8 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       h('div',{className:'bsa186-panes','data-layout':arrangement,style:{'--pdf-width':split+'%'}},
         h('section',{className:'bsa186-pane bsa186-pdf','aria-label':'Reference PDF'},h('div',{className:'bsa186-pane-heading'},h('strong',null,'Reference'),h('small',null,chosenPdf?.name||'Select a source')),
           url?h('iframe',{src:url+'#toolbar=1',title:'PDF reference: '+(chosenPdf?.name||''),loading:'eager'}):h('div',{className:'bsa186-empty'},'Add a PDF above to read it beside your notes.')),
-        h('section',{className:'bsa186-pane bsa186-notebook','aria-label':'Handwriting notebook'},h('div',{className:'bsa186-pane-heading'},h('strong',null,'Your notebook'),h('small',null,'Existing pages, pen and T-account tools')),
-          h(InkPad,{key:subject.id,subject,toast}))));
+        h('section',{className:'bsa186-pane bsa186-notebook','aria-label':'Handwriting notebook'},h('div',{className:'bsa186-pane-heading'},h('strong',null,'Your notebook'),h('small',null,scopedProblem?'Dedicated pages for this problem':'Existing pages, pen and T-account tools')),
+          h(InkPad,{key:inkSubject.id,subject:inkSubject,toast}))));
   }
 
   /* v187: isolated answer-checking lab; the answers are explicitly defined.
@@ -12664,45 +12854,293 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     if(Math.abs(totalDr-totalCr)>.005)return {ok:false,reason:'Debits and credits do not balance: ₱'+totalDr.toLocaleString()+' versus ₱'+totalCr.toLocaleString()+'.'};
     const normalized=arr=>arr.map(([name,dr,cr])=>[bsa187Account(name),dr,cr].join('|')).sort().join('::');
     const ok=normalized(actual)===normalized(exercise.solution);
-    return {ok,reason:ok?'Correct! Both the accounts and amounts match.':'Your entry balances, but one or more accounts or amounts do not match this transaction. Review which accounts increased or decreased.'};}
+    return {ok,reason:ok?'Correct! Both the accounts and amounts match.':'The entry balances, but does not match the stored answer key. See the specific differences below.',details:ok?[]:bsa205Diagnose(rows,exercise)};}
   /* v194/v196: new checks are first-class, per-subject sync collections;
      v192 local results are left untouched until the learner imports them. */
-  function BSA187AccountingLab({subject,update,toast}){
-    const [index,setIndex]=useState(0),[rows,setRows]=useState(bsa187Blank),[feedback,setFeedback]=useState(null),[reveal,setReveal]=useState(false);
-    const [level,setLevel]=useState('All'),[topic,setTopic]=useState('All');
-    const key=bsaNextKey('lab_v187',subject.id);
+  /* v198: Unified practice hub. Imported journal entries are stored inside the
+     EXISTING per-subject Problem Sets collection. They are never copied into a
+     second, competing subject database. Attempts stay in subject.labAttempts. */
+  const BSA198_LAB_SET='Accounting Lab · Your journal exercises';
+  const BSA198_EXAMPLE={format:'bsa-accounting-lab-v1',subject:'Accountancy',exercises:[
+    {title:'Electricity for this month',topic:'Basic transactions',level:'Beginner',
+      prompt:'Paid ₱5,200 cash for electricity consumed this month.',
+      hint:'Which expense was incurred, and which asset decreased?',
+      explanation:'Illustrative self-authored example. Verify against your course materials.',
+      source:'Illustrative practice example',
+      solution:[{account:'Utilities Expense',debit:5200,credit:0},{account:'Cash',debit:0,credit:5200}]}
+  ]};
+  const bsa198Text=x=>String(x==null?'':x).normalize('NFKC').replace(/\s+/g,' ').trim();
+  const bsa198Fingerprint=x=>bsa198Text(x).toLowerCase().replace(/\b(?:problem|question|item)\s*(?:no\.?|number|#)?\s*\d+\s*[:.)-]\s*/g,'').replace(/(?:₱|php|\bp)(?=\s*\d)/gi,'').replace(/(\d),(?=\d{3}(?:\D|$))/g,'$1').replace(/[^a-z0-9]+/g,' ').trim();
+  const bsa198Near=(a,b)=>{
+    const aa=bsa198Fingerprint(a),bb=bsa198Fingerprint(b);
+    if(!aa||!bb||aa.length<40||bb.length<40)return false;
+    const amounts=x=>(x.match(/\d+(?:\.\d+)?/g)||[]).join(',');
+    if(amounts(aa)!==amounts(bb))return false;
+    const as=new Set(aa.split(' ')),bs=new Set(bb.split(' '));
+    let intersection=0;for(const t of as)if(bs.has(t))intersection++;
+    return 2*intersection/(as.size+bs.size)>=.91;
+  };
+  function bsa198Validate(raw){
+    if(!raw||typeof raw!=='object'||Array.isArray(raw))return {error:'Exercise must be a JSON object.'};
+    const title=bsa198Text(raw.title||raw.name),prompt=bsa198Text(raw.prompt||raw.problem||raw.question);
+    if(prompt.length<12||prompt.length>4000)return {error:'Problem statement must contain 12–4,000 characters.'};
+    if(title.length>150)return {error:'Title is too long (maximum 150 characters).'};
+    const submitted=raw.solution||raw.journalEntry||raw.entries||raw.labEntry;
+    if(!Array.isArray(submitted)||submitted.length<2||submitted.length>16)return {error:'Solution must contain 2–16 journal-entry lines in an array.'};
+    let dr=0,cr=0;
+    const solution=[];
+    for(const x of submitted){
+      const r=Array.isArray(x)?{account:x[0],debit:x[1],credit:x[2]}:x;
+      if(!r||typeof r!=='object')return {error:'Every solution line needs an account, debit and credit.'};
+      const account=bsa198Text(r.account||r.name),debit=bsa187Number(r.debit),credit=bsa187Number(r.credit);
+      if(!account||account.length>100||!Number.isFinite(debit)||!Number.isFinite(credit)||debit>1e11||credit>1e11||
+         (!!debit===!!credit)||Math.abs(debit*100-Math.round(debit*100))>1e-6||Math.abs(credit*100-Math.round(credit*100))>1e-6)
+        return {error:'Each entry line needs a valid account and one non-negative amount (at most two decimal places), on exactly one side.'};
+      dr+=Math.round(debit*100);cr+=Math.round(credit*100);solution.push([account,debit,credit]);
+    }
+    if(dr!==cr||!dr)return {error:'The supplied answer key does not balance. Debits and credits must match.'};
+    const source=bsa198Text(raw.source||raw.reference);
+    const level=['Beginner','Intermediate','Advanced'].find(x=>x.toLowerCase()===bsa198Text(raw.level||raw.difficulty).toLowerCase())||'Intermediate';
+    return {value:{title:title||prompt.slice(0,75),prompt,level,topic:bsa198Text(raw.topic||raw.subtopic)||'Imported journal entries',
+      source:source.slice(0,240),hint:bsa198Text(raw.hint).slice(0,750),explanation:bsa198Text(raw.explanation||raw.reason).slice(0,2500),solution}};
+  }
+  function bsa198StoredKeyValid(p){
+    if(!Array.isArray(p.labEntry)||p.labEntry.length<2||p.labEntry.length>16)return false;
+    let debit=0,credit=0;
+    for(const row of p.labEntry){
+      if(!Array.isArray(row)||row.length<3||typeof row[0]!=='string'||!row[0].trim())return false;
+      const dr=Number(row[1]),cr=Number(row[2]);
+      if(!Number.isFinite(dr)||!Number.isFinite(cr)||dr<0||cr<0||dr>1e11||cr>1e11||!!dr===!!cr)return false;
+      if(Math.abs(dr*100-Math.round(dr*100))>1e-6||Math.abs(cr*100-Math.round(cr*100))>1e-6)return false;
+      debit+=Math.round(dr*100);credit+=Math.round(cr*100);
+    }
+    return debit>0&&debit===credit;
+  }
+  function bsa198Catalog(subject){
+    const original=BSA187_EXERCISES.map((e,i)=>({...e,index:i,key:'builtin:'+i,kind:'builtin',level:e.level||'Beginner',topic:e.topic||'Basic transactions',source:'Built-in illustrated example'}));
+    const linked=[],ordinary=[],mcqs=[];
+    for(const set of subject.psets||[])for(const p of set.problems||[]){
+      const item={...p,setId:set.id,setTitle:set.title,source:p.source||set.source||'',key:'ps:'+p.id};
+      if(bsa198StoredKeyValid(p))linked.push({...item,kind:'stored',index:-1,title:p.title||set.title,prompt:p.problem,
+        solution:p.labEntry,level:p.labLevel||({easy:'Beginner',average:'Intermediate',difficult:'Advanced'}[p.difficulty])||'Intermediate',
+        topic:p.labTopic||p.subtopic||set.topicText||'Imported journal entries',hint:p.labHint||'',explanation:p.labExplanation||''});
+      else ordinary.push(item);
+    }
+    for(const set of subject.mcqSets||[])for(const p of set.problems||[])mcqs.push({...p,setId:set.id,setTitle:set.title});
+    return {journal:[...original,...linked],ordinary,mcqs};
+  }
+  function bsa198PlanBatch(raw,subject){
+    const c=bsa198Catalog(subject);
+    const existing=[...c.journal.map(x=>({prompt:x.prompt,kind:x.kind,title:x.title,solution:x.solution})),
+      ...c.ordinary.map(x=>({prompt:x.problem,kind:'plain',setId:x.setId,problemId:x.id,title:x.title})),
+      ...c.mcqs.map(x=>({prompt:x.problem,kind:'mcq',title:x.title}))];
+    const out={accepted:[],upgrades:[],duplicates:[],similar:[],conflicts:[],invalid:[],total:raw.length};
+    for(let i=0;i<raw.length;i++){
+      const check=bsa198Validate(raw[i]);if(check.error){out.invalid.push({row:i+1,reason:check.error});continue;}
+      const ex=check.value,key=bsa198Fingerprint(ex.prompt);
+      const hit=existing.find(x=>bsa198Fingerprint(x.prompt)===key);
+      if(hit){
+        if(hit.kind==='plain'){
+          out.upgrades.push({exercise:ex,setId:hit.setId,problemId:hit.problemId,row:i+1});
+          hit.kind='reserved';
+        }else if(hit.solution&&hit.solution.length&&
+          !bsa187Verify(ex.solution.map(([account,debit,credit])=>({account,debit:String(debit||''),credit:String(credit||'')})),{solution:hit.solution}).ok)
+          out.conflicts.push({row:i+1,title:ex.title,reason:'Existing prompt has a DIFFERENT answer key. Review both sources; nothing was overwritten.'});
+        else out.duplicates.push({row:i+1,title:ex.title,reason:hit.kind==='reserved'?'Already being upgraded':'Already exists'});
+        continue;
+      }
+      const close=existing.find(x=>bsa198Near(x.prompt,ex.prompt));
+      if(close){out.similar.push({row:i+1,title:ex.title,reason:'Similar to '+(close.title||'an existing problem')});continue;}
+      out.accepted.push(ex);existing.push({prompt:ex.prompt,title:ex.title,kind:'pending'});
+    }
+    return out;
+  }
+  function bsa198Parse(raw){
+    if(raw.length>600000)throw Error('Import too large. Limit JSON to 600 KB or split into smaller batches.');
+    const obj=JSON.parse(raw.trim().replace(/^```(?:json)?\s*/i,'').replace(/```\s*$/,''));
+    if(obj&&typeof obj==='object'&&!Array.isArray(obj)&&obj.format&&obj.format!=='bsa-accounting-lab-v1')
+      throw Error('This is '+obj.format+'. Use Import & Export for existing Problem Set / MCQ formats; they will appear in the Lab library automatically.');
+    const list=Array.isArray(obj)?obj:obj&&obj.exercises;
+    if(!Array.isArray(list)||!list.length)throw Error('Expected {"format":"bsa-accounting-lab-v1","exercises":[...]} with at least one entry.');
+    if(list.length>100)throw Error('Import at most 100 exercises per batch.');
+    return list;
+  }
+  function bsa198DeclaredSubject(raw){
+    try{const obj=JSON.parse(raw.trim().replace(/^```(?:json)?\s*/i,'').replace(/```\s*$/,''));return obj&&!Array.isArray(obj)&&typeof obj.subject==='string'?bsa198Text(obj.subject).slice(0,150):''}
+    catch(_){return ''}
+  }
+  function bsa198StorePlan(s,plan){
+    s.psets=s.psets||[];
+    for(const rec of plan.upgrades){
+      const set=s.psets.find(x=>x.id===rec.setId),p=set&&(set.problems||[]).find(x=>x.id===rec.problemId);
+      if(p&&!bsa198StoredKeyValid(p))Object.assign(p,{labEntry:rec.exercise.solution,labHint:rec.exercise.hint,labExplanation:rec.exercise.explanation,
+        labTopic:rec.exercise.topic,labLevel:rec.exercise.level});
+    }
+    if(plan.accepted.length){
+      let set=s.psets.find(x=>x.labCollection===true);
+      if(!set){set={id:uid('ps'),labCollection:true,title:BSA198_LAB_SET,topicText:'Journal practice',source:'Learner-imported exercises',intro:'Imported journal entries; answer keys are provided by the importer and are not independently verified.',problems:[],added:today()};s.psets.push(set);}
+      let n=Math.max(0,...set.problems.map(p=>Number(p.no)||0));
+      for(const ex of plan.accepted)set.problems.push({id:uid('pp'),no:++n,title:ex.title,problem:ex.prompt,subtopic:ex.topic,
+        topicText:ex.topic,difficulty:{Beginner:'easy',Intermediate:'average',Advanced:'difficult'}[ex.level],req:['Prepare the journal entry'],choices:[],
+        answer:'',approach:ex.hint,solution:ex.explanation,trap:'',source:ex.source,st:'',labEntry:ex.solution,
+        labHint:ex.hint,labExplanation:ex.explanation,labTopic:ex.topic,labLevel:ex.level});
+    }
+  }
+  const bsa198AttemptKey=a=>a&&a.problemId?'ps:'+a.problemId:'builtin:'+Number(a?.exercise);
+  function BSA187AccountingLab({subject,update,toast,go}){
+    const [tab,setTab]=useState('journal'),[selected,setSelected]=useState(''),[filter,setFilter]=useState('all'),[search,setSearch]=useState(''),[level,setLevel]=useState('All');
+    const [rows,setRows]=useState(bsa187Blank),[feedback,setFeedback]=useState(null),[reveal,setReveal]=useState(false);
+    const [importText,setImportText]=useState(''),[preview,setPreview]=useState(null),[importError,setImportError]=useState('');
+    const [manual,setManual]=useState(false),[manualF,setManualF]=useState(()=>({title:'',prompt:'',topic:'',level:'Intermediate',source:'',hint:'',explanation:'',rows:bsa187Blank()}));
+    const [manualError,setManualError]=useState('');
+    const catalog=useMemo(()=>bsa198Catalog(subject),[subject.psets,subject.mcqSets]);
+    const legacyKey=bsaNextKey('lab_v187',subject.id);
     const synced=Array.isArray(subject.labAttempts)?subject.labAttempts:[];
-    const legacy=(()=>{const d=bsaNextRead(key,{attempts:[]});return (Array.isArray(d.attempts)?d.attempts:[]).map((x,i)=>({...x,legacyId:'legacy-lab-'+subject.id+'-'+i+'-'+Number(x.date||0)})).filter(x=>!synced.some(a=>a.id===x.legacyId))})();
-    const visible=BSA187_EXERCISES.map((ex,i)=>({ex,i})).filter(x=>(level==='All'||(x.ex.level||'Beginner')===level)&&(topic==='All'||(x.ex.topic||'Basic transactions')===topic));
-    const ex=BSA187_EXERCISES[index];
-    useEffect(()=>{if(!visible.some(x=>x.i===index)){setIndex(visible[0]?.i??0);setRows(bsa187Blank());setFeedback(null);setReveal(false)}},[level,topic,index]);
-    useEffect(()=>{setRows(bsa187Blank());setFeedback(null);setReveal(false);setIndex(0);setLevel('All');setTopic('All')},[subject.id]);
+    const legacy=(()=>{const d=bsaNextRead(legacyKey,{attempts:[]});return(Array.isArray(d.attempts)?d.attempts:[]).map((x,i)=>({...x,legacyId:'legacy-lab-'+subject.id+'-'+i+'-'+Number(x.date||0)})).filter(x=>!synced.some(a=>a.id===x.legacyId))})();
+    const history=useMemo(()=>{
+      const hmap=new Map();for(const a of synced){const key=bsa198AttemptKey(a);const item=hmap.get(key)||{n:0,correct:0,latest:null};item.n++;if(a.correct)item.correct++;if(!item.latest||Number(a.date)>Number(item.latest.date))item.latest=a;hmap.set(key,item)}return hmap;
+    },[synced]);
+    const stats=x=>history.get(x.key)||{n:0,correct:0,latest:null};
+    const sorted=useMemo(()=>catalog.journal.slice().sort((a,b)=>{
+      const priority=x=>{const o=history.get(x.key);return !o?0:o.latest&&!o.latest.correct?1:2};return priority(a)-priority(b)||(a.index??10000)-(b.index??10000);
+    }),[catalog.journal,history]);
+    const filtered=sorted.filter(x=>(level==='All'||level===x.level)&&(!search||bsa198Fingerprint(x.title+' '+x.prompt+' '+x.topic+' '+x.source).includes(bsa198Fingerprint(search)))&&
+      (filter==='all'||filter==='new'&&(!stats(x).n||x.key===selected)||filter==='weak'&&(!!stats(x).latest&&!stats(x).latest.correct||x.key===selected)||filter==='done'&&(!!stats(x).latest&&stats(x).latest.correct||x.key===selected)));
+    const current=filtered.find(x=>x.key===selected)||filtered[0]||null;
+    const reset=()=>{setRows(bsa187Blank());setFeedback(null);setReveal(false)};
+    const choose=key=>{setSelected(key);reset()};
+    useEffect(()=>{setSelected('');setTab('journal');setSearch('');setLevel('All');setFilter('all');reset();setPreview(null)},[subject.id]);
     const change=(i,field,value)=>{setRows(old=>old.map((r,j)=>i===j?{...r,[field]:value}:r));setFeedback(null)};
-    const verify=()=>{const result=bsa187Verify(rows,ex);setFeedback(result);
+    const verify=()=>{
+      if(!current||!Array.isArray(current.solution))return;
+      const result=bsa187Verify(rows,current);setFeedback(result);
       if(result.reason==='Enter a journal entry first.'||result.reason==='Use non-negative numeric amounts.')return;
-      const attempt={id:uid('lab'),exercise:index,correct:result.ok,date:Date.now(),level:ex.level||'Beginner'};
-      update(s=>{s.labAttempts=[...(s.labAttempts||[]),attempt].slice(-500)});
+      const attempt={id:uid('lab'),exercise:current.kind==='builtin'?current.index:-1,problemId:current.kind==='stored'?current.id:undefined,
+        correct:result.ok,date:Date.now(),level:current.level||'Beginner'};
+      setSelected(current.key);update(s=>{s.labAttempts=[...(s.labAttempts||[]),attempt].slice(-1000)});
     };
-    const importLegacy=()=>{if(!legacy.length)return;
-      if(!window.confirm('Copy '+legacy.length+' older local lab checks into the subject data that may sync to your configured GitHub repository? Original local history will remain unchanged.'))return;
-      update(s=>{const ids=new Set((s.labAttempts||[]).map(x=>x.id));s.labAttempts=[...(s.labAttempts||[])];legacy.forEach(x=>{const id=x.legacyId;if(!ids.has(id)){s.labAttempts.push({id,exercise:Number(x.exercise)||0,correct:!!x.correct,date:Number(x.date)||0,level:BSA187_EXERCISES[Number(x.exercise)||0]?.level||'Beginner'});ids.add(id)}})});
-      toast('Copied older lab checks into the syncable subject record. Your local copy was preserved.');
+    const next=()=>{if(!filtered.length)return;const n=filtered.findIndex(x=>x.key===current?.key);choose(filtered[(n+1)%filtered.length].key)};
+    const importLegacy=()=>{
+      if(!legacy.length||!window.confirm('Copy '+legacy.length+' older local checks to syncable subject history? Your originals stay unchanged.'))return;
+      update(s=>{const ids=new Set((s.labAttempts||[]).map(x=>x.id));s.labAttempts=[...(s.labAttempts||[])];for(const x of legacy){if(ids.has(x.legacyId))continue;s.labAttempts.push({id:x.legacyId,exercise:Number(x.exercise)||0,correct:!!x.correct,date:Number(x.date)||0,level:BSA187_EXERCISES[Number(x.exercise)||0]?.level||'Beginner'});ids.add(x.legacyId)}});
+      toast('Older practice history copied. Original device-only history preserved.');
     };
-    const changeExercise=n=>{setIndex(n);setRows(bsa187Blank());setFeedback(null);setReveal(false)};
-    const next=()=>{const at=visible.findIndex(x=>x.i===index);changeExercise(visible[(at+1)%visible.length]?.i??0)};
-    const groups=new Map();rows.forEach(r=>{const acct=r.account.trim();const d=bsa187Number(r.debit),c=bsa187Number(r.credit);if(!acct||!Number.isFinite(d)||!Number.isFinite(c)||(!d&&!c))return;const key=bsa187Account(acct);if(!groups.has(key))groups.set(key,{name:acct,dr:0,cr:0});const x=groups.get(key);x.dr+=d;x.cr+=c;});
-    const correct=synced.filter(x=>x.correct).length;
-    return h('section',{className:'view bsa187-page'},h('div',{className:'page-head'},h('div',null,h('span',{className:'v2-eyebrow'},'v196 · GUIDED ACCOUNTING PRACTICE'),h('h1',{className:'page-title'},'Accounting Lab'),h('p',{className:'muted'},'Twenty worked transactions across basics, adjusting entries and estimates. Answer first; then check each account and amount.'))),
-      h('div',{className:'bsa196-filters v2-panel'},h('label',null,'Difficulty',h('select',{value:level,onChange:e=>{setLevel(e.target.value);setTopic('All')}},['All','Beginner','Intermediate','Advanced'].map(x=>h('option',{key:x,value:x},x)))),h('label',null,'Topic',h('select',{value:topic,onChange:e=>{setTopic(e.target.value);setLevel('All')}},['All','Basic transactions','Adjusting entries','Estimates & provisions'].map(x=>h('option',{key:x,value:x},x)))),h('label',null,'Exercise',h('select',{value:index,onChange:e=>changeExercise(Number(e.target.value))},visible.map(x=>h('option',{key:x.i,value:x.i},(x.i+1)+'. '+x.ex.title))))),
-      h('div',{className:'bsa187-layout'},h('section',{className:'v2-panel bsa187-problem'},h('span',{className:'v2-eyebrow'},'PRACTICE '+(index+1)+' / '+BSA187_EXERCISES.length+' · '+(ex.level||'Beginner')),h('h2',null,ex.title),h('p',null,ex.prompt),h('details',null,h('summary',null,'Need a hint?'),h('p',null,ex.hint)),
-        h('p',{className:'muted small'},'Answer checks stay separate from scores, XP and your official journal.'),h('div',{className:'bsa187-count'},synced.length+' checks in syncable subject data · '+correct+' correct'),
-        !!legacy.length&&h('div',{className:'bsa194-import'},h('small',null,legacy.length+' older device-only checks are still saved in v192 storage.'),h('button',{className:'btn',onClick:importLegacy},'Copy old checks to syncable history'))),
-      h('section',{className:'v2-panel bsa187-entry'},h('h2',null,'Your general journal'),h('div',{className:'bsa187-table-wrap'},h('table',{className:'bsa187-table'},h('thead',null,h('tr',null,['Account','Debit (₱)','Credit (₱)'].map(x=>h('th',{key:x},x)))),h('tbody',null,rows.map((r,i)=>h('tr',{key:i},h('td',null,h('input',{value:r.account,placeholder:i===0?'Account title':'Account',onChange:e=>change(i,'account',e.target.value),'aria-label':'Account line '+(i+1)})),h('td',null,h('input',{type:'text',inputMode:'decimal',value:r.debit,placeholder:'0',onChange:e=>change(i,'debit',e.target.value),'aria-label':'Debit line '+(i+1)})),h('td',null,h('input',{type:'text',inputMode:'decimal',value:r.credit,placeholder:'0',onChange:e=>change(i,'credit',e.target.value),'aria-label':'Credit line '+(i+1)}))))))),
-        h('div',{className:'bsa187-actions'},h('button',{className:'btn primary',onClick:verify},'Check entry'),h('button',{className:'btn',onClick:()=>setReveal(v=>!v)},reveal?'Hide solution':'Reveal solution'),h('button',{className:'btn ghost',onClick:next},'Next problem →')),
-        feedback&&h('p',{className:'bsa187-feedback'+(feedback.ok?' success':''),role:'status'},feedback.reason),
-        (feedback||reveal)&&ex.explanation&&h('p',{className:'bsa196-explanation'},ex.explanation),
-        reveal&&h('div',{className:'bsa187-solution'},h('strong',null,'Suggested journal entry'),ex.solution.map(([account,dr,cr],i)=>h('div',{key:i},h('span',null,account),h('span',null,dr?'Debit ₱'+dr.toLocaleString():'Credit ₱'+cr.toLocaleString())))))),
-      h('section',{className:'v2-panel bsa187-taccounts'},h('h2',null,'T-account preview'),h('p',{className:'muted small'},'Shows exactly what you entered; it is not automatically correct.'),groups.size?h('div',{className:'bsa187-tgrid'},[...groups.values()].map(g=>h('div',{className:'bsa187-taccount',key:g.name},h('strong',null,g.name),h('div',null,h('span',null,g.dr?'₱'+g.dr.toLocaleString():'—'),h('span',null,g.cr?'₱'+g.cr.toLocaleString():'—'))))):h('p',{className:'muted'},'Enter your journal lines to see the T-accounts.')));
+    const checkImport=()=>{try{const plan=bsa198PlanBatch(bsa198Parse(importText),subject);plan.declaredSubject=bsa198DeclaredSubject(importText);setPreview(plan);setImportError('');}
+      catch(e){setPreview(null);setImportError(String(e.message||e))}};
+    const applyImport=()=>{
+      try{
+        const plan=bsa198PlanBatch(bsa198Parse(importText),subject);
+        if(!plan.accepted.length&&!plan.upgrades.length){setPreview(plan);setImportError('Nothing new to import. Duplicates and similar problems were not added.');return;}
+        if(!window.confirm('Import into '+subject.name+'? Add '+plan.accepted.length+' new exercises and upgrade '+plan.upgrades.length+' existing questions. The supplied solutions are not independently verified; existing study progress will be preserved.'+(bsa198DeclaredSubject(importText)?' JSON subject: '+bsa198DeclaredSubject(importText)+'.':'')))return;
+        update(s=>bsa198StorePlan(s,plan));setPreview(null);setImportText('');setImportError('');setTab('journal');setFilter('new');setSelected('');
+        toast('Saved '+plan.accepted.length+' new journal exercises; enabled checking on '+plan.upgrades.length+' existing problems. Skipped '+(plan.duplicates.length+plan.similar.length+plan.conflicts.length+plan.invalid.length)+' duplicates/similar/invalid.');
+      }catch(e){setImportError(String(e.message||e))}
+    };
+    const saveManual=()=>{
+      const raw={...manualF,solution:manualF.rows.map(r=>({account:r.account,debit:r.debit,credit:r.credit})).filter(r=>r.account.trim()||r.debit||r.credit)};
+      const plan=bsa198PlanBatch([raw],subject);
+      if(plan.invalid.length){setManualError(plan.invalid[0].reason);return}
+      if(plan.duplicates.length||plan.similar.length||plan.conflicts.length){setManualError(plan.conflicts.length?'A matching question has a different answer key. Review both solutions before saving.':'This problem already exists or closely matches another. No duplicate was saved.');return}
+      if(plan.upgrades.length&&!window.confirm('This exact problem already exists in Problem Sets. Add its checkable journal answer to that ORIGINAL problem instead of creating a copy?'))return;
+      update(s=>bsa198StorePlan(s,plan));setManual(false);setManualError('');setTab('journal');setFilter('new');setSelected('');
+      setManualF({title:'',prompt:'',topic:'',level:'Intermediate',source:'',hint:'',explanation:'',rows:bsa187Blank()});
+      toast(plan.upgrades.length?'Added checking to the existing problem.':'Saved one journal exercise to your existing Problem Sets library.');
+    };
+    const groups=new Map();rows.forEach(r=>{const acct=r.account.trim();const d=bsa187Number(r.debit),c=bsa187Number(r.credit);if(!acct||!Number.isFinite(d)||!Number.isFinite(c)||(!d&&!c))return;const key=bsa187Account(acct);if(!groups.has(key))groups.set(key,{name:acct,dr:0,cr:0});const x=groups.get(key);x.dr+=d;x.cr+=c});
+    const duplicateCount=(()=>{const seen=new Set();let repeats=0;for(const x of [...catalog.journal.map(x=>x.prompt),...catalog.ordinary.map(x=>x.problem),...catalog.mcqs.map(x=>x.problem)]){const key=bsa198Fingerprint(x);if(!key)continue;if(seen.has(key))repeats++;else seen.add(key)}return repeats})();
+    const searchLists=(items)=>items.filter(x=>!search||bsa198Fingerprint((x.title||'')+' '+(x.problem||'')+' '+(x.setTitle||'')).includes(bsa198Fingerprint(search)));
+    return h('section',{className:'view bsa187-page bsa198-page'},
+      h('header',{className:'page-head bsa198-heading'},h('div',null,h('span',{className:'v2-eyebrow'},'v198 · ONE ORGANIZED PRACTICE HUB'),h('h1',{className:'page-title'},'Accounting Lab'),h('p',{className:'muted'},'Journal practice, existing problem sets and MCQs together—without duplicating your learning records.')),
+        h('button',{className:'btn primary',onClick:()=>{setTab('import');setPreview(null);setImportError('')}},'+ Import journal problems')),
+      h('div',{className:'bsa198-overview'},[
+        [catalog.journal.length,'Checkable journals'],[(subject.psets||[]).reduce((n,s)=>n+(s.problems||[]).length,0),'Problems in your sets'],[catalog.mcqs.length,'MCQs'],[synced.length,'Lab attempts']
+      ].map(([n,label])=>h('div',{className:'bsa198-metric',key:label},h('strong',null,n),h('span',null,label)))),
+      h('div',{className:'bsa198-tabs',role:'group','aria-label':'Practice library sections'},[
+        ['journal','Journal trainer'],['problems','Existing problem sets'],['mcq','MCQ library'],['import','Import / add']
+      ].map(([k,label])=>h('button',{key:k,className:tab===k?'active':'',type:'button','aria-pressed':tab===k,onClick:()=>{setTab(k);setSearch('')}},label))),
+      duplicateCount>0&&h('p',{className:'bsa198-duplicate-note'},duplicateCount+' identical question prompt'+(duplicateCount===1?'':'s')+' already exist across your current libraries. Existing records were not deleted. Future Lab imports will skip duplicates.'),
+      tab==='journal'&&h(React.Fragment,null,
+        h('div',{className:'bsa198-toolbar v2-panel'},
+          h('input',{type:'search',value:search,onChange:e=>setSearch(e.target.value),placeholder:'Search topic, question, source…','aria-label':'Search journal exercises'}),
+          h('select',{value:filter,onChange:e=>{setFilter(e.target.value);setSelected('');reset()},'aria-label':'Review filter'},[
+            ['all','Smart order'],['new','Not tried'],['weak','Needs another try'],['done','Last attempt correct']].map(([v,label])=>h('option',{key:v,value:v},label))),
+          h('select',{value:level,onChange:e=>{setLevel(e.target.value);setSelected('');reset()},'aria-label':'Difficulty'},['All','Beginner','Intermediate','Advanced'].map(x=>h('option',{key:x,value:x},x)))),
+        h('div',{className:'bsa198-journal-grid'},
+          h('aside',{className:'v2-panel bsa198-queue'},h('div',{className:'bsa198-queue-head'},h('strong',null,'Journal practice'),h('span',null,filtered.length+' available')),
+            h('div',{className:'bsa198-queue-list'},filtered.length?filtered.map(item=>{const o=stats(item);return h('button',{type:'button',key:item.key,className:'bsa198-queue-item'+(item.key===current?.key?' chosen':''),onClick:()=>choose(item.key),'aria-current':item.key===current?.key?'true':undefined},
+              h('strong',null,item.title),h('span',null,item.topic+' · '+item.level),h('small',null,!o.n?'● New':o.latest?.correct?'✓ Last attempt correct':'↻ Needs review'));}):h('p',{className:'muted small'},'No matching exercises. Change the filters or import a new problem.'))),
+          current&&h('div',{className:'bsa198-workspace'},
+            h('section',{className:'v2-panel bsa187-problem'},
+              h('div',{className:'bsa198-card-top'},h('span',{className:'v2-eyebrow'},current.kind==='builtin'?'BUILT-IN PRACTICE':'YOUR PROBLEM LIBRARY'),
+                h('span',{className:'bsa198-source-pill'},current.level)),h('h2',null,current.title),h('p',{className:'bsa198-prompt'},current.prompt),
+              h('p',{className:'muted small'},current.source?'Source: '+current.source:'No source provided · check answer key independently'),
+              current.hint&&h('details',null,h('summary',null,'Need a hint?'),h('p',null,current.hint)),
+              h('p',{className:'muted small'},'Your entry is compared with the supplied answer key. Imported keys are not independently verified by the app.'),
+              h('p',{className:'bsa187-count'},stats(current).n+' attempts on this problem'),
+              current.kind==='stored'&&h('button',{className:'btn ghost',onClick:()=>go('psets',{open:current.setId})},'View original Problem Set →')),
+            h('section',{className:'v2-panel bsa187-entry'},h('h2',null,'Prepare the general journal'),
+              h('div',{className:'bsa187-table-wrap'},h('table',{className:'bsa187-table'},h('thead',null,h('tr',null,['Account','Debit (₱)','Credit (₱)'].map(x=>h('th',{key:x},x)))),
+                h('tbody',null,rows.map((r,i)=>h('tr',{key:i},
+                  h('td',null,h('input',{value:r.account,placeholder:'Account name',onChange:e=>change(i,'account',e.target.value),'aria-label':'Account '+(i+1)})),
+                  h('td',null,h('input',{value:r.debit,inputMode:'decimal',placeholder:'0',onChange:e=>change(i,'debit',e.target.value),'aria-label':'Debit '+(i+1)})),
+                  h('td',null,h('input',{value:r.credit,inputMode:'decimal',placeholder:'0',onChange:e=>change(i,'credit',e.target.value),'aria-label':'Credit '+(i+1)}))))))),
+              h('div',{className:'bsa198-row-actions'},h('button',{className:'btn ghost',disabled:rows.length>=16,onClick:()=>setRows(old=>[...old,{account:'',debit:'',credit:''}])},'+ Add journal line'),
+                h('button',{className:'btn ghost',disabled:rows.length<=2,onClick:()=>setRows(old=>old.slice(0,-1))},'Remove last line')),
+              h('div',{className:'bsa187-actions'},h('button',{className:'btn primary',onClick:verify},'Check my entry'),
+                h('button',{className:'btn',onClick:()=>setReveal(v=>!v)},reveal?'Hide solution':'Reveal solution'),h('button',{className:'btn',onClick:()=>go('split',{problemId:current.kind==='stored'?current.id:'builtin-'+current.key,title:current.title,prompt:current.prompt})},'✎ Solve with Pencil'),h('button',{className:'btn ghost',onClick:next},'Next in list →')),
+              feedback&&h('p',{className:'bsa187-feedback'+(feedback.ok?' success':''),role:'status'},feedback.reason), feedback?.details?.length>0&&h('div',{className:'bsa205-check-feedback','aria-label':'Detailed entry feedback'},feedback.details.map((x,i)=>h('p',{key:i},x))),
+              (feedback||reveal)&&current.explanation&&h('p',{className:'bsa196-explanation'},current.explanation),
+              reveal&&h('div',{className:'bsa187-solution'},h('strong',null,'Supplied answer key'),current.solution.map(([account,dr,cr],i)=>h('div',{key:i},h('span',null,account),h('span',null,dr?'Debit ₱'+Number(dr).toLocaleString():'Credit ₱'+Number(cr).toLocaleString())))))),
+          h('section',{className:'v2-panel bsa187-taccounts'},h('h2',null,'T-account preview'),h('p',{className:'muted small'},'A visual of your own entered amounts—not a validation of correctness.'),
+            groups.size?h('div',{className:'bsa187-tgrid'},[...groups.values()].map(g=>h('div',{className:'bsa187-taccount',key:g.name},h('strong',null,g.name),h('div',null,h('span',null,g.dr?'₱'+g.dr.toLocaleString():'—'),h('span',null,g.cr?'₱'+g.cr.toLocaleString():'—'))))):h('p',{className:'muted'},'Your T-accounts appear as you fill in the journal.'))),
+        !!legacy.length&&h('div',{className:'bsa194-import v2-panel'},h('span',null,legacy.length+' older device-only lab checks can be copied into your syncable subject history.'),h('button',{className:'btn',onClick:importLegacy},'Import legacy history'))),
+      tab==='problems'&&h('section',{className:'v2-panel bsa198-library'},h('h2',null,'Your existing Problem Sets'),h('p',{className:'muted'},'This shows your original Problem Sets without copying them. Use the worked solutions and grading where they are already saved.'),
+        h('input',{type:'search',value:search,onChange:e=>setSearch(e.target.value),placeholder:'Find a set or question…','aria-label':'Search problem sets'}),
+        !(subject.psets||[]).length&&h('p',{className:'muted'},'No problem sets imported yet. Use Import & Export to bring in bsa-problemset-v1 JSON.'),
+        (subject.psets||[]).filter(set=>!search||searchLists((set.problems||[]).map(p=>({...p,setTitle:set.title}))).length||bsa198Fingerprint(set.title).includes(bsa198Fingerprint(search))).map(set=>{
+          const n=(set.problems||[]).length,lab=(set.problems||[]).filter(p=>Array.isArray(p.labEntry)).length;
+          return h('article',{className:'bsa198-library-row',key:set.id},h('div',null,h('strong',null,set.title),h('p',{className:'muted small'},n+' problems · '+lab+' can also be checked in Journal trainer'+(set.source?' · '+set.source:''))),
+            h('button',{className:'btn',onClick:()=>go('psets',{open:set.id})},'Open original →'))})),
+      tab==='mcq'&&h('section',{className:'v2-panel bsa198-library'},h('h2',null,'MCQ Library'),h('p',{className:'muted'},'MCQs remain in your existing adaptive quiz system, which remembers attempted questions and weak topics.'),
+        h('input',{type:'search',value:search,onChange:e=>setSearch(e.target.value),placeholder:'Find an MCQ collection…','aria-label':'Search MCQ collections'}),
+        !(subject.mcqSets||[]).length&&h('p',{className:'muted'},'No MCQ sets yet. Import a bsa-mcq-v1 bank from Import & Export.'),
+        (subject.mcqSets||[]).filter(set=>!search||bsa198Fingerprint(set.title+' '+(set.problems||[]).map(p=>p.problem).join(' ')).includes(bsa198Fingerprint(search))).map(set=>
+          h('article',{className:'bsa198-library-row',key:set.id},h('div',null,h('strong',null,set.title),h('p',{className:'muted small'},(set.problems||[]).length+' quiz questions')),
+            h('button',{className:'btn',onClick:()=>go('mcq')},'Open MCQ Library →')))),
+      tab==='import'&&h('div',{className:'bsa198-import-layout'},
+        h('section',{className:'v2-panel bsa198-import'},h('h2',null,'Import checkable journal problems'),
+          h('p',{className:'muted'},'Paste or upload JSON with question statements and balanced journal-entry answer keys. Nothing is saved until you review and confirm the preview.'),
+          h('p',{className:'bsa198-target-subject'},'Active destination: ',h('strong',null,subject.name),' · Switch subjects first if this is the wrong course.'),
+          h('div',{className:'bsa198-row-actions'},h('button',{className:'btn',onClick:()=>{setImportText(JSON.stringify(BSA198_EXAMPLE,null,2));setPreview(null);setImportError('')}},'Load example format'),
+            h('label',{className:'btn bsa198-file-label'},'Choose .json file',h('input',{type:'file',accept:'.json,application/json',onChange:async e=>{const file=e.target.files?.[0];e.target.value='';if(!file)return;if(file.size>600000){setImportError('JSON exceeds 600 KB; split the import.');return}try{setImportText(await file.text());setPreview(null);setImportError('')}catch(err){setImportError('Could not read file: '+String(err))}}}))),
+          h('textarea',{value:importText,onChange:e=>{setImportText(e.target.value);setPreview(null);setImportError('')},placeholder:'Paste bsa-accounting-lab-v1 JSON here…',rows:12,'aria-label':'Journal exercise import JSON'}),
+          h('div',{className:'bsa187-actions'},h('button',{className:'btn primary',disabled:!importText.trim(),onClick:checkImport},'Check data & duplicates'),
+            h('button',{className:'btn',onClick:()=>setManual(v=>!v)},manual?'Close manual entry':'+ Add one manually')),
+          importError&&h('p',{className:'bsa187-feedback',role:'alert'},importError),
+          preview&&h('div',{className:'bsa198-preview',role:'status'},h('h3',null,'Import preview — nothing saved yet'),preview.declaredSubject&&h('p',{className:'muted small'},'Declared subject: '+preview.declaredSubject+' · Active destination: '+subject.name),
+            h('div',{className:'bsa198-preview-stats'},[
+              [preview.accepted.length,'New'],[preview.upgrades.length,'Upgrade existing'],[preview.duplicates.length,'Duplicates skipped'],[preview.similar.length,'Similar skipped'],[preview.invalid.length,'Invalid'],[preview.conflicts.length,'Answer-key differences']
+            ].map(([n,label])=>h('div',{key:label},h('strong',null,n),h('span',null,label)))),
+            [...preview.invalid.map(x=>`#${x.row}: ${x.reason}`),...preview.similar.map(x=>`#${x.row}: ${x.reason}`),...preview.conflicts.map(x=>`#${x.row}: ${x.reason}`),...preview.duplicates.map(x=>`#${x.row}: ${x.reason}`)].slice(0,12).map((line,i)=>h('p',{className:'muted small',key:i},line)),
+            h('button',{className:'btn primary',disabled:!preview.accepted.length&&!preview.upgrades.length,onClick:applyImport},'Confirm '+(preview.accepted.length+preview.upgrades.length)+' additions / upgrades'))),
+        h('aside',{className:'v2-panel bsa198-import-guide'},h('h2',null,'Keep your library organized'),
+          h('p',null,'1. Import ordinary textbook problems into Problem Sets. They automatically appear under Existing problem sets here.'),
+          h('p',null,'2. Import journal-entry exercises with structured solutions here for automatic account-and-amount checking.'),
+          h('p',null,'3. If the problem already exists in Problem Sets, the import can attach its entry key to that original—without copying it.'),
+          h('p',null,'4. Identical or very similar prompts are skipped. Different amounts and facts remain distinct exercises.'),
+          h('p',{className:'muted small'},'JSON inputs do not automatically extract questions from PDFs or verify the accounting treatment. Confirm answers against your sources before import.'),
+          h('button',{className:'btn',onClick:()=>go('psets')},'Go to Problem Sets →')),
+        manual&&h('section',{className:'v2-panel bsa198-manual'},h('h2',null,'Add one structured journal problem'),
+          [['title','Short title'],['prompt','Complete problem statement'],['topic','Topic / chapter'],['source','Book or source (optional)'],['hint','Hint (optional)'],['explanation','Explanation (optional)']].map(([k,label])=>h('label',{key:k},label,k==='prompt'||k==='explanation'?
+            h('textarea',{value:manualF[k],rows:k==='prompt'?3:2,onChange:e=>setManualF(v=>({...v,[k]:e.target.value}))}):
+            h('input',{value:manualF[k],onChange:e=>setManualF(v=>({...v,[k]:e.target.value}))}))),
+          h('label',null,'Difficulty',h('select',{value:manualF.level,onChange:e=>setManualF(v=>({...v,level:e.target.value}))},['Beginner','Intermediate','Advanced'].map(x=>h('option',{key:x,value:x},x)))),
+          h('strong',null,'Supplied journal-entry key (must balance)'),
+          h('div',{className:'bsa187-table-wrap'},h('table',{className:'bsa187-table'},h('thead',null,h('tr',null,['Account','Debit (₱)','Credit (₱)'].map(x=>h('th',{key:x},x)))),h('tbody',null,manualF.rows.map((r,i)=>h('tr',{key:i},['account','debit','credit'].map(k=>h('td',{key:k},h('input',{value:r[k],inputMode:k==='account'?'text':'decimal','aria-label':k+' '+(i+1),onChange:e=>setManualF(v=>({...v,rows:v.rows.map((a,j)=>j===i?{...a,[k]:e.target.value}:a)}))})))))))),
+          h('div',{className:'bsa198-row-actions'},h('button',{className:'btn',disabled:manualF.rows.length>=16,onClick:()=>setManualF(v=>({...v,rows:[...v.rows,{account:'',debit:'',credit:''}]}))},'+ Row'),
+            h('button',{className:'btn',disabled:manualF.rows.length<=2,onClick:()=>setManualF(v=>({...v,rows:v.rows.slice(0,-1)}))},'− Row')),
+          manualError&&h('p',{className:'bsa187-feedback',role:'alert'},manualError),
+          h('button',{className:'btn primary',onClick:saveManual},'Check duplicate & save'))));
   }
 
   /* v188: a genuinely derived, explicitly user-completed study plan. */
@@ -12915,6 +13353,455 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
         details&&h('div',{className:'v2-classic-details'},h(HomeView,{subject:s,go,settings,openEditor,update,toast})))
     );
   }
+  /* =======================================================================
+    v199–v205: One Library / Study / Practice system. Existing material and
+    grading collections remain the source of truth. Nothing is imported or
+    sent to an AI provider without a direct learner action.
+  ======================================================================= */
+  const BSA205_LIMIT=120;
+  const bsa205Money=n=>'₱'+Number(n||0).toLocaleString(undefined,{maximumFractionDigits:2});
+  const bsa205Date=t=>{try{return new Date(t).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})}catch(_){return ''}};
+  const bsa205Short=(v,n=160)=>String(v||'').slice(0,n);
+  // v205: Drive files are links, not OAuth connections. This is deliberately
+  // link-only so GitHub Pages remains stable without custom Google Cloud setup.
+  const bsa205DriveId=url=>{try{
+    const u=new URL(String(url||'').trim());
+    if(u.protocol!=='https:'||u.hostname!=='drive.google.com')return '';
+    const m=u.pathname.match(/^\/file\/d\/([A-Za-z0-9_-]{12,})(?:\/|$)/);
+    const id=m?m[1]:(u.pathname==='/open'?u.searchParams.get('id')||'':'');
+    return /^[A-Za-z0-9_-]{12,}$/.test(id)?id:'';
+  }catch(_){return ''}};
+  function bsa205LoadScript(url,check){return new Promise((resolve,reject)=>{if(check())return resolve();
+    const prior=[...document.querySelectorAll('script')].find(x=>x.src===url);if(prior){prior.addEventListener('load',resolve,{once:true});prior.addEventListener('error',()=>reject(Error('Google script could not load.')),{once:true});return;}
+    const el=document.createElement('script');el.src=url;el.async=true;el.onload=resolve;el.onerror=()=>reject(Error('Google connection library could not load. Check your connection.'));document.head.appendChild(el);});}
+  function BSA205Sources({subject,update,toast,go}){
+    const [message,setMessage]=useState(''),[link,setLink]=useState(''),[name,setName]=useState('');
+    const [localFiles,setLocalFiles]=useState([]),[space,setSpace]=useState(null);
+    const sources=subject.driveSources||[];
+    useEffect(()=>{let live=true;
+      const refresh=async()=>{try{if(navigator.storage?.estimate){const data=await navigator.storage.estimate();if(live&&Number.isFinite(data?.quota)&&Number.isFinite(data?.usage))setSpace({used:data.usage,quota:data.quota});}}catch(_){}};
+      refresh();return()=>{live=false};
+    },[subject.id,localFiles.length]);
+    function addSource(){const fileId=bsa205DriveId(link);
+      if(!fileId){setMessage('Use a Google Drive PDF file link (drive.google.com/file/d/…). Folder and Google Docs links are not supported.');return}
+      if(sources.some(x=>x.fileId===fileId)){setMessage('That Drive file is already linked to this subject.');return}
+      update(s=>{s.driveSources=[...(s.driveSources||[]),{id:uid('drive'),name:bsa205Short(name.trim()||'Drive PDF',180),fileId,url:'https://drive.google.com/file/d/'+encodeURIComponent(fileId)+'/view',sourceType:'drive-link',addedAt:Date.now()}]});
+      setLink('');setName('');setMessage('Drive PDF linked. No file bytes were stored in your dashboard.');
+    }
+    const total=localFiles.reduce((v,x)=>v+(Number(x.size)||0),0);
+    const mb=n=>(n/1048576).toFixed(n>=104857600?0:1)+' MB';
+    return h('section',{className:'bsa205-source-grid'},
+      h('div',{className:'bsa205-card'},h('div',{className:'bsa205-card-head'},h('div',null,h('span',{className:'bsa205-overline'},'AVAILABLE OFFLINE · THIS DEVICE'),h('h2',null,'Local PDFs')),h('span',{className:'bsa205-tag'},'Maximum '+BSA205_LIMIT+' MB per PDF')),
+        h('p',{className:'muted small'},'Best for small lecture handouts and frequently used worksheets. Files live in this browser, not in GitHub or your JSON backup. Avoid clearing website data without keeping the originals.'),
+        h('div',{className:'bsa205-storage-meter'},
+          h('div',{className:'bsa205-storage-line'},h('strong',null,localFiles.length+' saved PDFs · '+mb(total)),h('span',null,space?mb(space.used)+' of approximately '+mb(space.quota)+' browser storage used':'Device storage availability varies')),
+          space&&h('div',{className:'bsa205-storage-track',role:'progressbar','aria-label':'Browser storage usage','aria-valuemin':0,'aria-valuemax':100,'aria-valuenow':Math.min(100,Math.round(100*space.used/space.quota))},h('div',{style:{width:Math.min(100,100*space.used/space.quota)+'%'}}))),
+        h(PdfSourceShelf,{subject,toast,compact:true,onChanged:setLocalFiles}),
+        h('p',{className:'muted small'},'Tip: for books around 50 MB or larger, prefer a Drive link. Local storage quotas vary by device and may be cleared by the browser.')),
+      h('div',{className:'bsa205-card'},h('div',{className:'bsa205-card-head'},h('div',null,h('span',{className:'bsa205-overline'},'REQUIRES INTERNET · CLOUD SOURCE'),h('h2',null,'Google Drive links')),h('span',{className:'bsa205-tag'},sources.length+' linked')),
+        h('p',{className:'muted small'},'Keep large PDFs in your own Google Drive, then save their links here. This does not require OAuth setup, a Drive API key, or access to the rest of your Drive. Files open in Google Drive using your normal Google account.'),
+        h('div',{className:'bsa205-inline-form'},h('input',{value:name,onChange:e=>setName(e.target.value),placeholder:'Textbook or PDF title','aria-label':'Drive PDF title'}),h('input',{value:link,onChange:e=>setLink(e.target.value),placeholder:'https://drive.google.com/file/d/…','aria-label':'Google Drive PDF file link'}),h('button',{className:'btn primary',disabled:!link.trim(),onClick:addSource},'Save link')),
+        message&&h('p',{className:'bsa205-message',role:'status'},message),
+        sources.length?h('div',{className:'bsa205-source-list'},sources.map(item=>h('div',{className:'bsa205-source',key:item.id},h('div',null,h('strong',null,item.name),h('small',null,'Cloud source · requires internet and access to the file')),
+          h('div',{className:'bsa205-action-row'},h('a',{className:'btn',href:item.url,target:'_blank',rel:'noopener noreferrer'},'Open in Drive'),h('button',{className:'btn ghost',onClick:()=>{if(window.confirm('Unlink this PDF source? The file in Google Drive will not be deleted.'))update(s=>{s.driveSources=(s.driveSources||[]).filter(x=>x.id!==item.id)})}},'Unlink'))))):h('p',{className:'muted small'},'No Drive PDFs linked to this subject yet.'),
+        h('p',{className:'muted small'},'Privacy: only the title and Drive file link are saved with your subject data and may sync across devices. The PDF itself stays in Drive. Links do not bypass Drive sharing permissions.')),
+      h('p',{className:'muted small bsa205-full'},'Recommended workflow: keep textbook originals in Drive, save essential worksheets locally, and cite chapter/page in each imported problem. For offline use of a cloud book, download it through Google Drive when needed.'));
+  }
+  const bsa205FamilyKey=s=>bsa198Fingerprint(s).replace(/\b\d+(?:\s+\d+)*\b/g,'#');
+  function bsa205LibraryItems(s){const rows=[];
+    for(const x of s.lectures||[])rows.push({key:'lecture:'+x.id,id:x.id,type:'Lecture',title:x.title||'Untitled lecture',text:x.title+' '+(x.summary||''),source:x.source||'',route:'lectures',opts:{open:x.id}});
+    for(const x of s.psets||[])for(const p of x.problems||[])rows.push({key:'problem:'+p.id,id:p.id,type:bsa198StoredKeyValid(p)?'Journal problem':'Written problem',title:p.title||x.title||'Written problem',text:p.problem||'',source:p.source||x.source||'',route:bsa198StoredKeyValid(p)?'accounting-lab':'psets',opts:bsa198StoredKeyValid(p)?{}:{open:x.id},verified:p.labVerification==='Source checked'});
+    for(const x of s.mcqSets||[])for(const p of x.problems||[])rows.push({key:'mcq:'+p.id,id:p.id,type:'MCQ',title:x.title||'Multiple choice',text:p.problem||'',source:p.source||x.source||'',route:'mcq'});
+    for(const x of s.cards||[])rows.push({key:'card:'+x.id,id:x.id,type:'Flashcard',title:x.q||x.front||'Flashcard',text:x.q||x.front||'',route:'vault'});
+    for(const x of s.rules||[])rows.push({key:'rule:'+x.id,id:x.id,type:'Reference rule',title:x.title||'Rule',text:x.decisionRule||'',source:x.sourceTitle||'',verified:x.status==='Source checked',route:'rules'});
+    return rows;
+  }
+  function bsa205Duplicates(rows){const exact=new Map(),families=new Map(),duplicates=[],variants=[];
+    for(const item of rows){if(!['Journal problem','Written problem','MCQ'].includes(item.type))continue;
+      const key=bsa198Fingerprint(item.text);if(key.length>16){if(exact.has(key))duplicates.push([exact.get(key),item]);else exact.set(key,item)}
+      const family=bsa205FamilyKey(item.text);if(family.length>25){const prev=families.get(family);if(prev&&bsa198Fingerprint(prev.text)!==key)variants.push([prev,item]);else if(!prev)families.set(family,item)}
+    }return {duplicates,variants};
+  }
+  const bsa205InboxKey=text=>bsa198Fingerprint(text).slice(0,2400);
+  function bsa205InboxPlan(s,text){const key=bsa205InboxKey(text);if(key.length<12)return {error:'Add a meaningful problem or note first.'};
+    if((s.studyInbox||[]).some(x=>bsa205InboxKey(x.text)===key))return {error:'This text already exists in your Study Inbox.'};
+    const orig=bsa205LibraryItems(s).find(x=>bsa205InboxKey(x.text)===key);
+    if(orig)return {error:'This question is already saved in '+orig.type+'. Open the original rather than copy it.'};
+    return {ok:true,similar:bsa205LibraryItems(s).some(x=>bsa198Near(x.text,text))};
+  }
+  function bsa205FileBase64(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result||'').split(',')[1]||'');r.onerror=()=>reject(Error('Could not read the selected document.'));r.readAsDataURL(file)});}
+  async function bsa205ExtractPdfText(file,pageLimit=20){
+    if(!file||file.size>45*1048576)throw Error('For local text extraction, use a PDF under 45 MB. Larger books can be linked in Drive or used page by page.');
+    await bsa205LoadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',()=>!!window.pdfjsLib);
+    const pdfjs=window.pdfjsLib;
+    pdfjs.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    const doc=await pdfjs.getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise;
+    let body='';for(let i=1;i<=Math.min(pageLimit,doc.numPages);i++){
+      const page=await doc.getPage(i), content=await page.getTextContent();const extracted=content.items.map(x=>x.str||'').join(' ');
+      body+='\n[Page '+i+'] '+extracted+'\n';if(body.length>45000)break;
+    }return {text:body.slice(0,45000),pages:doc.numPages};
+  }
+  async function bsa205GemDraft(text,file){
+    if(!gemReady())throw Error('Set up Gemini in Ask Tutor first. No document was uploaded.');
+    const instructions='Extract accounting practice problems only from this student-provided material. Produce ONLY valid JSON in this exact structure: {"format":"bsa-accounting-lab-v1","exercises":[{"title":"...","topic":"...","level":"Beginner|Intermediate|Advanced","prompt":"...","source":"...","hint":"...","explanation":"...","solution":[{"account":"...","debit":0,"credit":0}]}]}. Only include questions where a complete journal entry can be derived. Do not fabricate missing numerical facts, solutions, source references or transactions. Never combine separate problems. Each balanced solution must have at least 2 lines. If uncertain, return an empty exercises array. Answers are tentative and must be checked by the learner. At most 15 problems per request.';
+    const parts=[{text:instructions+'\n\nCOURSE MATERIAL:\n'+String(text||'').slice(0,42000)}];
+    if(file){if(!/^(application\/pdf|image\/(?:png|jpeg|webp))$/.test(file.type))throw Error('Choose a PDF, PNG, JPEG or WebP.');
+      if(file.size>30*1048576)throw Error('AI upload is limited to 30 MB to reduce mobile memory use. Extract pages as text or use smaller files.');
+      parts.push({inlineData:{mimeType:file.type,data:await bsa205FileBase64(file)}});
+    }
+    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),95000);
+    try{const resp=await fetch(GEM.base+'/models/'+encodeURIComponent(gemModel())+':generateContent?key='+encodeURIComponent(gemKey()),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{role:'user',parts}],generationConfig:{temperature:0.12,maxOutputTokens:8192,responseMimeType:'application/json'}}),signal:controller.signal});
+      if(!resp.ok)throw await gemErr(resp);const obj=await resp.json();const out=(obj.candidates?.[0]?.content?.parts||[]).filter(p=>!p.thought&&p.text).map(p=>p.text).join('');if(!out.trim())throw Error('Gemini did not return any questions.');
+      for(const piece of psJSONCandidates(out)){try{const v=JSON.parse(piece);if(v&&v.format==='bsa-accounting-lab-v1'&&Array.isArray(v.exercises))return v;}catch(_){}}
+      throw Error('Gemini returned an incomplete format. No questions were saved. Review the raw result in the tutor instead.');
+    }finally{clearTimeout(timer)}
+  }
+  function BSA205Importer({subject,update,toast,go,initialText}){
+    const [material,setMaterial]=useState(initialText||''),[file,setFile]=useState(null),[source,setSource]=useState(''),[locator,setLocator]=useState('');
+    const [draft,setDraft]=useState(''),[checked,setChecked]=useState(false),[plan,setPlan]=useState(null),[message,setMessage]=useState(''),[busy,setBusy]=useState(false);
+    const prepareFile=async(e)=>{const f=e.target.files?.[0];e.target.value='';if(!f)return;setFile(f);setSource(v=>v||f.name);setDraft('');setPlan(null);setChecked(false);setMessage('Selected '+f.name+' ('+(f.size/1048576).toFixed(1)+' MB). You choose when to send it to Gemini.');
+      if(/\.(?:txt|json|md)$/i.test(f.name)&&f.size<500000)try{setMaterial(await f.text())}catch(_){}};
+    const extract=async()=>{if(!file||file.type!=='application/pdf')return;setBusy(true);try{const out=await bsa205ExtractPdfText(file);if(!out.text.trim())throw Error('No selectable text found. This PDF may be scanned; try selected screenshots instead.');setMaterial(out.text);setMessage('Extracted up to 20 of '+out.pages+' pages locally. Nothing was sent to Gemini.')}catch(e){setMessage(e.message||String(e))}finally{setBusy(false)}};
+    const propose=async()=>{if(!material.trim()&&!file){setMessage('Paste a problem or choose a PDF/image first.');return}
+      if(!window.confirm('Send the selected document/text to your configured Gemini model to draft problems? Review all results before saving.'))return;
+      setBusy(true);setMessage('');setPlan(null);setChecked(false);try{const obj=await bsa205GemDraft(material,file);setDraft(JSON.stringify(obj,null,2));setMessage('AI draft ready. It is NOT saved and its solutions are NOT independently verified. Edit, check and preview before importing.')}catch(e){setMessage(e.message||String(e))}finally{setBusy(false)}};
+    const review=()=>{try{const parsed=bsa198Parse(draft);const result=bsa198PlanBatch(parsed,subject);setPlan(result);setMessage('Preview calculated. Identical/near matching problems are not added automatically.')}catch(e){setPlan(null);setMessage(e.message||String(e))}};
+    const addInbox=()=>{const raw=material.trim()||draft.trim();const check=bsa205InboxPlan(subject,raw);if(check.error){setMessage(check.error);return}
+      if(check.similar&&!window.confirm('A similar problem exists already. Save this as a separate inbox item anyway?'))return;
+      update(s=>{s.studyInbox=[{id:uid('inbox'),text:raw.slice(0,45000),kind:'material',source:source.slice(0,180),locator:locator.slice(0,120),createdAt:Date.now(),status:'new'},...(s.studyInbox||[])]});
+      setMessage('Saved to your universal Study Inbox. Your original source file was not embedded in the academic JSON.');setMaterial('');setDraft('');setFile(null);};
+    const importVerified=()=>{if(!plan||!checked){setMessage('Check the verification box only after confirming every answer with your textbook/notes.');return}
+      try{const fresh=bsa198PlanBatch(bsa198Parse(draft),subject);if(!fresh.accepted.length&&!fresh.upgrades.length){setMessage('No new verified exercises. Review duplicate or conflict warnings.');setPlan(fresh);return}
+        update(s=>{bsa198StorePlan(s,fresh);for(const ex of fresh.accepted){for(const set of s.psets||[])for(const p of set.problems||[])if(bsa198Fingerprint(p.problem)===bsa198Fingerprint(ex.prompt)&&bsa198StoredKeyValid(p)){p.labVerification='Source checked';if(!p.source&&source)p.source=source;if(locator)p.sourceLocator=locator;}}
+          for(const r of fresh.upgrades){const p=(s.psets||[]).find(x=>x.id===r.setId)?.problems?.find(x=>x.id===r.problemId);if(p){p.labVerification='Source checked';if(locator)p.sourceLocator=locator;}}
+        });setMessage('Added '+fresh.accepted.length+' new checkable problems and upgraded '+fresh.upgrades.length+' originals.');setDraft('');setPlan(null);setChecked(false);
+      }catch(e){setMessage(e.message||String(e))}};
+    return h('section',{className:'bsa205-import-grid'},
+      h('div',{className:'bsa205-card'},h('span',{className:'bsa205-overline'},'STEP 1 · CAPTURE'),h('h2',null,'Bring in study material'),
+        h('p',{className:'muted small'},'Import text, a PDF, or an image. Files stay on your device unless you explicitly ask Gemini to extract questions. You can also simply save the text in your inbox.'),
+        h('label',{className:'bsa205-file-drop'},'＋ Select PDF, screenshot, or text file',h('input',{type:'file',accept:'.pdf,.png,.jpg,.jpeg,.webp,.txt,.md,.json,application/pdf,image/png,image/jpeg,image/webp',onChange:prepareFile})),
+        file&&h('p',{className:'bsa205-message'},file.name+' · '+(file.size/1048576).toFixed(1)+' MB',file.type==='application/pdf'&&h('button',{className:'btn ghost',disabled:busy,onClick:extract},'Extract selectable text locally')),
+        h('textarea',{className:'bsa205-large-input',rows:9,value:material,onChange:e=>setMaterial(e.target.value),placeholder:'Paste a textbook problem, lecture examples, or extracted PDF text here…','aria-label':'Study material text'}),
+        h('div',{className:'bsa205-double'},h('label',null,'Textbook or source name',h('input',{value:source,onChange:e=>setSource(e.target.value),placeholder:'Valix, chapter 3…'})),h('label',null,'Page or locator',h('input',{value:locator,onChange:e=>setLocator(e.target.value),placeholder:'p. 42 / item 7'}))),
+        h('div',{className:'bsa205-action-row'},h('button',{className:'btn',disabled:busy||(!material.trim()&&!file),onClick:addInbox},'Save to Inbox'),h('button',{className:'btn primary',disabled:busy||(!material.trim()&&!file),onClick:propose},busy?'Working…':'Draft with Gemini')),
+        !gemReady()&&h('p',{className:'muted small'},'Gemini is not configured. You can still save text to the Inbox or import structured JSON through Accounting Lab. Set up Gemini in Ask Tutor to enable AI suggestions.'),
+        message&&h('p',{className:'bsa205-message',role:'status'},message)),
+      h('div',{className:'bsa205-card'},h('span',{className:'bsa205-overline'},'STEP 2 · VERIFY'),h('h2',null,'Review before importing'),
+        h('p',{className:'muted small'},'AI output is an editable draft, never an official solution. Correct the entries, verify the accounting treatment, then run duplicate checks.'),
+        h('textarea',{className:'bsa205-large-input bsa205-code',rows:13,value:draft,onChange:e=>{setDraft(e.target.value);setPlan(null);setChecked(false)},placeholder:'The suggested bsa-accounting-lab-v1 JSON will appear here. You can also paste an existing journal-exercise JSON file.','aria-label':'Editable JSON exercise proposals'}),
+        h('button',{className:'btn',disabled:!draft.trim(),onClick:review},'Validate & check duplicates'),
+        plan&&h('div',{className:'bsa205-audit-preview'},h('strong',null,'Preview — nothing imported yet'),h('div',{className:'bsa205-pill-row'},[['New',plan.accepted.length],['Upgrade original',plan.upgrades.length],['Duplicate',plan.duplicates.length],['Similar',plan.similar.length],['Conflict',plan.conflicts.length],['Invalid',plan.invalid.length]].map(([label,count])=>h('span',{className:'bsa205-pill',key:label},label+' '+count))),
+          [...plan.conflicts,...plan.similar,...plan.invalid].slice(0,7).map((x,i)=>h('p',{className:'muted small',key:i},'#'+x.row+' · '+(x.reason||x.title)))),
+        h('label',{className:'bsa205-consent'},h('input',{type:'checkbox',checked,onChange:e=>setChecked(e.target.checked)}),'I checked the proposed journal answers against my actual source.'),
+        h('button',{className:'btn primary',disabled:!plan||!checked||!(plan.accepted.length+plan.upgrades.length),onClick:importVerified},'Import verified exercises'),
+        h('p',{className:'muted small'},'PDF page text and AI proposals are not added automatically. Existing questions are reused when possible. For general calculation problems or MCQs, use your original Problem Sets and MCQ import formats.')));
+  }
+  function BSA205Library({subject,update,toast,go,init}){
+    const [tab,setTab]=useState(['all','inbox','sources','import','health'].includes(init?.tab)?init.tab:'all');
+    const [query,setQuery]=useState(''),[type,setType]=useState('All'),[showHidden,setShowHidden]=useState(false),[handoff,setHandoff]=useState('');
+    const [capture,setCapture]=useState(''),[captureSource,setCaptureSource]=useState(''),[warning,setWarning]=useState('');
+    const rows=useMemo(()=>bsa205LibraryItems(subject),[subject]);
+    const flags=subject.libraryFlags||[];
+    const hidden=new Set(flags.filter(f=>f.archived).map(f=>f.target));
+    const totals=useMemo(()=>bsa205Duplicates(rows),[rows]);
+    const hasSource=rows.filter(x=>['Journal problem','Written problem','MCQ'].includes(x.type)&&!x.source).length;
+    const unverified=rows.filter(x=>x.type==='Journal problem'&&!x.verified).length;
+    const inbox=(subject.studyInbox||[]).slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    const flagged=(subject.libraryFlags||[]).filter(x=>x.archived).length;
+    const allTypes=['All',...new Set(rows.map(x=>x.type))];
+    const display=rows.filter(x=>(showHidden||!hidden.has(x.key))&&(type==='All'||x.type===type)&&(!query||bsa198Fingerprint(x.title+' '+x.text+' '+x.source).includes(bsa198Fingerprint(query))));
+    const toggleHide=key=>{update(s=>{s.libraryFlags=s.libraryFlags||[];let row=s.libraryFlags.find(x=>x.target===key);if(row){row.archived=!row.archived;row.changedAt=Date.now()}else{s.libraryFlags.push({id:uid('flag'),target:key,archived:true,changedAt:Date.now()})}});toast('Library view updated. The original material was not deleted.');};
+    const addNote=()=>{const check=bsa205InboxPlan(subject,capture);if(check.error){setWarning(check.error);return}
+      if(check.similar&&!window.confirm('This resembles a saved question. Save a separate inbox note?'))return;
+      update(s=>{s.studyInbox=[{id:uid('inbox'),text:capture.trim().slice(0,45000),kind:'material',source:captureSource.trim().slice(0,180),status:'new',createdAt:Date.now()},...(s.studyInbox||[])]});
+      setCapture('');setCaptureSource('');setWarning('Saved to Inbox. You can sort it later.');};
+    const updateInbox=(id,status)=>update(s=>{const r=(s.studyInbox||[]).find(x=>x.id===id);if(r)r.status=status});
+    const startImport=x=>{setHandoff(x.text);setTab('import')};
+    return h('section',{className:'view bsa205-page'},
+      h('div',{className:'bsa205-page-head'},h('div',null,h('span',{className:'bsa205-overline'},'YOUR MATERIALS · ONE PLACE'),h('h1',null,'Study Library'),h('p',null,'Find, sort, and reuse your existing materials. Import new problems once, without growing duplicate banks.')),
+        h('button',{className:'bsa205-head-action',onClick:()=>setTab('import')},'＋ Import material')),
+      h('div',{className:'bsa205-snapshot'},[['Saved items',rows.length],['Inbox to sort',inbox.filter(x=>x.status==='new').length],['Duplicate candidates',totals.duplicates.length],['Hidden from hub',flagged]].map(([title,count])=>h('div',{className:'bsa205-snapshot-item',key:title},h('strong',null,count),h('span',null,title)))),
+      h('div',{className:'bsa205-pagetabs',role:'group','aria-label':'Library areas'},[['all','All materials'],['inbox','Inbox'],['sources','PDFs & Drive'],['import','Import studio'],['health','Library health']].map(([key,label])=>h('button',{key,type:'button',className:tab===key?'selected':'','aria-pressed':tab===key,onClick:()=>setTab(key)},label))),
+      tab==='all'&&h('div',{className:'bsa205-card'},h('div',{className:'bsa205-card-head'},h('div',null,h('h2',null,'Browse everything'),h('p',{className:'muted small'},'These are views of the original libraries, not copies of the questions.')),
+        h('button',{className:'btn ghost',onClick:()=>setShowHidden(v=>!v)},showHidden?'Hide archived':'Show archived')),
+        h('div',{className:'bsa205-filters'},h('input',{type:'search',value:query,onChange:e=>setQuery(e.target.value),placeholder:'Search question, title or source…','aria-label':'Search all study materials'}),
+          h('select',{value:type,onChange:e=>setType(e.target.value),'aria-label':'Material type'},allTypes.map(x=>h('option',{key:x},x)))),
+        h('p',{className:'muted small'},display.length+' matches · First 120 displayed to keep the app responsive.'),
+        h('div',{className:'bsa205-library-list'},display.slice(0,120).map(x=>h('article',{key:x.key,className:'bsa205-material'},
+          h('div',{className:'bsa205-material-main'},h('span',{className:'bsa205-tag'},x.type),hidden.has(x.key)&&h('span',{className:'bsa205-tag'},'Hidden'),
+            h('h3',null,bsa205Short(x.title,120)),h('p',{className:'muted small'},bsa205Short(x.text,210)),x.source&&h('small',null,'Source: '+bsa205Short(x.source,125))),
+          h('div',{className:'bsa205-material-actions'},h('button',{className:'btn primary',onClick:()=>go(x.route,x.opts||{})},'Open original'),h('button',{className:'btn ghost',onClick:()=>toggleHide(x.key)},hidden.has(x.key)?'Show in hub':'Hide in hub')))),
+          !display.length&&h('p',{className:'muted'},'Nothing matches yet. Change your filters, or add a source in the Import studio.'))),
+      tab==='inbox'&&h('div',{className:'bsa205-inbox-grid'},
+        h('div',{className:'bsa205-card'},h('h2',null,'Quick capture'),h('p',{className:'muted small'},'Collect problems or ideas now. Organize them when you have time.'),h('textarea',{rows:6,value:capture,onChange:e=>setCapture(e.target.value),placeholder:'Paste a question, a formula, or a note…','aria-label':'New inbox note'}),
+          h('input',{value:captureSource,onChange:e=>setCaptureSource(e.target.value),placeholder:'Source / chapter (optional)','aria-label':'Inbox source'}),h('button',{className:'btn primary',disabled:!capture.trim(),onClick:addNote},'Save to Inbox'),warning&&h('p',{className:'bsa205-message'},warning)),
+        h('div',{className:'bsa205-card'},h('div',{className:'bsa205-card-head'},h('h2',null,'To organize'),h('span',{className:'bsa205-tag'},inbox.filter(x=>x.status==='new').length+' new')),
+          inbox.length?h('div',{className:'bsa205-inbox-list'},inbox.slice(0,100).map(x=>h('article',{className:'bsa205-inbox-item',key:x.id},h('div',null,h('span',{className:'bsa205-tag'},x.status==='new'?'Needs sorting':x.status==='reviewed'?'Reviewed':'Filed'),h('small',null,' '+bsa205Date(x.createdAt))),h('p',null,bsa205Short(x.text,480)),x.source&&h('small',null,x.source+(x.locator?' · '+x.locator:'')),
+            h('div',{className:'bsa205-action-row'},h('button',{className:'btn',onClick:()=>startImport(x)},'Draft journal problems'),h('button',{className:'btn ghost',onClick:()=>updateInbox(x.id,x.status==='reviewed'?'new':'reviewed')},x.status==='reviewed'?'Mark new':'Mark reviewed'),h('button',{className:'btn ghost',onClick:()=>updateInbox(x.id,'filed')},'File away'))))):h('p',{className:'muted'},'Your Inbox is clear. Files in original Problem Sets and MCQs stay where they belong.'))),
+      tab==='sources'&&h(BSA205Sources,{subject,update,toast,go}),
+      tab==='import'&&h(BSA205Importer,{key:handoff?.slice(0,36)||subject.id,subject,update,toast,go,initialText:handoff}),
+      tab==='health'&&h('div',{className:'bsa205-health-grid'},
+        h('div',{className:'bsa205-card'},h('span',{className:'bsa205-overline'},'NOTHING WAS DELETED'),h('h2',null,'Library health'),
+          [['Exact duplicate candidates',totals.duplicates.length,'Matching question statements across existing collections.'],['Numerical variants',totals.variants.length,'Similar wording with different numbers: useful variations, not automatic duplicates.'],['Journal keys needing a source check',unverified,'Balanced debits/credits do not guarantee the accounting treatment.'],['Problems without source labels',hasSource,'Add textbook and page references when available.'],['Unsorted Inbox items',inbox.filter(x=>x.status==='new').length,'Review and file away drafts so the Inbox stays clean.']].map(([title,n,detail])=>h('div',{className:'bsa205-health-row',key:title},h('span',{className:'bsa205-health-number'},n),h('div',null,h('strong',null,title),h('p',{className:'muted small'},detail))))),
+        h('div',{className:'bsa205-card'},h('h2',null,'Review exact duplicates'),h('p',{className:'muted small'},'You can hide a repeat from this hub without deleting a grade, attempt or original question.'),
+          totals.duplicates.length?totals.duplicates.slice(0,35).map(([a,b],i)=>h('div',{className:'bsa205-duplicate',key:i},h('strong',null,bsa205Short(b.title,90)),h('small',null,a.type+' ↔ '+b.type),h('p',{className:'muted small'},bsa205Short(b.text,180)),
+            h('button',{className:'btn',onClick:()=>toggleHide(b.key)},hidden.has(b.key)?'Restore visibility':'Hide repeat in hub'))):h('p',{className:'muted small'},'No exact duplicate prompts detected.'),
+          h('p',{className:'muted small'},'Similarity detection is advisory, not an accounting equivalence test. No answers or question records are merged automatically.'))));
+  }
+  /* v201–202: A connected, explicitly keyed accounting cycle. Dynamic cases are
+     permitted only when their user-provided transaction keys are balanced. */
+  function bsa205Diagnose(rows,exercise){
+    const actual=(rows||[]).filter(r=>r.account?.trim()&&(bsa187Number(r.debit)||bsa187Number(r.credit))).map(r=>({account:bsa187Account(r.account),dr:bsa187Number(r.debit),cr:bsa187Number(r.credit)}));
+    const required=(exercise.solution||[]).map(x=>({account:bsa187Account(x[0]),dr:Number(x[1])||0,cr:Number(x[2])||0}));
+    const findings=[];let misses=0;
+    for(const line of required){let candidates=actual.filter(x=>x.account===line.account);if(!candidates.length){misses++;continue}
+      if(!candidates.some(x=>Math.abs(x.dr-line.dr)<0.005&&Math.abs(x.cr-line.cr)<0.005)){
+        if(candidates.some(x=>Math.abs(x.dr-line.cr)<.005&&Math.abs(x.cr-line.dr)<.005))findings.push('An amount may be on the wrong debit/credit side.');
+        else findings.push('Check an amount on an account you have already entered.');}}
+    const totalDr=actual.reduce((s,x)=>s+x.dr,0),totalCr=actual.reduce((s,x)=>s+x.cr,0);
+    if(Math.abs(totalDr-totalCr)>0.005)findings.unshift('Debits and credits do not balance yet.');
+    if(misses)findings.push(misses+' expected account line'+(misses===1?' is':'s are')+' missing or named differently.');
+    if(actual.length>required.length)findings.push('You may have an extra journal line.');
+    return [...new Set(findings)].slice(0,4);
+  }
+  const BSA205_CYCLE={id:'built-in-service-cycle-v205',title:'Riverbend Services · Month 1',source:'Illustrative fictional case · built-in',verified:true,
+    description:'Work one coherent service-business accounting cycle, from transactions to trial balances, financial statements and closing.',
+    accountTypes:{Cash:'asset','Accounts Receivable':'asset',Equipment:'asset','Accumulated Depreciation':'contraAsset','Salaries Payable':'liability',
+      "Owner's Capital":'equity','Service Revenue':'revenue','Rent Expense':'expense','Utilities Expense':'expense','Salaries Expense':'expense','Depreciation Expense':'expense'},
+    transactions:[
+      {title:'Opening investment',prompt:'The owner invested ₱100,000 cash to open Riverbend Services.',solution:[['Cash',100000,0],["Owner's Capital",0,100000]]},
+      {title:'Purchased equipment',prompt:'Bought service equipment for ₱30,000 cash.',solution:[['Equipment',30000,0],['Cash',0,30000]]},
+      {title:'Paid rent',prompt:'Paid ₱6,000 cash for rent covering this month.',solution:[['Rent Expense',6000,0],['Cash',0,6000]]},
+      {title:'Cash services',prompt:'Performed services for ₱25,000 cash.',solution:[['Cash',25000,0],['Service Revenue',0,25000]]},
+      {title:'Services on account',prompt:'Performed services of ₱10,000 on account, not yet collected.',solution:[['Accounts Receivable',10000,0],['Service Revenue',0,10000]]},
+      {title:'Paid utilities',prompt:'Paid ₱3,000 cash for utility expenses incurred this month.',solution:[['Utilities Expense',3000,0],['Cash',0,3000]]},
+      {title:'Paid salaries',prompt:'Paid ₱9,000 in salaries for this month.',solution:[['Salaries Expense',9000,0],['Cash',0,9000]]},
+      {title:'Collected receivable',prompt:'Collected ₱7,000 cash from a customer billed earlier this month.',solution:[['Cash',7000,0],['Accounts Receivable',0,7000]]}
+    ],adjustments:[
+      {title:'Accrued salaries',prompt:'At month-end, employees have earned ₱2,000 in salaries that will be paid next month.',solution:[['Salaries Expense',2000,0],['Salaries Payable',0,2000]]},
+      {title:'Equipment depreciation',prompt:'At month-end, depreciation on equipment is ₱1,000.',solution:[['Depreciation Expense',1000,0],['Accumulated Depreciation',0,1000]]}
+    ]};
+  function bsa205CycleValidate(raw){
+    if(!raw||typeof raw!=='object'||Array.isArray(raw))throw Error('A cycle case must be an object.');
+    const title=bsa198Text(raw.title);if(title.length<5||title.length>150)throw Error('Case needs a 5–150 character title.');
+    const transactions=raw.transactions,adjustments=raw.adjustments||[];
+    if(!Array.isArray(transactions)||transactions.length<2||transactions.length>40||!Array.isArray(adjustments)||adjustments.length>25)throw Error('Use 2–40 transactions and 0–25 adjusting entries.');
+    const convert=(row,i)=>{const v=bsa198Validate({...row,level:'Intermediate'});if(v.error)throw Error('Step '+(i+1)+': '+v.error);return {title:v.value.title,prompt:v.value.prompt,solution:v.value.solution}};
+    const steps=transactions.map(convert),adj=adjustments.map((x,i)=>convert(x,transactions.length+i));
+    const allowed=new Set(['asset','contraAsset','liability','equity','revenue','expense','other']);const accountTypes={};
+    if(raw.accountTypes&&typeof raw.accountTypes==='object'&&!Array.isArray(raw.accountTypes))for(const [name,type] of Object.entries(raw.accountTypes)){if(name.length<100&&allowed.has(type))accountTypes[name]=type;}
+    return {id:uid('cyclecase'),title,description:bsa198Text(raw.description).slice(0,500),source:bsa198Text(raw.source).slice(0,200)||'Imported by student',verified:false,
+      accountTypes,transactions:steps,adjustments:adj};
+  }
+  function bsa205Ledger(steps){const m=new Map();for(const step of steps)for(const [account,dr,cr] of step.solution||[]){const k=bsa187Account(account);
+    if(!m.has(k))m.set(k,{name:account,debit:0,credit:0});const row=m.get(k);row.debit+=Number(dr)||0;row.credit+=Number(cr)||0;}
+    return [...m.values()].map(x=>({...x,balance:x.debit-x.credit,trialDr:Math.max(0,x.debit-x.credit),trialCr:Math.max(0,x.credit-x.debit)}));
+  }
+  function bsa205CycleReports(item){const ledger=bsa205Ledger([...(item.transactions||[]),...(item.adjustments||[])]);
+    const types=new Map(Object.entries(item.accountTypes||{}).map(([name,type])=>[bsa187Account(name),type]));
+    const rows=ledger.map(x=>({...x,type:types.get(bsa187Account(x.name))||'other'}));
+    const revenue=rows.filter(x=>x.type==='revenue').reduce((sum,x)=>sum-x.balance,0),expense=rows.filter(x=>x.type==='expense').reduce((sum,x)=>sum+x.balance,0);
+    const assets=rows.filter(x=>x.type==='asset'||x.type==='contraAsset').reduce((sum,x)=>sum+x.balance,0),liabilities=rows.filter(x=>x.type==='liability').reduce((sum,x)=>sum-x.balance,0);
+    const capital=rows.filter(x=>x.type==='equity').reduce((sum,x)=>sum-x.balance,0);
+    const identified=rows.every(x=>x.type!=='other');
+    const closes=[];const revs=rows.filter(x=>x.type==='revenue'&&x.balance<-.005),exps=rows.filter(x=>x.type==='expense'&&x.balance>.005);
+    if(revs.length)closes.push({title:'Close revenues',prompt:'Close the revenue accounts to Income Summary.',solution:[...revs.map(x=>[x.name,0-x.balance,0]),['Income Summary',0,revs.reduce((n,x)=>n-x.balance,0)]]});
+    if(exps.length)closes.push({title:'Close expenses',prompt:'Close the expense accounts to Income Summary.',solution:[['Income Summary',exps.reduce((n,x)=>n+x.balance,0),0],...exps.map(x=>[x.name,0,x.balance])]});
+    const profit=revenue-expense;const owner=rows.find(x=>x.type==='equity');if(owner&&Math.abs(profit)>.005)closes.push({title:'Close Income Summary',prompt:'Transfer net income or loss from Income Summary into '+owner.name+'.',solution:profit>=0?[['Income Summary',profit,0],[owner.name,0,profit]]:[[owner.name,-profit,0],['Income Summary',0,-profit]]});
+    return {rows,identified,revenue,expense,profit,assets,liabilities,capital,closes};
+  }
+  function BSA205Cycle({subject,update,toast,go}){
+    const cases=[BSA205_CYCLE,...(subject.cycleCases||[])],runs=subject.cycleRuns||[];
+    const [caseId,setCaseId]=useState(BSA205_CYCLE.id),[step,setStep]=useState(0),[rows,setRows]=useState(bsa187Blank),[feedback,setFeedback]=useState(null),[reveal,setReveal]=useState(false),[phase,setPhase]=useState('journal');
+    const [showReports,setShowReports]=useState(false),[importText,setImportText]=useState(''),[importError,setImportError]=useState(''),[importOpen,setImportOpen]=useState(false);
+    const [ledgerDraft,setLedgerDraft]=useState({}),[ledgerFeedback,setLedgerFeedback]=useState(null),[showLedgerModel,setShowLedgerModel]=useState(false);
+    const [statementDraft,setStatementDraft]=useState({}),[statementFeedback,setStatementFeedback]=useState(null);
+    const chosen=cases.find(x=>x.id===caseId)||BSA205_CYCLE;
+    const model=bsa205CycleReports(chosen);const allSteps=[...chosen.transactions,...chosen.adjustments,...model.closes];
+    const run=runs.filter(x=>x.caseId===chosen.id).sort((a,b)=>(b.startedAt||0)-(a.startedAt||0))[0];
+    useEffect(()=>{const saved=(subject.problemWork||[]).find(x=>x.key==='cycle:'+chosen.id+':reports');setLedgerDraft(saved?.ledger||{});setStatementDraft(saved?.statement||{});setLedgerFeedback(null);setStatementFeedback(null);setShowLedgerModel(false);setShowReports(false)},[chosen.id,subject.id]);
+    const statementKey=[['revenue','Revenue',model.revenue],['expense','Expenses',model.expense],['profit','Net profit (negative for loss)',model.profit],['assets','Net assets',model.assets],['liabilities','Liabilities',model.liabilities],['endingEquity','Ending equity',model.capital+model.profit]];
+    const saveReports=()=>{update(s=>{s.problemWork=s.problemWork||[];const key='cycle:'+chosen.id+':reports';let r=s.problemWork.find(x=>x.key===key);if(!r){r={id:uid('work'),key};s.problemWork.push(r)}r.ledger=ledgerDraft;r.statement=statementDraft;r.savedAt=Date.now()});toast('Ledger and statement drafts saved to your study records. No grades were changed.')};
+    const changeLedger=(key,side,value)=>{setLedgerDraft(old=>({...old,[key]:{...(old[key]||{}),[side]:value}}));setLedgerFeedback(null)};
+    const ledgerInputRows=model.rows.map(r=>{
+      const key=bsa187Account(r.name),v=ledgerDraft[key]||{};
+      return h('tr',{key},h('td',null,r.name),
+        h('td',null,h('input',{inputMode:'decimal',placeholder:'0',value:v.dr||'',onChange:e=>changeLedger(key,'dr',e.target.value),'aria-label':r.name+' debit'})),
+        h('td',null,h('input',{inputMode:'decimal',placeholder:'0',value:v.cr||'',onChange:e=>changeLedger(key,'cr',e.target.value),'aria-label':r.name+' credit'})));
+    });
+    const checkLedger=()=>{const mistakes=[];for(const r of model.rows){const k=bsa187Account(r.name),v=ledgerDraft[k]||{},dr=bsa187Number(v.dr),cr=bsa187Number(v.cr);if(!Number.isFinite(dr)||!Number.isFinite(cr)||Math.abs(dr-r.trialDr)>.005||Math.abs(cr-r.trialCr)>.005)mistakes.push(r.name)}setLedgerFeedback({correct:model.rows.length-mistakes.length,total:model.rows.length,accounts:mistakes})};
+    const checkStatements=()=>{const incorrect=statementKey.filter(([key,label,value])=>!Number.isFinite(bsa187Number(statementDraft[key]))||Math.abs(bsa187Number(statementDraft[key])-value)>.005).map(x=>x[1]);setStatementFeedback({correct:statementKey.length-incorrect.length,total:statementKey.length,incorrect})};
+    const complete=new Set(run?.done||[]),done=complete.size;
+    const current=allSteps[step];const itemKey='cycle:'+chosen.id+':'+step;
+    useEffect(()=>{const draft=(subject.problemWork||[]).find(x=>x.key===itemKey);setRows(draft?.rows?.length?draft.rows:bsa187Blank());setFeedback(null);setReveal(false)},[itemKey,subject.id]);
+    const newRun=()=>{const id=uid('cyclerun');update(s=>{s.cycleRuns=[...(s.cycleRuns||[]),{id,caseId:chosen.id,startedAt:Date.now(),done:[],attempts:0}]});setStep(0);setPhase('journal');toast('New cycle run started. Earlier attempts are preserved.');};
+    const check=()=>{if(!current)return;const result=bsa187Verify(rows,current);const hints=bsa205Diagnose(rows,current);setFeedback({...result,details:hints});
+      if(result.ok)update(s=>{let active=(s.cycleRuns||[]).filter(x=>x.caseId===chosen.id).sort((a,b)=>(b.startedAt||0)-(a.startedAt||0))[0];if(!active){active={id:uid('cyclerun'),caseId:chosen.id,startedAt:Date.now(),done:[],attempts:0};s.cycleRuns=[...(s.cycleRuns||[]),active]}
+        active.attempts=(active.attempts||0)+1;active.done=Array.from(new Set([...(active.done||[]),String(step)]));active.lastAt=Date.now();});
+      else if(result.reason!=='Enter a journal entry first.')update(s=>{let active=(s.cycleRuns||[]).filter(x=>x.caseId===chosen.id).sort((a,b)=>(b.startedAt||0)-(a.startedAt||0))[0];if(active)active.attempts=(active.attempts||0)+1});};
+    const draftSave=()=>{update(s=>{s.problemWork=s.problemWork||[];const saved=s.problemWork.find(x=>x.key===itemKey);if(saved){saved.rows=rows;saved.savedAt=Date.now()}else s.problemWork.push({id:uid('work'),key:itemKey,rows,savedAt:Date.now()})});toast('Working journal lines saved for this step. No grade was changed.');};
+    const loadCase=()=>{try{if(importText.length>200000)throw Error('Case JSON must be under 200 KB.');const raw=JSON.parse(importText);const candidate=bsa205CycleValidate(raw);
+      if(cases.some(x=>bsa198Fingerprint(x.title)===bsa198Fingerprint(candidate.title)))throw Error('A case with this title already exists.');
+      if(!window.confirm('Save this student-provided cycle case? Its accounting keys were checked for balancing only; you must confirm the treatments and classifications yourself.'))return;
+      update(s=>{s.cycleCases=[...(s.cycleCases||[]),candidate]});setCaseId(candidate.id);setStep(0);setImportText('');setImportOpen(false);setImportError('');toast('Cycle case imported. Answer keys remain student-provided, not independently verified.');
+    }catch(e){setImportError(e.message||String(e))}};
+    const dr=model.rows.reduce((n,x)=>n+x.trialDr,0),cr=model.rows.reduce((n,x)=>n+x.trialCr,0);
+    const select=(n)=>{setStep(n);setPhase('journal')};
+    return h('section',{className:'view bsa205-page'},
+      h('div',{className:'bsa205-page-head'},h('div',null,h('span',{className:'bsa205-overline'},'CONNECTED PRACTICE · V201'),h('h1',null,'Accounting Cycle Studio'),h('p',null,'One coherent case: journalize, adjust, post to ledgers, prepare statements and close the books.')),
+        h('button',{className:'bsa205-head-action',onClick:()=>setImportOpen(v=>!v)},'＋ Import cycle case')),
+      importOpen&&h('div',{className:'bsa205-card'},h('h2',null,'Import a connected case'),h('p',{className:'muted small'},'JSON: title, transactions, optional adjustments, accountTypes. Each step needs prompt and balanced solution lines. Imported answer keys are not independently verified.'),
+        h('textarea',{rows:8,className:'bsa205-code',value:importText,onChange:e=>setImportText(e.target.value),placeholder:'{"title":"Case", "transactions":[{"title":"...","prompt":"...","solution":[{"account":"Cash","debit":1000,"credit":0}, ...]}], "accountTypes":{"Cash":"asset"}}'}),
+        importError&&h('p',{className:'bsa205-message',role:'alert'},importError),h('button',{className:'btn primary',disabled:!importText.trim(),onClick:loadCase},'Validate & save case')),
+      h('div',{className:'bsa205-card bsa205-cycle-top'},h('label',null,'Choose a case',h('select',{value:caseId,onChange:e=>{setCaseId(e.target.value);setStep(0);setShowReports(false)}},cases.map(x=>h('option',{key:x.id,value:x.id},x.title)))),
+        h('div',null,h('strong',null,done+' / '+allSteps.length+' journal steps completed'),h('p',{className:'muted small'},chosen.verified?'Built-in illustrative model':'Student-provided keys; verify against source'),h('p',{className:'muted small'},chosen.source||'')),
+        h('button',{className:'btn',onClick:newRun},'Start another run')),
+      h('div',{className:'bsa205-pagetabs',role:'group','aria-label':'Accounting cycle views'},[['journal','Journal & adjustments'],['ledger','General ledger & trial balance'],['statements','Statements & closing']].map(([key,label])=>h('button',{key,className:phase===key?'selected':'','aria-pressed':phase===key,onClick:()=>setPhase(key)},label))),
+      phase==='journal'&&h('div',{className:'bsa205-cycle-grid'},
+        h('aside',{className:'bsa205-card bsa205-cycle-steps'},h('h2',null,'Step sequence'),allSteps.map((x,i)=>h('button',{key:i,className:'bsa205-step'+(step===i?' active':''),onClick:()=>select(i)},h('span',null,complete.has(String(i))?'✓':i+1),h('div',null,h('strong',null,x.title),h('small',null,i<chosen.transactions.length?'Transaction':i<chosen.transactions.length+chosen.adjustments.length?'Adjustment':'Closing entry'))))),
+        h('div',{className:'bsa205-card bsa205-cycle-work'},current&&h(React.Fragment,null,h('span',{className:'bsa205-overline'},'STEP '+(step+1)+' / '+allSteps.length),h('h2',null,current.title),h('p',null,current.prompt),
+          h('div',{className:'bsa205-entry-table'},h('div',{className:'bsa205-entry-head'},h('span',null,'Account'),h('span',null,'Debit'),h('span',null,'Credit')),
+            rows.map((r,i)=>h('div',{className:'bsa205-entry-row',key:i},['account','debit','credit'].map(field=>h('input',{key:field,type:'text',inputMode:field==='account'?'text':'decimal',value:r[field]||'',onChange:e=>{setRows(old=>old.map((x,j)=>j===i?{...x,[field]:e.target.value}:x));setFeedback(null)},'aria-label':field+' journal line '+(i+1)}))))),
+          h('div',{className:'bsa205-action-row'},h('button',{className:'btn ghost',disabled:rows.length>=16,onClick:()=>setRows(v=>[...v,{account:'',debit:'',credit:''}])},'＋ Line'),h('button',{className:'btn ghost',disabled:rows.length<=2,onClick:()=>setRows(v=>v.slice(0,-1))},'− Line'),h('button',{className:'btn',onClick:draftSave},'Save working')),
+          h('div',{className:'bsa205-action-row'},h('button',{className:'btn primary',onClick:check},'Check entry'),h('button',{className:'btn',onClick:()=>setReveal(v=>!v)},reveal?'Hide source key':'Reveal source key'),h('button',{className:'btn',disabled:step>=allSteps.length-1,onClick:()=>select(step+1)},'Next step →')),
+          feedback&&h('div',{className:'bsa205-result'+(feedback.ok?' correct':'')},h('strong',null,feedback.ok?'Entry matches the saved key':'Needs another look'),h('p',null,feedback.reason),!feedback.ok&&(feedback.details||[]).map((line,i)=>h('p',{key:i},'• '+line))),
+          reveal&&h('div',{className:'bsa205-key'},h('strong',null,'Supplied key'),current.solution.map(([account,dr,cr],i)=>h('div',{key:i},h('span',null,account),h('span',null,dr?bsa205Money(dr)+' debit':bsa205Money(cr)+' credit')))),
+          h('p',{className:'muted small'},'Correct checks mark this run only; opening or revealing answers never awards XP. Draft working lines can be saved and resumed across configured sync devices.')))),
+      phase==='ledger'&&h('div',{className:'bsa205-card bsa205-ledger-practice'},h('span',{className:'bsa205-overline'},'YOUR WORK FIRST'),h('h2',null,'Post and prepare a trial balance'),h('p',{className:'muted small'},'Use the journal entries to post net balances. Debit and credit fields accept numbers only. Check before revealing the supplied model; blank fields count as zero.'),
+        h('div',{className:'bsa205-table-scroll'},h('table',{className:'bsa205-table'},
+          h('thead',null,h('tr',null,h('th',null,'Account'),h('th',null,'Debit (₱)'),h('th',null,'Credit (₱)'))),
+          h('tbody',null,ledgerInputRows))),
+        h('div',{className:'bsa205-action-row'},h('button',{className:'btn primary',onClick:checkLedger},'Check trial balance'),h('button',{className:'btn',onClick:saveReports},'Save draft'),h('button',{className:'btn ghost',onClick:()=>setShowLedgerModel(x=>!x)},showLedgerModel?'Hide supplied model':'Reveal supplied model')),
+        ledgerFeedback&&h('div',{className:'bsa205-result',role:'status'},h('strong',null,ledgerFeedback.correct+' of '+ledgerFeedback.total+' account balances match'),ledgerFeedback.accounts.length?h('p',null,'Revisit: '+ledgerFeedback.accounts.slice(0,12).join(', ')):h('p',null,'All posted balances match the supplied case key.'))),
+      phase==='ledger'&&showLedgerModel&&h('div',{className:'bsa205-card'},h('h2',null,'Posted balances and trial balance'),h('p',{className:'muted small'},'Model-derived from this case’s supplied journal keys, not from your unfinished answers. Use it to verify posting and classify balances.'),
+        h('div',{className:'bsa205-table-scroll'},h('table',{className:'bsa205-table'},h('thead',null,h('tr',null,['Account','Ledger debits','Ledger credits','TB debit','TB credit'].map(x=>h('th',{key:x},x)))),h('tbody',null,model.rows.map(x=>h('tr',{key:x.name},h('td',null,x.name),...[x.debit,x.credit,x.trialDr,x.trialCr].map((v,i)=>h('td',{key:i},v?bsa205Money(v):'—')))),h('tr',{className:'total'},h('th',null,'TOTAL'),h('th',null,'—'),h('th',null,'—'),h('th',null,bsa205Money(dr)),h('th',null,bsa205Money(cr))))),
+        h('p',{className:'bsa205-message'},Math.abs(dr-cr)<0.005?'Trial balance agrees. This proves debit-credit equality, not that every accounting judgment is correct.':'Model keys are not balanced — review this imported case.')),
+      phase==='statements'&&h('div',{className:'bsa205-card'},h('span',{className:'bsa205-overline'},'WORK THROUGH THE NUMBERS'),h('h2',null,'Prepare your financial statement totals'),h('p',{className:'muted small'},'Use the adjusted trial balance to calculate each total. This is practice, not an official financial report.'),
+        h('div',{className:'bsa205-statement-entry'},statementKey.map(([key,label])=>h('label',{key},label,h('input',{inputMode:'decimal',value:statementDraft[key]||'',placeholder:'₱ amount',onChange:e=>{setStatementDraft(old=>({...old,[key]:e.target.value}));setStatementFeedback(null)}})))),
+        h('div',{className:'bsa205-action-row'},h('button',{className:'btn primary',onClick:checkStatements},'Check my totals'),h('button',{className:'btn',onClick:saveReports},'Save working')),
+        statementFeedback&&h('p',{className:'bsa205-result',role:'status'},statementFeedback.correct+' of '+statementFeedback.total+' totals match the saved key.',statementFeedback.incorrect.length?' Review: '+statementFeedback.incorrect.join(', '):' All totals match.'),
+        h('h2',null,'Financial statements & closing'),
+        !model.identified&&h('p',{className:'bsa205-message'},'Some accounts in this imported case have no recognized accountTypes classification. Complete the accountTypes map before relying on the financial statements.'),
+        h('button',{className:'btn',onClick:()=>setShowReports(v=>!v)},showReports?'Hide statement model':'Show statement model'),
+        showReports&&h('div',{className:'bsa205-statement-grid'},h('article',null,h('h3',null,'Income statement'),h('div',null,'Revenue',h('strong',null,bsa205Money(model.revenue))),h('div',null,'Expenses',h('strong',null,bsa205Money(model.expense))),h('div',{className:'total'},'Net '+(model.profit>=0?'income':'loss'),h('strong',null,bsa205Money(Math.abs(model.profit))))),
+          h('article',null,h('h3',null,'Statement of financial position'),h('div',null,'Net assets',h('strong',null,bsa205Money(model.assets))),h('div',null,'Liabilities',h('strong',null,bsa205Money(model.liabilities))),h('div',null,'Capital (before closing)',h('strong',null,bsa205Money(model.capital))),h('div',null,'Current-period result',h('strong',null,bsa205Money(model.profit))),h('div',{className:'total'},'Liabilities + ending equity',h('strong',null,bsa205Money(model.liabilities+model.capital+model.profit))))),
+        h('p',{className:'muted small'},'Closing entries appear after transaction and adjusting steps in the Journal tab. They close nominal accounts to Income Summary and then to capital. For imported cases, the app depends on your provided account type classifications.'))));
+  }
+  function bsa205SessionBlocks(subject,budget,settings){
+    const blocks=[],seen=new Set(),now=Date.now();
+    const append=(key,title,detail,route,opts,mins)=>{if(seen.has(key))return;seen.add(key);blocks.push({key,title,detail,route,opts:opts||{},mins,done:false})};
+    const mistakes=(subject.mistakes||[]).filter(x=>x.status!=='Cleared');
+    if(mistakes.length)append('mistakes','Review a saved mistake',mistakes.length+' corrections to revisit','mistakes',{},12);
+    const cards=buildReview(subject,settings?.newPerDay||10,settings?.maxPerDay||0);
+    if((cards.due||[]).length+(cards.mist||[]).length+(cards.prob||[]).length)append('review','Spaced recall','Cards and problems ready to return','practice',{start:'review'},15);
+    const cat=bsa198Catalog(subject),lab=cat.journal;
+    const attempts=subject.labAttempts||[];const byKey=new Map();for(const a of attempts){const key=bsa198AttemptKey(a);if(!byKey.has(key)||Number(a.date)>Number(byKey.get(key).date))byKey.set(key,a)}
+    const weak=lab.filter(x=>byKey.has(x.key)&&!byKey.get(x.key).correct);
+    if(weak.length)append('lab-weak','Retry an accounting entry',weak.length+' lab exercises need another try','accounting-lab',{},15);
+    else if(lab.length)append('lab','Practice journal entries',lab.length+' available exercises','accounting-lab',{},15);
+    if((subject.mcqSets||[]).some(x=>x.problems?.length))append('mcq','Adaptive MCQ practice','Uses your previous questions and review timing','mcq',{},15);
+    const written=(subject.psets||[]).flatMap(x=>x.problems||[]).filter(x=>!bsa198StoredKeyValid(x));
+    if(written.length)append('written','Solve a written problem',written.length+' workbook questions ready','psets',{},20);
+    const lectures=(subject.lectures||[]).filter(x=>!x.done);if(lectures.length)append('read','Finish an unfinished lecture',lectures.length+' lectures left','lectures',{open:lectures[0].id},15);
+    if(!blocks.length)append('explore','Explore your library','Add a lecture or question, then study it','library',{},15);
+    const result=[];let used=0;for(const b of blocks){if(result.length&&used+b.mins>budget)continue;result.push(b);used+=b.mins;if(used>=budget)break}
+    return result;
+  }
+  function BSA205Study({subject,update,settings,go,toast}){
+    const [budget,setBudget]=useState(40),[showMore,setShowMore]=useState(false);
+    const sessions=(subject.practiceSessions||[]).slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    const active=sessions.find(x=>!x.archived&&x.blocks?.some(b=>!b.done))||null;
+    const proposal=useMemo(()=>bsa205SessionBlocks(subject,budget,settings),[subject,budget,settings]);
+    const create=()=>{const newSession={id:uid('session205'),createdAt:Date.now(),lastAt:Date.now(),budget,blocks:proposal,archived:false};
+      update(s=>{s.practiceSessions=[...(s.practiceSessions||[]),newSession]});toast('Study plan created. Blocks are manually checked; no XP or grades were added.');};
+    const toggle=(id,blockKey)=>{update(s=>{const session=(s.practiceSessions||[]).find(x=>x.id===id);if(!session)return;
+      const b=(session.blocks||[]).find(x=>x.key===blockKey);if(b)b.done=!b.done;session.lastAt=Date.now();});};
+    const archive=id=>{update(s=>{const x=(s.practiceSessions||[]).find(r=>r.id===id);if(x)x.archived=true});toast('Plan filed in session history. Study progress and grades are unchanged.');};
+    const listed=active||sessions[0]||null;
+    return h('section',{className:'view bsa205-page'},
+      h('div',{className:'bsa205-page-head'},h('div',null,h('span',{className:'bsa205-overline'},'ONE STUDY FLOW · NO DUPLICATE QUESTIONS'),h('h1',null,'Study Session Builder'),h('p',null,'Use your current lectures, due reviews, mistakes, written problems and journal exercises in one guided session.'))),
+      h('div',{className:'bsa205-study-grid'},
+        h('div',{className:'bsa205-card'},h('h2',null,'Build your next session'),h('label',null,'Time available',h('select',{value:budget,onChange:e=>setBudget(Number(e.target.value))},[20,40,60,90].map(m=>h('option',{key:m,value:m},m+' minutes')))),
+          h('div',{className:'bsa205-session-proposal'},proposal.map(x=>h('div',{key:x.key},h('span',null,x.mins+'m'),h('div',null,h('strong',null,x.title),h('small',null,x.detail))))),
+          h('button',{className:'btn primary',onClick:create},'Create study session'),h('p',{className:'muted small'},'The plan only links to existing material. It never makes a new problem set or records study minutes automatically.')),
+        h('div',{className:'bsa205-card'},h('div',{className:'bsa205-card-head'},h('h2',null,'Continue your plan'),listed&&h('span',{className:'bsa205-tag'},(listed.blocks||[]).filter(x=>x.done).length+'/'+(listed.blocks||[]).length+' finished')),
+          listed?h('div',{className:'bsa205-live-session'},h('p',{className:'muted small'},'Created '+bsa205Date(listed.createdAt)+' · '+listed.budget+'-min target'),
+            (listed.blocks||[]).map(b=>h('div',{className:'bsa205-session-block'+(b.done?' done':''),key:b.key},h('label',null,h('input',{type:'checkbox',checked:!!b.done,onChange:()=>toggle(listed.id,b.key),'aria-label':'Mark '+b.title+' done'})),
+              h('div',null,h('strong',null,b.title),h('small',null,b.detail)),h('button',{className:'btn',onClick:()=>go(b.route,b.opts||{})},'Open'))),
+            h('div',{className:'bsa205-action-row'},h('button',{className:'btn ghost',onClick:()=>archive(listed.id)},'File this plan'),h('button',{className:'btn ghost',onClick:()=>setShowMore(v=>!v)},showMore?'Hide past sessions':'Session history'))):h('p',{className:'muted'},'Your next session will appear here when you create one.'),
+          showMore&&sessions.slice(0,20).map(s=>h('div',{className:'bsa205-history-row',key:s.id},h('span',null,bsa205Date(s.createdAt)),h('span',null,(s.blocks||[]).filter(b=>b.done).length+' / '+(s.blocks||[]).length+' blocks'),h('span',null,s.archived?'Filed':'Active'))))),
+      h('div',{className:'bsa205-card'},h('h2',null,'Choose how to study'),h('div',{className:'bsa205-route-grid'},[
+        ['Practice','Adaptive quizzes and review','practice'],['Accounting Lab','Check journal entries','accounting-lab'],['Accounting Cycle','Work a connected case','accounting-cycle'],['Split Study','PDF with a notebook','split'],['AI Tutor','Ask questions and save memory','ask'],['Library','Find your original questions','library']
+      ].map(([title,subtitle,route])=>h('button',{key:route,className:'bsa205-route-card',onClick:()=>go(route)},h('strong',null,title),h('small',null,subtitle),h('span',null,'↗'))))));
+  }
+  function BSA205Mastery({subject,go}){
+    const events=(subject.learningEvents||[]).filter(e=>['correct','incorrect','partial'].includes(e.result));
+    const lab=subject.labAttempts||[],mistakes=subject.mistakes||[],cards=subject.cards||[];
+    const topics=(subject.topics||[]).filter(t=>t.kind!=='exam');
+    const mapping=new Map(topics.map(t=>[t.id,{id:t.id,title:t.title||t.name||'Topic',correct:0,wrong:0,assisted:0,reviewed:0,cards:0,mistakes:0}]));
+    const unlinked={id:'unlinked',title:'Not linked to a roadmap topic',correct:0,wrong:0,assisted:0,reviewed:0,cards:0,mistakes:0};
+    const get=id=>mapping.get(id)||unlinked;
+    for(const e of events){const r=get(e.topicId);r.reviewed++;if(e.result==='correct'&&!e.guessed&&!e.assisted)r.correct++;else if(e.result==='incorrect')r.wrong++;else r.assisted++}
+    for(const c of cards)get(c.topicId).cards++;
+    for(const m of mistakes)if(m.status!=='Cleared')get(m.topicId).mistakes++;
+    const groups=[...mapping.values(),unlinked].filter(x=>x.reviewed||x.cards||x.mistakes);
+    groups.sort((a,b)=>(b.wrong+b.mistakes)-(a.wrong+a.mistakes));
+    const total=events.length,confidence=events.filter(x=>x.result==='correct'&&!x.guessed&&!x.assisted).length;
+    const recent=events.filter(x=>Number(x.at)>=Date.now()-7*864e5).length;
+    const labGood=lab.filter(x=>x.correct).length;
+    return h('section',{className:'view bsa205-page'},
+      h('div',{className:'bsa205-page-head'},h('div',null,h('span',{className:'bsa205-overline'},'BASED ON SAVED PRACTICE'),h('h1',null,'Learning Insights'),h('p',null,'A clearer picture of what you know, what you guessed, and what deserves another attempt.'))),
+      h('div',{className:'bsa205-snapshot'},[['Recall attempts',total],['Independent correct',confidence],['Events in 7 days',recent],['Journal checks',lab.length]].map(([title,count])=>h('div',{className:'bsa205-snapshot-item',key:title},h('strong',null,count),h('span',null,title)))),
+      h('div',{className:'bsa205-master-grid'},
+        h('div',{className:'bsa205-card'},h('h2',null,'Your topic evidence'),h('p',{className:'muted small'},'Only linked questions are attributed to topics. Unlinked records stay explicitly unlinked; this is evidence, not a predicted exam score.'),
+          groups.length?groups.map(x=>{const pct=x.reviewed?Math.round(x.correct/x.reviewed*100):0;return h('div',{className:'bsa205-master-row',key:x.id},h('div',null,h('strong',null,x.title),h('small',null,x.correct+' independent correct · '+x.wrong+' missed · '+x.assisted+' guessed/assisted · '+x.mistakes+' open mistakes')),
+            h('div',{className:'bsa205-progress',role:'progressbar','aria-label':'Independent correct fraction for '+x.title,'aria-valuemin':0,'aria-valuemax':100,'aria-valuenow':pct},h('div',{style:{width:pct+'%'}})),h('small',null,x.reviewed?pct+'% of recorded attempts':'No rated attempts yet'));}):h('p',{className:'muted'},'Answer some quizzes or rate flashcards with linked topics to see evidence here.')),
+        h('div',{className:'bsa205-card'},h('h2',null,'Interpret your results'),
+          h('div',{className:'bsa205-health-row'},h('span',{className:'bsa205-health-number'},labGood),h('div',null,h('strong',null,'Correct journal-entry checks'),h('p',{className:'muted small'},lab.length+' total attempts, including retries. A correct supplied key is not a guarantee of a correct textbook solution.'))),
+          h('div',{className:'bsa205-health-row'},h('span',{className:'bsa205-health-number'},mistakes.filter(x=>x.status!=='Cleared').length),h('div',null,h('strong',null,'Open corrections'),h('p',{className:'muted small'},'Saved Mistake Log items that still need deliberate review.'))),
+          h('div',{className:'bsa205-action-row'},h('button',{className:'btn primary',onClick:()=>go('study')},'Build a focused session'),h('button',{className:'btn',onClick:()=>go('mistakes')},'Review mistakes')),
+          h('p',{className:'muted small'},'Self-rated completion, calendar plans, and XP are deliberately excluded from answer accuracy. Guessed and assisted answers are not counted as confident independent recall.'))));
+  }
+  /* v205: One calm launch pad instead of a catalog of every button. */
+  function DashboardV205Home({subject,go,settings,openEditor,update,toast}){
+    const [showClassic,setShowClassic]=useState(false);
+    const review=buildReview(subject,settings?.newPerDay||10,settings?.maxPerDay||0);
+    const due=(review.due||[]).length+(review.mist||[]).length+(review.prob||[]).length;
+    const inbox=(subject.studyInbox||[]).filter(x=>x.status==='new').length;
+    const mistakes=(subject.mistakes||[]).filter(x=>x.status!=='Cleared').length;
+    const recent=bsa181Read().recent.filter(x=>x.subjectId===subject.id&&x.tab!=='home').slice(0,3);
+    const next=mistakes?{title:'Turn a mistake into progress',description:mistakes+' saved mistakes need another try.',route:'mistakes',label:'Review mistakes'}:
+      due?{title:'Your next review is ready',description:due+' review items due from your study records.',route:'practice',label:'Start recall',opts:{start:'review'}}:
+      inbox?{title:'Clear your Study Inbox',description:inbox+' notes or problems still need sorting.',route:'library',label:'Organize Inbox',opts:{tab:'inbox'}}:
+      {title:'Build a focused session',description:'Choose a few meaningful tasks based on your available time.',route:'study',label:'Plan a session'};
+    return h('section',{className:'view bsa205-page bsa205-home'},
+      h('div',{className:'bsa205-hero'},
+        h('div',{className:'bsa205-hero-copy'},h('span',{className:'bsa205-hero-eyebrow'},'YOUR STUDY SPACE  /  '+new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})),
+          h('h1',null,'Less searching.',h('span',null,' More learning.')),
+          h('p',null,'All of your '+(subject.name||'study')+' tools are now organized into a few clear places. Pick one thing and make progress.'),
+          h('div',{className:'bsa205-hero-actions'},h('button',{className:'bsa205-primary-action',onClick:()=>go('study')},'Start a study session  ↗'),
+            h('button',{className:'bsa205-hero-secondary',onClick:()=>go('library',{tab:'inbox'})},'Open Study Inbox'))),
+        h('div',{className:'bsa205-hero-orb','aria-hidden':'true'},h('span',null,'Σ'),h('small',null,subject.code||'BSA'))),
+      h('div',{className:'bsa205-home-stats'},[['Review due',due,'practice'],['Open mistakes',mistakes,'mistakes'],['Inbox',inbox,'library'],['Study sources',(subject.driveSources||[]).length+(subject.psets||[]).length,'library']].map(([label,n,route])=>h('button',{key:label,className:'bsa205-home-stat',onClick:()=>go(route,route==='library'?{tab:'inbox'}:{})},h('strong',null,n),h('span',null,label),h('small',null,'Explore ↗')))),
+      h('div',{className:'bsa205-home-main'},
+        h('section',{className:'bsa205-next-card'},h('span',{className:'bsa205-overline'},'SUGGESTED NEXT STEP · BASED ON SAVED DATA'),h('h2',null,next.title),h('p',null,next.description),
+          h('button',{className:'btn primary',onClick:()=>go(next.route,next.opts||{})},next.label,' ↗')),
+        h('section',{className:'bsa205-card bsa205-recent'},h('div',{className:'bsa205-card-head'},h('h2',null,'Pick up where you left off'),h('button',{className:'btn ghost',onClick:()=>go('workspace',{tab:'recent'})},'View all')),
+          recent.length?recent.map((x,i)=>h('button',{className:'bsa205-recent-row',key:i,onClick:()=>go(x.tab,x.open?{open:x.open}:{})},h('span',{className:'bsa205-number'},String(i+1).padStart(2,'0')),h('span',null,x.label||x.tab),h('span',null,'↗'))):h('p',{className:'muted'},'Your recently opened lessons and practice tools will appear here.'))),
+      h('div',{className:'bsa205-home-section-title'},h('div',null,h('span',{className:'bsa205-overline'},'FIVE SIMPLE PLACES'),h('h2',null,'What would you like to do?'))),
+      h('div',{className:'bsa205-home-paths'},[
+        ['study','01','Study','Build a focused session, ask the tutor, or read with your iPad.','✦'],
+        ['practice','02','Practice','Quizzes, flashcards, problems, Accounting Lab and the full cycle.','✓'],
+        ['library','03','Library','Your source PDFs, Google Drive, notes, imports and duplicates.','▤'],
+        ['week','04','Plan','See this week, due work, exams and scheduled study blocks.','▦'],
+        ['insights','05','Progress','Understand your actual recall, corrections and journal attempts.','◈']
+      ].map(([route,n,title,description,mark])=>h('button',{key:route,className:'bsa205-path',onClick:()=>go(route)},h('span',{className:'bsa205-path-n'},n),h('span',{className:'bsa205-path-mark','aria-hidden':true},mark),h('strong',null,title),h('p',null,description),h('span',{className:'bsa205-path-arrow'},'Explore ↗')))),
+      h('div',{className:'bsa205-home-more'},h('span',null,'More options when you need them'),
+        h('div',{className:'bsa205-action-row'},h('button',{className:'btn',onClick:()=>go('accounting-cycle')},'Accounting Cycle'),h('button',{className:'btn',onClick:()=>go('split')},'iPad Split Study'),h('button',{className:'btn',onClick:()=>go('life')},'Study Room'),h('button',{className:'btn',onClick:()=>go('safety')},'Data safety'))),
+      h('div',{className:'bsa205-classic'},h('button',{className:'bsa205-classic-toggle',onClick:()=>setShowClassic(x=>!x),'aria-expanded':showClassic},showClassic?'Hide advanced home widgets':'Show advanced home widgets & personalization',h('span',null,showClassic?'−':'+')),
+        showClassic&&h('div',{className:'bsa205-legacy'},h(DashboardV2Home,{subject,go,settings,openEditor,update,toast}))));
+  }
+
   function App() {
     const [data, setData] = useState(() => loadLocal() || buildDefault());
     const [nav, setNav] = useState({ tab: "home", opts: {}, key: 0 });
@@ -12925,10 +13812,10 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const [navSearch, setNavSearch] = useState("");
     const [shortcutsOpen,setShortcutsOpen] = useState(false);
     const bottomSwipe=useRef(null);
-    const swipeTabs=['home','lectures','practice','rules','workspace'];
+    const swipeTabs=['home','study','practice','library','insights'];
     const touchNavStart=e=>{const x=e.touches?.[0];if(x)bottomSwipe.current={x:x.clientX,y:x.clientY,tab:nav.tab}};
     const touchNavEnd=e=>{const start=bottomSwipe.current;bottomSwipe.current=null;const end=e.changedTouches?.[0];if(!start||!end)return;const dx=end.clientX-start.x,dy=end.clientY-start.y;if(Math.abs(dx)<65||Math.abs(dy)>35)return;const ix=swipeTabs.indexOf(start.tab);if(ix<0)return;const target=swipeTabs[ix+(dx<0?1:-1)];if(target)go(target)};
-    const [collapsedNav, setCollapsedNav] = useState({"Plan & progress":true,"My space":true,"More tools":true});
+    const [collapsedNav, setCollapsedNav] = useState({"Learning tools":true,"Accounting tools":true,"Plan & progress":true,"More tools":true});
     const [editor, setEditor] = useState(null);
     const [msg, setMsg] = useState("");
     const [downloads, setDownloads] = useState(null);
@@ -13012,7 +13899,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       setNav((n) => ({ tab, opts, key: n.key + 1 }));
       if (!opts.open) { const workspace=document.querySelector(".shell > .content"); if (workspace) workspace.scrollTop=0; else window.scrollTo({top:0}); }
     };
-    const shortcutItems = [["home","Home","⌂"],["subjects","Subjects","▤"],["practice","Practice","✦"],["ask","Tutor","✧"],["life","Study Room","☀"]];
+    const shortcutItems = [["home","Today","⌂"],["study","Study studio","✦"],["practice","Practice","✓"],["library","Library","▤"],["insights","Insights","◈"],["subjects","Switch subject","∑"]];
     const shortcutGo = (tab) => {
       setShortcutsOpen(false);
       if (tab === "subjects") setModal("subjects");
@@ -13051,7 +13938,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       try {
         const qs = new URLSearchParams(location.search);
         const want = qs.get("go");
-        const okTabs = ["safety", "week", "knowledge", "split", "accounting-lab", "curriculum", "home", "workspace", "break", "life", "achievements", "stats-clean", "private-vault", "practice", "roadmap", "calendar", "vault", "mistakes", "grades", "lectures", "psets", "rules", "class", "toolkit", "howto"];
+        const okTabs = ["study", "library", "insights", "accounting-cycle", "safety", "week", "knowledge", "split", "accounting-lab", "curriculum", "home", "workspace", "break", "life", "achievements", "stats-clean", "private-vault", "practice", "roadmap", "calendar", "vault", "mistakes", "grades", "lectures", "psets", "rules", "class", "toolkit", "howto"];
         if (want && okTabs.includes(want)) {
           setNav({ tab: want, opts: want === "practice" ? { start: "review" } : {}, key: 1 });
           history.replaceState(null, "", location.pathname);
@@ -13139,6 +14026,10 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     useEffect(() => { setBadge(reviewCount); }, [reviewCount]);
     const tabs = [
       ["home", "Today", "home"],
+      ["study", "Study Studio", "lecture"],
+      ["library", "Study Library", "book"],
+      ["insights", "Learning Insights", "grade"],
+      ["accounting-cycle", "Accounting Cycle", "pset"],
       ["workspace", "Study Workspace", "book"],
       ["split", "Split Study · iPad", "book"],
       ["accounting-lab", "Accounting Lab", "pset"],
@@ -13165,13 +14056,13 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       ["toolkit", "Study Toolkit", "book"],
       ["life", "Study Room", "look"], ["personalize", "Personalization Corner", "look"], ["howto", "How-To Corner", "book"]
     ];
+    // v205: Five useful destinations first; advanced tools stay one tap away.
     const navGroups = [
-      {name:"Home", items:["home","workspace"]},
-      {name:"Learn", items:["lectures","rules","vault","roadmap","knowledge","split"]},
-      {name:"Practice", items:["practice","mcq","psets","mistakes","accounting-lab"]},
-      {name:"Plan & progress", items:["stats-clean","calendar","week","class","grades","achievements"]},
-      {name:"My space", items:["life","break","personalize"]},
-      {name:"More tools", items:["toolkit","safety","ask","curriculum","guide","howto"]}
+      {name:"Start here",items:["home","study","practice","library","insights"]},
+      {name:"Learning tools",items:["lectures","rules","vault","split","ask","workspace"]},
+      {name:"Accounting tools",items:["accounting-lab","accounting-cycle","mcq","psets","mistakes"]},
+      {name:"Plan & progress",items:["week","calendar","grades","stats-clean","class","roadmap","knowledge","achievements"]},
+      {name:"More tools",items:["curriculum","toolkit","safety","guide","howto","life","break","personalize"]}
     ];
     const filteredNavGroups = navGroups.map(group=>({
       ...group,
@@ -13199,14 +14090,14 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const subjectPicker = (id) => /* @__PURE__ */ React.createElement("select", { id, className: "subject-select", value: data.activeId, onChange: (e) => switchSubject(e.target.value), "aria-label": "Active subject" }, (() => {const groups=new Map();data.subjects.forEach(s=>{const matched=PROSPECTUS.flatMap(t=>t.courses.map(c=>({...c,term:t.term}))).find(c=>String(c.code).trim().toLowerCase()===String(s.code||"").trim().toLowerCase());const label=s.curriculumTerm||(matched&&matched.term)||"Other / custom subjects";if(!groups.has(label))groups.set(label,[]);groups.get(label).push(s);});return [...groups].sort((a,b)=>a[0].localeCompare(b[0],undefined,{numeric:true})).map(([term,subjects])=>React.createElement("optgroup",{key:term,label:term},subjects.map(s=>React.createElement("option",{key:s.id,value:s.id},s.code?`${s.code} · ${s.name}`:s.name))));})());
     return /* @__PURE__ */ React.createElement("div", { className: "shell" }, /* @__PURE__ */ React.createElement("aside", { className: "rail", "aria-label": "Main" }, /* @__PURE__ */ h("div",{className:"bsa-shortcut-anchor"},React.createElement("button", { className: "brand brand-home-button", type: "button", onClick: () => setShortcutsOpen(v=>!v), title: "Open quick shortcuts", "aria-label": "Open quick shortcuts", "aria-expanded":shortcutsOpen,"aria-haspopup":"menu" }, /* @__PURE__ */ React.createElement("span", { className: "brand-mark", "aria-hidden": "true" }, "Σ"), /* @__PURE__ */ React.createElement("span", null, "BSA Study Desk")),shortcutMenu()), /* @__PURE__ */ React.createElement("div", { className: "rail-subject" }, /* @__PURE__ */ React.createElement("span", { className: "rail-label" }, "Subject"), subjectPicker("subj"), /* @__PURE__ */ React.createElement("button", { className: "link-btn", onClick: () => setModal("subjects") }, "+ Add new subject")), h("div",{className:"rail-nav-wrap"},h("label",{className:"nav-search-label",htmlFor:"desk-nav-search"},"Find a tool"),h("input",{id:"desk-nav-search",className:"nav-search",type:"search",placeholder:"Search tools…",value:navSearch,onChange:e=>setNavSearch(e.target.value),"aria-label":"Search dashboard tools"}),h("nav",{className:"rail-nav","aria-label":"Study Desk sections"},filteredNavGroups.map(group=>h("section",{className:"nav-group",key:group.name},h("button",{className:"nav-group-heading",type:"button","aria-expanded":navSearch?true:!collapsedNav[group.name],onClick:()=>setCollapsedNav(prev=>({...prev,[group.name]:!prev[group.name]}))},h("span",null,group.name),h("span",{className:"nav-chevron","aria-hidden":"true"},navSearch||!collapsedNav[group.name]?"⌄":"›")),(navSearch||!collapsedNav[group.name])?h("div",{className:"nav-group-links"},group.tabs.map(([k,l,ic,n])=>h("button",{key:k,className:nav.tab===k?"on":"","aria-current":nav.tab===k?"page":undefined,title:(DESK_FEATURE_GUIDE.find(f=>f.id===k)||{}).desc||l,onClick:()=>go(k)},h(Icon,{name:ic}),h("span",null,l),n?h("span",{className:"n"},n):null))):null)))), /* @__PURE__ */ React.createElement("div", { className: "rail-tools" }, /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("data") }, /* @__PURE__ */ React.createElement(Icon, { name: "data", size: 18 }), " Import & export"), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("look") }, /* @__PURE__ */ React.createElement(Icon, { name: "look", size: 18 }), " Appearance"), /* @__PURE__ */ React.createElement(ThemeDots, { settings: data.settings, setSettings })), React.createElement(SyncBadge, { onOpen: openSync })), /* @__PURE__ */ React.createElement("header", { className: "mobilebar" }, /* @__PURE__ */ h("div",{className:"bsa-shortcut-anchor mobile"},React.createElement("button", { className: "brand-mark mobile-home-button", type: "button", onClick: () => setShortcutsOpen(v=>!v), title: "Open quick shortcuts", "aria-label": "Open quick shortcuts", "aria-expanded":shortcutsOpen,"aria-haspopup":"menu" }, "Σ"),shortcutMenu()), subjectPicker("subj-m"), h("button",{className:"icon-btn",onClick:()=>setSpotlightOpen(true),"aria-label":"Search dashboard"},"⌕"), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal(syncAlert ? "sync" : "data"), "aria-label": syncAlert ? "Import, export and sync (needs attention)" : "Import and export", "data-sync": syncAlert }, /* @__PURE__ */ React.createElement(Icon, { name: "data" })), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal("look"), "aria-label": "Appearance" }, /* @__PURE__ */ React.createElement(Icon, { name: "look" }))), /* @__PURE__ */ React.createElement("main", { className: "content" },
       h("div",{className:"workspace-topbar v2-topbar"},
-        h("div",{className:"workspace-context"},h("span",{className:"workspace-eyebrow"},"BSA DESK  /"),h("strong",null,(tabs.find(t=>t[0]===nav.tab)||[null,"Today"])[1]),h("span",{className:"workspace-subject"},subject.code||subject.name)),
-        h("div",{className:"workspace-actions v2-top-actions"},h("button",{className:"v2-top-search",onClick:()=>setSpotlightOpen(true),title:"Search · Ctrl/⌘ + K","aria-label":"Search all study materials"},"⌕  Search everything",h("kbd",null,"⌘ K")),h("button",{className:"v2-top-capture",onClick:()=>go("workspace",{tab:"inbox"})},"＋ Capture"),h("button",{className:"v2-top-quick",onClick:()=>setModal("quick")},"＋"))),
+        h("div",{className:"workspace-context"},h("span",{className:"workspace-eyebrow"},"STUDY SPACE  /"),h("strong",null,(tabs.find(t=>t[0]===nav.tab)||[null,"Today"])[1]),h("span",{className:"workspace-subject"},subject.code||subject.name)),
+        h("div",{className:"workspace-actions v2-top-actions"},h("button",{className:"v2-top-search",onClick:()=>setSpotlightOpen(true),title:"Search · Ctrl/⌘ + K","aria-label":"Search all study materials"},"⌕  Search everything",h("kbd",null,"⌘ K")),h("button",{className:"v2-top-capture",onClick:()=>go("library",{tab:"inbox"})},"＋ Import"),h("button",{className:"v2-top-quick",onClick:()=>setModal("quick")},"＋"))),
       h(ScreenBoundary,{key:nav.tab,route:nav.tab,onHome:()=>go("home")},h(React.Fragment,null,
-      nav.tab === "guide" && h(FeatureGuide,{go}), nav.tab === "break" && h(BreakCorner), nav.tab === "joy" && h(JoyHub,{go}), nav.tab === "life" && h(StudyLife,{go}), nav.tab === "achievements" && h(AcademicProgress,{go}), nav.tab === "stats-clean" && h(StudyReport,{data,update,toast,go}), nav.tab === "private-vault" && !window.__BSA_SHARED_MODE__ && h(PrivateVault,{toast}), nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data,initialTool:nav.opts?.tool})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), h(WorkflowRibbon,{tab:nav.tab,go}), nav.tab === "home" && h(DashboardV2Home, { ...viewProps }), nav.tab === "split" && h(BSA186SplitStudy,{subject,toast}), nav.tab === "accounting-lab" && h(BSA187AccountingLab,{subject,update,toast}), nav.tab === "week" && h(BSA191WeeklyPlanner,{subject,update,go,openEditor,toast}), nav.tab === "knowledge" && h(BSA192KnowledgeMap,{subject,go}), nav.tab === "safety" && h(BSA193DeviceSafety,{data,go,toast}), nav.tab === "practice" && h(PracticeView, { ...viewProps, data }), nav.tab === "mcq" && h(MCQPage,{...viewProps}), nav.tab === "rules" && h(RulesLibrary,{...viewProps}), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(CalendarView, { ...viewProps }), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "workspace" && h(BSA181Workspace, { ...viewProps, initialTab:nav.opts?.tab, undoAvailable:!!undo, onGlobalUndo:doUndo }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(PsView, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })))),
+      nav.tab === "guide" && h(FeatureGuide,{go}), nav.tab === "break" && h(BreakCorner), nav.tab === "joy" && h(JoyHub,{go}), nav.tab === "life" && h(StudyLife,{go}), nav.tab === "achievements" && h(AcademicProgress,{go}), nav.tab === "stats-clean" && h(StudyReport,{data,update,toast,go}), nav.tab === "private-vault" && !window.__BSA_SHARED_MODE__ && h(PrivateVault,{toast}), nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data,initialTool:nav.opts?.tool})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), h(WorkflowRibbon,{tab:nav.tab,go}), nav.tab === "home" && h(DashboardV205Home, { ...viewProps }), nav.tab === "study" && h(BSA205Study,{...viewProps}), nav.tab === "library" && h(BSA205Library,{...viewProps}), nav.tab === "insights" && h(BSA205Mastery,{...viewProps}), nav.tab === "accounting-cycle" && h(BSA205Cycle,{...viewProps}), nav.tab === "split" && h(BSA186SplitStudy,{subject,toast,go,init:nav.opts}), nav.tab === "accounting-lab" && h(BSA187AccountingLab,{subject,update,toast,go}), nav.tab === "week" && h(BSA191WeeklyPlanner,{subject,update,go,openEditor,toast}), nav.tab === "knowledge" && h(BSA192KnowledgeMap,{subject,go}), nav.tab === "safety" && h(BSA193DeviceSafety,{data,go,toast}), nav.tab === "practice" && h(PracticeView, { ...viewProps, data }), nav.tab === "mcq" && h(MCQPage,{...viewProps}), nav.tab === "rules" && h(RulesLibrary,{...viewProps}), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(CalendarView, { ...viewProps }), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "workspace" && h(BSA181Workspace, { ...viewProps, initialTab:nav.opts?.tab, undoAvailable:!!undo, onGlobalUndo:doUndo }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(PsView, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps, key:subject.id }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })))),
       h(BSA181HighlightTool,{subject,tab:nav.tab,go,toast}),
       spotlightOpen && h(BSA181Spotlight,{data,go,onSwitch:(id,tab,opts)=>{setData(d=>({...d,activeId:id}));go(tab,opts)},onClose:()=>setSpotlightOpen(false)}),
       /* @__PURE__ */ h("nav",{className:"bottom-nav v2-bottom-nav","aria-label":"Mobile navigation",onTouchStart:touchNavStart,onTouchEnd:touchNavEnd},
-        [["home","Today","home"],["lectures","Learn","lecture"],["practice","Practice","bolt"],["rules","Rules","book"],["workspace","Workspace","cards"]].map(([k,l,ic])=>h("button",{type:"button",key:k,className:nav.tab===k?"on":"","aria-current":nav.tab===k?"page":undefined,onClick:()=>go(k)},h(Icon,{name:ic}),h("span",null,l))),
+        [["home","Today","home"],["study","Study","lecture"],["practice","Practice","bolt"],["library","Library","book"],["insights","Progress","grade"]].map(([k,l,ic])=>h("button",{type:"button",key:k,className:nav.tab===k?"on":"","aria-current":nav.tab===k?"page":undefined,onClick:()=>go(k)},h(Icon,{name:ic}),h("span",null,l))),
         h("button",{type:"button",onClick:()=>setModal("more"),className:"v2-more-mobile","aria-label":"More tools"},h(Icon,{name:"more"}),h("span",null,"More"))), /* @__PURE__ */ React.createElement("div", { className: `toast${msg ? " show" : ""}`, role: "status", "aria-live": "polite" }, msg), h(FocusBar, { data, update, toast }), modal === "quick" && /* @__PURE__ */ React.createElement(QuickAdd, { onClose: () => setModal(null), onPick: (k) => {
       if (k === "grade") {
         setModal(null);
@@ -13311,7 +14202,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
   function bsaDownloadSafeDiagnostics(error) {
     try {
       const keys=bsaBackupKeys();
-      const report={app:'BSA Study Desk',build:'v196',time:new Date().toISOString(),
+      const report={app:'BSA Study Desk',build:'v205',time:new Date().toISOString(),
         page:location.pathname,online:navigator.onLine,
         userAgent:navigator.userAgent,
         studyStorageKeyCount:keys.length,
@@ -13319,7 +14210,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
         academicProgressRecordPresent:localStorage.getItem(PROGRESS_KEY)!==null,
         error:String(error&&error.message||'Unknown display error').slice(0,600)};
       const u=URL.createObjectURL(new Blob([JSON.stringify(report,null,2)],{type:'application/json'}));
-      const a=document.createElement('a');a.href=u;a.download='BSA-Desk-Diagnostics-v196.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),5000);
+      const a=document.createElement('a');a.href=u;a.download='BSA-Desk-Diagnostics-v205.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),5000);
     } catch(e){alert('Diagnostic export unavailable: '+String(e.message||e))}
   }
   class DashboardBoundary extends React.Component {
