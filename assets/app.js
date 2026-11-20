@@ -3589,7 +3589,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
   /* V3: secondary tools are grouped and closed initially; no duplicate homepage inside More. */
   function MoreSheet({onPick,onClose,settings,setSettings,go}){
     const sections=[
-      ['Study & reading',[['lectures','Lectures','lecture'],['split','Split Study','book'],['ask','AI Tutor','ask'],['vault','Flashcards','cards'],['rules','Reference rules','book'],['workspace','Workspace','book']]],
+      ['Study & reading',[['lectures','Lectures','lecture'],['ask','AI Tutor','ask'],['vault','Flashcards','cards'],['rules','Reference rules','book'],['workspace','Workspace','book']]],
       ['Advanced practice',[['accounting-lab','Accounting Lab','pset'],['accounting-cycle','Accounting Cycle','pset'],['mcq','Multiple-choice library','cards'],['psets','Problem Sets','pset'],['mistakes','Mistake Log','mistakes']]],
       ['Planning, progress & extras',[['insights','Learning Progress','grade'],['week','Weekly Planner','calendar'],['calendar','Calendar','calendar'],['grades','Grades','grade'],['class','Classes and deadlines','subjects'],['knowledge','Knowledge Map','roadmap'],['life','Study Room','look'],['toolkit','Toolkit','book'],['safety','Data Safety','data']]]
     ];
@@ -5120,13 +5120,13 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const key=bsa197QuizKey(q);
     const items=[...(history.keys.get(key)||[]),...(history.ids.get(q.id)||[])].sort((a,b)=>(Number(a.at)||0)-(Number(b.at)||0));
     let streak=0,wrong=0;
-    for(const e of items){if(e.result==='correct'&&!e.guessed)streak++;else{streak=0;wrong++;}}
+    for(const e of items){if(e.result==='correct'&&!e.guessed&&!e.assisted)streak++;else{streak=0;wrong++;}}
     const last=items.length?items[items.length-1]:null;
     const at=last?Number(last.at)||Date.parse(last.date||'')||0:0;
     // A guess is a correct score, but not evidence of durable recall.
-    const span=!last?0:last.result==='correct'&&!last.guessed?[1,3,7,14,30][Math.min(streak-1,4)]||30:1;
+    const span=!last?0:last.result==='correct'&&!last.guessed&&!last.assisted?[1,3,7,14,30][Math.min(streak-1,4)]||30:1;
     return {key,seen:items.length,streak,wrong,at,due:!!last&&at>0&&now>=at+span*BSA197_DAY,
-      weak:!!last&&(wrong>0||!!last.guessed)&&streak<3,mastered:streak>=3,
+      weak:!!last&&(wrong>0||!!last.guessed||!!last.assisted)&&streak<3,mastered:streak>=3,
       recent:!!last&&at>0&&now-at<2*BSA197_DAY};
   }
   function bsa197Pool(pool,events,now=Date.now()){
@@ -5165,10 +5165,10 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     catch(_){return false;}
   }
   function bsa197DeleteDraft(subjectId){try{localStorage.removeItem(bsa197DraftKey(subjectId));}catch(_){}}
-  function MultipleChoiceQuiz({ subject, update, toast, go, onExit, initialSetId = 'all' }) {
+  function MultipleChoiceQuiz({ subject, update, toast, go, onExit, initialSetId = 'all', initialTopicId = 'all', initialMode = 'smart' }) {
     const all=useMemo(()=>mcqDedicatedPool(subject),[subject]);
-    const [topic,setTopic]=useState('all'),[collection,setCollection]=useState(initialSetId);
-    const [count,setCount]=useState(10),[mode,setMode]=useState('smart');
+    const [topic,setTopic]=useState(initialTopicId),[collection,setCollection]=useState(initialSetId);
+    const [count,setCount]=useState(10),[mode,setMode]=useState(initialMode);
     const [phase,setPhase]=useState('setup'),[paper,setPaper]=useState([]),[pos,setPos]=useState(0);
     const [answers,setAnswers]=useState({}),[revealed,setRevealed]=useState({}),[guessed,setGuessed]=useState({});
     const [draft,setDraft]=useState(()=>bsa197LoadDraft(subject.id));
@@ -5391,15 +5391,15 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
   }
 
   /* v153: Independent MCQ library and quiz route. */
-  function MCQPage({subject,update,toast,go}){
-    const [quizSet,setQuizSet]=useState(null);
+  function MCQPage({subject,update,toast,go,init}){
+    const [quizSet,setQuizSet]=useState(init?.setId||(init?.topicId&&init.topicId!=='all'?'all':null));
     return h("section",{className:"view mcq-page"},
       h("div",{className:"page-head"},
         h("div",null,h("span",{className:"panel-kicker"},"QUESTION COLLECTIONS"),h("h1",{className:"page-title"},"Multiple-choice questions"),
           h("p",{className:"muted"},"Browse question sets, inspect answers and explanations, or practice one question at a time."))),
       quizSet!==null ? h(React.Fragment,null,
         h("button",{className:"btn",onClick:()=>setQuizSet(null)},"← Back to MCQ library"),
-        h(MultipleChoiceQuiz,{subject,update,toast,go,initialSetId:quizSet,onExit:()=>setQuizSet(null)})) :
+        h(MultipleChoiceQuiz,{subject,update,toast,go,initialSetId:quizSet,initialTopicId:init?.topicId||'all',initialMode:init?.mode||'smart',onExit:()=>setQuizSet(null)})) :
       h(React.Fragment,null,
         h("div",{className:"mcq-page-actions"},
           h("button",{className:"btn primary",onClick:()=>setQuizSet("all")},"Start mixed MCQ quiz"),
@@ -12784,36 +12784,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
 
   /* v186: two panes reuse the existing IndexedDB PDF shelf and v33 InkPad.
      PDF object URLs are temporary and are revoked when the selection changes. */
-  function BSA186SplitStudy({subject,toast,go,init}){
-    const scopedProblem=init?.problemId?String(init.problemId):"";
-    const inkSubject=scopedProblem?{...subject,id:subject.id+":problem:"+scopedProblem}:subject;
-    const [pdfs,setPdfs]=useState([]),[chosen,setChosen]=useState(''),[url,setUrl]=useState(''),[split,setSplit]=useState(48),[error,setError]=useState(''),[busy,setBusy]=useState(false);
-    const layoutKey=bsaNextKey('split_layout_v195');
-    const [arrangement,setArrangement]=useState(()=>bsaNextRead(layoutKey,{arrangement:'auto'}).arrangement||'auto');
-    const setArrangementSaved=value=>{if(bsaNextSave(layoutKey,{arrangement:value},toast))setArrangement(value)};
-    const refresh=()=>bsaPdfList(subject.id).then(items=>{setPdfs(items);setChosen(old=>items.some(x=>x.id===old)?old:(items[0]?.id||''));setError('')}).catch(e=>setError(String(e.message||e)));
-    useEffect(()=>{refresh();const cb=e=>{if(e.detail?.subjectId===subject.id)refresh()};window.addEventListener('bsa-pdf-shelf-changed',cb);return()=>window.removeEventListener('bsa-pdf-shelf-changed',cb)},[subject.id]);
-    const chosenPdf=pdfs.find(x=>x.id===chosen);
-    useEffect(()=>{if(!chosenPdf?.blob){setUrl('');return}const next=URL.createObjectURL(chosenPdf.blob);setUrl(next);return()=>URL.revokeObjectURL(next)},[chosenPdf?.id,chosenPdf?.blob]);
-    const upload=async e=>{const files=Array.from(e.target.files||[]);e.target.value='';if(!files.length)return;setBusy(true);setError('');try{for(const f of files)await bsaPdfAdd(subject.id,f);await refresh();toast('Your PDFs are ready in Split Study.')}catch(err){setError(String(err.message||err))}finally{setBusy(false)}};
-    return h('section',{className:'view bsa186-page'},h('div',{className:'page-head'},h('div',null,h('span',{className:'v2-eyebrow'},'v186 · IPAD STUDY MODE'),h('h1',{className:'page-title'},'Split Study'),h('p',{className:'muted'},'Read a saved PDF while using the existing handwriting notebook. Both panes stay on this device.'))),
-      scopedProblem&&h('div',{className:'bsa205-problem-work'},h('div',null,h('strong',null,'Working on: '+(init?.title||'Accounting problem')),h('p',{className:'muted small'},init?.prompt||'Your dedicated, local handwriting pages are attached to this problem.')),h('button',{className:'btn',onClick:()=>go?.('accounting-lab')},'Back to Accounting Lab')),
-      h('div',{className:'bsa186-bar'},h('label',null,'Source PDF',h('select',{value:chosen,onChange:e=>setChosen(e.target.value),'aria-label':'Source PDF'},h('option',{value:''},pdfs.length?'Choose a PDF':'No saved PDF yet'),pdfs.map(x=>h('option',{key:x.id,value:x.id},x.name)))),
-        h('label',{className:'btn bsa186-upload'},busy?'Adding…':'＋ Add PDF',h('input',{type:'file',accept:'.pdf,application/pdf',multiple:true,disabled:busy,onChange:upload})),
-        url&&h('button',{type:'button',className:'btn ghost',onClick:()=>bsaPdfOpenFile(chosenPdf,false)},'Open PDF separately'),
-        h('label',{className:'bsa186-width'},'PDF width',h('input',{type:'range',min:32,max:68,step:2,value:split,onChange:e=>setSplit(Number(e.target.value)),'aria-label':'PDF pane width'}),split+'%'),
-        h('label',{className:'bsa195-layout-picker'},'Panels',h('select',{value:arrangement,onChange:e=>setArrangementSaved(e.target.value),'aria-label':'Split Study panel arrangement'},h('option',{value:'auto'},'Auto'),h('option',{value:'side'},'Side by side'),h('option',{value:'stack'},'Stacked')))),
-      error&&h('p',{className:'error',role:'alert'},error),
-      h('p',{className:'muted small bsa186-note'},'PDF files are stored in this browser’s IndexedDB, not in the JSON backup or GitHub sync. Keep original copies. On iPad, use “Open PDF separately” if the built-in browser cannot scroll a PDF.'),
-      h('div',{className:'bsa186-panes','data-layout':arrangement,style:{'--pdf-width':split+'%'}},
-        h('section',{className:'bsa186-pane bsa186-pdf','aria-label':'Reference PDF'},h('div',{className:'bsa186-pane-heading'},h('strong',null,'Reference'),h('small',null,chosenPdf?.name||'Select a source')),
-          url?h('iframe',{src:url+'#toolbar=1',title:'PDF reference: '+(chosenPdf?.name||''),loading:'eager'}):h('div',{className:'bsa186-empty'},'Add a PDF above to read it beside your notes.')),
-        h('section',{className:'bsa186-pane bsa186-notebook','aria-label':'Handwriting notebook'},h('div',{className:'bsa186-pane-heading'},h('strong',null,'Your notebook'),h('small',null,scopedProblem?'Dedicated pages for this problem':'Existing pages, pen and T-account tools')),
-          h(InkPad,{key:inkSubject.id,subject:inkSubject,toast}))));
-  }
-
-  /* v187: isolated answer-checking lab; the answers are explicitly defined.
-     Never present self-entered unverified entries as accounting evidence. */
+  /* Split Study interface retired in V3.4. Existing PDFs remain stored locally. */
   const BSA187_EXERCISES=[
     {title:'Owner investment',prompt:'The owner invested ₱50,000 cash into the business.',hint:'Which asset increased? What represents the owner’s claim?',solution:[['Cash',50000,0],['Owner’s Capital',0,50000]]},
     {title:'Rent paid',prompt:'The business paid ₱8,000 cash for this month’s rent.',hint:'Which expense increased, and what asset decreased?',solution:[['Rent Expense',8000,0],['Cash',0,8000]]},
@@ -12988,9 +12959,10 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     }
   }
   const bsa198AttemptKey=a=>a&&a.problemId?'ps:'+a.problemId:'builtin:'+Number(a?.exercise);
-  function BSA187AccountingLab({subject,update,toast,go}){
-    const [tab,setTab]=useState('journal'),[selected,setSelected]=useState(''),[filter,setFilter]=useState('all'),[search,setSearch]=useState(''),[level,setLevel]=useState('All');
+  function BSA187AccountingLab({subject,update,toast,go,init}){
+    const [tab,setTab]=useState('journal'),[selected,setSelected]=useState(''),[filter,setFilter]=useState('all'),[search,setSearch]=useState(init?.search||''),[level,setLevel]=useState('All');
     const [rows,setRows]=useState(bsa187Blank),[feedback,setFeedback]=useState(null),[reveal,setReveal]=useState(false);
+    const [queueLimit,setQueueLimit]=useState(50);
     const [importText,setImportText]=useState(''),[preview,setPreview]=useState(null),[importError,setImportError]=useState('');
     const [manual,setManual]=useState(false),[manualF,setManualF]=useState(()=>({title:'',prompt:'',topic:'',level:'Intermediate',source:'',hint:'',explanation:'',rows:bsa187Blank()}));
     const [manualError,setManualError]=useState('');
@@ -13010,7 +12982,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const current=filtered.find(x=>x.key===selected)||filtered[0]||null;
     const reset=()=>{setRows(bsa187Blank());setFeedback(null);setReveal(false)};
     const choose=key=>{setSelected(key);reset()};
-    useEffect(()=>{setSelected('');setTab('journal');setSearch('');setLevel('All');setFilter('all');reset();setPreview(null)},[subject.id]);
+    useEffect(()=>{setSelected('');setTab('journal');setSearch('');setLevel('All');setFilter('all');setQueueLimit(50);setSearch(init?.search||'');reset();setPreview(null)},[subject.id]);
     const change=(i,field,value)=>{setRows(old=>old.map((r,j)=>i===j?{...r,[field]:value}:r));setFeedback(null)};
     const verify=()=>{
       if(!current||!Array.isArray(current.solution))return;
@@ -13068,8 +13040,8 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
           h('select',{value:level,onChange:e=>{setLevel(e.target.value);setSelected('');reset()},'aria-label':'Difficulty'},['All','Beginner','Intermediate','Advanced'].map(x=>h('option',{key:x,value:x},x)))),
         h('div',{className:'bsa198-journal-grid'},
           h('aside',{className:'v2-panel bsa198-queue'},h('div',{className:'bsa198-queue-head'},h('strong',null,'Journal practice'),h('span',null,filtered.length+' available')),
-            h('div',{className:'bsa198-queue-list'},filtered.length?filtered.map(item=>{const o=stats(item);return h('button',{type:'button',key:item.key,className:'bsa198-queue-item'+(item.key===current?.key?' chosen':''),onClick:()=>choose(item.key),'aria-current':item.key===current?.key?'true':undefined},
-              h('strong',null,item.title),h('span',null,item.topic+' · '+item.level),h('small',null,!o.n?'● New':o.latest?.correct?'✓ Last attempt correct':'↻ Needs review'));}):h('p',{className:'muted small'},'No matching exercises. Change the filters or import a new problem.'))),
+            h('div',{className:'bsa198-queue-list'},filtered.length?filtered.slice(0,Math.max(queueLimit,filtered.findIndex(x=>x.key===current?.key)+1)).map(item=>{const o=stats(item);return h('button',{type:'button',key:item.key,className:'bsa198-queue-item'+(item.key===current?.key?' chosen':''),onClick:()=>choose(item.key),'aria-current':item.key===current?.key?'true':undefined},
+              h('strong',null,item.title),h('span',null,item.topic+' · '+item.level),h('small',null,!o.n?'● New':o.latest?.correct?'✓ Last attempt correct':'↻ Needs review'));}):h('p',{className:'muted small'},'No matching exercises. Change the filters or import a new problem.'),filtered.length>Math.max(queueLimit,filtered.findIndex(x=>x.key===current?.key)+1)&&h('button',{className:'btn bsa34-load-queue',onClick:()=>setQueueLimit(v=>v+50)},'Show 50 more ('+(filtered.length-Math.max(queueLimit,filtered.findIndex(x=>x.key===current?.key)+1))+' remaining)'))),
           current&&h('div',{className:'bsa198-workspace'},
             h('section',{className:'v2-panel bsa187-problem'},
               h('div',{className:'bsa198-card-top'},h('span',{className:'v2-eyebrow'},current.kind==='builtin'?'BUILT-IN PRACTICE':'YOUR PROBLEM LIBRARY'),
@@ -13088,7 +13060,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
               h('div',{className:'bsa198-row-actions'},h('button',{className:'btn ghost',disabled:rows.length>=16,onClick:()=>setRows(old=>[...old,{account:'',debit:'',credit:''}])},'+ Add journal line'),
                 h('button',{className:'btn ghost',disabled:rows.length<=2,onClick:()=>setRows(old=>old.slice(0,-1))},'Remove last line')),
               h('div',{className:'bsa187-actions'},h('button',{className:'btn primary',onClick:verify},'Check my entry'),
-                h('button',{className:'btn',onClick:()=>setReveal(v=>!v)},reveal?'Hide solution':'Reveal solution'),h('button',{className:'btn',onClick:()=>go('split',{problemId:current.kind==='stored'?current.id:'builtin-'+current.key,title:current.title,prompt:current.prompt})},'✎ Solve with Pencil'),h('button',{className:'btn ghost',onClick:next},'Next in list →')),
+                h('button',{className:'btn',onClick:()=>setReveal(v=>!v)},reveal?'Hide solution':'Reveal solution'),h('button',{className:'btn',onClick:()=>go('workspace',{tab:'scratch'})},'✎ Open scratchpad'),h('button',{className:'btn ghost',onClick:next},'Next in list →')),
               feedback&&h('p',{className:'bsa187-feedback'+(feedback.ok?' success':''),role:'status'},feedback.reason), feedback?.details?.length>0&&h('div',{className:'bsa205-check-feedback','aria-label':'Detailed entry feedback'},feedback.details.map((x,i)=>h('p',{key:i},x))),
               (feedback||reveal)&&current.explanation&&h('p',{className:'bsa196-explanation'},current.explanation),
               reveal&&h('div',{className:'bsa187-solution'},h('strong',null,'Supplied answer key'),current.solution.map(([account,dr,cr],i)=>h('div',{key:i},h('span',null,account),h('span',null,dr?'Debit ₱'+Number(dr).toLocaleString():'Credit ₱'+Number(cr).toLocaleString())))))),
@@ -13346,7 +13318,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
             h('span',{className:'v2-recent-arrow','aria-hidden':true},'↗')))):
             h('div',{className:'v2-empty-recent'},'Your recent lectures and study tools will appear here as you open them.'))),
       layoutVisible('tools')&&h('div',{className:'v2-tools-section',style:{order:layoutOrder('tools')}},h('div',{className:'v2-section-header'},h('div',null,h('span',{className:'v2-eyebrow'},'EXPLORE'),h('h2',null,'Choose your study mode')),h('span',{className:'v2-muted'},`${mcqCount} MCQs · ${problemCount} written problems · ${cards.length} cards`)),
-      h('div',{className:'v2-tool-grid'},[...tools,['split','Split Study','PDF + handwriting','book'],['accounting-lab','Accounting Lab','Journal entries & T-accounts','pset'],['week','Weekly Planner','Plan your study blocks','calendar'],['knowledge','Knowledge Map','Connect saved materials','roadmap']].map(([tab,title,description,ic])=>h('button',{type:'button',key:tab,className:'v2-tool-tile',onClick:()=>go(tab)},
+      h('div',{className:'v2-tool-grid'},[...tools,['accounting-lab','Accounting Lab','Journal entries & T-accounts','pset'],['week','Weekly Planner','Plan your study blocks','calendar'],['knowledge','Knowledge Map','Connect saved materials','roadmap']].map(([tab,title,description,ic])=>h('button',{type:'button',key:tab,className:'v2-tool-tile',onClick:()=>go(tab)},
         h('span',{className:'v2-tool-icon'},h(Icon,{name:ic,size:22})),h('strong',null,title),h('span',{className:'v2-tool-description'},description),h('span',{className:'v2-tool-arrow','aria-hidden':true},'↗'))))),
       layoutVisible('buddy')&&h('div',{className:'bsa189-wrap',style:{order:layoutOrder('buddy')}},h(BSA189Companion,{go})),
       h('div',{className:'v2-more-wrap',style:{order:99}},h('button',{type:'button',className:'v2-details-toggle',onClick:()=>setDetails(v=>!v),'aria-expanded':details},
@@ -13506,7 +13478,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
   }
   function BSA205Library({subject,update,toast,go,init}){
     const [tab,setTab]=useState(['all','inbox','sources','import','health'].includes(init?.tab)?init.tab:'all');
-    const [query,setQuery]=useState(''),[type,setType]=useState(()=>(subject.psets||[]).some(set=>(set.problems||[]).some(p=>!bsa198StoredKeyValid(p)))?'Written problem':'All'),[topicFilter,setTopicFilter]=useState('All topics'),[activeGroup,setActiveGroup]=useState(''),[visibleCount,setVisibleCount]=useState(20),[showHidden,setShowHidden]=useState(false),[handoff,setHandoff]=useState('');
+    const [query,setQuery]=useState(''),[type,setType]=useState(()=>(subject.psets||[]).some(set=>(set.problems||[]).some(p=>!bsa198StoredKeyValid(p)))?'Written problem':'All'),[topicFilter,setTopicFilter]=useState(init?.topicLabel||'All topics'),[activeGroup,setActiveGroup]=useState(init?.topicLabel||''),[visibleCount,setVisibleCount]=useState(20),[showHidden,setShowHidden]=useState(false),[handoff,setHandoff]=useState('');
     const [selectedProblems,setSelectedProblems]=useState([]),[bulkTopic,setBulkTopic]=useState('');
     const [capture,setCapture]=useState(''),[captureSource,setCaptureSource]=useState(''),[warning,setWarning]=useState('');
     const rows=useMemo(()=>bsa205LibraryItems(subject),[subject]);
@@ -13524,6 +13496,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const grouped=bsa3GroupRows(display);
     const shownGroup=activeGroup&&grouped.some(([name])=>name===activeGroup)?activeGroup:(topicFilter!=='All topics'?topicFilter:'');
     const chosenRows=shownGroup?(grouped.find(([name])=>name===shownGroup)||['',[]])[1]:[];
+    const needsTopic=rows.filter(x=>x.kind==='problem'&&x.topic==='Uncategorized'&&!hidden.has(x.key)).length;
     const updateProblemTopic=(item,newValue)=>{const label=newValue==='custom'?window.prompt('Type a chapter/topic label for this problem. It will not change the problem or answer.',item.topic==='Uncategorized'?'':item.topic):null;
       if(newValue==='custom'&&(!label||!label.trim()))return false;
       update(s=>{const set=(s.psets||[]).find(x=>x.id===item.setId);const problem=set?.problems?.find(x=>x.id===item.id);if(!problem)return;
@@ -13558,8 +13531,8 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       h('div',{className:'bsa205-pagetabs bsa3-library-main-tabs',role:'group','aria-label':'Library areas'},[['all','Written problems'],['inbox','Inbox'],['sources','Source links']].map(([key,label])=>h('button',{key,type:'button',className:tab===key?'selected':'','aria-pressed':tab===key,onClick:()=>setTab(key)},label))),
       h('details',{className:'bsa3-library-extra'},h('summary',null,'Other library tools'),h('div',null,h('button',{className:'btn',onClick:()=>setTab('import')},'Import exercises'),h('button',{className:'btn',onClick:()=>setTab('health')},'Duplicate & library cleanup'))),
       tab==='all'&&h('div',{className:'bsa205-card bsa3-library-browser'},
-        h('div',{className:'bsa205-card-head'},h('div',null,h('h2',null,'Browse by topic'),h('p',{className:'muted small'},'Open one topic folder at a time. The original questions and marked answers stay unchanged.')),
-          h('button',{className:'btn ghost',onClick:()=>setShowHidden(v=>!v)},showHidden?'Hide archived':'Show archived')),
+        h('div',{className:'bsa205-card-head'},h('div',null,h('h2',null,'Browse by topic'),h('p',{className:'muted small'},'Open a topic folder, or organize unclassified problems. Saved solutions and attempts remain intact.')),
+          h('div',{className:'bsa34-library-tools'},needsTopic>0&&h('button',{className:'btn bsa34-sort-cta',onClick:()=>{setType('Written problem');setTopicFilter('Uncategorized');setActiveGroup('Uncategorized');setVisibleCount(20)}},'Organize '+needsTopic+' unclassified'),h('button',{className:'btn ghost',onClick:()=>setShowHidden(v=>!v)},showHidden?'Hide archived':'Show archived'))),
         h('div',{className:'bsa3-library-controls'},
           h('label',null,'Material',h('select',{value:type,onChange:e=>{setType(e.target.value);setTopicFilter('All topics');setActiveGroup('');setSelectedProblems([]);setVisibleCount(20)},'aria-label':'Filter material type'},allTypes.map(x=>h('option',{key:x,value:x},x==='All'?'All material types':x+'s')))),
           h('label',null,'Topic',h('select',{value:topics.includes(topicFilter)?topicFilter:'All topics',onChange:e=>{setTopicFilter(e.target.value);setActiveGroup(e.target.value==='All topics'?'':e.target.value);setSelectedProblems([]);setVisibleCount(20)},'aria-label':'Filter by topic'},topics.map(x=>h('option',{key:x,value:x},x)))),
@@ -13568,7 +13541,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
         h('div',{className:'bsa3-topic-folders',role:'group','aria-label':'Topic folders'},grouped.map(([label,list])=>h('button',{key:label,type:'button',className:'bsa3-topic-folder'+(shownGroup===label?' selected':''),onClick:()=>{setActiveGroup(shownGroup===label?'':label);setSelectedProblems([]);setVisibleCount(20)},'aria-expanded':shownGroup===label},h('span',{className:'bsa3-topic-folder-name'},label),h('span',{className:'bsa3-topic-count'},list.length),h('span',{'aria-hidden':true},shownGroup===label?'−':'+')))),
         !grouped.length&&h('p',{className:'muted'},'No matching materials. Try a different topic or clear your search.'),
         shownGroup&&h('section',{className:'bsa3-question-pane','aria-label':'Questions in selected topic'},
-          h('h3',null,shownGroup),
+          h('div',{className:'bsa34-topic-header'},h('h3',null,shownGroup),h('button',{className:'btn bsa34-topic-session',onClick:()=>{const f=bsa34FocusChoices(subject).find(o=>o.label===shownGroup);go('study',{focusId:f?.id||'label:'+shownGroup})}},'Plan this topic ↗')),
           chosenRows.some(x=>x.kind==='problem')&&h('div',{className:'bsa3-bulk-bar'},
             h('span',null,selectedProblems.length+' selected'),
             h('button',{className:'btn',onClick:()=>setSelectedProblems(chosenRows.slice(0,visibleCount).filter(x=>x.kind==='problem').map(x=>x.key))},'Select visible'),
@@ -13742,69 +13715,93 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
           h('article',null,h('h3',null,'Statement of financial position'),h('div',null,'Net assets',h('strong',null,bsa205Money(model.assets))),h('div',null,'Liabilities',h('strong',null,bsa205Money(model.liabilities))),h('div',null,'Capital (before closing)',h('strong',null,bsa205Money(model.capital))),h('div',null,'Current-period result',h('strong',null,bsa205Money(model.profit))),h('div',{className:'total'},'Liabilities + ending equity',h('strong',null,bsa205Money(model.liabilities+model.capital+model.profit))))),
         h('p',{className:'muted small'},'Closing entries appear after transaction and adjusting steps in the Journal tab. They close nominal accounts to Income Summary and then to capital. For imported cases, the app depends on your provided account type classifications.'))));
   }
-  /* Evidence-informed workflow: brief preparation, independent retrieval,
-     corrective review. All targets are existing content, not generated copies. */
-  function bsa205SessionBlocks(subject,budget,settings){
-    const blocks=[];const minutes=Math.max(20,Math.min(90,Number(budget)||40));
-    const lectures=(subject.lectures||[]).filter(x=>!x.done);
-    const mcq=(subject.mcqSets||[]).some(x=>(x.problems||[]).length);
-    const written=(subject.psets||[]).some(x=>(x.problems||[]).some(p=>!bsa198StoredKeyValid(p)));
-    const cat=bsa198Catalog(subject),journal=(cat.journal||[]).length>0;
-    const reviews=buildReview(subject,settings?.newPerDay||10,settings?.maxPerDay||0);
-    const due=(reviews.due||[]).length+(reviews.mist||[]).length+(reviews.prob||[]).length;
-    const mistakes=(subject.mistakes||[]).filter(m=>m.status!=='Cleared').length;
-    const push=(key,title,detail,route,opts,mins,stage)=>blocks.push({key,title,detail,route,opts:opts||{},mins,stage,done:false});
-    if(lectures.length){
-      push('read','Learn one concept','Before reading, recall what you already know. Then read one unfinished lecture and explain its main idea in your own words.','lectures',{open:lectures[0].id},minutes<=20?5:10,'learn');
-    }else{
-      push('prepare','Activate what you know','Pick a topic from your materials. Before checking notes, try explaining its main idea without looking.','library',{tab:'all'},minutes<=20?4:7,'learn');
+  /* V3.4: Topic focus is metadata, never a guessed classification. Using the
+     same source record in multiple screens avoids creating duplicate problems. */
+  function bsa34FocusChoices(subject){
+    const items=[{id:'all',label:'Any topic · mix my saved materials'}], seen=new Set(['all']);
+    for(const t of subject.topics||[]){if(!t?.id||seen.has(t.id))continue;seen.add(t.id);
+      items.push({id:t.id,label:[t.code,t.title||t.name].filter(Boolean).join(' · ')||'Topic'});}
+    for(const x of bsa205LibraryItems(subject)){
+      if(!x.topic||x.topic==='Uncategorized'||x.topicId)continue;
+      const id='label:'+x.topic;if(seen.has(id))continue;seen.add(id);items.push({id,label:x.topic});
     }
-    if(mcq){
-      push('mcq','Recall without notes','Answer existing MCQs before revealing feedback. If you guessed, mark it as a guess.','mcq',{},minutes<=20?9:15,'practice');
-    }else if(written){
-      push('written','Solve a written problem','Choose a problem by topic. Work it independently before checking the stored solution.','library',{tab:'all'},minutes<=20?9:18,'practice');
-    }else if(journal){
-      push('journal','Try an accounting entry','Enter the debit and credit yourself, then use the checker to identify mistakes.','accounting-lab',{},minutes<=20?9:18,'practice');
-    }else{
-      push('explore','Pick a practice problem','Find or import a question you can attempt without using the answer key first.','library',{tab:'all'},minutes<=20?9:15,'practice');
-    }
-    if(minutes>=60 && written && mcq){
-      push('written','Apply it in a different format','Now solve one written problem without copying the MCQ answer pattern.','library',{tab:'all'},15,'practice');
-    }else if(minutes>=60 && journal && mcq){
-      push('journal','Apply it to journal entries','Switch from recognising answers to constructing your own debit and credit entry.','accounting-lab',{},15,'practice');
-    }
-    if(due){
-      push('review','Review what is due','Try recalling first; check the explanation, then rate your recall accurately.','practice',{start:'review'},minutes<=20?5:10,'review');
-    }else if(mistakes){
-      push('mistakes','Correct an earlier mistake','Reattempt a previously missed question and explain why your old reasoning failed.','mistakes',{},minutes<=20?5:10,'review');
-    }else{
-      push('reflect','Check your own recall','Without reopening the answer, explain one thing you learned, and name one point you need to revisit.','study',{},minutes<=20?5:8,'review');
-    }
-    // For short sessions, preserve each learning stage; for longer sessions,
-    // shrink task estimates rather than silently skipping reflection.
-    const sum=blocks.reduce((v,x)=>v+x.mins,0);
-    if(sum>minutes){const scale=minutes/sum;const target=blocks.map(b=>Math.max(3,Math.floor(b.mins*scale)));
-      let extra=minutes-target.reduce((a,b)=>a+b,0);for(let i=0;extra>0;i=(i+1)%target.length){target[i]++;extra--}
-      return blocks.map((b,i)=>({...b,mins:target[i]}));}
+    return items;
+  }
+  function bsa34TopicMatch(item,focus,subject,source){
+    if(!focus||focus==='all')return true;
+    const topicId=item?.topicId||(item?.subtopic?'':source?.topicId)||'';
+    const label=bsa3TopicLabel(subject,topicId,item?.subtopic||item?.topicText||source?.topicText||source?.topic||'');
+    return focus.startsWith('label:')?label.toLowerCase()===focus.slice(6).toLowerCase():topicId===focus;
+  }
+  function bsa34TopicTitle(subject,focus){return bsa34FocusChoices(subject).find(x=>x.id===focus)?.label||'All saved topics';}
+  function bsa34PlanBlocks(subject,budget,settings,focus='all'){
+    const blocks=[],minutes=Math.max(20,Math.min(90,Number(budget)||40));
+    const lecture=(subject.lectures||[]).find(x=>!x.done&&bsa34TopicMatch(x,focus,subject));
+    const mcq=mcqDedicatedPool(subject).find(x=>bsa34TopicMatch(x,focus,subject));
+    const psets=subject.psets||[];
+    let written=null;
+    for(const set of psets){const p=(set.problems||[]).find(x=>!bsa198StoredKeyValid(x)&&bsa34TopicMatch(x,focus,subject,set));if(p){written={set,p};break}}
+    const journal=bsa198Catalog(subject).journal.find(x=>focus==='all'||bsa198Fingerprint(x.topic||'')===bsa198Fingerprint(bsa34TopicTitle(subject,focus)));
+    const mistakes=(subject.mistakes||[]).filter(x=>x.status!=='Cleared'&&bsa34TopicMatch(x,focus,subject));
+    const relatedCards=(subject.cards||[]).filter(x=>bsa34TopicMatch(x,focus,subject));
+    const push=(key,title,detail,route,opts,mins,stage,ref)=>blocks.push({key,title,detail,route,opts:opts||{},mins,stage,ref:ref||'',done:false});
+    const focusLabel=bsa34TopicTitle(subject,focus);
+    if(lecture)push('read','Study one lesson','First recall what you already know, then read and explain one key idea.','lectures',{open:lecture.id},minutes<=20?5:10,'learn',lecture.id);
+    else push('prepare','Activate your knowledge',focus==='all'?'Choose a concept, then explain what you already know before opening notes.':'No unfinished lecture is tagged '+focusLabel+'. Use your existing topic materials, or add a lesson in Library.','library',{tab:'all',topicLabel:focus.startsWith('label:')?focus.slice(6):focusLabel},minutes<=20?4:7,'learn');
+    if(mcq)push('mcq','Retrieve from memory','Answer MCQs without notes. Mark lucky guesses honestly.','mcq',{setId:mcq.setId,topicId:focus==='all'?'all':focus.startsWith('label:')?'all':focus},minutes<=20?9:15,'practice',mcq.id);
+    else if(written)push('written','Solve a written problem','Use the original problem and attempt it before revealing the solution.','psets',{open:written.set.id,problemId:written.p.id},minutes<=20?9:18,'practice',written.p.id);
+    else if(journal)push('journal','Prepare a journal entry','Enter your debit and credit before checking the source key.','accounting-lab',{search:journal.title||journal.topic||''},minutes<=20?9:18,'practice',journal.kind==='stored'?journal.id:'builtin:'+journal.index);
+    else push('explore','Find a practice question',focus==='all'?'Choose an existing problem rather than importing a duplicate.':'No practice question is linked to '+focusLabel+' yet. Open the topic folder and choose or classify an original.','library',{tab:'all',topicLabel:focus.startsWith('label:')?focus.slice(6):focusLabel},minutes<=20?9:15,'practice');
+    if(minutes>=60&&mcq&&written)push('written','Apply the same topic differently','Try constructing a complete written answer after your MCQ practice.','psets',{open:written.set.id,problemId:written.p.id},15,'practice',written.p.id);
+    else if(minutes>=60&&mcq&&journal)push('journal','Apply the idea to journal entries','Move from recognition to constructing your own entry.','accounting-lab',{search:journal.title||journal.topic||''},15,'practice',journal.kind==='stored'?journal.id:'builtin:'+journal.index);
+    if(mistakes.length)push('mistakes','Reattempt an earlier mistake','Try the same topic again without looking at your previous answer.','mistakes',{},minutes<=20?5:10,'review',mistakes[0].id);
+    else if(relatedCards.length)push('cards','Recall it again','Review flashcards for this topic, rating what you really remember.','vault',{},minutes<=20?5:10,'review',relatedCards[0].id);
+    else push('reflect','Explain what you remember','Without notes, explain one idea and name a part you still need to check.','study',{},minutes<=20?5:8,'review');
+    const sum=blocks.reduce((n,b)=>n+b.mins,0);
+    if(sum>minutes){const scaled=blocks.map(b=>Math.max(3,Math.floor(b.mins*minutes/sum)));
+      let remaining=minutes-scaled.reduce((a,b)=>a+b,0);for(let i=0;remaining>0;i=(i+1)%scaled.length){scaled[i]++;remaining--}
+      return blocks.map((b,i)=>({...b,mins:scaled[i]}));}
     return blocks;
   }
-  function BSA205Study({subject,update,settings,go,toast}){
+  function bsa205SessionBlocks(subject,budget,settings,focus='all'){return bsa34PlanBlocks(subject,budget,settings,focus)}
+  /* Actual attempt evidence is computed from existing events, not a new grading
+     system. A wrong answer still counts as an attempt, never as mastery. */
+  function bsa34BlockEvidence(subject,session,block){
+    if(!block||!session)return false;
+    const since=Number(session.createdAt)||0;
+    const id=session.focusId||'all';
+    const events=(subject.learningEvents||[]).filter(e=>(Number(e.at)||0)>=since&&['correct','incorrect','partial'].includes(e.result));
+    const matches=e=>bsa34TopicMatch(e,id,subject);
+    if(block.key==='mcq'){
+      const matched=new Set(mcqDedicatedPool(subject).filter(q=>(!block.opts?.setId||q.setId===block.opts.setId)&&bsa34TopicMatch(q,id,subject)).map(q=>q.id));
+      return events.some(e=>e.kind==='mcq'&&(matched.size?matched.has(e.sourceId):block.ref?e.sourceId===block.ref:matches(e)));
+    }
+    if(block.key==='written')return events.some(e=>e.kind==='problem'&&(block.ref?e.sourceId===block.ref:matches(e)));
+    if(block.key==='cards')return events.some(e=>e.kind==='flashcard'&&(block.ref?e.sourceId===block.ref:matches(e)));
+    if(block.key==='journal')return (subject.labAttempts||[]).some(a=>Number(a.date)>=since&&(
+      block.ref?.startsWith('builtin:')?Number(a.exercise)===Number(block.ref.slice(8)):a.problemId===block.ref));
+    return false;
+  }
+  function BSA205Study({subject,update,settings,go,toast,init}){
     const [budget,setBudget]=useState(40),[reflection,setReflection]=useState('');
+    const [focusId,setFocusId]=useState(init?.focusId||'all');
+    const focusChoices=useMemo(()=>bsa34FocusChoices(subject),[subject]);
+    useEffect(()=>{if(init?.focusId&&focusChoices.some(x=>x.id===init.focusId))setFocusId(init.focusId)},[init?.focusId,subject.id]);
     const sessions=(subject.practiceSessions||[]).slice().sort((a,b)=>(Number(b.lastAt||b.createdAt)||0)-(Number(a.lastAt||a.createdAt)||0));
     const journey=bsa33Journey(subject);
     const active=journey.session;
-    const proposal=useMemo(()=>bsa205SessionBlocks(subject,budget,settings),[subject,budget,settings]);
+    const proposal=useMemo(()=>bsa205SessionBlocks(subject,budget,settings,focusId),[subject,budget,settings,focusId]);
     const create=()=>{
       if(active){toast('Finish or file your existing plan before creating a new one.');return}
       if(!proposal.length){toast('Add some lessons or questions first, then build a plan.');return}
-      const newSession={id:uid('session205'),createdAt:Date.now(),lastAt:Date.now(),budget,blocks:proposal.map(b=>({...b,done:false})),archived:false};
+      const newSession={id:uid('session205'),createdAt:Date.now(),lastAt:Date.now(),budget,focusId,focusLabel:bsa34TopicTitle(subject,focusId),blocks:proposal.map(b=>({...b,done:false})),archived:false};
       update(s=>{s.practiceSessions=[...(s.practiceSessions||[]),newSession]});
       setReflection('');toast('Your three-stage study plan is ready. Begin with the first task.');
     };
     const toggle=(id,blockKey)=>update(s=>{const session=(s.practiceSessions||[]).find(x=>x.id===id);if(!session||session.archived)return;
       const b=(session.blocks||[]).find(x=>x.key===blockKey);if(b)b.done=!b.done;session.lastAt=Date.now()});
     const archive=id=>{update(s=>{const x=(s.practiceSessions||[]).find(r=>r.id===id);if(x){x.archived=true;x.lastAt=Date.now()}});toast('Session filed. Your saved answers, scores and notes are unchanged.');};
-    const start=active?.blocks?.find(b=>!b.done)||null;
+    const start=journey.next;
     const completed=active?journey.done:0;
     useEffect(()=>setReflection(active?.reflection||''),[active?.id]);
     const saveReflection=()=>{if(!active)return;update(s=>{const x=(s.practiceSessions||[]).find(r=>r.id===active.id);if(x){x.reflection=reflection.slice(0,1000);x.lastAt=Date.now()}});toast('Reflection saved in this study plan. It does not count as a quiz score.');};
@@ -13816,18 +13813,18 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       active?h('div',{className:'bsa33-session-board'},
         h('div',{className:'bsa33-session-top'},
           h('div',null,h('span',{className:'bsa33-eyebrow'},'YOUR CURRENT STUDY PLAN'),h('h2',null,'You are making progress.'),
-            h('p',null,'Planned: '+(Number(active.budget)||40)+' minutes · '+completed+' of '+journey.total+' activities marked done')),
+            h('p',null,'Focus: '+(active.focusLabel||'Mixed topics')+' · '+(Number(active.budget)||40)+' minutes · '+completed+' of '+journey.total+' activities attempted or checked')),
           h('span',{className:'bsa33-session-percent'},journey.percent+'%')),
         h('div',{className:'bsa33-session-meter',role:'progressbar','aria-valuenow':journey.percent,'aria-valuemin':0,'aria-valuemax':100,'aria-label':'Activities marked complete, not evidence of mastery'},h('span',{style:{width:journey.percent+'%'}})),
         start&&h('div',{className:'bsa33-next-block'},
-          h('div',null,h('span',{className:'bsa33-eyebrow'},'NEXT TASK'),h('h3',null,start.title),h('p',null,start.detail||'Continue the next study activity.')),
-          h('button',{className:'bsa33-button bsa33-button-primary',onClick:()=>go(start.route,start.opts||{})},'Open this task',h('span',{'aria-hidden':'true'},'↗'))),
-        h('div',{className:'bsa33-task-list','aria-label':'Current study tasks'},active.blocks.map((block,i)=>h('div',{key:block.key||i,className:'bsa33-task'+(block.done?' is-done':'')+(block===start?' is-next':'')},
+          h('div',null,h('span',{className:'bsa33-eyebrow'},'NEXT TASK · '+(active.focusLabel||'YOUR SUBJECT')),h('h3',null,start.title),h('p',null,start.detail||'Continue the next study activity.')),
+          h('button',{className:'bsa33-button bsa33-button-primary',onClick:()=>go(start.route,start.opts||{})},'Continue: '+start.title,h('span',{'aria-hidden':'true'},'↗'))),
+        h('div',{className:'bsa33-task-list','aria-label':'Current study tasks'},journey.blocks.map((block,i)=>h('div',{key:block.key||i,className:'bsa33-task'+(block.effectiveDone?' is-done':'')+(block===start?' is-next':'')},
           h('span',{className:'bsa33-task-index'},String(i+1).padStart(2,'0')),
           h('div',{className:'bsa33-task-text'},h('strong',null,block.title),h('small',null,block.detail||'Existing study material')),
-          h('button',{className:'bsa33-task-open',type:'button',onClick:()=>go(block.route,block.opts||{})},'Open',h('span',{'aria-hidden':'true'},'↗')),
-          h('label',{className:'bsa33-task-done'},h('input',{type:'checkbox',checked:!!block.done,onChange:()=>toggle(active.id,block.key),'aria-label':'Mark '+block.title+' complete after doing it'}),h('span',null,block.done?'Done':'Mark done'))))),
-        h('div',{className:'bsa33-session-footer'},h('span',null,'Completion is self-reported. Quiz and Lab accuracy are tracked separately.'),
+          h('button',{className:'bsa33-task-open',type:'button',onClick:()=>go(block.route,block.opts||{})},'Open '+(block.stage==='learn'?'lesson':block.stage==='review'?'review':'problem'),h('span',{'aria-hidden':'true'},'↗')),
+          h('label',{className:'bsa33-task-done'},h('input',{type:'checkbox',checked:!!block.effectiveDone,disabled:!!block.evidence,onChange:()=>toggle(active.id,block.key),'aria-label':'Mark '+block.title+' complete after doing it'}),h('span',null,block.evidence?'Attempt recorded':block.done?'Done':'Mark done'))))),
+        h('div',{className:'bsa33-session-footer'},h('span',null,'Answered practice is recognized automatically. Checked tasks are self-reported; neither implies mastery.'),
           h('button',{className:'bsa33-text-button',onClick:()=>archive(active.id)},journey.percent===100?'Finish and file plan':'File this plan')),
         journey.percent===100&&h('section',{className:'bsa33-reflect', 'aria-label':'End of session reflection'},
           h('span',{className:'bsa33-eyebrow'},'STEP 03 · REFLECT & REVISIT'),
@@ -13838,7 +13835,8 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
           h('button',{className:'bsa33-button bsa33-button-outline',onClick:()=>go('practice',{start:'review'})},'Practice spaced reviews ↗')),
           h('small',null,'Retention comes from repeated retrieval over time—not from marking a checklist complete.'))):
         h('div',{className:'bsa33-create-board'},
-          h('div',{className:'bsa33-create-copy'},h('span',{className:'bsa33-eyebrow'},'LET’S PLAN YOUR STUDY TIME'),h('h2',null,'Build a focused session'),h('p',null,'Your next session will include preparation, independent recall, and corrective review using materials you already saved.')),
+          h('div',{className:'bsa33-create-copy'},h('span',{className:'bsa33-eyebrow'},'LET’S PLAN YOUR STUDY TIME'),h('h2',null,'Build a focused session'),h('p',null,'Choose a topic. The plan links to matching materials where available and will never quietly pick a different topic.')),
+          h('label',{className:'bsa34-focus-field'},'Focus on one topic',h('select',{value:focusChoices.some(x=>x.id===focusId)?focusId:'all',onChange:e=>setFocusId(e.target.value),'aria-label':'Choose a topic for this study plan'},focusChoices.map(x=>h('option',{key:x.id,value:x.id},x.label)))),
           h('label',{className:'bsa33-time-field'},'How much time do you have?',h('select',{value:budget,onChange:e=>setBudget(Number(e.target.value))},[20,40,60,90].map(m=>h('option',{key:m,value:m},m+' minutes')))),
           h('div',{className:'bsa33-proposal-list'},proposal.length?proposal.map((block,i)=>h('div',{key:block.key||i},h('span',null,String(i+1).padStart(2,'0')),h('div',null,h('strong',null,block.title),h('small',null,block.mins+' minutes · '+block.detail)))):
             h('p',null,'No suitable study material is saved for this subject yet. Add a lesson or question in Library first.')),
@@ -13847,11 +13845,24 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
         h('div',{className:'bsa33-what-next'},h('span',{className:'bsa33-eyebrow'},'WHEN YOU ARE READY'),h('h3',null,'Practice what you studied'),h('p',null,'Choose an existing MCQ, written problem or journal-entry exercise. Finish with a review of mistakes.'),
           h('div',{className:'bsa33-actions'},h('button',{className:'bsa33-button bsa33-button-secondary',onClick:()=>go('practice')},'Choose practice ↗'),h('button',{className:'bsa33-button bsa33-button-outline',onClick:()=>go('mistakes')},'Review mistakes ↗'))),
         h('div',{className:'bsa33-utility-panel'},h('h3',null,'Need a specific tool?'),h('p',null,'These are shortcuts, not extra study dashboards.'),h('div',{className:'bsa33-tool-links'},
-          [['Find a lecture','lectures'],['Search written problems','library'],['Open AI Tutor','ask'],['Split Study on iPad','split']].map(([label,tab])=>h('button',{key:tab,onClick:()=>go(tab)},label,' ↗'))))),
+          [['Find a lecture','lectures'],['Search written problems','library'],['Open AI Tutor','ask'],['Open scratchpad','workspace']].map(([label,tab])=>h('button',{key:tab,onClick:()=>go(tab,tab==='workspace'?{tab:'scratch'}:{})},label,' ↗'))))),
       h('details',{className:'bsa33-history'},h('summary',null,'Previous study plans ('+sessions.length+')'),
         sessions.length?h('div',{className:'bsa33-history-list'},sessions.slice(0,12).map(s=>h('div',{key:s.id},h('strong',null,bsa205Date(s.createdAt)),h('span',null,(s.blocks||[]).filter(b=>b.done).length+' / '+(s.blocks||[]).length+' completed'),h('small',null,s.archived?'Filed':'Current')))):h('p',null,'Your study session history will appear here.')));
   }
+  function bsa34LearningSnapshot(subject,now=Date.now()){
+    const pool=bsa197Pool(mcqDedicatedPool(subject),subject.learningEvents||[],now);
+    const mcq={unseen:0,due:0,weak:0,strong:0};
+    for(const q of pool){const r=q._recall;if(!r.seen)mcq.unseen++;if(r.due)mcq.due++;if(r.weak)mcq.weak++;if(r.mastered)mcq.strong++;}
+    const weeks=[28,21,14,7].map((days,i)=>{
+      const begin=now-days*BSA197_DAY,end=now-(days-7)*BSA197_DAY;
+      const events=(subject.learningEvents||[]).filter(e=>e.kind==='mcq'&&Number(e.at)>=begin&&Number(e.at)<end);
+      const independent=events.filter(e=>e.result==='correct'&&!e.guessed&&!e.assisted).length;
+      return {label:'Week '+(i+1),count:events.length,independent};
+    });
+    return {pool:pool.length,mcq,weeks,events:(subject.learningEvents||[]).filter(e=>e.kind==='mcq')};
+  }
   function BSA205Mastery({subject,go}){
+    const recall=useMemo(()=>bsa34LearningSnapshot(subject),[subject]);
     const events=(subject.learningEvents||[]).filter(e=>['correct','incorrect','partial'].includes(e.result));
     const lab=subject.labAttempts||[],mistakes=subject.mistakes||[],cards=subject.cards||[];
     const topics=(subject.topics||[]).filter(t=>t.kind!=='exam');
@@ -13868,11 +13879,22 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const labGood=lab.filter(x=>x.correct).length;
     return h('section',{className:'view bsa205-page'},
       h('div',{className:'bsa205-page-head'},h('div',null,h('span',{className:'bsa205-overline'},'BASED ON SAVED PRACTICE'),h('h1',null,'Learning Insights'),h('p',null,'A clearer picture of what you know, what you guessed, and what deserves another attempt.'))),
+      h('section',{className:'bsa34-memory-panel','aria-label':'Learning memory overview'},
+        h('div',{className:'bsa34-memory-heading'},h('div',null,h('span',{className:'bsa33-eyebrow'},'SMART RECALL · REAL ANSWER HISTORY'),h('h2',null,'What should I remember next?'),
+          h('p',null,'Based on your saved MCQ attempts. A confident answer is not the same as permanent mastery.')),
+          h('button',{className:'bsa34-memory-action',onClick:()=>go('mcq',{mode:'due'})},'Open due MCQs ↗')),
+        h('div',{className:'bsa34-memory-cards'},[
+          [recall.mcq.due,'Due now','Ready for another recall'],[recall.mcq.weak,'Needs practice','Previously missed or guessed'],
+          [recall.mcq.unseen,'Not yet tried','Fresh questions available'],[recall.mcq.strong,'3+ confident recalls','A practice streak, not a predicted grade']
+        ].map(([value,label,info])=>h('div',{key:label,className:'bsa34-memory-card'},h('strong',null,value),h('span',null,label),h('small',null,info)))),
+        h('div',{className:'bsa34-weekly'},h('div',null,h('strong',null,'Independent recall · past 4 weeks'),h('small',null,'These are counts of recorded correct attempts without hints/guesses. Weeks with no attempts show zero.')),
+          h('div',{className:'bsa34-week-bars'},recall.weeks.map(w=>h('div',{key:w.label,className:'bsa34-week'},h('div',{className:'bsa34-week-track'},h('span',{style:{height:(w.count?Math.max(6,Math.round(w.independent/Math.max(...recall.weeks.map(x=>x.count),1)*100)):0)+'%'}})),h('strong',null,w.independent+' / '+w.count),h('small',null,w.label))))),
+        h('p',{className:'bsa34-memory-note'},'No study-hour or XP data is used to estimate recall. Topics without tagged attempts remain unclassified.')),
       h('div',{className:'bsa205-snapshot'},[['Recall attempts',total],['Independent correct',confidence],['Events in 7 days',recent],['Journal checks',lab.length]].map(([title,count])=>h('div',{className:'bsa205-snapshot-item',key:title},h('strong',null,count),h('span',null,title)))),
       h('div',{className:'bsa205-master-grid'},
         h('div',{className:'bsa205-card'},h('h2',null,'Your topic evidence'),h('p',{className:'muted small'},'Only linked questions are attributed to topics. Unlinked records stay explicitly unlinked; this is evidence, not a predicted exam score.'),
           groups.length?groups.map(x=>{const pct=x.reviewed?Math.round(x.correct/x.reviewed*100):0;return h('div',{className:'bsa205-master-row',key:x.id},h('div',null,h('strong',null,x.title),h('small',null,x.correct+' independent correct · '+x.wrong+' missed · '+x.assisted+' guessed/assisted · '+x.mistakes+' open mistakes')),
-            h('div',{className:'bsa205-progress',role:'progressbar','aria-label':'Independent correct fraction for '+x.title,'aria-valuemin':0,'aria-valuemax':100,'aria-valuenow':pct},h('div',{style:{width:pct+'%'}})),h('small',null,x.reviewed?pct+'% of recorded attempts':'No rated attempts yet'));}):h('p',{className:'muted'},'Answer some quizzes or rate flashcards with linked topics to see evidence here.')),
+            h('div',{className:'bsa205-progress',role:'progressbar','aria-label':'Independent correct fraction for '+x.title,'aria-valuemin':0,'aria-valuemax':100,'aria-valuenow':pct},h('div',{style:{width:pct+'%'}})),h('small',null,x.reviewed?pct+'% of recorded attempts':'No rated attempts yet'),x.id!=='unlinked'&&h('button',{className:'bsa34-topic-session',onClick:()=>go('study',{focusId:x.id})},'Study this topic ↗'));}):h('p',{className:'muted'},'Answer some quizzes or rate flashcards with linked topics to see evidence here.')),
         h('div',{className:'bsa205-card'},h('h2',null,'Interpret your results'),
           h('div',{className:'bsa205-health-row'},h('span',{className:'bsa205-health-number'},labGood),h('div',null,h('strong',null,'Correct journal-entry checks'),h('p',{className:'muted small'},lab.length+' total attempts, including retries. A correct supplied key is not a guarantee of a correct textbook solution.'))),
           h('div',{className:'bsa205-health-row'},h('span',{className:'bsa205-health-number'},mistakes.filter(x=>x.status!=='Cleared').length),h('div',null,h('strong',null,'Open corrections'),h('p',{className:'muted small'},'Saved Mistake Log items that still need deliberate review.'))),
@@ -13888,15 +13910,17 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       .filter(x=>x&&!x.archived&&Array.isArray(x.blocks)&&x.blocks.length)
       .slice().sort((a,b)=>(Number(b.lastAt||b.createdAt)||0)-(Number(a.lastAt||a.createdAt)||0));
     const session=sessions[0]||null;
-    const blocks=session?session.blocks.filter(Boolean):[];
-    const done=blocks.filter(b=>b.done).length;
-    const next=blocks.find(b=>!b.done)||null;
-    return {session,blocks,done,next,total:blocks.length,percent:blocks.length?Math.round(done/blocks.length*100):0};
+    const blocks=session?session.blocks.filter(Boolean).map(b=>{const evidence=bsa34BlockEvidence(subject,session,b);
+      return {...b,evidence,effectiveDone:!!b.done||evidence}}):[];
+    const done=blocks.filter(b=>b.effectiveDone).length;
+    const verified=blocks.filter(b=>b.evidence).length;
+    const next=blocks.find(b=>!b.effectiveDone)||null;
+    return {session,blocks,done,verified,next,total:blocks.length,percent:blocks.length?Math.round(done/blocks.length*100):0};
   }
-  const BSA33_ROUTE_NAMES={home:'Today',study:'Study plan',practice:'Practice',library:'Study Library',mcq:'MCQ quiz',psets:'Written problems',lectures:'Lectures',vault:'Flashcards',mistakes:'Mistake review','accounting-lab':'Accounting Lab','accounting-cycle':'Accounting Cycle',split:'Split Study',ask:'AI Tutor',insights:'Learning insights',week:'Weekly planner',roadmap:'Roadmap',knowledge:'Knowledge map'};
+  const BSA33_ROUTE_NAMES={home:'Today',study:'Study plan',practice:'Practice',library:'Study Library',mcq:'MCQ quiz',psets:'Written problems',lectures:'Lectures',vault:'Flashcards',mistakes:'Mistake review','accounting-lab':'Accounting Lab','accounting-cycle':'Accounting Cycle',ask:'AI Tutor',insights:'Learning insights',week:'Weekly planner',roadmap:'Roadmap',knowledge:'Knowledge map'};
   function bsa33RouteName(tab){return BSA33_ROUTE_NAMES[tab]||String(tab||'Study tool').replace(/-/g,' ').replace(/\b\w/g,s=>s.toUpperCase())}
   function BSA31StudyPath({tab,opts,go,subject}){
-    const step=(['study','lectures','ask','split','library','rules'].includes(tab))?1:
+    const step=(['study','lectures','ask','library','rules'].includes(tab))?1:
       (['mistakes','vault'].includes(tab)||tab==='practice'&&opts?.start==='review')?3:
       (['practice','mcq','psets','accounting-lab','accounting-cycle'].includes(tab))?2:0;
     if(!step)return null;
@@ -13904,7 +13928,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const flow=[['Learn','study','Plan and read'],['Practice','practice','Solve and test'],['Review','mistakes','Remember and improve']];
     return h('nav',{className:'bsa33-route-nav','aria-label':'Learn, practice, review navigation'},
       h('div',{className:'bsa33-route-head'},h('span',{className:'bsa33-route-kicker'},'YOUR LEARNING PATH'),
-        h('span',{className:'bsa33-route-caption'},journey.next?journey.done+' of '+journey.total+' planned tasks finished':'Follow the stages at your own pace')),
+        h('span',{className:'bsa33-route-caption'},journey.next?journey.done+' of '+journey.total+' tasks attempted or checked':'Follow the stages at your own pace')),
       h('div',{className:'bsa33-route-track'},flow.map(([name,target,desc],i)=>h('button',{
         key:target,type:'button',className:'bsa33-route-node'+(step===i+1?' is-current':''),
         'aria-current':step===i+1?'step':undefined,
@@ -13913,7 +13937,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
           h('span',{className:'bsa33-route-index'},String(i+1).padStart(2,'0')),
           h('span',{className:'bsa33-route-name'},name),
           i<2&&h('span',{className:'bsa33-route-arrow','aria-hidden':'true'},'→')))),
-      journey.next&&h('button',{className:'bsa33-route-continue',type:'button',onClick:()=>go('study')},'Continue my plan',h('span',{'aria-hidden':'true'},'↗')));
+      journey.next&&h('button',{className:'bsa33-route-continue',type:'button',onClick:()=>go(journey.next.route,journey.next.opts||{})},'Continue: '+journey.next.title,h('span',{'aria-hidden':'true'},'↗')));
   }
   /* V3.2: daily encouragement uses the Manila calendar day, so it stays
      consistent across the user's desktop, iPad and Android devices. It is
@@ -13981,7 +14005,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const written=(subject.psets||[]).reduce((n,set)=>n+(set.problems||[]).filter(p=>!bsa198StoredKeyValid(p)).length,0);
     const recent=bsa181Read().recent.filter(x=>x.subjectId===subject.id&&!['home','guide'].includes(x.tab)).slice(0,2);
     const journey=bsa33Journey(subject);
-    const next=journey.next?{title:'Continue your active study plan',description:(journey.done)+' of '+journey.total+' tasks finished · Next: '+journey.next.title,route:'study',label:'Continue my session'}:
+    const next=journey.next?{title:'Continue your active study plan',description:(journey.done)+' of '+journey.total+' tasks finished · Next: '+journey.next.title,route:journey.next.route,opts:journey.next.opts||{},label:'Continue: '+journey.next.title}:
       journey.session?{title:'Finish with a teach-back',description:'All tasks are checked off. Explain the topic from memory and file your plan.',route:'study',label:'Reflect & finish'}:
       mistakes?{title:'Revisit your saved mistakes',description:mistakes+' unresolved question'+(mistakes===1?'':'s')+' to learn from.',route:'mistakes',label:'Open mistake review'}:
       due?{title:'Your spaced review is ready',description:due+' review items are waiting.',route:'practice',opts:{start:'review'},label:'Start due reviews'}:
@@ -14015,13 +14039,13 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
           h('button',{className:'bsa31-quiet-link',onClick:()=>go('library',{tab:'all'})},'Find a written problem by topic  ↗')),
         h('section',{className:'bsa31-at-glance bsa33-context-panel'},
           h('span',{className:'bsa205-overline'},journey.next?'YOUR CURRENT SESSION':'YOUR MATERIALS AT A GLANCE'),
-          journey.next&&h('div',{className:'bsa33-context-session'},h('strong',null,'Next: '+journey.next.title),h('p',null,journey.next.detail||'Return to the active plan and complete the next activity.'),h('button',{className:'btn primary',onClick:()=>go('study')},'Continue session ↗')), 
+          journey.next&&h('div',{className:'bsa33-context-session'},h('strong',null,'Focus: '+(journey.session.focusLabel||'Mixed topics')+' · '+journey.next.title),h('p',null,journey.next.detail||'Continue the active plan.'),h('button',{className:'btn primary',onClick:()=>go(journey.next.route,journey.next.opts||{})},'Open next task ↗')), 
           h('div',{className:'bsa31-mini-metrics'},[
             [written,'Written problems'],[due,'Due reviews'],[mistakes,'Open mistakes']
           ].map(([n,label])=>h('div',{key:label},h('strong',null,n),h('span',null,label)))),
           h('p',null,'These are counts, not extra places to start. Use the three study steps above.'))),
       h('details',{className:'bsa31-home-extras'},h('summary',null,'Looking for an advanced feature?'),h('div',{className:'bsa205-action-row'},[
-        ['Library & materials','library'],['Accounting Cycle Studio','accounting-cycle'],['Weekly study plan','week'],['Learning insights','insights'],['iPad Split Study','split'],['Data safety','safety']
+        ['Library & materials','library'],['Accounting Cycle Studio','accounting-cycle'],['Weekly study plan','week'],['Learning insights','insights'],['Data safety','safety']
       ].map(([label,route])=>h('button',{className:'btn',key:route,onClick:()=>go(route)},label)))),
       h('p',{className:'bsa31-data-note'},'Study plans link to your existing materials. Completing a task requires your confirmation; it never adds XP automatically.'));
   }
@@ -14040,11 +14064,15 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       {icon:'↻',theme:'review',title:'Flashcards & spaced review',desc:due?'Resume questions due for review.':'Open your flashcards and study what you want to remember.',meta:due+' review items due',action:due?'Start due reviews':'Open flashcards',tab:due?'practice':'vault',opts:due?{start:'review'}:{}}
     ];
     const journey=bsa33Journey(subject);
+    const focus=journey.session?.focusId||'all';
+    const focusLabel=journey.session?.focusLabel||'Your subject';
+    const mcqMatching=focus==='all'||mcqDedicatedPool(subject).some(q=>bsa34TopicMatch(q,focus,subject));
+    const focusedMcq=focus!=='all'&&mcqMatching?{topicId:focus.startsWith('label:')?'all':focus}:{};
     return h('section',{className:'view bsa3-practice bsa31-practice bsa33-practice'},
       h('header',{className:'bsa31-practice-hero'},h('span',{className:'bsa205-overline'},'STEP 02 / ACTIVE PRACTICE'),h('h1',null,'Choose how you want to ',h('span',null,'practice.')),
         h('p',null,'Pick one practice format. Your original questions stay in their libraries, while mistakes feed into Review.')),
-      journey.next&&h('div',{className:'bsa33-practice-session'},h('span',null,'ACTIVE PLAN · '+journey.done+'/'+journey.total+' TASKS COMPLETE'),h('strong',null,'Next planned activity: '+journey.next.title),h('button',{onClick:()=>go('study')},'View session plan ↗')),
-      h('div',{className:'bsa31-practice-grid'},activities.map((x,i)=>h('button',{type:'button',key:x.theme,className:'bsa31-practice-tile '+x.theme,onClick:()=>go(x.tab,x.opts||{}), 'aria-label':x.action},
+      journey.next&&h('div',{className:'bsa33-practice-session'},h('span',null,'ACTIVE PLAN · '+journey.done+'/'+journey.total+' TASKS COMPLETE'),h('strong',null,'Focus: '+focusLabel+' · Next: '+journey.next.title),h('button',{onClick:()=>go('study')},'View session plan ↗')),
+      h('div',{className:'bsa31-practice-grid'},activities.map((x,i)=>h('button',{type:'button',key:x.theme,className:'bsa31-practice-tile '+x.theme,onClick:()=>go(x.tab,x.theme==='quiz'?focusedMcq:x.theme==='written'&&focus!=='all'?{tab:'all',topicLabel:focus.startsWith('label:')?focus.slice(6):focusLabel}:x.opts||{}), 'aria-label':x.action},
         h('span',{className:'bsa31-practice-tile-top'},h('span',{className:'bsa31-practice-icon','aria-hidden':'true'},x.icon),h('small',null,'OPTION 0'+(i+1))),
         h('strong',null,x.title),h('p',null,x.desc),h('span',{className:'bsa31-practice-meta'},x.meta),h('span',{className:'bsa31-practice-cta'},x.action+'  ↗')))),
       h('div',{className:'bsa31-after-practice bsa33-after-practice'},
@@ -14107,7 +14135,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
         ['library','03','Library','Find materials by topic or open Drive links.','▤']
       ].map(([route,n,title,description,mark])=>h('button',{key:route,className:'bsa205-path',onClick:()=>go(route)},h('span',{className:'bsa205-path-n'},n),h('span',{className:'bsa205-path-mark','aria-hidden':true},mark),h('strong',null,title),h('p',null,description),h('span',{className:'bsa205-path-arrow'},'Explore ↗')))),
       h('details',{className:'bsa205-home-more'},h('summary',null,'More options · planning, progress and tools'),
-        h('div',{className:'bsa205-action-row'},h('button',{className:'btn',onClick:()=>go('week')},'Weekly plan'),h('button',{className:'btn',onClick:()=>go('insights')},'Learning progress'),h('button',{className:'btn',onClick:()=>go('accounting-cycle')},'Accounting Cycle'),h('button',{className:'btn',onClick:()=>go('split')},'iPad Split Study'),h('button',{className:'btn',onClick:()=>go('safety')},'Data safety'))),
+        h('div',{className:'bsa205-action-row'},h('button',{className:'btn',onClick:()=>go('week')},'Weekly plan'),h('button',{className:'btn',onClick:()=>go('insights')},'Learning progress'),h('button',{className:'btn',onClick:()=>go('accounting-cycle')},'Accounting Cycle'),h('button',{className:'btn',onClick:()=>go('safety')},'Data safety'))),
       h('div',{className:'bsa205-classic'},h('button',{className:'bsa205-classic-toggle',onClick:()=>setShowClassic(x=>!x),'aria-expanded':showClassic},showClassic?'Hide advanced home widgets':'Show advanced home widgets & personalization',h('span',null,showClassic?'−':'+')),
         showClassic&&h('div',{className:'bsa205-legacy'},h(DashboardV2Home,{subject,go,settings,openEditor,update,toast}))));
   }
@@ -14196,6 +14224,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       markDirty();
     };
     const go = (tab, opts = {}) => {
+      if(tab==='split'){tab='workspace';opts={tab:'scratch'}}
       if (tab === "data") {
         if (opts && (opts.tab || opts.prefill)) setModal({ data: opts.tab || "import", prefill: opts.prefill });
         else setModal("data");
@@ -14248,7 +14277,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       try {
         const qs = new URLSearchParams(location.search);
         const want = qs.get("go");
-        const okTabs = ["study", "library", "insights", "accounting-cycle", "safety", "week", "knowledge", "split", "accounting-lab", "curriculum", "guide", "home", "workspace", "break", "life", "achievements", "stats-clean", "private-vault", "practice", "roadmap", "calendar", "vault", "mistakes", "grades", "lectures", "psets", "rules", "class", "toolkit", "howto"];
+        const okTabs = ["study", "library", "insights", "accounting-cycle", "safety", "week", "knowledge", "accounting-lab", "curriculum", "guide", "home", "workspace", "break", "life", "achievements", "stats-clean", "private-vault", "practice", "roadmap", "calendar", "vault", "mistakes", "grades", "lectures", "psets", "rules", "class", "toolkit", "howto"];
         if (want && okTabs.includes(want)) {
           setNav({ tab: want, opts: want === "practice" ? { start: "review" } : {}, key: 1 });
           history.replaceState(null, "", location.pathname);
@@ -14341,7 +14370,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       ["insights", "Your progress", "grade"],
       ["accounting-cycle", "Accounting Cycle", "pset"],
       ["workspace", "Study Workspace", "book"],
-      ["split", "Split Study · iPad", "book"],
+      
       ["accounting-lab", "Accounting Lab", "pset"],
       ["week", "Weekly Planner", "calendar"],
       ["knowledge", "Knowledge Map", "roadmap"],
@@ -14369,7 +14398,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     // v205: Five useful destinations first; advanced tools stay one tap away.
     const navGroups = [
       {name:"Your workflow",items:["home","study","practice","library","insights"]},
-      {name:"Learning tools",items:["lectures","rules","vault","split","ask","workspace"]},
+      {name:"Learning tools",items:["lectures","rules","vault","ask","workspace"]},
       {name:"Accounting tools",items:["accounting-lab","accounting-cycle","mcq","psets","mistakes"]},
       {name:"Plan & progress",items:["week","calendar","grades","stats-clean","class","roadmap","knowledge","achievements"]},
       {name:"More tools",items:["guide","curriculum","toolkit","safety","howto","life","break","personalize"]}
@@ -14404,7 +14433,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
         h("div",{className:"workspace-actions v2-top-actions"},h("button",{className:"v2-top-search",onClick:()=>setSpotlightOpen(true),title:"Search · Ctrl/⌘ + K","aria-label":"Search all study materials"},"⌕  Search",h("kbd",null,"⌘ K")))),
       h(ScreenBoundary,{key:nav.tab,route:nav.tab,onHome:()=>go("home")},h(React.Fragment,null,
       h(BSA31StudyPath,{tab:nav.tab,opts:nav.opts,go,subject}),
-      nav.tab === "guide" && h(BSA3StartGuide,{go}), nav.tab === "break" && h(BreakCorner), nav.tab === "joy" && h(JoyHub,{go}), nav.tab === "life" && h(StudyLife,{go}), nav.tab === "achievements" && h(AcademicProgress,{go}), nav.tab === "stats-clean" && h(StudyReport,{data,update,toast,go}), nav.tab === "private-vault" && !window.__BSA_SHARED_MODE__ && h(PrivateVault,{toast}), nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data,initialTool:nav.opts?.tool})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), nav.tab === "home" && h(BSA3Today, { ...viewProps }), nav.tab === "study" && h(BSA205Study,{...viewProps}), nav.tab === "library" && h(BSA205Library,{...viewProps}), nav.tab === "insights" && h(BSA205Mastery,{...viewProps}), nav.tab === "accounting-cycle" && h(BSA205Cycle,{...viewProps}), nav.tab === "split" && h(BSA186SplitStudy,{subject,toast,go,init:nav.opts}), nav.tab === "accounting-lab" && h(BSA187AccountingLab,{subject,update,toast,go}), nav.tab === "week" && h(BSA191WeeklyPlanner,{subject,update,go,openEditor,toast}), nav.tab === "knowledge" && h(BSA192KnowledgeMap,{subject,go}), nav.tab === "safety" && h(BSA193DeviceSafety,{data,go,toast}), nav.tab === "practice" && h(BSA3Practice, { ...viewProps, data }), nav.tab === "mcq" && h(MCQPage,{...viewProps}), nav.tab === "rules" && h(RulesLibrary,{...viewProps}), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(CalendarView, { ...viewProps }), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "workspace" && h(BSA181Workspace, { ...viewProps, initialTab:nav.opts?.tab, undoAvailable:!!undo, onGlobalUndo:doUndo }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(PsView, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps, key:subject.id }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })))),
+      nav.tab === "guide" && h(BSA3StartGuide,{go}), nav.tab === "break" && h(BreakCorner), nav.tab === "joy" && h(JoyHub,{go}), nav.tab === "life" && h(StudyLife,{go}), nav.tab === "achievements" && h(AcademicProgress,{go}), nav.tab === "stats-clean" && h(StudyReport,{data,update,toast,go}), nav.tab === "private-vault" && !window.__BSA_SHARED_MODE__ && h(PrivateVault,{toast}), nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data,initialTool:nav.opts?.tool})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), nav.tab === "home" && h(BSA3Today, { ...viewProps }), nav.tab === "study" && h(BSA205Study,{...viewProps}), nav.tab === "library" && h(BSA205Library,{...viewProps}), nav.tab === "insights" && h(BSA205Mastery,{...viewProps}), nav.tab === "accounting-cycle" && h(BSA205Cycle,{...viewProps}), nav.tab === "accounting-lab" && h(BSA187AccountingLab,{subject,update,toast,go}), nav.tab === "week" && h(BSA191WeeklyPlanner,{subject,update,go,openEditor,toast}), nav.tab === "knowledge" && h(BSA192KnowledgeMap,{subject,go}), nav.tab === "safety" && h(BSA193DeviceSafety,{data,go,toast}), nav.tab === "practice" && h(BSA3Practice, { ...viewProps, data }), nav.tab === "mcq" && h(MCQPage,{...viewProps}), nav.tab === "rules" && h(RulesLibrary,{...viewProps}), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(CalendarView, { ...viewProps }), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "workspace" && h(BSA181Workspace, { ...viewProps, initialTab:nav.opts?.tab, undoAvailable:!!undo, onGlobalUndo:doUndo }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(PsView, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps, key:subject.id }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })))),
       h(BSA181HighlightTool,{subject,tab:nav.tab,go,toast}),
       spotlightOpen && h(BSA181Spotlight,{data,go,onSwitch:(id,tab,opts)=>{setData(d=>({...d,activeId:id}));go(tab,opts)},onClose:()=>setSpotlightOpen(false)}),
       /* @__PURE__ */ h("nav",{className:"bottom-nav v2-bottom-nav","aria-label":"Mobile navigation",onTouchStart:touchNavStart,onTouchEnd:touchNavEnd},
