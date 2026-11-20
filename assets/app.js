@@ -1330,7 +1330,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
      - Offline edits are counted and kept; they upload as soon as a connection is back. */
   const GH_KEYS = { user: "bsa_gh_user", repo: "bsa_gh_repo", token: "bsa_gh_key", path: "bsa_gh_path" };
   const SYNC_META_KEY = "bsa_sync_meta";
-  const COLLS = ["topics", "cards", "mistakes", "quizzes", "sessions", "days", "lectures", "psets", "mcqSets", "classes", "attend", "tasks", "aiAttempts", "learningEvents"];
+  const COLLS = ["topics", "cards", "mistakes", "quizzes", "sessions", "days", "lectures", "psets", "mcqSets", "classes", "attend", "tasks", "aiAttempts", "learningEvents", "labAttempts", "todayChecks"];
   const TOMB_DAYS = 120;
   const POLL_MS = 3e4;
   const lsGet = (k) => {
@@ -4613,6 +4613,12 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
   function FocusBar({ data, update, toast }) {
     const t = useTimer();
     const focusActive=useRef({id:null,ms:0,last:Date.now()});
+    const [floating,setFloating]=useState(null),[compact,setCompact]=useState(false);
+    const dragging=useRef(null);
+    const beginDrag=e=>{if(e.button!==0&&e.pointerType==='mouse')return;const r=e.currentTarget.parentElement.getBoundingClientRect();dragging.current={px:e.clientX,py:e.clientY,x:r.left,y:r.top};try{e.currentTarget.setPointerCapture(e.pointerId)}catch(_){}e.preventDefault()};
+    const moveDrag=e=>{const d=dragging.current;if(!d)return;const r=e.currentTarget.getBoundingClientRect(),w=Math.min(window.innerWidth-16,r.width),height=Math.min(window.innerHeight-16,r.height);setFloating({x:Math.max(8,Math.min(window.innerWidth-w-8,d.x+e.clientX-d.px)),y:Math.max(8,Math.min(window.innerHeight-height-8,d.y+e.clientY-d.py))})};
+    const keyDrag=e=>{if(!['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Home'].includes(e.key))return;e.preventDefault();if(e.key==='Home'){setFloating(null);return}const r=e.currentTarget.parentElement.getBoundingClientRect();const dx=e.key==='ArrowLeft'?-20:e.key==='ArrowRight'?20:0,dy=e.key==='ArrowUp'?-20:e.key==='ArrowDown'?20:0;setFloating({x:Math.max(8,Math.min(window.innerWidth-r.width-8,r.left+dx)),y:Math.max(8,Math.min(window.innerHeight-r.height-8,r.top+dy))})};
+    const endDrag=()=>{dragging.current=null};
     useEffect(()=>{const id=setInterval(()=>{const cur=timerState,now=Date.now(),f=focusActive.current;
       const key=cur&&(cur.startedAt||cur.start);
       if(key!==f.id){f.id=key;f.ms=0;}
@@ -4695,10 +4701,12 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const pct = Math.min(100, timerElapsed(t) / (t.mins * 6e4) * 100);
     return h(
       "div",
-      { className: `focus-bar${t.running ? "" : " paused"}`, role: "timer", "aria-label": "Focus timer" },
+      { className: `focus-bar bsa190-focus${compact?" bsa190-collapsed":""}${t.running ? "" : " paused"}`, role: "timer", "aria-label": "Focus timer",style:floating?{left:floating.x,top:floating.y,bottom:'auto',transform:'none'}:{},onPointerMove:moveDrag,onPointerUp:endDrag,onPointerCancel:endDrag },
+      h("button",{type:'button',className:'bsa190-handle',title:'Drag to move the timer',onPointerDown:beginDrag,onKeyDown:keyDrag,'aria-label':'Drag focus timer; use arrow keys to move, Home to reset'},'⠿'),
       h("span", { className: "focus-ring", style: { "--p": `${pct}%` }, "aria-hidden": "true" }),
       h("div", { className: "focus-text" }, h("strong", null, `${Math.floor(secs / 60)}:${pad(secs % 60)}`), h("span", { className: "muted small" }, t.phase === "break" ? (t.label || "Break") : t.running ? "Focus" : "Paused", t.pomo && t.phase !== "break" ? ` \u00b7 round ${t.round || 1}` : "", topic && t.phase !== "break" ? `, ${topic.code || topic.title}` : !topic && t.label && t.phase !== "break" ? `, ${t.label}` : "")),
       t.phase === "break" && t.pomo && h("button", { className: "btn", onClick: () => { setTimerState(null); startTimer({ mins: t.pomo.work || 25, topicId: t.topicId, subjectId: t.subjectId, pomo: t.pomo, round: (t.round || 1) + 1 }); } }, "Skip break"),
+      h("button",{className:'bsa190-toggle',type:'button',onClick:()=>setCompact(v=>!v),'aria-label':compact?'Expand timer':'Minimize timer','aria-expanded':!compact},compact?'▢':'−'),
       h("button", { className: "btn", onClick: () => setTimerState(t.running ? { ...t, running: false, acc: timerElapsed(t) } : { ...t, running: true, start: Date.now() }) }, t.running ? "Pause" : "Resume"),
       h("button", { className: "btn primary", onClick: () => finish(false) }, "Finish")
     );
@@ -11315,7 +11323,9 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     for(const sub of doc.subjects){
       if(!sub||typeof sub!=='object'||Array.isArray(sub)||typeof sub.id!=='string'||!sub.id.trim()||sub.id.length>=500||ids.has(sub.id)||typeof sub.name!=='string'||!sub.name.trim()||sub.name.length>=1000)return false;
       ids.add(sub.id);
-      for(const field of ['topics','cards','mistakes','quizzes','sessions','lectures','psets'])if(sub[field]!==undefined&&!Array.isArray(sub[field]))return false;
+      for(const field of ['topics','cards','mistakes','quizzes','sessions','lectures','psets','labAttempts','todayChecks'])if(sub[field]!==undefined&&!Array.isArray(sub[field]))return false;
+      for(const attempt of sub.labAttempts||[])if(!attempt||typeof attempt.id!=='string'||!Number.isFinite(Number(attempt.exercise))||!Number.isFinite(Number(attempt.date))||typeof attempt.correct!=='boolean')return false;
+      for(const check of sub.todayChecks||[])if(!check||typeof check.id!=='string'||typeof check.day!=='string'||!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(check.day)||typeof check.taskId!=='string')return false;
     }
     return true;
   }
@@ -11830,6 +11840,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
   function activeSeason(month){return month<3?'winter':month<6?'spring':month<9?'summer':'autumn'}
 
   function StudyLife({go}){
+    const liveTimer=useTimer();
     const [life,setLife]=useState(readLife),[progress,setProgress]=useState(readProgress),[tab,setTab]=useState('room'),[notice,setNotice]=useState('');
     useEffect(()=>{const refresh=()=>setProgress(readProgress());window.addEventListener('bsa-progress-updated',refresh);window.addEventListener('storage',refresh);return()=>{window.removeEventListener('bsa-progress-updated',refresh);window.removeEventListener('storage',refresh)};},[]);
     const save=fn=>setLife(old=>{const next=fn(old);try{localStorage.setItem(LIFE_KEY,JSON.stringify(next));return next}catch(e){setNotice('Room changes could not be saved. Check device storage.');return old}});
@@ -11855,7 +11866,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
         h('div',{className:'life-scene '+(new Date().getHours()>=18||new Date().getHours()<6?'life-night':'life-day')},
           h('div',{className:'life-scene-window'},'☁️ ☀️'),h('div',{className:'life-scene-shelf'},(life.equipped||[]).includes('shelf')?'📚 🪴':'📖'),
           h('div',{className:'life-scene-lamp life-place-'+(life.roomPositions?.lamp||'center')},(life.equipped||[]).includes('lamp')?'💡':''),
-          h('div',{className:'life-scene-avatar'},h(PixelScholar,{avatar})),pet&&h('div',{className:'life-scene-pet'},pet.emoji),
+          h('div',{className:'life-scene-avatar'+(liveTimer?.running&&liveTimer.phase==='work'?' bsa189-room-active':'')},h(PixelScholar,{avatar,pose:liveTimer?.running&&liveTimer.phase==='work'?'walk':progress.events.some(e=>e.day===today())?'happy':'front'})),pet&&h('div',{className:'life-scene-pet'},pet.emoji),
           h('div',{className:'life-scene-desk',style:{left:life.deskPlacement==='left'?'6%':life.deskPlacement==='right'?'38%':'21%'}},'📖　☕'),
           h('div',{className:'life-scene-rug'},(life.equipped||[]).includes('rug')?'◯':''),
           h('div',{className:'life-scene-plants life-place-'+(life.roomPositions?.plant||'right')},(life.equipped||[]).includes('plant')?'🪴':'')),
@@ -12520,10 +12531,320 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
         h('p',null,'This discards the unreadable local copy. Restore a known-good study backup through Import & Export afterward.'),
         h('button',{className:'btn danger',onClick:reset},'Replace unreadable local copy')));
   }
-  /* Dashboard V2: presentation and navigation only. No new academic events, IDs,
-     saved-data keys, or artificial activity/achievement records are created here. */
+  /* ================================================================
+     BSA Study Desk V2, v185–v196. Core academic grades and XP unchanged.
+     Since v194, new lab checks and today checkmarks live in per-subject
+     mergeable records; optional v192 local history remains available to import.
+     Other preferences remain device-local and exportable in JSON backups.
+     PDFs remain in browser IndexedDB, not JSON backups or GitHub sync.
+     ================================================================ */
+  const BSA_NEXT_SHARED=!!window.__BSA_SHARED_MODE__;
+  const bsaNextKey=(suffix,subjectId='')=>(BSA_NEXT_SHARED?'bsa_shared_v2_':'bsa_v2_')+suffix+(subjectId?'_'+subjectId:'');
+  const bsaNextRead=(key,fallback)=>{try{const raw=JSON.parse(localStorage.getItem(key)||'null');return raw&&typeof raw==='object'?raw:fallback}catch(_){return fallback}};
+  const bsaNextSave=(key,value,toast)=>{try{localStorage.setItem(key,JSON.stringify(value));return true}catch(_){toast&&toast('Could not save this setting. Export a backup and free device storage.');return false}};
+  const BSA185_SECTIONS=[['stats','Study overview'],['today','Today plan'],['focus','Next action & recent'],['tools','Study tools'],['buddy','Study companion']];
+  const bsa185Default=()=>({sections:BSA185_SECTIONS.map(x=>x[0]),hidden:[],density:'comfortable'});
+  const bsa185Read=()=>{const d=bsaNextRead(bsaNextKey('layout_v185'),bsa185Default());return {
+    sections:[...(Array.isArray(d.sections)?d.sections:[]).filter(x=>BSA185_SECTIONS.some(y=>y[0]===x)),...BSA185_SECTIONS.map(x=>x[0]).filter(x=>!(d.sections||[]).includes(x))],
+    hidden:Array.isArray(d.hidden)?d.hidden.filter(x=>BSA185_SECTIONS.some(y=>y[0]===x)):[],
+    density:d.density==='compact'?'compact':'comfortable'};};
+  function BSA185LayoutEditor({layout,onChange,onClose}){
+    const move=(id,dir)=>{const a=layout.sections.slice(),i=a.indexOf(id),next=i+dir;if(i<0||next<0||next>=a.length)return;[a[i],a[next]]=[a[next],a[i]];onChange({...layout,sections:a})};
+    return h('div',{className:'bsa185-editor',role:'region','aria-label':'Customize Today layout'},
+      h('div',{className:'bsa185-editor-head'},h('div',null,h('strong',null,'Make this desk yours'),h('small',null,'Move sections, or hide what you do not need. Your layout is saved on this device.')),h('button',{type:'button',className:'btn ghost',onClick:onClose},'Done')),
+      h('label',{className:'bsa185-density'},'Space between cards',h('select',{value:layout.density,onChange:e=>onChange({...layout,density:e.target.value})},h('option',{value:'comfortable'},'Comfortable'),h('option',{value:'compact'},'Compact'))),
+      h('div',{className:'bsa185-editor-list'},layout.sections.map((id,i)=>h('div',{className:'bsa185-editor-row',key:id},
+        h('label',null,h('input',{type:'checkbox',checked:!layout.hidden.includes(id),onChange:e=>onChange({...layout,hidden:e.target.checked?layout.hidden.filter(x=>x!==id):[...layout.hidden,id]})}),BSA185_SECTIONS.find(x=>x[0]===id)?.[1]||id),
+        h('div',{className:'bsa185-move'},h('button',{type:'button',disabled:i===0,onClick:()=>move(id,-1),'aria-label':'Move '+id+' up'},'↑'),h('button',{type:'button',disabled:i===layout.sections.length-1,onClick:()=>move(id,1),'aria-label':'Move '+id+' down'},'↓'))))),
+      h('button',{type:'button',className:'btn ghost',onClick:()=>onChange(bsa185Default())},'Reset layout'));
+  }
+
+  /* v193: read-only device & study-data diagnostics. No silent repairs or erasures. */
+  function BSA193DeviceSafety({data,go,toast}){
+    const [status,setStatus]=useState({busy:false,ran:false});
+    const [network,setNetwork]=useState(navigator.onLine);
+    useEffect(()=>{const up=()=>setNetwork(navigator.onLine);window.addEventListener('online',up);window.addEventListener('offline',up);return()=>{window.removeEventListener('online',up);window.removeEventListener('offline',up)}},[]);
+    const run=async()=>{
+      setStatus({busy:true,ran:false});
+      const checks=[];
+      const check=(label,ok,detail)=>checks.push({label,ok,detail});
+      try{
+        const raw=localStorage.getItem(STORE_KEY);
+        const doc=JSON.parse(raw||'null');
+        check('Main study record',bsaValidMainRecord(doc),raw?'Saved subjects are readable and structurally valid.':'No saved main record found.');
+      }catch(e){check('Main study record',false,'Saved study data could not be parsed. Export original data before troubleshooting.');}
+      try{const key='bsa_v193_storage_probe';localStorage.setItem(key,'ok');const ok=localStorage.getItem(key)==='ok';localStorage.removeItem(key);check('Local storage writes',ok,ok?'A temporary test value was saved and removed.':'Writing a temporary test value failed.');}
+      catch(e){check('Local storage writes',false,'Storage may be blocked or full.');}
+      check('Secure site',location.protocol==='https:'||location.hostname==='localhost',location.protocol==='https:'?'HTTPS is active.':'Offline installation and backup checks require HTTPS (localhost permitted for development).');
+      check('Offline worker supported','serviceWorker'in navigator,'serviceWorker'in navigator?'This browser supports offline application caching.':'Offline worker is unavailable here.');
+      if('serviceWorker'in navigator){try{const reg=await navigator.serviceWorker.getRegistration();check('Offline worker installed',!!reg,reg?'An offline application worker is registered.':'Open the app online once to install offline support.');}catch(e){check('Offline worker installed',false,'Unable to inspect the offline worker.');}}
+      try{const files=await Promise.all((data.subjects||[]).map(sub=>bsaPdfList(sub.id)));const count=files.reduce((n,list)=>n+list.length,0);check('Saved PDF shelf',true,count+' PDF'+(count===1?'':'s')+' found in this browser (not part of JSON backups).');}
+      catch(e){check('Saved PDF shelf',false,'Could not read local PDF storage; do not clear browser data.');}
+      let storage='Not provided by this browser';
+      try{if(navigator.storage?.estimate){const e=await navigator.storage.estimate();if(Number.isFinite(e.usage)&&Number.isFinite(e.quota))storage=(e.usage/1048576).toFixed(1)+' MB used of ~'+(e.quota/1048576).toFixed(0)+' MB quota';}}
+      catch(_){}
+      setStatus({busy:false,ran:true,checks,storage});
+    };
+    return h('section',{className:'view bsa193-page'},
+      h('div',{className:'page-head'},h('div',null,h('span',{className:'v2-eyebrow'},'v193 · SAFE DEVICE CHECKS'),h('h1',{className:'page-title'},'Device & Data Safety'),h('p',{className:'muted'},'Check this browser’s saved records and offline support without deleting or changing study data.'))),
+      h('div',{className:'bsa193-summary v2-panel'},h('div',null,h('h2',null,'Your study data stays yours'),h('p',{className:'muted small'},'Your academic backup contains locally stored study records and V2 preferences, but not PDF file blobs, credentials or GitHub secrets. Keep original PDFs and an external backup.')),
+        h('div',{className:'bsa193-actions'},h('button',{className:'btn primary',onClick:()=>bsaDownloadUnifiedBackup(toast)},'Download verified JSON backup'),h('button',{className:'btn',onClick:run,disabled:status.busy},status.busy?'Checking…':'Run device checks'),h('button',{className:'btn',onClick:()=>go('toolkit')},'Open Study Toolkit'))),
+      h('div',{className:'bsa193-status-row'},h('span',{className:network?'bsa193-connected':'bsa193-offline'},network?'● Network online':'● Network offline'),h('span',null,'Device: '+deviceName()),status.ran&&h('span',null,'Estimated storage: '+status.storage)),
+      status.ran&&h('div',{className:'bsa193-checks'},status.checks.map(x=>h('div',{className:'bsa193-check'+(x.ok?' good':' warning'),key:x.label},h('span',{'aria-hidden':'true'},x.ok?'✓':'!'),h('div',null,h('strong',null,x.label),h('p',null,x.detail))))),
+      h('p',{className:'muted small'},'These checks cannot replace testing on a physical iPad/Android, prove PDF/Apple Pencil behavior, or guarantee future cloud sync. Never clear Safari/Chrome site data to fix an update without exporting your records first.'));
+  }
+
+  /* v186: two panes reuse the existing IndexedDB PDF shelf and v33 InkPad.
+     PDF object URLs are temporary and are revoked when the selection changes. */
+  function BSA186SplitStudy({subject,toast}){
+    const [pdfs,setPdfs]=useState([]),[chosen,setChosen]=useState(''),[url,setUrl]=useState(''),[split,setSplit]=useState(48),[error,setError]=useState(''),[busy,setBusy]=useState(false);
+    const layoutKey=bsaNextKey('split_layout_v195');
+    const [arrangement,setArrangement]=useState(()=>bsaNextRead(layoutKey,{arrangement:'auto'}).arrangement||'auto');
+    const setArrangementSaved=value=>{if(bsaNextSave(layoutKey,{arrangement:value},toast))setArrangement(value)};
+    const refresh=()=>bsaPdfList(subject.id).then(items=>{setPdfs(items);setChosen(old=>items.some(x=>x.id===old)?old:(items[0]?.id||''));setError('')}).catch(e=>setError(String(e.message||e)));
+    useEffect(()=>{refresh();const cb=e=>{if(e.detail?.subjectId===subject.id)refresh()};window.addEventListener('bsa-pdf-shelf-changed',cb);return()=>window.removeEventListener('bsa-pdf-shelf-changed',cb)},[subject.id]);
+    const chosenPdf=pdfs.find(x=>x.id===chosen);
+    useEffect(()=>{if(!chosenPdf?.blob){setUrl('');return}const next=URL.createObjectURL(chosenPdf.blob);setUrl(next);return()=>URL.revokeObjectURL(next)},[chosenPdf?.id,chosenPdf?.blob]);
+    const upload=async e=>{const files=Array.from(e.target.files||[]);e.target.value='';if(!files.length)return;setBusy(true);setError('');try{for(const f of files)await bsaPdfAdd(subject.id,f);await refresh();toast('Your PDFs are ready in Split Study.')}catch(err){setError(String(err.message||err))}finally{setBusy(false)}};
+    return h('section',{className:'view bsa186-page'},h('div',{className:'page-head'},h('div',null,h('span',{className:'v2-eyebrow'},'v186 · IPAD STUDY MODE'),h('h1',{className:'page-title'},'Split Study'),h('p',{className:'muted'},'Read a saved PDF while using the existing handwriting notebook. Both panes stay on this device.'))),
+      h('div',{className:'bsa186-bar'},h('label',null,'Source PDF',h('select',{value:chosen,onChange:e=>setChosen(e.target.value),'aria-label':'Source PDF'},h('option',{value:''},pdfs.length?'Choose a PDF':'No saved PDF yet'),pdfs.map(x=>h('option',{key:x.id,value:x.id},x.name)))),
+        h('label',{className:'btn bsa186-upload'},busy?'Adding…':'＋ Add PDF',h('input',{type:'file',accept:'.pdf,application/pdf',multiple:true,disabled:busy,onChange:upload})),
+        url&&h('button',{type:'button',className:'btn ghost',onClick:()=>bsaPdfOpenFile(chosenPdf,false)},'Open PDF separately'),
+        h('label',{className:'bsa186-width'},'PDF width',h('input',{type:'range',min:32,max:68,step:2,value:split,onChange:e=>setSplit(Number(e.target.value)),'aria-label':'PDF pane width'}),split+'%'),
+        h('label',{className:'bsa195-layout-picker'},'Panels',h('select',{value:arrangement,onChange:e=>setArrangementSaved(e.target.value),'aria-label':'Split Study panel arrangement'},h('option',{value:'auto'},'Auto'),h('option',{value:'side'},'Side by side'),h('option',{value:'stack'},'Stacked')))),
+      error&&h('p',{className:'error',role:'alert'},error),
+      h('p',{className:'muted small bsa186-note'},'PDF files are stored in this browser’s IndexedDB, not in the JSON backup or GitHub sync. Keep original copies. On iPad, use “Open PDF separately” if the built-in browser cannot scroll a PDF.'),
+      h('div',{className:'bsa186-panes','data-layout':arrangement,style:{'--pdf-width':split+'%'}},
+        h('section',{className:'bsa186-pane bsa186-pdf','aria-label':'Reference PDF'},h('div',{className:'bsa186-pane-heading'},h('strong',null,'Reference'),h('small',null,chosenPdf?.name||'Select a source')),
+          url?h('iframe',{src:url+'#toolbar=1',title:'PDF reference: '+(chosenPdf?.name||''),loading:'eager'}):h('div',{className:'bsa186-empty'},'Add a PDF above to read it beside your notes.')),
+        h('section',{className:'bsa186-pane bsa186-notebook','aria-label':'Handwriting notebook'},h('div',{className:'bsa186-pane-heading'},h('strong',null,'Your notebook'),h('small',null,'Existing pages, pen and T-account tools')),
+          h(InkPad,{key:subject.id,subject,toast}))));
+  }
+
+  /* v187: isolated answer-checking lab; the answers are explicitly defined.
+     Never present self-entered unverified entries as accounting evidence. */
+  const BSA187_EXERCISES=[
+    {title:'Owner investment',prompt:'The owner invested ₱50,000 cash into the business.',hint:'Which asset increased? What represents the owner’s claim?',solution:[['Cash',50000,0],['Owner’s Capital',0,50000]]},
+    {title:'Rent paid',prompt:'The business paid ₱8,000 cash for this month’s rent.',hint:'Which expense increased, and what asset decreased?',solution:[['Rent Expense',8000,0],['Cash',0,8000]]},
+    {title:'Cash service revenue',prompt:'Services worth ₱12,000 were performed and paid for immediately in cash.',hint:'Record the cash received and earned service revenue.',solution:[['Cash',12000,0],['Service Revenue',0,12000]]},
+    {title:'Supplies on account',prompt:'Bought ₱4,000 of unused supplies on account. The supplier has not yet been paid.',hint:'The business has an asset and a liability.',solution:[['Supplies',4000,0],['Accounts Payable',0,4000]]},
+    {title:'Collect receivable',prompt:'Collected ₱6,000 from a customer who previously owed the business.',hint:'Revenue was recognized earlier. Which two assets changed?',solution:[['Cash',6000,0],['Accounts Receivable',0,6000]]},
+    {title:'Pay a supplier',prompt:'Paid ₱3,000 to settle an existing account payable.',hint:'Reduce the liability and the cash asset.',solution:[['Accounts Payable',3000,0],['Cash',0,3000]]},
+    {title:'Accrued salaries',prompt:'Employees earned ₱5,000 in salaries this month, but they will be paid next month.',hint:'Recognize an expense and a payable.',solution:[['Salaries Expense',5000,0],['Salaries Payable',0,5000]]},
+    {title:'Prepaid insurance',prompt:'The business paid ₱12,000 for insurance covering the next 12 months. Record the initial payment using the asset method.',hint:'At payment, the coverage is still an asset.',solution:[['Prepaid Insurance',12000,0],['Cash',0,12000]]}
+    ,{title:'Adjust supplies',level:'Intermediate',topic:'Adjusting entries',prompt:'Before adjustment, supplies on hand were ₱9,000. A physical count shows only ₱2,500 remains. Record the adjustment.',hint:'Calculate how much was used, then reduce Supplies.',explanation:'₱9,000 less ₱2,500 remaining equals ₱6,500 consumed.',solution:[['Supplies Expense',6500,0],['Supplies',0,6500]]}
+    ,{title:'Earned unearned revenue',level:'Intermediate',topic:'Adjusting entries',prompt:'The company previously recorded ₱18,000 as Unearned Service Revenue. By year-end, ₱7,000 of the service has been completed. Record the adjustment.',hint:'Decrease the liability by the part already earned.',explanation:'Revenue is recognized as services are performed, not when the advance was received.',solution:[['Unearned Service Revenue',7000,0],['Service Revenue',0,7000]]}
+    ,{title:'Accrued interest',level:'Intermediate',topic:'Adjusting entries',prompt:'A ₱120,000 note payable has a 12% annual interest rate. Three months of interest have accrued, unpaid. Record the accrual. Use a 12-month year.',hint:'₱120,000 × 12% × 3/12.',explanation:'Interest for three months is ₱3,600, payable but not yet paid.',solution:[['Interest Expense',3600,0],['Interest Payable',0,3600]]}
+    ,{title:'Depreciate equipment',level:'Intermediate',topic:'Adjusting entries',prompt:'Equipment costs ₱100,000 with ₱10,000 residual value and a 5-year useful life. Record one full year’s straight-line depreciation.',hint:'(Cost − residual value) ÷ useful life.',explanation:'(₱100,000 − ₱10,000) ÷ 5 = ₱18,000 per year.',solution:[['Depreciation Expense',18000,0],['Accumulated Depreciation',0,18000]]}
+    ,{title:'Insurance used',level:'Intermediate',topic:'Adjusting entries',prompt:'A one-year insurance policy of ₱24,000 was initially recorded as Prepaid Insurance. Three months have expired. Record the adjustment.',hint:'₱24,000 × 3/12 is the expired portion.',explanation:'The expired ₱6,000 becomes expense, while unexpired coverage remains an asset.',solution:[['Insurance Expense',6000,0],['Prepaid Insurance',0,6000]]}
+    ,{title:'Services on account',level:'Beginner',topic:'Basic transactions',prompt:'Provided ₱15,000 of services to a client on account. Collection will happen next month.',hint:'The business now has a claim against the client.',explanation:'Services earned create an account receivable even before cash is collected.',solution:[['Accounts Receivable',15000,0],['Service Revenue',0,15000]]}
+    ,{title:'Owner withdrawal',level:'Beginner',topic:'Basic transactions',prompt:'The owner withdrew ₱2,500 cash for personal use. Use an Owner’s Drawings account.',hint:'A drawing reduces owner’s equity, not business revenue.',explanation:'A drawing is a distribution to the owner, not an operating expense.',solution:[["Owner's Drawings",2500,0],['Cash',0,2500]]}
+    ,{title:'Acquire equipment on credit',level:'Beginner',topic:'Basic transactions',prompt:'Purchased equipment for ₱45,000 on account. No cash was paid.',hint:'An asset increases and a liability increases.',explanation:'The equipment is capitalized, while Accounts Payable records the liability.',solution:[['Equipment',45000,0],['Accounts Payable',0,45000]]}
+    ,{title:'Allowance for doubtful accounts',level:'Advanced',topic:'Estimates & provisions',prompt:'An analysis of receivables requires an ending Allowance for Doubtful Accounts credit balance of ₱8,000. Its unadjusted balance is a ₱2,000 credit. Record the year-end adjustment.',hint:'The desired credit balance is ₱8,000; there is already a ₱2,000 credit.',explanation:'An additional ₱6,000 credit to Allowance is required; the other side is Bad Debt Expense.',solution:[['Bad Debt Expense',6000,0],['Allowance for Doubtful Accounts',0,6000]]}
+    ,{title:'Bad debt write-off',level:'Advanced',topic:'Estimates & provisions',prompt:'Under the allowance method, write off ₱3,000 of a specific customer’s uncollectible balance.',hint:'Writing off uses the allowance already established, not a new expense.',explanation:'Debit Allowance and credit Accounts Receivable; no extra expense is recognized at write-off.',solution:[['Allowance for Doubtful Accounts',3000,0],['Accounts Receivable',0,3000]]}
+    ,{title:'Accrued service revenue',level:'Intermediate',topic:'Adjusting entries',prompt:'Performed ₱9,500 of services that were neither billed nor recorded at year-end. The amount can be measured reliably and is expected to be collected.',hint:'Record the right to receive payment and revenue earned.',explanation:'An adjusting entry recognizes revenue in the period earned, with a receivable.',solution:[['Accounts Receivable',9500,0],['Service Revenue',0,9500]]}
+    ,{title:'Unearned service cash receipt',level:'Beginner',topic:'Basic transactions',prompt:'Received ₱10,000 in advance from a customer for services to be provided next month. Use the liability method.',hint:'No service has yet been earned.',explanation:'Cash increases, and the business owes future service to the customer.',solution:[['Cash',10000,0],['Unearned Service Revenue',0,10000]]}
+  ];
+  const bsa187Blank=()=>Array.from({length:4},()=>({account:'',debit:'',credit:''}));
+  const bsa187Account=x=>{const n=norm(x).replace(/^owners?\s*/,'owner ');const aliases={
+    'owner s capital':'owner capital','owner capital':'owner capital','capital':'owner capital',
+    'salaries expense':'salaries expense','salary expense':'salaries expense','wages expense':'salaries expense',
+    'salaries payable':'salaries payable','salary payable':'salaries payable','wages payable':'salaries payable',
+    'service income':'service revenue','fees earned':'service revenue','service revenue':'service revenue',
+    'supplies on hand':'supplies','supplies asset':'supplies','account payable':'accounts payable',
+    'account receivable':'accounts receivable','rent expenses':'rent expense',
+    'owner drawings':'owner drawings','owners drawings':'owner drawings','drawings':'owner drawings',
+    'unearned revenue':'unearned service revenue','unearned income':'unearned service revenue',
+    'bad debts expense':'bad debt expense','doubtful accounts expense':'bad debt expense',
+    'allowance for bad debts':'allowance for doubtful accounts','accumulated depreciation equipment':'accumulated depreciation'};
+    return aliases[n]||n;};
+  const bsa187Number=x=>{const t=String(x||'').replace(/[₱,\s]/g,'');if(!t)return 0;const n=Number(t);return Number.isFinite(n)&&n>=0?n:NaN;};
+  function bsa187Verify(rows,exercise){const actual=[];let totalDr=0,totalCr=0;for(const r of rows){const debit=bsa187Number(r.debit),credit=bsa187Number(r.credit);if(!Number.isFinite(debit)||!Number.isFinite(credit)||debit<0||credit<0)return {ok:false,reason:'Use non-negative numeric amounts.'};if(!r.account.trim()&&!debit&&!credit)continue;if(!r.account.trim()||debit&&credit||!debit&&!credit)return {ok:false,reason:'Each entered line needs an account and an amount in either Debit or Credit.'};actual.push([bsa187Account(r.account),debit,credit]);totalDr+=debit;totalCr+=credit;}
+    if(!actual.length)return {ok:false,reason:'Enter a journal entry first.'};
+    if(Math.abs(totalDr-totalCr)>.005)return {ok:false,reason:'Debits and credits do not balance: ₱'+totalDr.toLocaleString()+' versus ₱'+totalCr.toLocaleString()+'.'};
+    const normalized=arr=>arr.map(([name,dr,cr])=>[bsa187Account(name),dr,cr].join('|')).sort().join('::');
+    const ok=normalized(actual)===normalized(exercise.solution);
+    return {ok,reason:ok?'Correct! Both the accounts and amounts match.':'Your entry balances, but one or more accounts or amounts do not match this transaction. Review which accounts increased or decreased.'};}
+  /* v194/v196: new checks are first-class, per-subject sync collections;
+     v192 local results are left untouched until the learner imports them. */
+  function BSA187AccountingLab({subject,update,toast}){
+    const [index,setIndex]=useState(0),[rows,setRows]=useState(bsa187Blank),[feedback,setFeedback]=useState(null),[reveal,setReveal]=useState(false);
+    const [level,setLevel]=useState('All'),[topic,setTopic]=useState('All');
+    const key=bsaNextKey('lab_v187',subject.id);
+    const synced=Array.isArray(subject.labAttempts)?subject.labAttempts:[];
+    const legacy=(()=>{const d=bsaNextRead(key,{attempts:[]});return (Array.isArray(d.attempts)?d.attempts:[]).map((x,i)=>({...x,legacyId:'legacy-lab-'+subject.id+'-'+i+'-'+Number(x.date||0)})).filter(x=>!synced.some(a=>a.id===x.legacyId))})();
+    const visible=BSA187_EXERCISES.map((ex,i)=>({ex,i})).filter(x=>(level==='All'||(x.ex.level||'Beginner')===level)&&(topic==='All'||(x.ex.topic||'Basic transactions')===topic));
+    const ex=BSA187_EXERCISES[index];
+    useEffect(()=>{if(!visible.some(x=>x.i===index)){setIndex(visible[0]?.i??0);setRows(bsa187Blank());setFeedback(null);setReveal(false)}},[level,topic,index]);
+    useEffect(()=>{setRows(bsa187Blank());setFeedback(null);setReveal(false);setIndex(0);setLevel('All');setTopic('All')},[subject.id]);
+    const change=(i,field,value)=>{setRows(old=>old.map((r,j)=>i===j?{...r,[field]:value}:r));setFeedback(null)};
+    const verify=()=>{const result=bsa187Verify(rows,ex);setFeedback(result);
+      if(result.reason==='Enter a journal entry first.'||result.reason==='Use non-negative numeric amounts.')return;
+      const attempt={id:uid('lab'),exercise:index,correct:result.ok,date:Date.now(),level:ex.level||'Beginner'};
+      update(s=>{s.labAttempts=[...(s.labAttempts||[]),attempt].slice(-500)});
+    };
+    const importLegacy=()=>{if(!legacy.length)return;
+      if(!window.confirm('Copy '+legacy.length+' older local lab checks into the subject data that may sync to your configured GitHub repository? Original local history will remain unchanged.'))return;
+      update(s=>{const ids=new Set((s.labAttempts||[]).map(x=>x.id));s.labAttempts=[...(s.labAttempts||[])];legacy.forEach(x=>{const id=x.legacyId;if(!ids.has(id)){s.labAttempts.push({id,exercise:Number(x.exercise)||0,correct:!!x.correct,date:Number(x.date)||0,level:BSA187_EXERCISES[Number(x.exercise)||0]?.level||'Beginner'});ids.add(id)}})});
+      toast('Copied older lab checks into the syncable subject record. Your local copy was preserved.');
+    };
+    const changeExercise=n=>{setIndex(n);setRows(bsa187Blank());setFeedback(null);setReveal(false)};
+    const next=()=>{const at=visible.findIndex(x=>x.i===index);changeExercise(visible[(at+1)%visible.length]?.i??0)};
+    const groups=new Map();rows.forEach(r=>{const acct=r.account.trim();const d=bsa187Number(r.debit),c=bsa187Number(r.credit);if(!acct||!Number.isFinite(d)||!Number.isFinite(c)||(!d&&!c))return;const key=bsa187Account(acct);if(!groups.has(key))groups.set(key,{name:acct,dr:0,cr:0});const x=groups.get(key);x.dr+=d;x.cr+=c;});
+    const correct=synced.filter(x=>x.correct).length;
+    return h('section',{className:'view bsa187-page'},h('div',{className:'page-head'},h('div',null,h('span',{className:'v2-eyebrow'},'v196 · GUIDED ACCOUNTING PRACTICE'),h('h1',{className:'page-title'},'Accounting Lab'),h('p',{className:'muted'},'Twenty worked transactions across basics, adjusting entries and estimates. Answer first; then check each account and amount.'))),
+      h('div',{className:'bsa196-filters v2-panel'},h('label',null,'Difficulty',h('select',{value:level,onChange:e=>{setLevel(e.target.value);setTopic('All')}},['All','Beginner','Intermediate','Advanced'].map(x=>h('option',{key:x,value:x},x)))),h('label',null,'Topic',h('select',{value:topic,onChange:e=>{setTopic(e.target.value);setLevel('All')}},['All','Basic transactions','Adjusting entries','Estimates & provisions'].map(x=>h('option',{key:x,value:x},x)))),h('label',null,'Exercise',h('select',{value:index,onChange:e=>changeExercise(Number(e.target.value))},visible.map(x=>h('option',{key:x.i,value:x.i},(x.i+1)+'. '+x.ex.title))))),
+      h('div',{className:'bsa187-layout'},h('section',{className:'v2-panel bsa187-problem'},h('span',{className:'v2-eyebrow'},'PRACTICE '+(index+1)+' / '+BSA187_EXERCISES.length+' · '+(ex.level||'Beginner')),h('h2',null,ex.title),h('p',null,ex.prompt),h('details',null,h('summary',null,'Need a hint?'),h('p',null,ex.hint)),
+        h('p',{className:'muted small'},'Answer checks stay separate from scores, XP and your official journal.'),h('div',{className:'bsa187-count'},synced.length+' checks in syncable subject data · '+correct+' correct'),
+        !!legacy.length&&h('div',{className:'bsa194-import'},h('small',null,legacy.length+' older device-only checks are still saved in v192 storage.'),h('button',{className:'btn',onClick:importLegacy},'Copy old checks to syncable history'))),
+      h('section',{className:'v2-panel bsa187-entry'},h('h2',null,'Your general journal'),h('div',{className:'bsa187-table-wrap'},h('table',{className:'bsa187-table'},h('thead',null,h('tr',null,['Account','Debit (₱)','Credit (₱)'].map(x=>h('th',{key:x},x)))),h('tbody',null,rows.map((r,i)=>h('tr',{key:i},h('td',null,h('input',{value:r.account,placeholder:i===0?'Account title':'Account',onChange:e=>change(i,'account',e.target.value),'aria-label':'Account line '+(i+1)})),h('td',null,h('input',{type:'text',inputMode:'decimal',value:r.debit,placeholder:'0',onChange:e=>change(i,'debit',e.target.value),'aria-label':'Debit line '+(i+1)})),h('td',null,h('input',{type:'text',inputMode:'decimal',value:r.credit,placeholder:'0',onChange:e=>change(i,'credit',e.target.value),'aria-label':'Credit line '+(i+1)}))))))),
+        h('div',{className:'bsa187-actions'},h('button',{className:'btn primary',onClick:verify},'Check entry'),h('button',{className:'btn',onClick:()=>setReveal(v=>!v)},reveal?'Hide solution':'Reveal solution'),h('button',{className:'btn ghost',onClick:next},'Next problem →')),
+        feedback&&h('p',{className:'bsa187-feedback'+(feedback.ok?' success':''),role:'status'},feedback.reason),
+        (feedback||reveal)&&ex.explanation&&h('p',{className:'bsa196-explanation'},ex.explanation),
+        reveal&&h('div',{className:'bsa187-solution'},h('strong',null,'Suggested journal entry'),ex.solution.map(([account,dr,cr],i)=>h('div',{key:i},h('span',null,account),h('span',null,dr?'Debit ₱'+dr.toLocaleString():'Credit ₱'+cr.toLocaleString())))))),
+      h('section',{className:'v2-panel bsa187-taccounts'},h('h2',null,'T-account preview'),h('p',{className:'muted small'},'Shows exactly what you entered; it is not automatically correct.'),groups.size?h('div',{className:'bsa187-tgrid'},[...groups.values()].map(g=>h('div',{className:'bsa187-taccount',key:g.name},h('strong',null,g.name),h('div',null,h('span',null,g.dr?'₱'+g.dr.toLocaleString():'—'),h('span',null,g.cr?'₱'+g.cr.toLocaleString():'—'))))):h('p',{className:'muted'},'Enter your journal lines to see the T-accounts.')));
+  }
+
+  /* v188: a genuinely derived, explicitly user-completed study plan. */
+  function bsa188Tasks(subject,settings){
+    const tasks=[];
+    const mistakes=(subject.mistakes||[]).filter(m=>m&&m.status!=='Cleared');
+    const review=buildReview(subject,settings?.newPerDay||10,settings?.maxPerDay||0);
+    const due=(review.due||[]).length+(review.mist||[]).length+(review.prob||[]).length;
+    const lectures=(subject.lectures||[]).filter(l=>l&&!l.done);
+    const upcoming=(subject.topics||[]).filter(t=>t&&t.kind==='exam'&&/^\d{4}-\d{2}-\d{2}$/.test(t.due||'')&&daysUntil(t.due)>=0&&daysUntil(t.due)<=14).sort((a,b)=>a.due.localeCompare(b.due));
+    if(upcoming.length){const exam=upcoming[0],days=daysUntil(exam.due);tasks.push({id:'exam-'+exam.id,title:'Prepare for '+exam.title,why:'Exam '+(days===0?'today':days===1?'tomorrow':'in '+days+' days'),weight:120-Math.min(14,days)*6,mins:30,route:'roadmap',opts:{open:exam.id}})}
+    if(mistakes.length)tasks.push({id:'mistakes',title:'Correct a saved mistake',why:mistakes.length+' open mistakes',weight:88+Math.min(mistakes.length,10),mins:20,route:'mistakes'});
+    if(due)tasks.push({id:'review',title:'Review what is due',why:due+' items due for recall',weight:90+Math.min(due,10),mins:20,route:'practice',opts:{start:'review'}});
+    if(lectures.length)tasks.push({id:'lectures',title:'Continue a lecture',why:lectures.length+' unfinished lecture'+(lectures.length===1?'':'s'),weight:65,mins:25,route:'lectures',opts:{open:lectures[0].id}});
+    if((subject.psets||[]).length)tasks.push({id:'psets',title:'Solve a written problem',why:(subject.psets||[]).length+' saved problem sets',weight:60,mins:25,route:'psets'});
+    if((subject.mcqSets||[]).length)tasks.push({id:'mcq',title:'Test recall with MCQs',why:(subject.mcqSets||[]).length+' MCQ sets available',weight:55,mins:15,route:'mcq'});
+    if((subject.topics||[]).length)tasks.push({id:'roadmap',title:'Review a topic on your roadmap',why:'Build connections before your next assessment',weight:30,mins:15,route:'roadmap'});
+    if(!tasks.length)tasks.push({id:'explore',title:'Explore a topic',why:'Start by creating or opening course materials',weight:25,mins:15,route:'roadmap'});
+    if(/account|cfas|financial report|bookkeep|^far\b/i.test(String(subject.name||'')+' '+String(subject.code||'')))tasks.push({id:'journal',title:'Practice a journal entry',why:'Optional accounting recall',weight:20,mins:15,route:'accounting-lab'});
+    else if(tasks.length===1)tasks.push({id:'materials',title:'Build a study resource',why:'Add a lecture, note or flashcard to get more personalized suggestions',weight:18,mins:15,route:'workspace'});
+    return tasks.sort((a,b)=>b.weight-a.weight||a.id.localeCompare(b.id));
+  }
+  function bsa196BudgetTasks(tasks,budget){
+    const max=budget<=20?2:budget<=40?3:4;
+    return tasks.slice(0,max).map((task,i)=>({...task,mins:Math.max(5,Math.floor((budget/max)/5)*5)}));
+  }
+  function BSA188Today({subject,settings,go,toast,update}){
+    const key=bsaNextKey('today_v188',subject.id);
+    const [record,setRecord]=useState(()=>bsaNextRead(key,{date:today(),done:[],budget:40}));
+    useEffect(()=>setRecord(bsaNextRead(key,{date:today(),done:[],budget:40})),[key]);
+    const date=today(),state=record.date===date?record:{date,done:[],budget:record.budget||40};
+    const synced=(subject.todayChecks||[]).filter(x=>x.day===date).map(x=>x.taskId);
+    const oldDone=Array.isArray(state.done)?state.done:[];
+    const checked=id=>synced.includes(id)||oldDone.includes(id);
+    const tasks=bsa196BudgetTasks(bsa188Tasks(subject,settings),state.budget);
+    const save=next=>{if(bsaNextSave(key,next,toast))setRecord(next)};
+    const toggle=id=>{
+      if(checked(id)){
+        if(oldDone.includes(id))save({...state,done:oldDone.filter(x=>x!==id)});
+        update(s=>{s.todayChecks=(s.todayChecks||[]).filter(x=>!(x.day===date&&x.taskId===id))});
+      } else update(s=>{s.todayChecks=[...(s.todayChecks||[]),{id:uid('today'),day:date,taskId:id,checkedAt:Date.now()}]});
+    };
+    const importOld=()=>{if(!oldDone.length)return;
+      if(!window.confirm('Copy today’s device-only checkmarks into subject data that may sync to your GitHub repository?'))return;
+      update(s=>{s.todayChecks=[...(s.todayChecks||[])];oldDone.forEach(id=>{if(!s.todayChecks.some(x=>x.day===date&&x.taskId===id))s.todayChecks.push({id:uid('today'),day:date,taskId:id,checkedAt:Date.now()})})});
+      save({...state,done:[]});toast('Today’s local checkmarks copied to subject sync data.');
+    };
+    const begin=task=>{if(timerState?.running){if(!window.confirm('A focus timer is already running. Replace it with this plan?'))return;}startTimer({mins:task.mins,subjectId:subject.id,label:task.title});go(task.route,task.opts||{});};
+    const completed=tasks.filter(x=>checked(x.id)).length;
+    return h('section',{className:'v2-panel bsa188-today','aria-label':'Smart Today study plan'},
+      h('div',{className:'bsa188-head'},h('div',null,h('span',{className:'v2-eyebrow'},'v196 · PRIORITIZED FROM YOUR RECORDS'),h('h2',null,'Your next study blocks'),h('p',{className:'muted small'},'Prioritizes upcoming exams, overdue review, open mistakes and unfinished work—not AI guesses.')),
+        h('label',null,'Time available',h('select',{value:state.budget,onChange:e=>save({...state,budget:Number(e.target.value)})},[20,40,60,90].map(n=>h('option',{key:n,value:n},n+' min'))))),
+      h('div',{className:'bsa188-progress'},h('span',null,completed+' / '+tasks.length+' manually checked'),h('div',{className:'bsa188-track'},h('span',{style:{width:(100*completed/Math.max(1,tasks.length))+'%'}}))),
+      h('div',{className:'bsa188-items'},tasks.map((task,i)=>h('div',{className:'bsa188-item'+(checked(task.id)?' done':''),key:task.id},
+        h('label',{className:'bsa188-check'},h('input',{type:'checkbox',checked:checked(task.id),onChange:()=>toggle(task.id),'aria-label':'Mark '+task.title+' completed'}),h('span',null,'0'+(i+1))),
+        h('div',{className:'bsa188-copy'},h('strong',null,task.title),h('small',null,task.why+' · '+task.mins+'-min suggested block')),
+        h('button',{type:'button',className:'btn',onClick:()=>begin(task)},'Start ↗')))),
+      oldDone.length>0&&h('div',{className:'bsa194-import'},h('small',null,oldDone.length+' older v192 checkmark(s) are saved locally.'),h('button',{className:'btn',onClick:importOld},'Copy to sync history')),
+      h('p',{className:'muted small bsa188-disclaimer'},'Checkmarks are a planning aid only and do not prove studying or award XP. Your available-time budget stays on this device; new checkmarks belong to the subject’s GitHub-syncable records if configured.'));
+  }
+
+  /* v189: companion follows real timer and achievement events; no rewards
+     are generated by rendering, clicking, or keeping the companion visible. */
+  function BSA189Companion({go}){
+    const timer=useTimer();
+    const [life,setLife]=useState(readLife),[progress,setProgress]=useState(readProgress);
+    const key=bsaNextKey('buddy_v189');
+    const [showMotion,setShowMotion]=useState(()=>bsaNextRead(key,{motion:true}).motion!==false);
+    useEffect(()=>{const f=()=>{setLife(readLife());setProgress(readProgress())};window.addEventListener('bsa-progress-updated',f);window.addEventListener('storage',f);return()=>{window.removeEventListener('bsa-progress-updated',f);window.removeEventListener('storage',f)}},[]);
+    const events=progress.events||[];const last=events.slice().sort((a,b)=>(Number(b.at||b.date||0)||0)-(Number(a.at||a.date||0)||0))[0];
+    const studying=!!(timer&&timer.running&&timer.phase==='work'),resting=!!(timer&&timer.phase==='break');
+    const didToday=events.some(x=>x.day===today());
+    const pose=studying?'walk':didToday?'happy':'front';
+    const label=studying?'Studying alongside you':resting?'Enjoy your well-earned break':didToday?'Your learning today made me smile':'Ready when you are';
+    const motionChange=checked=>{if(bsaNextSave(key,{motion:checked}))setShowMotion(checked)};
+    return h('section',{className:'v2-panel bsa189-widget','aria-label':'Study companion'},
+      h('div',{className:'bsa189-avatar'+(showMotion?' bsa189-animated':'')},h(PixelScholar,{avatar:life.avatar,pose})),
+      h('div',{className:'bsa189-message'},h('span',{className:'v2-eyebrow'},'STUDY COMPANION'),h('h2',null,label),h('p',{className:'muted small'},progressTotal(progress).toLocaleString()+' XP earned through recorded activities · No XP for opening this widget.'),
+        h('div',{className:'bsa189-actions'},h('button',{className:'btn primary',onClick:()=>go('life')},'Visit my room'),h('label',null,h('input',{type:'checkbox',checked:showMotion,onChange:e=>motionChange(e.target.checked)}),' Gentle motion'))));
+  }
+
+  /* v191: weekly calendar built from existing sessions and topic due dates.
+     Only UNCOMPLETED session plans can be rescheduled; completed history is
+     intentionally immutable from here. Touch users get explicit date selects. */
+  function BSA191WeeklyPlanner({subject,update,go,openEditor,toast}){
+    const [offset,setOffset]=useState(0);
+    const [dragId,setDragId]=useState('');
+    const start=addDays(today(),-((new Date().getDay()+6)%7)+offset*7);
+    const days=Array.from({length:7},(_,i)=>addDays(start,i));
+    const sessions=(subject.sessions||[]).filter(x=>x&&x.date&&/^\d{4}-\d{2}-\d{2}$/.test(x.date));
+    const events=days.map(day=>({day,entries:[
+      ...(subject.topics||[]).filter(x=>x.due===day).map(x=>({id:x.id,kind:x.kind==='exam'?'exam':'topic',label:x.title,description:x.kind==='exam'?'Exam':'Topic deadline',item:x})),
+      ...(subject.tasks||[]).filter(x=>x.due===day&&!x.done).map(x=>({id:x.id,kind:'task',label:x.title||x.name||'Task',description:'Class task',item:x})),
+      ...sessions.filter(x=>x.date===day).map(x=>({id:x.id,kind:'session',label:sessTopic(subject,x),description:(x.time?fmtTime(x.time)+' · ':'')+fmtMins(x.mins)+(x.done?' · Completed':' · Planned'),item:x}))]}));
+    const changeSession=(sessionId,date)=>{if(!days.includes(date))return;const session=sessions.find(x=>x.id===sessionId);if(!session||session.done){toast('Completed study history cannot be moved here.');return;}update(s=>{const item=(s.sessions||[]).find(x=>x.id===sessionId);if(item&&!item.done)item.date=date;});toast('Planned study block moved to '+date)};
+    return h('section',{className:'view bsa191-page'},h('div',{className:'page-head'},h('div',null,h('span',{className:'v2-eyebrow'},'v191 · SEE THE WEEK'),h('h1',{className:'page-title'},'Weekly Study Planner'),h('p',{className:'muted'},'A week at a glance using your saved plans, exams, and deadlines. Reschedule planned sessions without changing completed study history.'))),
+      h('div',{className:'bsa191-toolbar'},h('button',{className:'btn',onClick:()=>setOffset(n=>n-1),'aria-label':'Previous week'},'← Earlier'),h('strong',null,new Date(start+'T12:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric'})+' – '+new Date(days[6]+'T12:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})),h('button',{className:'btn',onClick:()=>setOffset(0)},'This week'),h('button',{className:'btn',onClick:()=>setOffset(n=>n+1),'aria-label':'Next week'},'Later →'),h('button',{className:'btn primary',onClick:()=>openEditor('session',null,{date:today()})},'+ Plan session')),
+      h('div',{className:'bsa191-grid'},events.map(({day,entries})=>h('section',{key:day,className:'bsa191-day'+(day===today()?' current':''),'aria-label':'Events on '+day,
+        onDragOver:e=>{if(dragId)e.preventDefault()},onDrop:e=>{e.preventDefault();if(dragId)changeSession(dragId,day);setDragId('')}},
+        h('div',{className:'bsa191-day-head'},h('strong',null,new Date(day+'T12:00:00').toLocaleDateString(undefined,{weekday:'short'})),h('span',null,day.slice(-2))),
+        entries.length?h('div',{className:'bsa191-events'},entries.map(x=>h('article',{className:'bsa191-event '+x.kind+(x.item.done?' done':''),key:x.kind+':'+x.id,draggable:x.kind==='session'&&!x.item.done,
+          onDragStart:e=>{if(x.kind==='session'&&!x.item.done){setDragId(x.id);e.dataTransfer.setData('text/plain',x.id);e.dataTransfer.effectAllowed='move'}},onDragEnd:()=>setDragId('')},
+          h('span',{className:'bsa191-type'},x.kind==='session'?'STUDY BLOCK':x.kind==='exam'?'EXAM':x.kind==='topic'?'DUE':'TASK'),
+          h('strong',null,x.label),h('small',null,x.description),
+          x.kind==='session'&&!x.item.done?h('label',null,'Move to',h('select',{value:day,onChange:e=>changeSession(x.id,e.target.value),'aria-label':'Reschedule '+x.label},days.map(d=>h('option',{key:d,value:d},new Date(d+'T12:00:00').toLocaleDateString(undefined,{weekday:'short',day:'numeric'}))))):h('button',{className:'bsa191-open',onClick:()=>go(x.kind==='session'?'calendar':x.kind==='task'?'class':'roadmap',x.kind==='session'?{date:day}:{open:x.id})},'Open ↗')))):
+          h('button',{className:'bsa191-add',onClick:()=>openEditor('session',null,{date:day})},'+ Add study block')))),
+      h('p',{className:'muted small bsa191-footnote'},'Drag an unfinished session to another day on desktop, or use Move to on iPad/Android. Completed sessions cannot be moved from this planner.'));
+  }
+
+  /* v192: topic-to-material map. Edges are created ONLY from real matching
+     topicId fields, not from guessed similarity between topic titles. */
+  function BSA192KnowledgeMap({subject,go}){
+    const [query,setQuery]=useState('');
+    const links=bsa181Links(subject);
+    const topics=(subject.topics||[]).filter(x=>x.kind!=='exam');
+    const [picked,setPicked]=useState('');
+    const matched=topics.filter(x=>(x.title||'').toLowerCase().includes(query.toLowerCase())||(x.code||'').toLowerCase().includes(query.toLowerCase()));
+    const focus=matched.find(x=>x.id===picked)||matched[0];
+    const connected=focus?links.find(x=>x.id===focus.id):null;
+    const related=connected?.related||[];
+    const sameTopicCount=topics.filter(x=>links.some(g=>g.id===x.id&&g.related.length)).length;
+    const weakFor=id=>(subject.mistakes||[]).filter(m=>m&&m.topicId===id&&m.status!=='Cleared').length;
+    const names={lectures:'Lectures',rules:'Rules & references',vault:'Flashcards',psets:'Problem sets',mcq:'MCQ library',mistakes:'Mistake log'};
+    return h('section',{className:'view bsa192-page'},h('div',{className:'page-head'},h('div',null,h('span',{className:'v2-eyebrow'},'v192 · YOUR KNOWLEDGE CONNECTIONS'),h('h1',{className:'page-title'},'Knowledge Map'),h('p',{className:'muted'},'Find the lectures, questions, rules and mistakes genuinely linked to each topic. No invented concept links.'))),
+      h('div',{className:'bsa192-stats'},h('span',null,topics.length+' topics'),h('span',null,sameTopicCount+' with linked materials'),h('button',{className:'btn',onClick:()=>go('roadmap')},'Edit your roadmap')),
+      h('div',{className:'bsa192-map'},h('aside',{className:'bsa192-topic-list'},h('label',null,'Find topic',h('input',{type:'search',placeholder:'Topic or code',value:query,onChange:e=>setQuery(e.target.value)})),
+        matched.length?matched.map(x=>{const rel=links.find(y=>y.id===x.id);return h('button',{type:'button',key:x.id,className:'bsa192-topic'+(focus?.id===x.id?' active':''),onClick:()=>setPicked(x.id)},h('strong',null,(x.code?x.code+' · ':'')+x.title),h('small',null,(rel?.related.length||0)+' linked resource groups · '+weakFor(x.id)+' open mistakes'))}):h('p',{className:'muted small'},'No matching topic.')),
+        h('div',{className:'bsa192-canvas'},focus?h('div',null,h('div',{className:'bsa192-center-node'},h('span',null,'TOPIC'),h('h2',null,(focus.code?focus.code+' · ':'')+focus.title),h('p',{className:'muted small'},weakFor(focus.id)+' saved unresolved mistakes for this topic'),h('button',{className:'btn',onClick:()=>go('roadmap',{open:focus.id})},'Open topic')),
+          h('div',{className:'bsa192-edges'},related.length?related.map(x=>h('button',{className:'bsa192-resource-node',key:x.type,onClick:()=>go(x.type,x.open?{open:x.open}:{})},h('strong',null,names[x.type]||x.type),h('small',null,x.label),h('span',{'aria-hidden':true},'↗'))):h('div',{className:'bsa192-empty'},'Nothing is linked to this topic yet. Add a lecture, flashcard, rule, question, or mistake with this topic selected.'))):
+          h('div',{className:'bsa192-empty'},'Add topics to your roadmap to start building the map.'))),
+      h('p',{className:'muted small'},'Connections are based only on matching saved topic IDs. This graph does not claim conceptual mastery or infer relationships without evidence.'));
+  }
+
+  /* Dashboard V2 Home. v185-v189 preferences and practice records live outside
+     the core academic schema; nothing here grants XP or changes quiz results. */
   function DashboardV2Home({subject,go,settings,openEditor,update,toast}) {
     const [details,setDetails]=useState(false);
+    const [layout,setLayout]=useState(bsa185Read);
+    const [editingLayout,setEditingLayout]=useState(false);
+    const layoutOrder=id=>layout.sections.indexOf(id)+1;
+    const layoutVisible=id=>!layout.hidden.includes(id);
+    const updateLayout=next=>{if(bsaNextSave(bsaNextKey('layout_v185'),next,toast))setLayout(next)};
     const s=subject||{};
     const cards=Array.isArray(s.cards)?s.cards:[];
     const lectures=Array.isArray(s.lectures)?s.lectures:[];
@@ -12555,7 +12876,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const card=(number,label,detail,route,ic)=>h('button',{key:label,type:'button',className:'v2-stat',onClick:()=>go(route)},
       h('span',{className:'v2-stat-symbol'},h(Icon,{name:ic,size:18})),
       h('strong',{className:'v2-stat-number'},number),h('span',{className:'v2-stat-label'},label),h('span',{className:'v2-stat-detail'},detail));
-    return h('section',{className:'view v2-home','aria-label':'Study dashboard'},
+    return h('section',{className:'view v2-home','data-bsa-density':layout.density,'aria-label':'Study dashboard'},
       h('div',{className:'v2-home-hero'},
         h('div',{className:'v2-hero-copy'},
           h('span',{className:'v2-eyebrow'},'YOUR STUDY SPACE  ·  '+dateLabel),
@@ -12563,14 +12884,17 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
           h('p',null,`Everything for ${s.name||'your subject'}, without the clutter. Start where it matters and keep moving.`),
           h('div',{className:'v2-hero-actions'},
             h('button',{type:'button',className:'v2-btn v2-btn-primary',onClick:()=>go('practice',{start:'review'})},h(Icon,{name:'bolt',size:17}),' Start studying'),
-            h('button',{type:'button',className:'v2-btn v2-btn-secondary',onClick:()=>go('workspace',{tab:'inbox'})},'＋ Quick note'))),
+            h('button',{type:'button',className:'v2-btn v2-btn-secondary',onClick:()=>go('workspace',{tab:'inbox'})},'＋ Quick note'),
+            h('button',{type:'button',className:'v2-btn v2-btn-secondary',onClick:()=>setEditingLayout(v=>!v),'aria-expanded':editingLayout},'⚙ Customize'))),
         h('div',{className:'v2-hero-stamp','aria-label':'Active subject'},h('span',null,'CURRENT SUBJECT'),h('strong',null,s.code||'STUDY DESK'),h('small',null,s.name||'Your learning library'))),
-      h('div',{className:'v2-stats','aria-label':'Current study records'},
+      editingLayout&&h(BSA185LayoutEditor,{layout,onChange:updateLayout,onClose:()=>setEditingLayout(false)}),
+      layoutVisible('stats')&&h('div',{className:'v2-stats','aria-label':'Current study records',style:{order:layoutOrder('stats')}},
         card(reviewDue,'Review due','Cards, problems & mistakes','practice','bolt'),
         card(lectures.length,'Lectures',`${pendingLectures.length} still to complete`,'lectures','lecture'),
         card(rules.length,'Reference rules','Search by standard','rules','book'),
         card(openMistakes.length,'Open mistakes','Your correction queue','mistakes','mistakes')),
-      h('div',{className:'v2-home-columns'},
+      layoutVisible('today')&&h('div',{className:'bsa188-wrap',style:{order:layoutOrder('today')}},h(BSA188Today,{key:s.id,subject:s,settings,go,toast,update})),
+      layoutVisible('focus')&&h('div',{className:'v2-home-columns',style:{order:layoutOrder('focus')}},
         h('div',{className:'v2-panel v2-focus-panel'},
           h('div',{className:'v2-panel-head'},h('span',{className:'v2-eyebrow'},focus.kicker),h('span',{className:'v2-live-dot'},'Based on your records')),
           h('h2',null,focus.title),h('p',null,focus.sub),
@@ -12582,10 +12906,11 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
             h('span',{className:'v2-recent-content'},h('strong',null,(r.tab==='lectures'&&(lectures.find(x=>x.id===r.open)||{}).title)||(routeTitles[r.tab]||String(r.label||r.tab).split(' · ').pop())),h('small',null,'Continue this activity')),
             h('span',{className:'v2-recent-arrow','aria-hidden':true},'↗')))):
             h('div',{className:'v2-empty-recent'},'Your recent lectures and study tools will appear here as you open them.'))),
-      h('div',{className:'v2-section-header'},h('div',null,h('span',{className:'v2-eyebrow'},'EXPLORE'),h('h2',null,'Choose your study mode')),h('span',{className:'v2-muted'},`${mcqCount} MCQs · ${problemCount} written problems · ${cards.length} cards`)),
-      h('div',{className:'v2-tool-grid'},tools.map(([tab,title,description,ic])=>h('button',{type:'button',key:tab,className:'v2-tool-tile',onClick:()=>go(tab)},
-        h('span',{className:'v2-tool-icon'},h(Icon,{name:ic,size:22})),h('strong',null,title),h('span',{className:'v2-tool-description'},description),h('span',{className:'v2-tool-arrow','aria-hidden':true},'↗')))),
-      h('div',{className:'v2-more-wrap'},h('button',{type:'button',className:'v2-details-toggle',onClick:()=>setDetails(v=>!v),'aria-expanded':details},
+      layoutVisible('tools')&&h('div',{className:'v2-tools-section',style:{order:layoutOrder('tools')}},h('div',{className:'v2-section-header'},h('div',null,h('span',{className:'v2-eyebrow'},'EXPLORE'),h('h2',null,'Choose your study mode')),h('span',{className:'v2-muted'},`${mcqCount} MCQs · ${problemCount} written problems · ${cards.length} cards`)),
+      h('div',{className:'v2-tool-grid'},[...tools,['split','Split Study','PDF + handwriting','book'],['accounting-lab','Accounting Lab','Journal entries & T-accounts','pset'],['week','Weekly Planner','Plan your study blocks','calendar'],['knowledge','Knowledge Map','Connect saved materials','roadmap']].map(([tab,title,description,ic])=>h('button',{type:'button',key:tab,className:'v2-tool-tile',onClick:()=>go(tab)},
+        h('span',{className:'v2-tool-icon'},h(Icon,{name:ic,size:22})),h('strong',null,title),h('span',{className:'v2-tool-description'},description),h('span',{className:'v2-tool-arrow','aria-hidden':true},'↗'))))),
+      layoutVisible('buddy')&&h('div',{className:'bsa189-wrap',style:{order:layoutOrder('buddy')}},h(BSA189Companion,{go})),
+      h('div',{className:'v2-more-wrap',style:{order:99}},h('button',{type:'button',className:'v2-details-toggle',onClick:()=>setDetails(v=>!v),'aria-expanded':details},
         details?'Hide detailed daily planner':'Show detailed daily planner',h('span',{'aria-hidden':true},details?'−':'+')),
         details&&h('div',{className:'v2-classic-details'},h(HomeView,{subject:s,go,settings,openEditor,update,toast})))
     );
@@ -12599,6 +12924,10 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     useEffect(()=>{const f=e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();setSpotlightOpen(v=>!v)}};document.addEventListener("keydown",f);return()=>document.removeEventListener("keydown",f)},[]);
     const [navSearch, setNavSearch] = useState("");
     const [shortcutsOpen,setShortcutsOpen] = useState(false);
+    const bottomSwipe=useRef(null);
+    const swipeTabs=['home','lectures','practice','rules','workspace'];
+    const touchNavStart=e=>{const x=e.touches?.[0];if(x)bottomSwipe.current={x:x.clientX,y:x.clientY,tab:nav.tab}};
+    const touchNavEnd=e=>{const start=bottomSwipe.current;bottomSwipe.current=null;const end=e.changedTouches?.[0];if(!start||!end)return;const dx=end.clientX-start.x,dy=end.clientY-start.y;if(Math.abs(dx)<65||Math.abs(dy)>35)return;const ix=swipeTabs.indexOf(start.tab);if(ix<0)return;const target=swipeTabs[ix+(dx<0?1:-1)];if(target)go(target)};
     const [collapsedNav, setCollapsedNav] = useState({"Plan & progress":true,"My space":true,"More tools":true});
     const [editor, setEditor] = useState(null);
     const [msg, setMsg] = useState("");
@@ -12693,6 +13022,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       h("div",{className:"bsa-shortcut-title"},"Quick shortcuts"),
       shortcutItems.map(([tab,label,symbol])=>h("button",{key:tab,type:"button",role:"menuitem",onClick:()=>shortcutGo(tab)},h("span",{className:"bsa-shortcut-symbol","aria-hidden":"true"},symbol),label)),
       !window.__BSA_SHARED_MODE__ && h("div",{className:"bsa-shortcut-separator",role:"separator"}),
+      !window.__BSA_SHARED_MODE__ && h("button",{type:"button",role:"menuitem",onClick:()=>{setShortcutsOpen(false);go("safety");}},h("span",{className:"bsa-shortcut-symbol","aria-hidden":"true"},"✓"),"Device & data safety"),
       !window.__BSA_SHARED_MODE__ && h("button",{type:"button",role:"menuitem",onClick:()=>{setShortcutsOpen(false);go("toolkit",{tool:"share"});}},h("span",{className:"bsa-shortcut-symbol","aria-hidden":"true"},"↗"),"Publish materials"),
       !window.__BSA_SHARED_MODE__ && h('button',{type:'button',role:'menuitem',onClick:()=>{setShortcutsOpen(false);go('private-vault');}},h('span',{className:'bsa-shortcut-symbol','aria-hidden':'true'},'🔒'),'Private vault'),
       !window.__BSA_SHARED_MODE__ && h("button",{type:"button",role:"menuitem",onClick:()=>{setShortcutsOpen(false);const updateButton=document.getElementById("bsa-update-button");if(updateButton)updateButton.click();else window.alert("The update checker is still loading. Please try again.");}},h("span",{className:"bsa-shortcut-symbol","aria-hidden":"true"},"↻"),"Check updates")) : null;
@@ -12721,7 +13051,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       try {
         const qs = new URLSearchParams(location.search);
         const want = qs.get("go");
-        const okTabs = ["curriculum", "home", "workspace", "break", "life", "achievements", "stats-clean", "private-vault", "practice", "roadmap", "calendar", "vault", "mistakes", "grades", "lectures", "psets", "rules", "class", "toolkit", "howto"];
+        const okTabs = ["safety", "week", "knowledge", "split", "accounting-lab", "curriculum", "home", "workspace", "break", "life", "achievements", "stats-clean", "private-vault", "practice", "roadmap", "calendar", "vault", "mistakes", "grades", "lectures", "psets", "rules", "class", "toolkit", "howto"];
         if (want && okTabs.includes(want)) {
           setNav({ tab: want, opts: want === "practice" ? { start: "review" } : {}, key: 1 });
           history.replaceState(null, "", location.pathname);
@@ -12810,6 +13140,11 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const tabs = [
       ["home", "Today", "home"],
       ["workspace", "Study Workspace", "book"],
+      ["split", "Split Study · iPad", "book"],
+      ["accounting-lab", "Accounting Lab", "pset"],
+      ["week", "Weekly Planner", "calendar"],
+      ["knowledge", "Knowledge Map", "roadmap"],
+      ["safety", "Device & Data Safety", "data"],
       ["guide", "Explore features", "book"],
       ["break", "Break Corner", "home"],
       ["achievements", "Study Achievements", "grade"],
@@ -12832,11 +13167,11 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     ];
     const navGroups = [
       {name:"Home", items:["home","workspace"]},
-      {name:"Learn", items:["lectures","rules","vault","roadmap"]},
-      {name:"Practice", items:["practice","mcq","psets","mistakes"]},
-      {name:"Plan & progress", items:["stats-clean","calendar","class","grades","achievements"]},
+      {name:"Learn", items:["lectures","rules","vault","roadmap","knowledge","split"]},
+      {name:"Practice", items:["practice","mcq","psets","mistakes","accounting-lab"]},
+      {name:"Plan & progress", items:["stats-clean","calendar","week","class","grades","achievements"]},
       {name:"My space", items:["life","break","personalize"]},
-      {name:"More tools", items:["toolkit","ask","curriculum","guide","howto"]}
+      {name:"More tools", items:["toolkit","safety","ask","curriculum","guide","howto"]}
     ];
     const filteredNavGroups = navGroups.map(group=>({
       ...group,
@@ -12867,10 +13202,10 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
         h("div",{className:"workspace-context"},h("span",{className:"workspace-eyebrow"},"BSA DESK  /"),h("strong",null,(tabs.find(t=>t[0]===nav.tab)||[null,"Today"])[1]),h("span",{className:"workspace-subject"},subject.code||subject.name)),
         h("div",{className:"workspace-actions v2-top-actions"},h("button",{className:"v2-top-search",onClick:()=>setSpotlightOpen(true),title:"Search · Ctrl/⌘ + K","aria-label":"Search all study materials"},"⌕  Search everything",h("kbd",null,"⌘ K")),h("button",{className:"v2-top-capture",onClick:()=>go("workspace",{tab:"inbox"})},"＋ Capture"),h("button",{className:"v2-top-quick",onClick:()=>setModal("quick")},"＋"))),
       h(ScreenBoundary,{key:nav.tab,route:nav.tab,onHome:()=>go("home")},h(React.Fragment,null,
-      nav.tab === "guide" && h(FeatureGuide,{go}), nav.tab === "break" && h(BreakCorner), nav.tab === "joy" && h(JoyHub,{go}), nav.tab === "life" && h(StudyLife), nav.tab === "achievements" && h(AcademicProgress,{go}), nav.tab === "stats-clean" && h(StudyReport,{data,update,toast,go}), nav.tab === "private-vault" && !window.__BSA_SHARED_MODE__ && h(PrivateVault,{toast}), nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data,initialTool:nav.opts?.tool})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), h(WorkflowRibbon,{tab:nav.tab,go}), nav.tab === "home" && h(DashboardV2Home, { ...viewProps }), nav.tab === "practice" && h(PracticeView, { ...viewProps, data }), nav.tab === "mcq" && h(MCQPage,{...viewProps}), nav.tab === "rules" && h(RulesLibrary,{...viewProps}), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(CalendarView, { ...viewProps }), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "workspace" && h(BSA181Workspace, { ...viewProps, initialTab:nav.opts?.tab, undoAvailable:!!undo, onGlobalUndo:doUndo }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(PsView, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })))),
+      nav.tab === "guide" && h(FeatureGuide,{go}), nav.tab === "break" && h(BreakCorner), nav.tab === "joy" && h(JoyHub,{go}), nav.tab === "life" && h(StudyLife,{go}), nav.tab === "achievements" && h(AcademicProgress,{go}), nav.tab === "stats-clean" && h(StudyReport,{data,update,toast,go}), nav.tab === "private-vault" && !window.__BSA_SHARED_MODE__ && h(PrivateVault,{toast}), nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data,initialTool:nav.opts?.tool})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), h(WorkflowRibbon,{tab:nav.tab,go}), nav.tab === "home" && h(DashboardV2Home, { ...viewProps }), nav.tab === "split" && h(BSA186SplitStudy,{subject,toast}), nav.tab === "accounting-lab" && h(BSA187AccountingLab,{subject,update,toast}), nav.tab === "week" && h(BSA191WeeklyPlanner,{subject,update,go,openEditor,toast}), nav.tab === "knowledge" && h(BSA192KnowledgeMap,{subject,go}), nav.tab === "safety" && h(BSA193DeviceSafety,{data,go,toast}), nav.tab === "practice" && h(PracticeView, { ...viewProps, data }), nav.tab === "mcq" && h(MCQPage,{...viewProps}), nav.tab === "rules" && h(RulesLibrary,{...viewProps}), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(CalendarView, { ...viewProps }), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "workspace" && h(BSA181Workspace, { ...viewProps, initialTab:nav.opts?.tab, undoAvailable:!!undo, onGlobalUndo:doUndo }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(PsView, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })))),
       h(BSA181HighlightTool,{subject,tab:nav.tab,go,toast}),
       spotlightOpen && h(BSA181Spotlight,{data,go,onSwitch:(id,tab,opts)=>{setData(d=>({...d,activeId:id}));go(tab,opts)},onClose:()=>setSpotlightOpen(false)}),
-      /* @__PURE__ */ h("nav",{className:"bottom-nav v2-bottom-nav","aria-label":"Mobile navigation"},
+      /* @__PURE__ */ h("nav",{className:"bottom-nav v2-bottom-nav","aria-label":"Mobile navigation",onTouchStart:touchNavStart,onTouchEnd:touchNavEnd},
         [["home","Today","home"],["lectures","Learn","lecture"],["practice","Practice","bolt"],["rules","Rules","book"],["workspace","Workspace","cards"]].map(([k,l,ic])=>h("button",{type:"button",key:k,className:nav.tab===k?"on":"","aria-current":nav.tab===k?"page":undefined,onClick:()=>go(k)},h(Icon,{name:ic}),h("span",null,l))),
         h("button",{type:"button",onClick:()=>setModal("more"),className:"v2-more-mobile","aria-label":"More tools"},h(Icon,{name:"more"}),h("span",null,"More"))), /* @__PURE__ */ React.createElement("div", { className: `toast${msg ? " show" : ""}`, role: "status", "aria-live": "polite" }, msg), h(FocusBar, { data, update, toast }), modal === "quick" && /* @__PURE__ */ React.createElement(QuickAdd, { onClose: () => setModal(null), onPick: (k) => {
       if (k === "grade") {
@@ -12976,7 +13311,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
   function bsaDownloadSafeDiagnostics(error) {
     try {
       const keys=bsaBackupKeys();
-      const report={app:'BSA Study Desk',build:'v105',time:new Date().toISOString(),
+      const report={app:'BSA Study Desk',build:'v196',time:new Date().toISOString(),
         page:location.pathname,online:navigator.onLine,
         userAgent:navigator.userAgent,
         studyStorageKeyCount:keys.length,
@@ -12984,7 +13319,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
         academicProgressRecordPresent:localStorage.getItem(PROGRESS_KEY)!==null,
         error:String(error&&error.message||'Unknown display error').slice(0,600)};
       const u=URL.createObjectURL(new Blob([JSON.stringify(report,null,2)],{type:'application/json'}));
-      const a=document.createElement('a');a.href=u;a.download='BSA-Desk-Diagnostics-v105.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),5000);
+      const a=document.createElement('a');a.href=u;a.download='BSA-Desk-Diagnostics-v196.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),5000);
     } catch(e){alert('Diagnostic export unavailable: '+String(e.message||e))}
   }
   class DashboardBoundary extends React.Component {
