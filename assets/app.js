@@ -11153,8 +11153,8 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       if(pub<0||retention<0)throw Error('Cannot publish: publisher boundary changed');
       app=app.slice(0,pub)+'\n  function ClassmatePublisher(){return null;}'+app.slice(retention);
       for(const [before,after] of swaps){if(!app.includes(before))throw Error('Cannot publish: app compatibility changed ('+before.slice(0,40)+')');app=(before==='["share","Classmate sharing"],' ? app.split(before).join(after) : app.replace(before,after));}
-      if(!app.includes("{name:\"Study\", items:[\"home\",\"workspace\",\"guide\",\"vault\",\"psets\",\"mcq\",\"rules\",\"lectures\",\"practice\"]},\n      {name:\"Tools\", items:[\"toolkit\",\"roadmap\",\"ask\",\"curriculum\",\"howto\"]},\n      {name:\"Progress\", items:[\"stats-clean\",\"mistakes\",\"grades\",\"achievements\"]},\n      {name:\"Plan\", items:[\"calendar\",\"class\"]},\n      {name:\"Your space\", items:[\"life\",\"break\",\"personalize\"]}"))throw Error('Cannot publish: navigation compatibility changed');
-      app=app.replace("{name:\"Study\", items:[\"home\",\"workspace\",\"guide\",\"vault\",\"psets\",\"mcq\",\"rules\",\"lectures\",\"practice\"]},\n      {name:\"Tools\", items:[\"toolkit\",\"roadmap\",\"ask\",\"curriculum\",\"howto\"]},\n      {name:\"Progress\", items:[\"stats-clean\",\"mistakes\",\"grades\",\"achievements\"]},\n      {name:\"Plan\", items:[\"calendar\",\"class\"]},\n      {name:\"Your space\", items:[\"life\",\"break\",\"personalize\"]}","{name:\"Study path\", items:[\"path\",\"mistakes\"]},\n      {name:\"Study materials\", items:[\"lectures\",\"vault\",\"psets\",\"mcq\",\"rules\",\"practice\"]},\n      {name:\"Accounting tools\", items:[\"toolkit\"]}");
+      if(!app.includes("{name:\"Home\", items:[\"home\",\"workspace\"]},\n      {name:\"Learn\", items:[\"lectures\",\"rules\",\"vault\",\"roadmap\"]},\n      {name:\"Practice\", items:[\"practice\",\"mcq\",\"psets\",\"mistakes\"]},\n      {name:\"Plan & progress\", items:[\"stats-clean\",\"calendar\",\"class\",\"grades\",\"achievements\"]},\n      {name:\"My space\", items:[\"life\",\"break\",\"personalize\"]},\n      {name:\"More tools\", items:[\"toolkit\",\"ask\",\"curriculum\",\"guide\",\"howto\"]}"))throw Error('Cannot publish: navigation compatibility changed');
+      app=app.replace("{name:\"Home\", items:[\"home\",\"workspace\"]},\n      {name:\"Learn\", items:[\"lectures\",\"rules\",\"vault\",\"roadmap\"]},\n      {name:\"Practice\", items:[\"practice\",\"mcq\",\"psets\",\"mistakes\"]},\n      {name:\"Plan & progress\", items:[\"stats-clean\",\"calendar\",\"class\",\"grades\",\"achievements\"]},\n      {name:\"My space\", items:[\"life\",\"break\",\"personalize\"]},\n      {name:\"More tools\", items:[\"toolkit\",\"ask\",\"curriculum\",\"guide\",\"howto\"]}","{name:\"Study path\", items:[\"path\",\"mistakes\"]},\n      {name:\"Study materials\", items:[\"lectures\",\"vault\",\"psets\",\"mcq\",\"rules\",\"practice\"]},\n      {name:\"Accounting tools\", items:[\"toolkit\"]}");
       app=app.replaceAll('Welcome back, John Angel 👋','Welcome to Study Desk 👋').replaceAll('John Angel','Student');
       const checkpoint='        learningCapture(d, n, now);\n        stampChanges(d, n, now);\n        n.updatedAt = now;\n        return n;';
       if(!app.includes(checkpoint))throw Error('Cannot publish: progress system changed');
@@ -12520,6 +12520,76 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
         h('p',null,'This discards the unreadable local copy. Restore a known-good study backup through Import & Export afterward.'),
         h('button',{className:'btn danger',onClick:reset},'Replace unreadable local copy')));
   }
+  /* Dashboard V2: presentation and navigation only. No new academic events, IDs,
+     saved-data keys, or artificial activity/achievement records are created here. */
+  function DashboardV2Home({subject,go,settings,openEditor,update,toast}) {
+    const [details,setDetails]=useState(false);
+    const s=subject||{};
+    const cards=Array.isArray(s.cards)?s.cards:[];
+    const lectures=Array.isArray(s.lectures)?s.lectures:[];
+    const rules=Array.isArray(s.rules)?s.rules:[];
+    const mcq=Array.isArray(s.mcqSets)?s.mcqSets:[];
+    const problems=Array.isArray(s.psets)?s.psets:[];
+    const mistakes=Array.isArray(s.mistakes)?s.mistakes:[];
+    const openMistakes=mistakes.filter(x=>x && x.status!=="Cleared");
+    const pendingLectures=lectures.filter(x=>x && !x.done);
+    const review=buildReview(s,settings&&settings.newPerDay||10,settings&&settings.maxPerDay||0);
+    const reviewDue=(review.due||[]).length+(review.mist||[]).length+(review.prob||[]).length;
+    const mcqCount=mcq.reduce((n,x)=>n+(Array.isArray(x.problems)?x.problems.length:0),0);
+    const problemCount=problems.reduce((n,x)=>n+(Array.isArray(x.problems)?x.problems.length:0),0);
+    const dateLabel=new Date().toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'});
+    const recent=bsa181Read().recent.filter(x=>x&&x.subjectId===s.id&&x.tab&&x.tab!=='home').slice(0,3);
+    const routeTitles={lectures:'Lecture',rules:'Rulebook',practice:'Practice',mcq:'MCQ library',psets:'Problem sets',vault:'Flashcards',roadmap:'Roadmap',stats:'Study report',mistakes:'Mistake log',calendar:'Calendar',workspace:'Study Workspace'};
+    const focus=openMistakes.length?{kicker:'YOUR NEXT MOVE',title:'Turn a mistake into progress',sub:`${openMistakes.length} open ${openMistakes.length===1?'mistake':'mistakes'} ready for another try.`,cta:'Review mistakes',tab:'mistakes'}:
+      reviewDue?{kicker:'YOUR NEXT MOVE',title:'A little recall goes a long way',sub:`${reviewDue} review ${reviewDue===1?'item':'items'} due from your saved study material.`,cta:'Start a review',tab:'practice',opts:{start:'review'}}:
+      pendingLectures.length?{kicker:'YOUR NEXT MOVE',title:'Pick up where you left off',sub:`${pendingLectures.length} ${pendingLectures.length===1?'lecture':'lectures'} still in progress.`,cta:'Continue reading',tab:'lectures',opts:{open:pendingLectures[0].id}}:
+      {kicker:'YOUR NEXT MOVE',title:'Keep your momentum',sub:'Try some fresh practice or explore a topic you want to understand better.',cta:'Open practice',tab:'practice'};
+    const tools=[
+      ['lectures','Lectures','Learn at your pace','lecture'],
+      ['rules','Rulebook','Find the exact treatment','book'],
+      ['mcq','MCQ library','Test your recall','cards'],
+      ['psets','Problem sets','Work through solutions','pset'],
+      ['vault','Flashcards','Build lasting recall','cards'],
+      ['workspace','Workspace','Notes, highlights & more','book']
+    ];
+    const card=(number,label,detail,route,ic)=>h('button',{key:label,type:'button',className:'v2-stat',onClick:()=>go(route)},
+      h('span',{className:'v2-stat-symbol'},h(Icon,{name:ic,size:18})),
+      h('strong',{className:'v2-stat-number'},number),h('span',{className:'v2-stat-label'},label),h('span',{className:'v2-stat-detail'},detail));
+    return h('section',{className:'view v2-home','aria-label':'Study dashboard'},
+      h('div',{className:'v2-home-hero'},
+        h('div',{className:'v2-hero-copy'},
+          h('span',{className:'v2-eyebrow'},'YOUR STUDY SPACE  ·  '+dateLabel),
+          h('h1',null,'Make today count.'),
+          h('p',null,`Everything for ${s.name||'your subject'}, without the clutter. Start where it matters and keep moving.`),
+          h('div',{className:'v2-hero-actions'},
+            h('button',{type:'button',className:'v2-btn v2-btn-primary',onClick:()=>go('practice',{start:'review'})},h(Icon,{name:'bolt',size:17}),' Start studying'),
+            h('button',{type:'button',className:'v2-btn v2-btn-secondary',onClick:()=>go('workspace',{tab:'inbox'})},'＋ Quick note'))),
+        h('div',{className:'v2-hero-stamp','aria-label':'Active subject'},h('span',null,'CURRENT SUBJECT'),h('strong',null,s.code||'STUDY DESK'),h('small',null,s.name||'Your learning library'))),
+      h('div',{className:'v2-stats','aria-label':'Current study records'},
+        card(reviewDue,'Review due','Cards, problems & mistakes','practice','bolt'),
+        card(lectures.length,'Lectures',`${pendingLectures.length} still to complete`,'lectures','lecture'),
+        card(rules.length,'Reference rules','Search by standard','rules','book'),
+        card(openMistakes.length,'Open mistakes','Your correction queue','mistakes','mistakes')),
+      h('div',{className:'v2-home-columns'},
+        h('div',{className:'v2-panel v2-focus-panel'},
+          h('div',{className:'v2-panel-head'},h('span',{className:'v2-eyebrow'},focus.kicker),h('span',{className:'v2-live-dot'},'Based on your records')),
+          h('h2',null,focus.title),h('p',null,focus.sub),
+          h('button',{type:'button',className:'v2-btn v2-btn-primary',onClick:()=>go(focus.tab,focus.opts||{})},focus.cta,' →')),
+        h('div',{className:'v2-panel v2-continue-panel'},
+          h('div',{className:'v2-panel-head'},h('h2',null,'Recently opened'),h('button',{type:'button',className:'v2-text-button',onClick:()=>go('workspace',{tab:'recent'})},'Your workspace →')),
+          recent.length?h('div',{className:'v2-recent-list'},recent.map((r,i)=>h('button',{key:i,type:'button',className:'v2-recent-row',onClick:()=>go(r.tab,r.open?{open:r.open}:{})},
+            h('span',{className:'v2-recent-index'},String(i+1).padStart(2,'0')),
+            h('span',{className:'v2-recent-content'},h('strong',null,(r.tab==='lectures'&&(lectures.find(x=>x.id===r.open)||{}).title)||(routeTitles[r.tab]||String(r.label||r.tab).split(' · ').pop())),h('small',null,'Continue this activity')),
+            h('span',{className:'v2-recent-arrow','aria-hidden':true},'↗')))):
+            h('div',{className:'v2-empty-recent'},'Your recent lectures and study tools will appear here as you open them.'))),
+      h('div',{className:'v2-section-header'},h('div',null,h('span',{className:'v2-eyebrow'},'EXPLORE'),h('h2',null,'Choose your study mode')),h('span',{className:'v2-muted'},`${mcqCount} MCQs · ${problemCount} written problems · ${cards.length} cards`)),
+      h('div',{className:'v2-tool-grid'},tools.map(([tab,title,description,ic])=>h('button',{type:'button',key:tab,className:'v2-tool-tile',onClick:()=>go(tab)},
+        h('span',{className:'v2-tool-icon'},h(Icon,{name:ic,size:22})),h('strong',null,title),h('span',{className:'v2-tool-description'},description),h('span',{className:'v2-tool-arrow','aria-hidden':true},'↗')))),
+      h('div',{className:'v2-more-wrap'},h('button',{type:'button',className:'v2-details-toggle',onClick:()=>setDetails(v=>!v),'aria-expanded':details},
+        details?'Hide detailed daily planner':'Show detailed daily planner',h('span',{'aria-hidden':true},details?'−':'+')),
+        details&&h('div',{className:'v2-classic-details'},h(HomeView,{subject:s,go,settings,openEditor,update,toast})))
+    );
+  }
   function App() {
     const [data, setData] = useState(() => loadLocal() || buildDefault());
     const [nav, setNav] = useState({ tab: "home", opts: {}, key: 0 });
@@ -12529,7 +12599,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     useEffect(()=>{const f=e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();setSpotlightOpen(v=>!v)}};document.addEventListener("keydown",f);return()=>document.removeEventListener("keydown",f)},[]);
     const [navSearch, setNavSearch] = useState("");
     const [shortcutsOpen,setShortcutsOpen] = useState(false);
-    const [collapsedNav, setCollapsedNav] = useState({"Planning":true,"Personal":true});
+    const [collapsedNav, setCollapsedNav] = useState({"Plan & progress":true,"My space":true,"More tools":true});
     const [editor, setEditor] = useState(null);
     const [msg, setMsg] = useState("");
     const [downloads, setDownloads] = useState(null);
@@ -12761,11 +12831,12 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       ["life", "Study Room", "look"], ["personalize", "Personalization Corner", "look"], ["howto", "How-To Corner", "book"]
     ];
     const navGroups = [
-      {name:"Study", items:["home","workspace","guide","vault","psets","mcq","rules","lectures","practice"]},
-      {name:"Tools", items:["toolkit","roadmap","ask","curriculum","howto"]},
-      {name:"Progress", items:["stats-clean","mistakes","grades","achievements"]},
-      {name:"Plan", items:["calendar","class"]},
-      {name:"Your space", items:["life","break","personalize"]}
+      {name:"Home", items:["home","workspace"]},
+      {name:"Learn", items:["lectures","rules","vault","roadmap"]},
+      {name:"Practice", items:["practice","mcq","psets","mistakes"]},
+      {name:"Plan & progress", items:["stats-clean","calendar","class","grades","achievements"]},
+      {name:"My space", items:["life","break","personalize"]},
+      {name:"More tools", items:["toolkit","ask","curriculum","guide","howto"]}
     ];
     const filteredNavGroups = navGroups.map(group=>({
       ...group,
@@ -12792,14 +12863,16 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const viewProps = { key: `${subject.id}-${nav.key}`, subject, update, toast, go, openEditor, init: nav.opts, settings: data.settings, setSettings };
     const subjectPicker = (id) => /* @__PURE__ */ React.createElement("select", { id, className: "subject-select", value: data.activeId, onChange: (e) => switchSubject(e.target.value), "aria-label": "Active subject" }, (() => {const groups=new Map();data.subjects.forEach(s=>{const matched=PROSPECTUS.flatMap(t=>t.courses.map(c=>({...c,term:t.term}))).find(c=>String(c.code).trim().toLowerCase()===String(s.code||"").trim().toLowerCase());const label=s.curriculumTerm||(matched&&matched.term)||"Other / custom subjects";if(!groups.has(label))groups.set(label,[]);groups.get(label).push(s);});return [...groups].sort((a,b)=>a[0].localeCompare(b[0],undefined,{numeric:true})).map(([term,subjects])=>React.createElement("optgroup",{key:term,label:term},subjects.map(s=>React.createElement("option",{key:s.id,value:s.id},s.code?`${s.code} · ${s.name}`:s.name))));})());
     return /* @__PURE__ */ React.createElement("div", { className: "shell" }, /* @__PURE__ */ React.createElement("aside", { className: "rail", "aria-label": "Main" }, /* @__PURE__ */ h("div",{className:"bsa-shortcut-anchor"},React.createElement("button", { className: "brand brand-home-button", type: "button", onClick: () => setShortcutsOpen(v=>!v), title: "Open quick shortcuts", "aria-label": "Open quick shortcuts", "aria-expanded":shortcutsOpen,"aria-haspopup":"menu" }, /* @__PURE__ */ React.createElement("span", { className: "brand-mark", "aria-hidden": "true" }, "Σ"), /* @__PURE__ */ React.createElement("span", null, "BSA Study Desk")),shortcutMenu()), /* @__PURE__ */ React.createElement("div", { className: "rail-subject" }, /* @__PURE__ */ React.createElement("span", { className: "rail-label" }, "Subject"), subjectPicker("subj"), /* @__PURE__ */ React.createElement("button", { className: "link-btn", onClick: () => setModal("subjects") }, "+ Add new subject")), h("div",{className:"rail-nav-wrap"},h("label",{className:"nav-search-label",htmlFor:"desk-nav-search"},"Find a tool"),h("input",{id:"desk-nav-search",className:"nav-search",type:"search",placeholder:"Search tools…",value:navSearch,onChange:e=>setNavSearch(e.target.value),"aria-label":"Search dashboard tools"}),h("nav",{className:"rail-nav","aria-label":"Study Desk sections"},filteredNavGroups.map(group=>h("section",{className:"nav-group",key:group.name},h("button",{className:"nav-group-heading",type:"button","aria-expanded":navSearch?true:!collapsedNav[group.name],onClick:()=>setCollapsedNav(prev=>({...prev,[group.name]:!prev[group.name]}))},h("span",null,group.name),h("span",{className:"nav-chevron","aria-hidden":"true"},navSearch||!collapsedNav[group.name]?"⌄":"›")),(navSearch||!collapsedNav[group.name])?h("div",{className:"nav-group-links"},group.tabs.map(([k,l,ic,n])=>h("button",{key:k,className:nav.tab===k?"on":"","aria-current":nav.tab===k?"page":undefined,title:(DESK_FEATURE_GUIDE.find(f=>f.id===k)||{}).desc||l,onClick:()=>go(k)},h(Icon,{name:ic}),h("span",null,l),n?h("span",{className:"n"},n):null))):null)))), /* @__PURE__ */ React.createElement("div", { className: "rail-tools" }, /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("data") }, /* @__PURE__ */ React.createElement(Icon, { name: "data", size: 18 }), " Import & export"), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("look") }, /* @__PURE__ */ React.createElement(Icon, { name: "look", size: 18 }), " Appearance"), /* @__PURE__ */ React.createElement(ThemeDots, { settings: data.settings, setSettings })), React.createElement(SyncBadge, { onOpen: openSync })), /* @__PURE__ */ React.createElement("header", { className: "mobilebar" }, /* @__PURE__ */ h("div",{className:"bsa-shortcut-anchor mobile"},React.createElement("button", { className: "brand-mark mobile-home-button", type: "button", onClick: () => setShortcutsOpen(v=>!v), title: "Open quick shortcuts", "aria-label": "Open quick shortcuts", "aria-expanded":shortcutsOpen,"aria-haspopup":"menu" }, "Σ"),shortcutMenu()), subjectPicker("subj-m"), h("button",{className:"icon-btn",onClick:()=>setSpotlightOpen(true),"aria-label":"Search dashboard"},"⌕"), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal(syncAlert ? "sync" : "data"), "aria-label": syncAlert ? "Import, export and sync (needs attention)" : "Import and export", "data-sync": syncAlert }, /* @__PURE__ */ React.createElement(Icon, { name: "data" })), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal("look"), "aria-label": "Appearance" }, /* @__PURE__ */ React.createElement(Icon, { name: "look" }))), /* @__PURE__ */ React.createElement("main", { className: "content" },
-      h("div",{className:"workspace-topbar"},
-        h("div",{className:"workspace-context"},h("span",{className:"workspace-eyebrow"},"STUDY DESK"),h("strong",null,(tabs.find(t=>t[0]===nav.tab)||[null,"Today"])[1]),h("span",{className:"workspace-subject"},subject.code||subject.name)),
-        h("div",{className:"workspace-actions"},h("button",{className:"btn ghost",onClick:()=>setSpotlightOpen(true),title:"Search dashboard · Ctrl/⌘ + K"},"⌕ Search"),h("button",{className:"btn ghost",onClick:()=>go("workspace",{tab:"inbox"})},"＋ Capture"),h("button",{className:"btn ghost",onClick:()=>setModal("quick")},"Quick add"),h("button",{className:"btn primary",onClick:()=>go("ask")},"Ask tutor"))),
+      h("div",{className:"workspace-topbar v2-topbar"},
+        h("div",{className:"workspace-context"},h("span",{className:"workspace-eyebrow"},"BSA DESK  /"),h("strong",null,(tabs.find(t=>t[0]===nav.tab)||[null,"Today"])[1]),h("span",{className:"workspace-subject"},subject.code||subject.name)),
+        h("div",{className:"workspace-actions v2-top-actions"},h("button",{className:"v2-top-search",onClick:()=>setSpotlightOpen(true),title:"Search · Ctrl/⌘ + K","aria-label":"Search all study materials"},"⌕  Search everything",h("kbd",null,"⌘ K")),h("button",{className:"v2-top-capture",onClick:()=>go("workspace",{tab:"inbox"})},"＋ Capture"),h("button",{className:"v2-top-quick",onClick:()=>setModal("quick")},"＋"))),
       h(ScreenBoundary,{key:nav.tab,route:nav.tab,onHome:()=>go("home")},h(React.Fragment,null,
-      nav.tab === "guide" && h(FeatureGuide,{go}), nav.tab === "break" && h(BreakCorner), nav.tab === "joy" && h(JoyHub,{go}), nav.tab === "life" && h(StudyLife), nav.tab === "achievements" && h(AcademicProgress,{go}), nav.tab === "stats-clean" && h(StudyReport,{data,update,toast,go}), nav.tab === "private-vault" && !window.__BSA_SHARED_MODE__ && h(PrivateVault,{toast}), nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data,initialTool:nav.opts?.tool})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), h(WorkflowRibbon,{tab:nav.tab,go}), nav.tab === "home" && /* @__PURE__ */ React.createElement(HomeView, { ...viewProps }), nav.tab === "practice" && h(PracticeView, { ...viewProps, data }), nav.tab === "mcq" && h(MCQPage,{...viewProps}), nav.tab === "rules" && h(RulesLibrary,{...viewProps}), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(CalendarView, { ...viewProps }), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "workspace" && h(BSA181Workspace, { ...viewProps, initialTab:nav.opts?.tab, undoAvailable:!!undo, onGlobalUndo:doUndo }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(PsView, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })))),
+      nav.tab === "guide" && h(FeatureGuide,{go}), nav.tab === "break" && h(BreakCorner), nav.tab === "joy" && h(JoyHub,{go}), nav.tab === "life" && h(StudyLife), nav.tab === "achievements" && h(AcademicProgress,{go}), nav.tab === "stats-clean" && h(StudyReport,{data,update,toast,go}), nav.tab === "private-vault" && !window.__BSA_SHARED_MODE__ && h(PrivateVault,{toast}), nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data,initialTool:nav.opts?.tool})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), h(WorkflowRibbon,{tab:nav.tab,go}), nav.tab === "home" && h(DashboardV2Home, { ...viewProps }), nav.tab === "practice" && h(PracticeView, { ...viewProps, data }), nav.tab === "mcq" && h(MCQPage,{...viewProps}), nav.tab === "rules" && h(RulesLibrary,{...viewProps}), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(CalendarView, { ...viewProps }), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "workspace" && h(BSA181Workspace, { ...viewProps, initialTab:nav.opts?.tab, undoAvailable:!!undo, onGlobalUndo:doUndo }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(PsView, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })))),
       h(BSA181HighlightTool,{subject,tab:nav.tab,go,toast}),
       spotlightOpen && h(BSA181Spotlight,{data,go,onSwitch:(id,tab,opts)=>{setData(d=>({...d,activeId:id}));go(tab,opts)},onClose:()=>setSpotlightOpen(false)}),
-      /* @__PURE__ */ React.createElement("nav", { className: "bottom-nav", "aria-label": "Sections" }, tabs.filter(x=>["home","practice","roadmap"].includes(x[0])).map(([k, l, ic]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), /* @__PURE__ */ React.createElement("span", null, l))), /* @__PURE__ */ React.createElement("button", { className: "fab", onClick: () => setModal("quick"), "aria-label": "Quick add" }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 24 })), [tabs.find(x=>x[0]==="calendar"), tabs.find(x=>x[0]==="mistakes")].map(([k, l, ic, n]) => /* @__PURE__ */ React.createElement("button", { key: k, className: nav.tab === k ? "on" : "", "aria-current": nav.tab === k ? "page" : void 0, onClick: () => go(k) }, /* @__PURE__ */ React.createElement("span", { className: "ico-wrap" }, /* @__PURE__ */ React.createElement(Icon, { name: ic }), k === "mistakes" && n ? /* @__PURE__ */ React.createElement("span", { className: "badge" }, n) : null), /* @__PURE__ */ React.createElement("span", null, k === "calendar" ? "Calendar" : "Mistakes"))), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("more") }, /* @__PURE__ */ React.createElement(Icon, { name: "more" }), /* @__PURE__ */ React.createElement("span", null, "More"))), /* @__PURE__ */ React.createElement("div", { className: `toast${msg ? " show" : ""}`, role: "status", "aria-live": "polite" }, msg), h(FocusBar, { data, update, toast }), modal === "quick" && /* @__PURE__ */ React.createElement(QuickAdd, { onClose: () => setModal(null), onPick: (k) => {
+      /* @__PURE__ */ h("nav",{className:"bottom-nav v2-bottom-nav","aria-label":"Mobile navigation"},
+        [["home","Today","home"],["lectures","Learn","lecture"],["practice","Practice","bolt"],["rules","Rules","book"],["workspace","Workspace","cards"]].map(([k,l,ic])=>h("button",{type:"button",key:k,className:nav.tab===k?"on":"","aria-current":nav.tab===k?"page":undefined,onClick:()=>go(k)},h(Icon,{name:ic}),h("span",null,l))),
+        h("button",{type:"button",onClick:()=>setModal("more"),className:"v2-more-mobile","aria-label":"More tools"},h(Icon,{name:"more"}),h("span",null,"More"))), /* @__PURE__ */ React.createElement("div", { className: `toast${msg ? " show" : ""}`, role: "status", "aria-live": "polite" }, msg), h(FocusBar, { data, update, toast }), modal === "quick" && /* @__PURE__ */ React.createElement(QuickAdd, { onClose: () => setModal(null), onPick: (k) => {
       if (k === "grade") {
         setModal(null);
         go("grades", { gtab: "scores" });
