@@ -4004,35 +4004,104 @@ body>.backdrop .bsa46-settings :is(button,select,input,summary):focus-visible{ou
 #root .bsa212-current-block small,#root .bsa212-current-block>p{font-size:.74rem;color:var(--muted);line-height:1.4;margin:0}
 #root .bsa212-current-block>p{flex:1 1 190px}
 #root .bsa212-current-block>button{padding:9px 12px;white-space:normal}
-#root .bsa212-float{position:fixed;z-index:135;bottom:calc(100px + env(safe-area-inset-bottom,0px));right:18px;width:210px;max-width:calc(100vw - 16px);color:var(--text);background:var(--surface);border:1px solid color-mix(in srgb,var(--accent) 34%,var(--line));border-radius:17px;box-shadow:0 8px 28px rgba(0,0,0,.21);overflow:hidden;isolation:isolate;font-family:inherit;box-sizing:border-box}
-#root .bsa212-float *{box-sizing:border-box}
-#root .bsa212-float.expanded{width:320px}
-#root .bsa212-float.is-due{border-color:var(--accent);box-shadow:0 8px 28px rgba(0,0,0,.23)}
-#root .bsa212-float-top{display:flex;align-items:center;gap:2px;min-height:51px;padding:5px 6px}
-#root .bsa212-float button{font-family:inherit;cursor:pointer}
-#root .bsa212-float button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-#root .bsa212-float-grip{display:grid;place-items:center;flex:0 0 27px;align-self:stretch;min-height:37px;border:0;border-radius:9px;color:var(--muted);background:transparent;font-size:20px;font-weight:700;cursor:grab!important;touch-action:none!important;user-select:none;-webkit-user-select:none}
-#root .bsa212-float-grip:active{cursor:grabbing!important;background:var(--surface-2)}
-#root .bsa212-float-summary{display:grid;gap:1px;flex:1 1 auto;min-width:0;min-height:38px;background:transparent;border:0;text-align:left;color:var(--text);padding:2px 4px;align-content:center}
-#root .bsa212-float-digits{font-weight:820;font-variant-numeric:tabular-nums;font-size:1.09rem;line-height:1.16;letter-spacing:-.025em}
-#root .bsa212-float-summary>span{color:var(--muted);font-size:.65rem;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
-#root .bsa212-float-expand{display:grid;place-items:center;flex:0 0 25px;min-width:25px;min-height:32px;border:0;border-radius:9px;background:var(--surface-2);color:var(--text);font-size:18px}
-#root .bsa212-float-body{display:grid;gap:9px;padding:4px 13px 12px;border-top:1px solid var(--line);max-height:min(420px,calc(100dvh - 105px));overflow-y:auto;overscroll-behavior:contain}
-#root .bsa212-float-phase{font-size:.88rem;line-height:1.3}
-#root .bsa212-float-body>p{margin:0;color:var(--muted);font-size:.72rem;line-height:1.45}
-#root .bsa212-float-meter{height:6px;width:100%;border-radius:999px;background:var(--surface-2);overflow:hidden}
-#root .bsa212-float-meter>span{display:block;height:100%;background:var(--accent);border-radius:999px;transition:width .25s linear}
-#root .bsa212-float-meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:5px;color:var(--muted);font-size:.67rem;font-weight:650;font-variant-numeric:tabular-nums}
-#root .bsa212-float-actions{display:flex;flex-wrap:wrap;gap:5px}
-#root .bsa212-float-actions>button{flex:1 1 auto;min-height:35px;border:1px solid var(--line);border-radius:9px;color:var(--text);background:var(--surface-2);font-size:.7rem;font-weight:700;padding:6px 8px;white-space:nowrap}
-#root .bsa212-float-actions>button:hover{border-color:var(--accent)}
-#root .bsa212-float-notice{padding:8px 9px;border:1px solid color-mix(in srgb,var(--accent) 35%,var(--line));border-radius:9px;background:color-mix(in srgb,var(--accent) 7%,var(--surface));font-size:.72rem;line-height:1.45}
-#root .bsa212-float-footnote{font-size:.63rem!important}
-#root .bsa212-float-reset{justify-self:end;padding:4px 0;border:0;background:transparent;color:var(--muted);font-size:.67rem}
-@media(max-width:680px){#root .bsa212-mode-options{grid-template-columns:1fr}#root .bsa212-float{right:10px;bottom:calc(99px + env(safe-area-inset-bottom,0px));width:200px}#root .bsa212-float.expanded{width:min(308px,calc(100vw - 20px))}#root .bsa212-current-block>button{width:100%}}
-@media(prefers-reduced-motion:reduce){#root .bsa212-float-meter>span{transition:none}}
+:is(#root,#bsa213-focus-layer) .bsa212-float{position:fixed;z-index:135;bottom:calc(100px + env(safe-area-inset-bottom,0px));right:18px;width:210px;max-width:calc(100vw - 16px);color:var(--text);background:var(--surface);border:1px solid color-mix(in srgb,var(--accent) 34%,var(--line));border-radius:17px;box-shadow:0 8px 28px rgba(0,0,0,.21);overflow:hidden;isolation:isolate;font-family:inherit;box-sizing:border-box}
+:is(#root,#bsa213-focus-layer) .bsa212-float *{box-sizing:border-box}
+:is(#root,#bsa213-focus-layer) .bsa212-float.expanded{width:320px}
+:is(#root,#bsa213-focus-layer) .bsa212-float.is-due{border-color:var(--accent);box-shadow:0 8px 28px rgba(0,0,0,.23)}
+:is(#root,#bsa213-focus-layer) .bsa212-float-top{display:flex;align-items:center;gap:2px;min-height:51px;padding:5px 6px}
+:is(#root,#bsa213-focus-layer) .bsa212-float button{font-family:inherit;cursor:pointer}
+:is(#root,#bsa213-focus-layer) .bsa212-float button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+:is(#root,#bsa213-focus-layer) .bsa212-float-grip{display:grid;place-items:center;flex:0 0 27px;align-self:stretch;min-height:37px;border:0;border-radius:9px;color:var(--muted);background:transparent;font-size:20px;font-weight:700;cursor:grab!important;touch-action:none!important;user-select:none;-webkit-user-select:none}
+:is(#root,#bsa213-focus-layer) .bsa212-float-grip:active{cursor:grabbing!important;background:var(--surface-2)}
+:is(#root,#bsa213-focus-layer) .bsa212-float-summary{display:grid;gap:1px;flex:1 1 auto;min-width:0;min-height:38px;background:transparent;border:0;text-align:left;color:var(--text);padding:2px 4px;align-content:center}
+:is(#root,#bsa213-focus-layer) .bsa212-float-digits{font-weight:820;font-variant-numeric:tabular-nums;font-size:1.09rem;line-height:1.16;letter-spacing:-.025em}
+:is(#root,#bsa213-focus-layer) .bsa212-float-summary>span{color:var(--muted);font-size:.65rem;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+:is(#root,#bsa213-focus-layer) .bsa212-float-expand{display:grid;place-items:center;flex:0 0 25px;min-width:25px;min-height:32px;border:0;border-radius:9px;background:var(--surface-2);color:var(--text);font-size:18px}
+:is(#root,#bsa213-focus-layer) .bsa212-float-body{display:grid;gap:9px;padding:4px 13px 12px;border-top:1px solid var(--line);max-height:min(420px,calc(100dvh - 105px));overflow-y:auto;overscroll-behavior:contain}
+:is(#root,#bsa213-focus-layer) .bsa212-float-phase{font-size:.88rem;line-height:1.3}
+:is(#root,#bsa213-focus-layer) .bsa212-float-body>p{margin:0;color:var(--muted);font-size:.72rem;line-height:1.45}
+:is(#root,#bsa213-focus-layer) .bsa212-float-meter{height:6px;width:100%;border-radius:999px;background:var(--surface-2);overflow:hidden}
+:is(#root,#bsa213-focus-layer) .bsa212-float-meter>span{display:block;height:100%;background:var(--accent);border-radius:999px;transition:width .25s linear}
+:is(#root,#bsa213-focus-layer) .bsa212-float-meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:5px;color:var(--muted);font-size:.67rem;font-weight:650;font-variant-numeric:tabular-nums}
+:is(#root,#bsa213-focus-layer) .bsa212-float-actions{display:flex;flex-wrap:wrap;gap:5px}
+:is(#root,#bsa213-focus-layer) .bsa212-float-actions>button{flex:1 1 auto;min-height:35px;border:1px solid var(--line);border-radius:9px;color:var(--text);background:var(--surface-2);font-size:.7rem;font-weight:700;padding:6px 8px;white-space:nowrap}
+:is(#root,#bsa213-focus-layer) .bsa212-float-actions>button:hover{border-color:var(--accent)}
+:is(#root,#bsa213-focus-layer) .bsa212-float-notice{padding:8px 9px;border:1px solid color-mix(in srgb,var(--accent) 35%,var(--line));border-radius:9px;background:color-mix(in srgb,var(--accent) 7%,var(--surface));font-size:.72rem;line-height:1.45}
+:is(#root,#bsa213-focus-layer) .bsa212-float-footnote{font-size:.63rem!important}
+:is(#root,#bsa213-focus-layer) .bsa212-float-reset{justify-self:end;padding:4px 0;border:0;background:transparent;color:var(--muted);font-size:.67rem}
+@media(max-width:680px){#root .bsa212-mode-options{grid-template-columns:1fr}:is(#root,#bsa213-focus-layer) .bsa212-float{right:10px;bottom:calc(99px + env(safe-area-inset-bottom,0px));width:200px}:is(#root,#bsa213-focus-layer) .bsa212-float.expanded{width:min(308px,calc(100vw - 20px))}#root .bsa212-current-block>button{width:100%}}
+@media(prefers-reduced-motion:reduce){:is(#root,#bsa213-focus-layer) .bsa212-float-meter>span{transition:none}}
 #root .bsa212-legacy-upgrade{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid var(--line);background:var(--surface);border-radius:13px;flex-wrap:wrap}
 #root .bsa212-legacy-upgrade>div{display:grid;gap:3px;flex:1 1 200px}
 #root .bsa212-legacy-upgrade strong{font-size:.82rem}
 #root .bsa212-legacy-upgrade small{font-size:.72rem;color:var(--muted)}
 #root .bsa212-legacy-upgrade button{min-height:35px}
+
+/* V2.13: One viewport-level floating focus layer. The portal stays outside
+   scrolling/transformed main content; it never duplicates with page sections. */
+#bsa213-focus-layer{position:static!important;pointer-events:none}
+#bsa213-focus-layer .bsa212-float{position:fixed!important;pointer-events:auto;z-index:214!important;overscroll-behavior:contain}
+#root .rail .bsa213-utility-toggle{display:flex;align-items:center;gap:7px;width:100%;min-width:0;min-height:36px;padding:7px 10px;border-radius:11px;border:1px solid var(--line);background:var(--surface-2);color:var(--text);font:inherit;font-size:.73rem;font-weight:760;cursor:pointer;text-align:left}
+#root .rail .bsa213-utility-toggle>span:nth-child(2){flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#root .rail .bsa213-utility-toggle small{color:var(--muted);font-size:.66rem;font-weight:650}
+#root .rail .bsa213-utility-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#root .rail .bsa213-utility-details{display:grid;gap:8px;min-width:0}
+#root > .shell.bsa47-rail-collapsed .bsa213-utility-toggle{justify-content:center;width:45px;padding:7px;min-height:43px}
+#root > .shell.bsa47-rail-collapsed .bsa213-utility-toggle>span,#root > .shell.bsa47-rail-collapsed .bsa213-utility-toggle>small{display:none!important}
+#root > .shell.bsa47-rail-collapsed .bsa213-utility-details{display:none!important}
+@media(max-width:680px){#bsa213-focus-layer .bsa212-float{max-width:calc(100vw - 16px)}}
+
+/* V2.13: Quick Smart Focus and custom timer goal controls */
+#root .bsa213-time-field{min-width:0;align-content:start}
+#root .bsa213-time-field>label:first-child{font-size:.79rem;font-weight:750}
+#root .bsa213-custom-minutes{display:grid;gap:6px;font-size:.72rem;color:var(--text)}
+#root .bsa213-custom-minutes input{min-width:0;width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:11px;background:var(--surface);color:var(--text);font:inherit;font-size:1.03rem;font-weight:800;min-height:43px;padding:9px 12px}
+#root .bsa213-budget-caption{color:var(--muted);font-size:.72rem;font-weight:500;line-height:1.5;margin:0}
+#root .bsa213-quick-explainer{display:grid;gap:6px;grid-column:1/-1;min-width:0;border:1px solid color-mix(in srgb,var(--accent) 32%,var(--line));border-radius:13px;background:color-mix(in srgb,var(--accent) 7%,var(--surface));padding:13px 15px}
+#root .bsa213-quick-explainer strong{font-size:.87rem;color:var(--text)}
+#root .bsa213-quick-explainer span{font-size:.76rem;color:var(--text);line-height:1.45}
+#root .bsa213-quick-explainer small{font-size:.69rem;color:var(--muted)}
+@media(max-width:680px){#root .bsa213-quick-explainer{grid-column:1}}
+
+/* V2.13 session continuity: one tidy entry point + honest archived progress. */
+#root .bsa31-hero .bsa214-home-planner-note{margin:9px 0 0!important;color:var(--muted)!important;font-size:.72rem!important;line-height:1.42!important;max-width:58ch!important}
+#root .bsa33-session-board>.bsa214-end-note{font-size:.72rem;line-height:1.45;color:var(--muted);margin:-9px 0 2px}
+#root .bsa33-session-board .bsa214-end-button{border:1px solid color-mix(in srgb,var(--accent) 31%,var(--line));border-radius:10px;padding:9px 12px;background:var(--surface-2);color:var(--text);font-weight:780;min-height:38px}
+#root .bsa33-session-board .bsa214-end-button:hover{border-color:var(--accent)}
+#bsa213-focus-layer .bsa214-floating-end{border-top:1px solid var(--line);padding-top:8px}
+#bsa213-focus-layer .bsa214-floating-end>button{width:100%;min-height:39px;border:1px solid color-mix(in srgb,var(--accent) 36%,var(--line));border-radius:11px;background:color-mix(in srgb,var(--accent) 8%,var(--surface));font-size:.73rem;font-weight:800;color:var(--text)}
+#bsa213-focus-layer .bsa214-floating-end>button:hover{border-color:var(--accent)}
+#root .bsa214-prior-session{min-width:0;display:grid;gap:7px;padding:14px 16px;border-radius:15px;border:1px solid color-mix(in srgb,var(--accent) 25%,var(--line));background:color-mix(in srgb,var(--accent) 5%,var(--surface));}
+#root .bsa214-prior-title{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px}
+#root .bsa214-prior-title strong{font-size:.85rem;line-height:1.3;color:var(--text)}
+#root .bsa214-prior-title small,#root .bsa214-prior-session>small{color:var(--muted);font-size:.71rem;line-height:1.5}
+#root .bsa214-prior-session>p{margin:0;color:var(--text);font-size:.75rem;line-height:1.5;overflow-wrap:anywhere}
+#root .bsa214-carry-toggle{display:flex;align-items:flex-start;gap:8px;margin-top:5px;font-size:.75rem;font-weight:720;cursor:pointer}
+#root .bsa214-carry-toggle>input{width:17px;height:17px;flex:none;accent-color:var(--accent)}
+#root .bsa214-adapt-note{padding:11px 13px;margin:0;border:1px solid var(--line);border-radius:11px;background:var(--surface-2);font-size:.74rem;color:var(--muted);line-height:1.5}
+#root .bsa214-history-item{align-items:start;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px}
+#root .bsa214-history-item>strong{grid-column:1/-1;font-size:.82rem}
+#root .bsa214-history-item>span{grid-column:1/-1;color:var(--muted)}
+#root .bsa214-history-item>small{grid-column:1;font-size:.72rem;line-height:1.4}
+#root .bsa214-history-replan{grid-column:2;grid-row:3 / span 3;align-self:center;border:1px solid var(--line);background:var(--surface-2);color:var(--text);border-radius:10px;min-height:36px;padding:8px 11px;font:inherit;font-weight:750;font-size:.73rem;cursor:pointer}
+#root .bsa214-history-replan:hover{border-color:var(--accent)}
+/* Place fields explicitly, without historic grid-row collision when a saved
+   session insight is inserted into the builder. */
+#root .bsa33-create-board{grid-template-columns:minmax(0,1fr) minmax(220px,.86fr);gap:16px!important}
+#root .bsa33-create-board>*{grid-row:auto!important}
+#root .bsa33-create-board>.bsa33-create-copy,
+#root .bsa33-create-board>.bsa34-focus-field,
+#root .bsa33-create-board>.bsa214-prior-session,
+#root .bsa33-create-board>.bsa213-quick-explainer,
+#root .bsa33-create-board>.bsa214-adapt-note,
+#root .bsa33-create-board>.bsa33-proposal-list{grid-column:1/-1!important}
+#root .bsa33-create-board>.bsa212-mode-picker{grid-column:1!important}
+#root .bsa33-create-board>.bsa213-time-field{grid-column:2!important}
+#root .bsa33-create-board>.bsa33-button{grid-column:1/-1!important;justify-self:end;width:min(100%,380px)}
+@media(max-width:800px){
+  #root .bsa33-create-board{grid-template-columns:minmax(0,1fr)!important}
+  #root .bsa33-create-board>*{grid-column:1!important;min-width:0}
+  #root .bsa33-create-board>.bsa33-button{width:100%}
+  #root .bsa214-history-item{grid-template-columns:1fr}
+  #root .bsa214-history-replan{grid-column:1;grid-row:auto;justify-self:start}
+}
