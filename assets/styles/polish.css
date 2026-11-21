@@ -3592,7 +3592,14 @@ html,body,#root{overflow-x:clip!important}
  .bsa15-studied-label{font-size:9px}
 }
 /* Mobile-first map navigation: never trap vertical swipes inside a nested pane. */
-.bsa15-scroll-frame{max-height:none!important;min-height:0;overflow-x:auto!important;overflow-y:hidden!important;touch-action:pan-x pan-y;scroll-behavior:smooth;}
+/* V2.4: the map is a true two-dimensional viewport, rather than a wide
+   drawing that extends down the page. Native touch panning stays available. */
+.bsa15-scroll-frame{height:clamp(320px,58vh,610px);max-height:none!important;min-height:0!important;overflow:auto!important;touch-action:pan-x pan-y;scroll-behavior:auto;cursor:grab;}
+.bsa15-scroll-frame.is-dragging{cursor:grabbing!important;scroll-behavior:auto!important;}
+.bsa15-scroll-frame:focus-visible{outline:2px solid var(--accent);outline-offset:-3px;}
+.bsa15-map-stage,.bsa15-map-stage *{-webkit-user-select:none;user-select:none;}
+.bsa24-center-btn{border:1px solid var(--vs-line);font-size:18px;font-weight:800;min-width:34px;}
+.bsa24-center-btn:hover{border-color:var(--accent);}
 .bsa15-map-node.is-faded{opacity:.43}
 .bsa15-pan-controls{display:flex;gap:3px;align-items:center;border:1px solid var(--vs-line);border-radius:10px;padding:3px}
 .bsa15-pan-controls button{border:0;border-radius:7px;min-width:34px;min-height:32px;background:var(--vs-soft);color:var(--vs-ink);cursor:pointer;font-weight:800;font-size:15px}
@@ -3608,7 +3615,7 @@ html,body,#root{overflow-x:clip!important}
  .bsa15-modes button{min-height:42px}
  .bsa15-pan-controls{margin-left:auto}
  .bsa15-visual-toolbar{padding:8px;gap:6px}
- .bsa15-scroll-frame{max-height:none!important;min-height:0!important}
+ .bsa15-phone-canvas .bsa15-scroll-frame{height:min(55dvh,470px);min-height:270px!important;}
  .bsa15-detail{padding:15px}
  .bsa15-detail h2{font-size:19px}
  .bsa15-hero p{font-size:13px}
@@ -3782,3 +3789,30 @@ body>.backdrop .bsa16-delete-dialog .modal-foot>.btn{min-width:0;white-space:nor
  #root .bsa22-review-tutor>.btn{width:100%}
 }
 @media(prefers-reduced-motion:reduce){#root .bsa22-review-tutor *{transition:none!important}}
+
+/* V2.5 | Practice navigation + input accessibility (existing themes preserved).
+   One quiz heading, one library navigation, one pause control. */
+#root .content[data-desk-page="mcq"] .mcq-page,
+#root .content[data-desk-page="mcq"] .mcq-quiz{min-width:0;max-width:100%}
+#root .content[data-desk-page="mcq"] .mcq-quiz>.page-head{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;margin-bottom:16px}
+#root .content[data-desk-page="mcq"] .mcq-quiz>.page-head .btn{flex:0 0 auto}
+#root .content[data-desk-page="mcq"] .mcq-shell{min-width:0;max-width:100%}
+#root .bsa18-resume-strip .bsa18-discard-btn{font-weight:600!important}
+#root .content[data-desk-page="mcq"] :is(.btn,.mcq-choice,.bsa197-mode):focus-visible,
+#root :is(.bsa18-resume-strip button,.bsa193-actions button):focus-visible{
+  outline:3px solid var(--accent)!important;outline-offset:3px!important;
+}
+@media(max-width:700px){
+  #root .content[data-desk-page="mcq"] .mcq-quiz>.page-head{gap:8px;margin-bottom:12px}
+  #root .content[data-desk-page="mcq"] .mcq-quiz>.page-head .btn{width:100%;min-height:42px!important}
+  #root .content[data-desk-page="mcq"] .bsa197-row .btn{flex:1 1 125px}
+  #root .content[data-desk-page="mcq"] .mcq-quiz .step-actions{display:flex;flex-wrap:wrap;gap:8px}
+  #root .content[data-desk-page="mcq"] .mcq-quiz .step-actions>.btn{flex:1 1 155px;min-width:0}
+}
+@media(pointer:coarse){
+  #root .content[data-desk-page="mcq"] :is(.mcq-choice,.step-actions .btn),
+  #root .bsa18-resume-strip>.btn{min-height:44px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  #root .content[data-desk-page="mcq"] :is(.mcq-choice,.btn,.mcq-shell){transition:none!important;animation:none!important}
+}
