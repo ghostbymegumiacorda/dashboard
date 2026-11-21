@@ -3038,3 +3038,100 @@ html[data-desk-theme] .bsa4-dock-panel,
 /* Timer's drag handle must not capture page scrolling on touchscreens. */
 .bsa190-focus .bsa190-handle,
 .focus-bar.bsa190-focus .bsa190-handle {touch-action:pan-y!important;cursor:pointer!important;}
+
+/* V4.6.9 — one connected, subject-scoped topic workflow. */
+.bsa49-flow{min-width:0;max-width:100%;display:flex;flex-direction:column;gap:1rem}
+.bsa49-flow-top{display:flex;align-items:flex-start;justify-content:space-between;gap:.7rem;flex-wrap:wrap}
+.bsa49-flow-top h2{margin:.1rem 0 .3rem;font-size:clamp(1.4rem,2.3vw,2rem)}
+.bsa49-flow-top p{margin:0;max-width:62ch}
+.bsa49-subject,.bsa49-gap-pill{display:inline-flex;align-items:center;max-width:100%;overflow-wrap:anywhere;padding:.4rem .65rem;border:1px solid var(--line);background:var(--surface-2);border-radius:50rem;font-size:.78rem;font-weight:700}
+.bsa49-topic-select{display:grid;grid-template-columns:12rem minmax(0,1fr);align-items:center;gap:.6rem;padding:.7rem .85rem;border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface)}
+.bsa49-topic-select select{min-width:0;width:100%;max-width:100%}
+.bsa49-flow-coverage{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem 1rem;padding:.9rem 1rem;border:1px solid var(--line);background:var(--surface);border-radius:var(--r-lg)}
+.bsa49-flow-coverage>div{flex:1 1 14rem;min-width:0}
+.bsa49-flow-coverage p{margin:.2rem 0 0;overflow-wrap:anywhere}
+.bsa49-flow-coverage small{width:100%;color:var(--muted);overflow-wrap:anywhere}
+.bsa49-flow-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.7rem}
+.bsa49-step{min-width:0;padding:1rem;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);display:flex;flex-direction:column;align-items:flex-start;gap:.45rem}
+.bsa49-step strong{font-size:1rem}
+.bsa49-step p{margin:0 0 .2rem;flex:1;overflow-wrap:anywhere}
+.bsa49-step .btn{max-width:100%;white-space:normal;text-align:left;overflow-wrap:anywhere}
+.bsa49-note{margin:0}
+.bsa49-empty{padding:1rem;border:1px solid var(--line);border-radius:var(--r-md)}
+.bsa49-topic-links{padding:.85rem 1rem;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);min-width:0}
+.bsa49-topic-links>summary{font-weight:700;cursor:pointer;overflow-wrap:anywhere}
+.bsa49-alias-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(140px,1fr) auto;align-items:center;gap:.5rem;padding:.55rem 0;border-bottom:1px solid var(--line)}
+.bsa49-alias-row>span{min-width:0;overflow-wrap:anywhere}
+.bsa49-alias-row select{min-width:0;max-width:100%;width:100%}
+.bsa49-alias-existing{padding-top:.7rem}
+.bsa49-import-complete{display:flex;align-items:center;flex-wrap:wrap;gap:.6rem}
+@media(max-width:920px){.bsa49-flow-steps{grid-template-columns:1fr}.bsa49-step{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.5rem}.bsa49-step>strong,.bsa49-step>p{grid-column:1/-1}.bsa49-step .btn{justify-self:start}}
+@media(max-width:620px){.bsa49-topic-select,.bsa49-alias-row{grid-template-columns:minmax(0,1fr)}.bsa49-topic-select select{width:100%}.bsa49-flow-top{display:block}.bsa49-subject{margin-top:.6rem}.bsa49-step{display:flex}.bsa49-step .btn{width:100%;justify-content:center;text-align:center}.bsa49-flow-coverage{padding:.75rem}.bsa49-topic-links{padding:.65rem}.bsa49-alias-row .btn{width:100%}}
+
+
+/* V1.0 academic interface: compact, intentional navigation instead of seven long tabs. */
+#root .content .bsa205-pagetabs.bsa3-library-main-tabs.bsa-v1-primary-tabs{
+  display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));
+  width:100%!important;max-width:760px!important;min-width:0!important;
+  gap:5px!important;overflow:visible!important;padding:5px!important;
+  margin:0 0 8px!important;flex-wrap:initial!important;
+}
+#root .content .bsa-v1-primary-tabs>button{
+  width:100%;min-width:0!important;min-height:40px!important;
+  white-space:normal!important;overflow-wrap:anywhere!important;
+  padding:8px 10px!important;text-align:center;font-size:.82rem!important;
+}
+.bsa-v1-extra-nav{min-width:0;max-width:760px;margin:0 0 14px}
+.bsa-v1-extra-nav>summary{display:flex;align-items:center;flex-wrap:wrap;gap:8px;cursor:pointer;padding:6px 4px;font-size:.82rem;font-weight:700;color:var(--muted)}
+.bsa-v1-extra-nav>summary:hover{color:var(--text)}
+.bsa-v1-current-tab{font-size:.72rem;padding:2px 8px;border-radius:100px;color:var(--text);background:var(--surface-2);border:1px solid var(--line)}
+.bsa-v1-extra-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:5px 0 8px}
+.bsa-v1-extra-tabs button{flex:0 1 auto;min-height:36px;padding:7px 11px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--text);font:inherit;font-size:.8rem;cursor:pointer}
+.bsa-v1-extra-tabs button.selected,.bsa-v1-extra-tabs button[aria-pressed=true]{border-color:var(--accent);background:var(--accent-soft);color:var(--text)}
+.bsa49-flow{gap:.7rem}
+.bsa49-flow-top{align-items:center}
+.bsa49-flow-top p{max-width:48ch}
+.bsa49-topic-select{padding:.65rem .8rem;grid-template-columns:8rem minmax(0,1fr)}
+.bsa49-flow-coverage{padding:.7rem .8rem;gap:.5rem}
+.bsa49-flow-coverage>div{flex:1 1 13rem}
+.bsa49-flow-coverage p{font-size:.85rem}
+.bsa49-gap-pill{font-size:.73rem;max-width:100%;white-space:normal}
+.bsa49-flow-steps{align-items:stretch;gap:.55rem}
+.bsa49-step{gap:.35rem;padding:.75rem;min-width:0}
+.bsa49-step p{flex:0 0 auto;margin:0 0 .25rem;font-size:.8rem;line-height:1.45}
+.bsa49-step strong{font-size:.94rem}
+.bsa49-step>.btn{width:100%;min-height:39px;justify-content:center;text-align:center}
+.bsa-v1-step-extra{width:100%;min-width:0;margin:0;padding:0}
+.bsa-v1-step-extra>summary{cursor:pointer;font-size:.78rem;font-weight:650;color:var(--muted);padding:6px 2px;min-height:30px}
+.bsa-v1-step-extra>.btn{width:100%;min-height:36px;white-space:normal}
+.bsa-v1-tool-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;padding-top:5px}
+.bsa-v1-tool-actions .btn{font-size:.77rem;line-height:1.25;min-height:36px;width:100%;white-space:normal}
+#root .bsa49-note{font-size:.74rem;margin:.1rem 0 0}
+@media(max-width:920px){
+ .bsa49-step{display:flex;align-items:stretch;flex-direction:column;gap:.25rem}
+ .bsa49-step>.btn{width:100%;justify-self:stretch}
+ .bsa49-flow-steps{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:720px){
+ #root .content .bsa205-pagetabs.bsa3-library-main-tabs.bsa-v1-primary-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .bsa49-flow-steps{grid-template-columns:1fr}
+ .bsa49-step{display:grid;grid-template-columns:minmax(0,1fr) minmax(125px,auto);align-items:center;gap:5px 10px}
+ .bsa49-step>strong,.bsa49-step>p,.bsa49-step>.bsa-v1-step-extra{grid-column:1/-1}
+ .bsa49-step>.btn{grid-column:1/-1;min-height:37px}
+ .bsa49-topic-select{grid-template-columns:1fr;gap:.3rem}
+}
+@media(max-width:420px){.bsa-v1-tool-actions{grid-template-columns:1fr}}
+
+/* V1.0: avoid pages of tiny generated subtopics without modifying saved data. */
+.bsa-v1-subtopic-wrapper{display:flex;flex-direction:column;gap:9px;min-width:0}
+.bsa-v1-subtopic-tools{display:grid;grid-template-columns:minmax(0,1fr) minmax(160px,240px);gap:8px;align-items:center;min-width:0}
+.bsa-v1-subtopic-tools>div{display:flex;flex-direction:column;gap:2px}
+.bsa-v1-subtopic-tools strong{font-size:.88rem}
+.bsa-v1-subtopic-tools input{width:100%;min-width:0;box-sizing:border-box;background:var(--surface);color:var(--text);border:1px solid var(--line);border-radius:9px;padding:9px 11px;font:inherit;font-size:.82rem}
+.bsa-v1-subtopic-wrapper .subs{margin:0;padding-inline-start:0}
+.bsa-v1-subtopic-toggle{align-self:flex-start;min-height:36px;white-space:normal}
+.bsa-v1-subtopic-tip{max-width:70ch;line-height:1.45;margin:0;opacity:.86}
+.bsa-v1-outline-warning{border:1px solid var(--line);border-radius:11px;padding:12px;background:var(--surface-2);color:var(--text);line-height:1.45}
+.bsa-v1-outline-warning summary{font-weight:700;cursor:pointer;overflow-wrap:anywhere}
+.bsa-v1-outline-warning p{font-size:.85rem;margin:7px 0 0;overflow-wrap:anywhere}
+@media(max-width:700px){.bsa-v1-subtopic-tools{grid-template-columns:1fr}.bsa-v1-subtopic-tools input{max-width:none}}
