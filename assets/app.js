@@ -1,6 +1,6 @@
 (() => {
   // User-facing release label only. Do not use for storage schemas or caches.
-  const BSA_RELEASE_LABEL = "V1.0";
+  const BSA_RELEASE_LABEL = "V1.1";
   const S = (t, p = null, s = false) => ({ t, p, s });
   const CFAS_TOPICS = [
     {
@@ -15967,6 +15967,64 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       h('nav',{'aria-label':'Focus destinations'},nav));
     return h(BSA31StudyPath,{tab,opts,go,subject});
   }
+  /* V1.1 — a subject chooser shared by desktop rail and mobile header.
+     The visible button is a controlled app component, while the searchable
+     list lives in a portal so neither the rail nor its scrollbar clips it. */
+  function BSA11SubjectSwitcher({subjects,activeId,onSwitch,onManage,onOpen,canManage=true,id}) {
+    const [open,setOpen]=useState(false);
+    const [query,setQuery]=useState('');
+    const [box,setBox]=useState({top:76,left:14,width:320});
+    const anchor=useRef(null);
+    const searchRef=useRef(null);
+    const active=subjects.find(x=>x.id===activeId)||subjects[0];
+    const labelOf=x=>[x.code,x.name].filter(Boolean).join(' · ');
+    const setPosition=()=>{
+      const r=anchor.current?.getBoundingClientRect();
+      if(!r)return;
+      const w=Math.min(380,Math.max(280,window.innerWidth-20));
+      const left=Math.max(10,Math.min(r.left,window.innerWidth-w-10));
+      const top=Math.max(10,Math.min(r.bottom+8,window.innerHeight-210));
+      setBox({left,top,width:w});
+    };
+    useEffect(()=>{
+      if(!open)return;
+      setPosition();
+      const resize=()=>setPosition();
+      const escape=e=>{if(e.key==='Escape')setOpen(false)};
+      window.addEventListener('resize',resize);
+      window.addEventListener('scroll',resize,true);
+      document.addEventListener('keydown',escape);
+      const timer=setTimeout(()=>searchRef.current?.focus(),0);
+      return()=>{clearTimeout(timer);window.removeEventListener('resize',resize);window.removeEventListener('scroll',resize,true);document.removeEventListener('keydown',escape)};
+    },[open]);
+    useEffect(()=>setOpen(false),[activeId]);
+    const needle=query.trim().toLocaleLowerCase();
+    const matches=subjects.filter(x=>[x.code,x.name,x.curriculumTerm].filter(Boolean).join(' ').toLocaleLowerCase().includes(needle));
+    const groups=new Map();
+    matches.forEach(x=>{const term=x.curriculumTerm||'My subjects';if(!groups.has(term))groups.set(term,[]);groups.get(term).push(x)});
+    return h('div',{ref:anchor,className:'bsa11-subject-wrap'},
+      h('button',{id,type:'button',className:'bsa11-subject-trigger',title:'Switch current subject','aria-haspopup':'dialog','aria-expanded':open,'aria-label':'Switch subject · '+labelOf(active||{}),onClick:()=>{if(onOpen)onOpen();setQuery('');setOpen(v=>!v)}},
+        h('span',{className:'bsa11-course-glyph','aria-hidden':'true'},'◈'),
+        h('span',{className:'bsa11-subject-text'},
+          h('small',null,active?.code||'MY COURSE'),
+          h('strong',null,active?.name||'Choose subject')),
+        h('span',{className:'bsa11-subject-chevron','aria-hidden':'true'},'⌄')),
+      open&&ReactDOM.createPortal(h(React.Fragment,null,
+        h('button',{className:'bsa11-popover-outside',type:'button','aria-label':'Close subject switcher',onClick:()=>setOpen(false)}),
+        h('section',{className:'bsa11-subject-popover',style:{top:box.top,left:box.left,width:box.width},role:'dialog','aria-label':'Choose current subject'},
+          h('header',{className:'bsa11-subject-pop-head'},h('div',null,h('strong',null,'Switch subject'),h('small',null,subjects.length+' saved course'+(subjects.length===1?'':'s'))),h('button',{type:'button','aria-label':'Close subject picker',onClick:()=>setOpen(false)},'×')),
+          h('label',{className:'bsa11-subject-search'},h('span',{'aria-hidden':'true'},'⌕'),h('input',{ref:searchRef,type:'search',placeholder:'Find a course or code',value:query,onChange:e=>setQuery(e.target.value),'aria-label':'Search courses'})),
+          h('div',{className:'bsa11-subject-list',role:'group','aria-label':'Saved subjects'},
+            [...groups].map(([name,items])=>h('div',{className:'bsa11-subject-group',key:name},
+              h('span',{className:'bsa11-group-label'},name),
+              items.map(item=>h('button',{type:'button',key:item.id,className:'bsa11-subject-choice'+(item.id===activeId?' is-active':''),onClick:()=>{setOpen(false);onSwitch(item.id)},'aria-current':item.id===activeId?'true':undefined},
+                h('span',{className:'bsa11-choice-monogram','aria-hidden':'true'},String(item.name||'?').slice(0,1).toUpperCase()),
+                h('span',{className:'bsa11-choice-copy'},h('strong',null,item.name),h('small',null,item.code||'Custom subject')),
+                item.id===activeId&&h('span',{className:'bsa11-choice-check','aria-label':'Currently selected'},'✓'))))),
+            !matches.length&&h('p',{className:'bsa11-no-results'},'No matching subject. You can add one below.')),
+          canManage&&h('footer',{className:'bsa11-subject-actions'},h('button',{type:'button',onClick:()=>{setOpen(false);onManage()}},'+ Add or manage subjects')))
+      ),document.body));
+  }
   function App() {
     const [data, setData] = useState(() => loadLocal() || buildDefault());
     const [nav, setNav] = useState({ tab: "home", opts: {}, key: 0 });
@@ -16016,6 +16074,27 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
         return window.matchMedia && window.matchMedia('(min-width:900px) and (max-width:1220px), (min-width:900px) and (max-width:1450px) and (pointer:coarse)').matches;
       } catch(_) { return false; }
     });
+    // V1.1: wheel/touchpad navigation belongs to the tool list, never the
+    // document behind it. The old nested flex scrollers could receive wheel
+    // gestures without moving. Keep this handler passive:false only here;
+    // touch events remain native and are never prevented.
+    useEffect(()=>{
+      const rail=document.querySelector('#root > .shell > aside.rail');
+      if(!rail)return;
+      const wheel=e=>{
+        if(e.ctrlKey||e.metaKey||e.shiftKey)return;
+        const nav=rail.querySelector('.rail-nav-wrap.bsa46-rail-nav');
+        if(!nav)return;
+        const distance=e.deltaY*(e.deltaMode===1?18:e.deltaMode===2?nav.clientHeight:1);
+        if(!distance||nav.scrollHeight<=nav.clientHeight+2)return;
+        const limit=nav.scrollHeight-nav.clientHeight;
+        if((distance>0&&nav.scrollTop>=limit-1)||(distance<0&&nav.scrollTop<=1))return;
+        e.preventDefault();
+        nav.scrollTop=Math.max(0,Math.min(limit,nav.scrollTop+distance));
+      };
+      rail.addEventListener('wheel',wheel,{passive:false});
+      return()=>rail.removeEventListener('wheel',wheel);
+    },[railCompact,nav.tab,sidebarPrefs]);
     const toggleRail=()=>setRailCompact(old=>{
       const next=!old;
       try{localStorage.setItem('bsa47_rail_compact',next?'1':'0')}catch(_){}
@@ -16329,7 +16408,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       go("grades", { gtab: t });
     };
     const viewProps = { key: `${subject.id}-${nav.key}`, subject, update, toast, go, openEditor, init: nav.opts, settings: data.settings, setSettings, onSubjectSettings:()=>setSidebarEdit(true) };
-    const subjectPicker = (id) => /* @__PURE__ */ React.createElement("select", { id, className: "subject-select", value: data.activeId, onChange: (e) => switchSubject(e.target.value), "aria-label": "Active subject" }, (() => {const groups=new Map();data.subjects.forEach(s=>{const matched=PROSPECTUS.flatMap(t=>t.courses.map(c=>({...c,term:t.term}))).find(c=>String(c.code).trim().toLowerCase()===String(s.code||"").trim().toLowerCase());const label=s.curriculumTerm||(matched&&matched.term)||"Other / custom subjects";if(!groups.has(label))groups.set(label,[]);groups.get(label).push(s);});return [...groups].sort((a,b)=>a[0].localeCompare(b[0],undefined,{numeric:true})).map(([term,subjects])=>React.createElement("optgroup",{key:term,label:term},subjects.map(s=>React.createElement("option",{key:s.id,value:s.id},s.code?`${s.code} · ${s.name}`:s.name))));})());
+    const subjectPicker = (id) => h(BSA11SubjectSwitcher,{id,subjects:data.subjects,activeId:data.activeId,onSwitch:switchSubject,onManage:()=>setModal('subjects'),onOpen:()=>setShortcutsOpen(false),canManage:!window.__BSA_SHARED_MODE__});
     return /* @__PURE__ */ React.createElement("div", { className: "shell"+(railCompact?" bsa47-rail-collapsed":"") }, /* @__PURE__ */ React.createElement("aside", { className: "rail", "aria-label": "Main" },
       h('div',{className:'bsa47-rail-header'},
         h("div",{className:"bsa-shortcut-anchor"},React.createElement("button", { className: "brand brand-home-button", type: "button", onClick: () => setShortcutsOpen(v=>!v), title: "Open quick shortcuts", "aria-label": "Open quick shortcuts", "aria-expanded":shortcutsOpen,"aria-haspopup":"menu" }, /* @__PURE__ */ React.createElement("span", { className: "brand-mark", "aria-hidden": "true" }, "Σ"), /* @__PURE__ */ React.createElement("span", null, "BSA Study Desk")),shortcutMenu()),
@@ -16359,7 +16438,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       // Specialized screens own their headings and side navigation. Rendering a
       // second theme-specific banner here buries lecture content on iPad and
       // cannot be reliably fixed with a CSS-only hide (old cached styles).
-      !['lectures','psets','mcq','vault','ask','rules','fs-lab','workspace','accounting-lab','accounting-cycle'].includes(nav.tab)
+      !['home','study','practice','library','insights','lectures','psets','mcq','vault','ask','rules','fs-lab','workspace','accounting-lab','accounting-cycle'].includes(nav.tab)
         && h(BSA43ThemeNavigation,{theme:data.settings.presentationTheme||"studio",tab:nav.tab,opts:nav.opts,go,subject}),
       nav.tab === "guide" && h(BSA3StartGuide,{go,subject}), nav.tab === "break" && h(BreakCorner), nav.tab === "joy" && h(JoyHub,{go}), nav.tab === "life" && h(StudyLife,{go}), nav.tab === "achievements" && h(AcademicProgress,{go}), nav.tab === "stats-clean" && h(StudyReport,{data,update,toast,go}), nav.tab === "private-vault" && !window.__BSA_SHARED_MODE__ && h(PrivateVault,{toast}), nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data,initialTool:nav.opts?.tool})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), nav.tab === "home" && h(BSA3Today, { ...viewProps }), nav.tab === "study" && h(BSA205Study,{...viewProps}), nav.tab === "library" && h(BSA205Library,{...viewProps}), nav.tab === "insights" && h(BSA205Mastery,{...viewProps}), nav.tab === "accounting-cycle" && h(BSA205Cycle,{...viewProps}), nav.tab === "fs-lab" && h(BSA43FinancialStatements,{...viewProps}), nav.tab === "accounting-lab" && h(BSA187AccountingLab,{subject,update,toast,go,init:nav.opts}), nav.tab === "week" && h(BSA344Schedule,{subject,update,go,openEditor,toast,init:nav.opts,initialMode:"week"}), nav.tab === "knowledge" && h(BSA192KnowledgeMap,{subject,go}), nav.tab === "safety" && h(BSA193DeviceSafety,{data,go,toast}), nav.tab === "practice" && h(React.Fragment,null,h(BSA3Practice,{ ...viewProps, data }),bsa46ToolVisible(subject,'fs-lab')&&h('div',{className:'bsa42-fs-shortcut'},h('div',null,h('strong',null,'Financial Statement Lab'),h('p',null,'Import report JSON, inspect audited disclosures, and practice any accounting standard.')),h('button',{className:'btn',onClick:()=>go('fs-lab')},'Open Financial Statements ↗'))), nav.tab === "mcq" && h(MCQPage,{...viewProps}), nav.tab === "rules" && h(RulesLibrary,{...viewProps}), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(BSA344Schedule,{subject,update,go,openEditor,toast,init:nav.opts,initialMode:"month"}), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "workspace" && h(BSA181Workspace, { ...viewProps, initialTab:nav.opts?.tab, undoAvailable:!!undo, onGlobalUndo:doUndo }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(BSA43ProblemSets, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps, key:subject.id }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })))),
       h(BSA181HighlightTool,{subject,tab:nav.tab,go,toast}),
