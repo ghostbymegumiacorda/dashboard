@@ -1,6 +1,6 @@
 (() => {
   // User-facing release label only. Do not use for storage schemas or caches.
-  const BSA_RELEASE_LABEL = "V1.6";
+  const BSA_RELEASE_LABEL = "V2.0";
   const S = (t, p = null, s = false) => ({ t, p, s });
   const CFAS_TOPICS = [
     {
@@ -2954,10 +2954,41 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       }
     }
   }
+  // V2.0 reliability: old checked MCQs may lack topicId because their imported
+  // collection was assigned to a roadmap topic AFTER the answer was recorded.
+  // Attribute these historical events at READ time only: never rewrite attempts,
+  // scores, timestamps, sync stamps, or unrelated/unmatched questions.
+  const bsa20ResolverCache=new WeakMap();
+  function bsa20TopicResolver(sub) {
+    const cached=bsa20ResolverCache.get(sub);
+    if(cached)return cached;
+    const valid=new Set((sub.topics||[]).filter(t=>t.kind!=='exam').map(t=>t.id));
+    const byId=new Map(),byKey=new Map(),ambiguous=new Set(),ambiguousIds=new Set();
+    for(const q of mcqDedicatedPool(sub)) {
+      if(!valid.has(q.topicId))continue;
+      if(byId.has(q.id)&&byId.get(q.id)!==q.topicId)ambiguousIds.add(q.id);
+      else byId.set(q.id,q.topicId);
+      const key=bsa197QuizKey(q);
+      if(byKey.has(key)&&byKey.get(key)!==q.topicId)ambiguous.add(key);
+      else byKey.set(key,q.topicId);
+    }
+    for(const key of ambiguous)byKey.delete(key);
+    for(const id of ambiguousIds)byId.delete(id);
+    const resolve=e=>{
+      if(!e)return '';
+      if(e.kind!=='mcq')return e.topicId||'';
+      if(valid.has(e.topicId))return e.topicId;
+      // A same-ID match is more precise; memory keys survive imported ID changes.
+      return byId.get(e.sourceId)||byKey.get(e.memoryKey)||'';
+    };
+    bsa20ResolverCache.set(sub,resolve);
+    return resolve;
+  }
   function learningEvidence(sub, topicId) {
-    const events = (sub.learningEvents||[]).filter(e=>e.topicId===topicId);
+    const topicFor=bsa20TopicResolver(sub);
+    const events = (sub.learningEvents||[]).filter(e=>e && topicFor(e)===topicId);
     const ai = (sub.aiAttempts||[]).filter(a=>a.topicId===topicId && ["correct","incorrect","partial"].includes(a.verdict)).map(a=>({id:a.id,kind:"ai",result:a.verdict,at:a.at||0,assisted:true}));
-    return events.concat(ai).sort((a,b)=>(b.at||0)-(a.at||0));
+    return events.concat(ai).sort((a,b)=>(Number(b.at)||Date.parse(b.at)||0)-(Number(a.at)||Date.parse(a.at)||0));
   }
   function learningNextAction(sub, ranked) {
     if (!ranked.length) return null;
@@ -2982,8 +3013,11 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       if(seen.has(key))continue;seen.add(key);
       const kind=x.kind||"other";
       const weight=kind==="mcq"?1:kind==="problem"?.65:kind==="flashcard"?.4:kind==="ai"?.25:.45;
-      const w=x.assisted?weight*.6:weight;
-      ev.push({t,source,kind,w,correct:x.result==="correct"?1:x.result==="partial"?.5:0});
+      const w=weight*(x.assisted?.6:1)*(x.guessed?.45:1);
+      // Guessed correct answers remain correct for the quiz score, but they are
+      // weaker evidence of understanding than an independent correct answer.
+      const value=x.result==="correct"?(x.guessed?.5:1):x.result==="partial"?.5:0;
+      ev.push({t,source,kind,w,correct:value,independent:!x.assisted&&!x.guessed});
     }
     const weighted=arr=>{
       const weight=arr.reduce((a,x)=>a+x.w,0);
@@ -2994,7 +3028,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const overall=weighted(ev);
     const days=new Set(ev.filter(x=>x.t>0).map(x=>Math.floor(x.t/day))).size;
     const sources=new Set(ev.map(x=>x.kind+":"+x.source)).size;
-    const objective=ev.filter(x=>x.kind==="mcq").length;
+    const objective=ev.filter(x=>x.kind==="mcq"&&x.independent).length;
     const confidence=overall.weight>=8&&days>=3&&sources>=5&&objective>=3?"Higher":overall.weight>=3&&days>=2&&sources>=3?"Moderate":"Limited";
     let trend="Not enough comparable evidence",delta=null;
     if(recent.n>=3&&previous.n>=3&&recent.weight>=1.5&&previous.weight>=1.5){
@@ -3031,7 +3065,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       const accuracy = signals.overall.percent!==null ? signals.overall.percent : legacyAccuracy;
       // High performance with little evidence is provisional, never proven mastery.
       const mastery = accuracy === null ? (t.status === "Mastered" ? "Marked mastered (unverified)" : "Not assessed") :
-        accuracy>=80&&!mistakes.length&&signals.confidence!=="Limited" ? "Promising" : accuracy>=55 ? "Developing" : "Needs practice";
+        accuracy>=80&&!mistakes.length&&signals.confidence!=="Limited" ? "Strong" : accuracy>=55 ? "Developing" : "Needs practice";
       const dueCards = cards.filter(c => c.srs && c.srs.due && c.srs.due <= today()).length;
       const days = exam && exam.due ? daysUntil(exam.due) : null;
       const relevant = !!exam && (examIds.has(t.id) || (!examIds.size && t.week <= exam.week));
@@ -5323,8 +5357,16 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
   function bsa197Recall(q,history,now=Date.now()) {
     const key=bsa197QuizKey(q);
     const items=[...(history.keys.get(key)||[]),...(history.ids.get(q.id)||[])].sort((a,b)=>(Number(a.at)||0)-(Number(b.at)||0));
-    let streak=0,wrong=0;
-    for(const e of items){if(e.result==='correct'&&!e.guessed&&!e.assisted)streak++;else{streak=0;wrong++;}}
+    // A streak must span different calendar days. Replaying a question three
+    // times immediately must not label it a durable retention strength.
+    let streak=0,wrong=0,previousDay='';
+    for(const e of items){
+      const date=String(e.date||'');
+      const time=Number(e.at)||Date.parse(date)||0;
+      const day=date.match(/^\d{4}-\d{2}-\d{2}/)?.[0]||(time?new Date(time).toISOString().slice(0,10):'undated');
+      if(e.result==='correct'&&!e.guessed&&!e.assisted){if(!streak||day!==previousDay)streak++;previousDay=day;}
+      else{streak=0;wrong++;previousDay='';}
+    }
     const last=items.length?items[items.length-1]:null;
     const at=last?Number(last.at)||Date.parse(last.date||'')||0:0;
     // A guess is a correct score, but not evidence of durable recall.
@@ -5364,12 +5406,52 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       return d;
     }catch(_){return null;}
   }
+  function bsa18PracticeChanged(){try{window.dispatchEvent(new Event('bsa18:practice-changed'));}catch(_){}}
+  // Preserve most-recent order even if two saved sessions land in the same millisecond.
+  let bsa18LastSavedAt=0;
+  function bsa18SavedAt(){bsa18LastSavedAt=Math.max(Date.now(),bsa18LastSavedAt+1);return bsa18LastSavedAt;}
   function bsa197SaveDraft(subjectId,data){
-    try{localStorage.setItem(bsa197DraftKey(subjectId),JSON.stringify({...data,subjectId,updatedAt:Date.now()}));return true;}
+    try{localStorage.setItem(bsa197DraftKey(subjectId),JSON.stringify({...data,subjectId,updatedAt:bsa18SavedAt()}));bsa18PracticeChanged();return true;}
     catch(_){return false;}
   }
-  function bsa197DeleteDraft(subjectId){try{localStorage.removeItem(bsa197DraftKey(subjectId));}catch(_){}}
-  function MultipleChoiceQuiz({ subject, update, toast, go, onExit, initialSetId = 'all', initialTopicId = 'all', initialMode = 'smart' }) {
+  function bsa197DeleteDraft(subjectId){try{localStorage.removeItem(bsa197DraftKey(subjectId));bsa18PracticeChanged();}catch(_){}}
+  // Device-local structured-problem position and results. Individual typed answers
+  // continue to use the existing per-problem bsa39 storage; no extra mastery or grades.
+  function bsa18WrittenKey(id){return (window.__BSA_SHARED_MODE__?'bsa_shared_':'bsa_')+'written_session_v18_'+id;}
+  function bsa18LoadWritten(id){try{
+    const d=JSON.parse(localStorage.getItem(bsa18WrittenKey(id))||'null');
+    if(!d||d.subjectId!==id||typeof d.setId!=='string'||!Array.isArray(d.order)||!d.order.length||
+      !Number.isFinite(d.updatedAt)||Date.now()-d.updatedAt>30*BSA197_DAY||d.updatedAt>Date.now()+BSA197_DAY)return null;
+    return d;
+  }catch(_){return null;}}
+  function bsa18SaveWritten(id,d){try{
+    localStorage.setItem(bsa18WrittenKey(id),JSON.stringify({...d,subjectId:id,updatedAt:bsa18SavedAt()}));
+    bsa18PracticeChanged();return true;
+  }catch(_){return false;}}
+  function bsa18DeleteWritten(id){try{localStorage.removeItem(bsa18WrittenKey(id));bsa18PracticeChanged();}catch(_){}}
+  function bsa18LatestPractice(subjects){
+    const found=[];
+    for(const sub of subjects||[]){if(!sub?.id)continue;
+      const mcq=bsa197LoadDraft(sub.id);
+      if(mcq)found.push({kind:'mcq',subjectId:sub.id,subjectName:sub.name||'Subject',label:'MCQ quiz',position:Math.min((Number(mcq.pos)||0)+1,mcq.ids.length),total:mcq.ids.length,updatedAt:mcq.updatedAt});
+      const wr=bsa18LoadWritten(sub.id);
+      if(wr&&(sub.psets||[]).some(x=>x.id===wr.setId)){
+        const set=(sub.psets||[]).find(x=>x.id===wr.setId);
+        found.push({kind:'written',subjectId:sub.id,subjectName:sub.name||'Subject',label:set?.title||'Written practice',setId:wr.setId,position:Math.min((Number(wr.pos)||0)+1,wr.order.length),total:wr.order.length,updatedAt:wr.updatedAt});
+      }
+    }
+    return found.sort((a,b)=>b.updatedAt-a.updatedAt);
+  }
+  // Corrupted/partially written chat history must never turn the Tutor into a blank page.
+  function bsa18ReadTutorChat(key){try{
+    const raw=JSON.parse(lsGet(key)||'[]');
+    if(!Array.isArray(raw))return [];
+    return raw.slice(-60).filter(x=>x&&typeof x==='object'&&(x.role==='me'||x.role==='ai'))
+      .map((m,i)=>({id:typeof m.id==='string'?m.id:'saved-'+i,role:m.role,
+        text:typeof m.text==='string'?(m.text|| (m.role==='ai'?'This reply was interrupted. You can ask again.':'')):'This saved reply was unreadable. Please ask again.',
+        err:!!m.err||m.role==='ai'&&!m.text}));
+  }catch(_){return [];}}
+  function MultipleChoiceQuiz({ subject, update, toast, go, onExit, initialSetId = 'all', initialTopicId = 'all', initialMode = 'smart', autoResume = false }) {
     const all=useMemo(()=>mcqDedicatedPool(subject),[subject]);
     const [topic,setTopic]=useState(initialTopicId),[collection,setCollection]=useState(initialSetId);
     const [count,setCount]=useState(10),[mode,setMode]=useState(initialMode);
@@ -5387,7 +5469,8 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const strongCount=catalog.filter(q=>q._recall.mastered).length;
     const available=mode==='due'?dueCount:mode==='weak'?weakCount:catalog.length;
     const current=paper[pos];
-    const score=paper.filter(q=>answers[q.id]&&answers[q.id]===q.key).length;
+    const checkedPaper=paper.filter(q=>!!revealed[q.id]&&!!answers[q.id]);
+    const score=checkedPaper.filter(q=>answers[q.id]===q.key).length;
     const start=()=>{
       const picks=bsa197Pick(catalog,mode,count);
       if(!picks.length)return;
@@ -5408,42 +5491,68 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       started.current=Number(draft.startedAt)||Date.now();runId.current=draft.runId||uid('quizrun');
       saved.current=false;setFeedbackExpanded(false);setDraft(null);setPhase('run');
     };
+    useEffect(()=>{if(autoResume && draft)resume();},[]);
     useEffect(()=>{
       if(phase!=='run'||!paper.length)return;
       bsa197SaveDraft(subject.id,{ids:paper.map(q=>q.id),topic,collection,mode,count,pos,
         answers,revealed,guessed,startedAt:started.current,runId:runId.current});
     },[phase,paper,pos,answers,revealed,guessed,subject.id]);
+    // V1.8 statistics integrity: only a learner's checked answer is an attempt.
+    // Use a stable session+question identity to prevent replay/resume/finish from
+    // recording the same question twice, including after GitHub synchronization.
+    const recordCheckedIn=(s,q,choice,isGuess,sessionKey,at)=>{
+      if(!q||!choice||!sessionKey)return false;
+      s.learningEvents=s.learningEvents||[];
+      const memoryKey=bsa197QuizKey(q);
+      if(s.learningEvents.some(e=>e.kind==='mcq'&&e.sessionKey===sessionKey&&
+          ((e.memoryKey&&e.memoryKey===memoryKey)||e.sourceId===q.id)))return false;
+      const correct=choice===q.key;
+      s.learningEvents.push({id:uid('le'),topicId:q.topicId||'',kind:'mcq',sourceId:q.id,
+        memoryKey,sessionKey,result:correct?'correct':'incorrect',
+        guessed:!!isGuess,assisted:false,at,date:today(),note:'MCQ · '+mode});
+      if(!correct){
+        const wrongChoice=q.choices.find((c,i)=>mxChoiceKey(c,i)===choice);
+        bsaUpsertMistake(s,{topicId:q.topicId||null,topicText:'',date:today(),question:psPlain(q.q).slice(0,400),
+          wrong:psPlain(wrongChoice||choice).slice(0,200),
+          correct:psPlain(q.choices.find((c,i)=>mxChoiceKey(c,i)===q.key)||q.key).slice(0,400),
+          trap:psPlain(q.trap||q.why||'Review the original explanation.').slice(0,400),
+          status:'Active',sourceMcqId:q.id});
+      }
+      return true;
+    };
+    const checkAnswer=()=>{
+      const q=paper[pos];
+      if(!q||!answers[q.id]||revealed[q.id])return;
+      const choice=answers[q.id],isGuess=!!guessed[q.id];
+      const key=runId.current||(runId.current=uid('quizrun'));
+      update(s=>{recordCheckedIn(s,q,choice,isGuess,key,Date.now());});
+      playQuizFeedbackSound(choice===q.key?'correct':'wrong');
+      setFeedbackExpanded(false);
+      setRevealed(x=>({...x,[q.id]:true}));
+    };
     const record=()=>{
       if(saved.current||!paper.length)return;
       saved.current=true;
       const duration=Math.max(1,Math.round((Date.now()-started.current)/60000));
       const sessionKey=runId.current||uid('quizrun');
+      const checked=paper.filter(q=>!!revealed[q.id]&&!!answers[q.id]);
+      const completedScore=checked.filter(q=>answers[q.id]===q.key).length;
       update(s=>{
         s.quizzes=s.quizzes||[];
         if(s.quizzes.some(x=>x.sessionKey===sessionKey))return;
+        // A draft with no checked answer is not evidence of a completed quiz.
+        if(!checked.length)return;
         s.quizzes.unshift({id:uid('q'),sessionKey,topicId:topic==='all'?null:topic,
           topicText:'MCQ · '+(BSA197_MODES.find(x=>x[0]===mode)?.[1]||'Practice')+' · '+(topic==='all'?'All topics':topics.find(t=>t.id===topic)?.title||'Topic'),
-          date:today(),score,items:paper.length});
-        bumpDay(s,{reviews:paper.length,right:score,mins:duration});
-        s.learningEvents=s.learningEvents||[];
-        const at=Date.now();
-        for(const q of paper){
-          const correct=answers[q.id]===q.key;
-          s.learningEvents.push({id:uid('le'),topicId:q.topicId||'',kind:'mcq',sourceId:q.id,
-            memoryKey:bsa197QuizKey(q),sessionKey,result:correct?'correct':'incorrect',
-            guessed:!!guessed[q.id],assisted:false,at,date:today(),note:'MCQ · '+mode});
-          if(correct)continue;
-          const wrongChoice=q.choices.find((c,i)=>mxChoiceKey(c,i)===answers[q.id]);
-          bsaUpsertMistake(s,{topicId:q.topicId||null,topicText:'',date:today(),question:psPlain(q.q).slice(0,400),
-            wrong:answers[q.id]?psPlain(wrongChoice||answers[q.id]).slice(0,200):'Left blank',
-            correct:psPlain(q.choices.find((c,i)=>mxChoiceKey(c,i)===q.key)||q.key).slice(0,400),
-            trap:psPlain(q.trap||q.why||'Review the original explanation.').slice(0,400),
-            status:'Active',sourceMcqId:q.id});
-        }
+          date:today(),score:completedScore,items:checked.length});
+        bumpDay(s,{reviews:checked.length,right:completedScore,mins:duration});
+        // Legacy/restored drafts may contain checked items without saved events.
+        // Only restore those confirmed checks; never count an unchecked selection.
+        for(const q of checked)recordCheckedIn(s,q,answers[q.id],guessed[q.id],sessionKey,Date.now());
       });
       bsa197DeleteDraft(subject.id);
       setDraft(null);
-      toast('Saved '+score+'/'+paper.length+'. Your quiz history now guides future review.');
+      toast(checked.length?'Saved '+completedScore+'/'+checked.length+' checked answers. Unchecked choices were excluded.':'No checked answers; no quiz score or activity was added.');
     };
     const finish=()=>{playQuizFeedbackSound('finish');record();setPhase('done');};
     const leave=()=>{if(phase==='run'&&paper.length){
@@ -5482,19 +5591,23 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
           h('p',{className:'muted small bsa197-mode-description'},BSA197_MODES.find(x=>x[0]===mode)?.[2]||''),
         h('div',{className:'bsa197-memory-grid','aria-label':'Question memory summary'},
           [['Available',catalog.length],['Not seen',newCount],['Due',dueCount],['Weak',weakCount],['Strong',strongCount]].map(([name,value])=>h('div',{key:name},h('strong',null,value),h('small',null,name)))),
-        h('p',{className:'muted small'},'Memory is based on recorded question-level attempts. Older scores without answer details cannot show what you missed. A correct guess is scheduled for review, not counted as mastered.'),
+        h('p',{className:'muted small'},'Not seen counts questions in this filtered MCQ bank only. It decreases after Check answer, not when you merely choose an option or answer in another practice tool. Your checked answers remain recorded after Save & leave or switching to AI Tutor. Old summary-only quiz scores cannot identify individual questions. Guesses return sooner.'),
         h('div',{className:'step-actions'},h('button',{className:'btn primary',disabled:!available,onClick:start},
           `Start ${Math.min(count,available)} question${Math.min(count,available)===1?'':'s'} →`),
           h('button',{className:'btn',onClick:()=>go('nlm',{pid:'mcq-quiz'})},'Add new MCQs')),
         !available&&h('p',{className:'muted small'},mode==='due'?'Nothing is due yet. Try Smart mix or Unseen first.':mode==='weak'?'No weak questions recorded yet. Try Smart mix.':'No questions in this collection. Import or assign a question set.'))
       :phase==='run'&&current?h('div',{className:'panel mcq-shell'},
         h('div',{className:'mcq-progress bsa-quiz-progress'},h('span',{className:'bsa-quiz-count'},'QUESTION ',h('strong',null,pos+1),` / ${paper.length}`),
-          h('span',{className:'bsa-quiz-reviewed'},`${paper.filter(q=>revealed[q.id]).length} checked`)),
+          h('span',{className:'bsa-quiz-reviewed'},`${checkedPaper.length} checked · ${score} correct`)),
         h('div',{className:'mcq-track'},h('span',{style:{width:`${(pos+1)/paper.length*100}%`}})),
         h('div',{className:'bsa197-question-meta'},h('span',{className:'bsa-quiz-source'},current.src||'Your MCQ library'),
           h('span',{className:'bsa197-question-tag'},!current._recall?.seen?'New':current._recall?.due?'Due review':current._recall?.weak?'Weak spot':'Practice')),
         h('div',{className:'mcq-question'},h('div',{dangerouslySetInnerHTML:{__html:psMdHtml(current.q)}})),
-        h('div',{className:'bsa4-mcq-help'},h('button',{type:'button',className:'btn ghost',onClick:()=>go('ask',{focus:{kind:'mcq',id:current.id,title:current.src||'MCQ',setTitle:current.src||'Question collection',question:psPlain(current.q),options:current.choices.map(psPlain)}})},'✦ Ask Tutor about this MCQ'),
+        h('div',{className:'bsa4-mcq-help'},h('button',{type:'button',className:'btn ghost',onClick:()=>{
+          const ok=bsa197SaveDraft(subject.id,{ids:paper.map(q=>q.id),topic,collection,mode,count,pos,answers,revealed,guessed,startedAt:started.current,runId:runId.current});
+          if(!ok){toast('Unable to save quiz on this device. Stay here and free browser storage first.');return;}
+          go('ask',{focus:{kind:'mcq',id:current.id,title:current.src||'MCQ',setTitle:current.src||'Question collection',question:psPlain(current.q),options:current.choices.map(psPlain)}});
+        }},'✦ Ask Tutor about this MCQ'),
         h('small',{className:'muted'},'Opening Tutor saves this quiz draft. The correct answer is not attached.')),
         h('div',{className:'mcq-options',role:'group','aria-label':'Choose one answer'},current.choices.map((choice,i)=>{
           const key=mxChoiceKey(choice,i),selected=answers[current.id]===key,visible=!!revealed[current.id];
@@ -5519,7 +5632,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
               current.trap&&h('div',{className:'bsa-trap-block'},h('span',{className:'bsa-result-eyebrow'},'EXAM TRAP'),h('div',{dangerouslySetInnerHTML:{__html:psMdHtml(current.trap)}}))):
               !!(current.why||current.trap)&&h('button',{className:'btn ghost bsa197-expand','aria-expanded':false,onClick:()=>setFeedbackExpanded(true)},'Show explanation & exam trap'))),
         h('div',{className:'step-actions'},!revealed[current.id]?h('button',{className:'btn primary',disabled:!answers[current.id],onClick:()=>{
-          playQuizFeedbackSound(answers[current.id]===current.key?'correct':'wrong');setFeedbackExpanded(false);setRevealed(x=>({...x,[current.id]:true}));
+          checkAnswer();
         }},'Check answer'):h('button',{className:'btn primary',onClick:()=>{
           if(pos===paper.length-1)finish();else{playQuizFeedbackSound('next');setPos(x=>x+1);setFeedbackExpanded(false);}
         }},pos===paper.length-1?'Finish & save':'Next question →'),
@@ -5527,9 +5640,9 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
           h('button',{className:'btn ghost',onClick:discard},'Discard'))
       ):h('div',{className:'panel mcq-shell'},
         h('div',{className:'bsa-finish-heading'},h('span',{className:'bsa-finish-medal','aria-hidden':true},'★'),
-          h('h2',null,'Quiz complete'),h('p',{className:'muted'},'Your question-level history has been updated.')),
-        h('p',{className:'big-num bsa-finish-score'},`${score} / ${paper.length}`),
-        h('p',{className:'muted bsa197-done-summary'},`${paper.length?Math.round(score/paper.length*100):0}% correct · ${paper.filter(q=>!q._recall?.seen).length} new · ${paper.filter(q=>q._recall?.seen).length} reviewed`),
+          h('h2',null,'Quiz complete'),h('p',{className:'muted'},'Only checked answers were recorded in your question history.')),
+        h('p',{className:'big-num bsa-finish-score'},`${score} / ${checkedPaper.length} checked`),
+        h('p',{className:'muted bsa197-done-summary'},`${checkedPaper.length?Math.round(score/checkedPaper.length*100):0}% correct · ${checkedPaper.filter(q=>!q._recall?.seen).length} first-time checks · ${checkedPaper.filter(q=>q._recall?.seen).length} repeat checks`),
         paper.some(q=>answers[q.id]!==q.key||guessed[q.id])&&h('div',{className:'bsa197-next-tip'},
           h('strong',null,'What the app will remember'),
           h('p',null,'Missed and guessed items are scheduled sooner. Correct, confident answers are gradually spaced further apart.')), 
@@ -5598,14 +5711,14 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
 
   /* v153: Independent MCQ library and quiz route. */
   function MCQPage({subject,update,toast,go,init}){
-    const [quizSet,setQuizSet]=useState(init?.setId||(init?.topicId&&init.topicId!=='all'?'all':null));
+    const [quizSet,setQuizSet]=useState(init?.resume?'all':(init?.setId||(init?.topicId&&init.topicId!=='all'?'all':null)));
     return h("section",{className:"view mcq-page"},
       h("div",{className:"page-head"},
         h("div",null,h("span",{className:"panel-kicker"},"QUESTION COLLECTIONS"),h("h1",{className:"page-title"},"Multiple-choice questions"),
           h("p",{className:"muted"},"Browse question sets, inspect answers and explanations, or practice one question at a time."))),
       quizSet!==null ? h(React.Fragment,null,
         h("button",{className:"btn",onClick:()=>setQuizSet(null)},"← Back to MCQ library"),
-        h(MultipleChoiceQuiz,{subject,update,toast,go,initialSetId:quizSet,initialTopicId:init?.topicId||'all',initialMode:init?.mode||'smart',onExit:()=>setQuizSet(null)})) :
+        h(MultipleChoiceQuiz,{subject,update,toast,go,initialSetId:quizSet,initialTopicId:init?.topicId||'all',initialMode:init?.mode||'smart',autoResume:!!init?.resume,onExit:()=>setQuizSet(null)})) :
       h(React.Fragment,null,
         h("div",{className:"mcq-page-actions"},
           h("button",{className:"btn primary",onClick:()=>setQuizSet("all")},"Start mixed MCQ quiz"),
@@ -5694,17 +5807,26 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
      reuses the existing Mistake Log, and never claims to auto-grade essays. */
   function PsWrittenDrill({set,subject,update,onMark,onExit,go}){
     const base=(set.problems||[]).slice().sort((a,b)=>(a.no||0)-(b.no||0));
+    const previous=bsa18LoadWritten(subject.id);
+    const savedSession=previous?.setId===set.id?previous:null;
+    const restoredOrder=()=>savedSession?[
+      ...savedSession.order.map(id=>base.find(p=>p.id===id)).filter(Boolean),
+      ...base.filter(p=>!savedSession.order.includes(p.id))
+    ]:base;
     const randomOrder=arr=>{const copy=arr.slice();for(let i=copy.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[copy[i],copy[j]]=[copy[j],copy[i]];}return copy;};
-    const [randomized,setRandomized]=useState(false);
-    const [problems,setProblems]=useState(()=>base);
-    const [pos,setPos]=useState(0);
+    const [randomized,setRandomized]=useState(!!savedSession?.randomized);
+    const [problems,setProblems]=useState(restoredOrder);
+    const [pos,setPos]=useState(()=>Math.max(0,Math.min(base.length-1,Number(savedSession?.pos)||0)));
     const [drafts,setDrafts]=useState(()=>Object.fromEntries(base.map(p=>[p.id,bsa39Load(subject.id,set.id,p.id)])));
-    const [revealed,setRevealed]=useState({});
-    const [marked,setMarked]=useState({});
+    const [revealed,setRevealed]=useState(savedSession?.revealed||{});
+    const [marked,setMarked]=useState(savedSession?.marked||{});
     const [editingNote,setEditingNote]=useState(null);
     const [notes,setNotes]=useState({});
-    const [hintLevel,setHintLevel]=useState({});
-    const [checks,setChecks]=useState({});
+    const [hintLevel,setHintLevel]=useState(savedSession?.hintLevel||{});
+    const [checks,setChecks]=useState(savedSession?.checks||{});
+    const persist=()=>bsa18SaveWritten(subject.id,{setId:set.id,pos,order:problems.map(x=>x.id),randomized,marked,revealed,hintLevel,checks});
+    useEffect(()=>{if(problems.length)persist();},[pos,randomized,problems,marked,revealed,hintLevel,checks,subject.id,set.id]);
+    const leave=()=>{if(!persist()){window.alert('Could not save this practice session on this device. Free storage before leaving.');return;}onExit();};
     const p=problems[pos];
     const labelFor=p=>`${set.title}, problem ${p.no}: ${p.title}`;
     const existingFor=p=>(subject.mistakes||[]).find(m=>bsaMistakeMatch(m,{question:labelFor(p),topicId:set.topicId||null,sourceProblemId:p.id}));
@@ -5719,7 +5841,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const numeric=single.test(answer.trim())&&single.test(expected);
     const keyCheck=bsa39KeyCheck(p,work);
     const matches=numeric&&Math.abs(num(answer)-num(expected))<=0.005;
-    const next=()=>{setEditingNote(null);if(pos<problems.length-1)setPos(v=>v+1);else onExit();};
+    const next=()=>{setEditingNote(null);if(pos<problems.length-1)setPos(v=>v+1);else{bsa18DeleteWritten(subject.id);onExit();}};
     const toggleRandom=()=>{
       const newMode=!randomized;
       if((pos>0||Object.keys(revealed).length>0)&&!window.confirm("Change question order and return to the first question? Your typed answers and marks will be kept."))return;
@@ -5765,7 +5887,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     return h("div",{className:"ps-written-drill panel bsa-v157-drill"},
       h("div",{className:"ps-written-top"},
         h("div",null,h("span",{className:"panel-kicker"},"PRACTICE STUDIO · PROBLEM SETS"),h("h2",null,"Solve. Compare. Improve."),h("p",{className:"muted small"},set.title)),
-        h("button",{className:"btn",onClick:onExit},"Exit drill")),
+        h("button",{className:"btn",onClick:leave},"Save & leave")),
       h("div",{className:"bsa-v157-toolbar"},
         h("div",{className:"bsa-v157-position"},h("strong",null,`Question ${pos+1} / ${problems.length}`),h("span",{className:"muted small"},`${Object.keys(marked).length} marked`)),
         h("button",{type:"button",className:`btn bsa-v157-shuffle ${randomized?"primary":""}`,onClick:toggleRandom,"aria-pressed":randomized},randomized?"🔀 Shuffle on":"⇄ Shuffle questions")),
@@ -5780,7 +5902,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         h(BSA39AnswerEditor,{p,work,onChange:value=>{setDrafts(v=>({...v,[p.id]:value}));bsa39Save(subject.id,set.id,p.id,value);}}),
         h('div',{className:'bsa39-hints'},h('button',{type:'button',className:'btn ghost',onClick:()=>setHintLevel(v=>({...v,[p.id]:Math.min(2,(v[p.id]||0)+1)}))},(hintLevel[p.id]||0)===0?'Need a hint?':(hintLevel[p.id]||0)===1?'Show method hint':'Hints shown'),
           (hintLevel[p.id]||0)>0&&h('p',null,'First identify the accounting concept and the exact requirements before calculating.'),
-          (hintLevel[p.id]||0)>1&&h('p',null,p.approach||p.labHint||'Break the question into smaller steps, check the accounts or assumptions, and confirm every required part.'))),
+          (hintLevel[p.id]||0)>1&&h('p',null,p.approach||p.labHint||'Break the question into smaller steps, check the accounts or assumptions, and confirm every required part.')),
         h("div",{className:"bsa-v157-actions"},
           h("span",{className:"muted small"},"Your answer stays on this device while the drill is open."),
           h("button",{className:"btn primary",disabled:!answer.trim(),onClick:()=>setRevealed(v=>({...v,[p.id]:true}))},"Compare with solution →"))),
@@ -5820,7 +5942,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
           h("label",null,"My answer / what I did",h("textarea",{rows:3,value:note.wrong||"",onChange:e=>setNotes(v=>({...v,[p.id]:{...v[p.id],wrong:e.target.value}}))})),
           h("label",null,"Correct answer / treatment",h("textarea",{rows:3,value:note.correct||"",onChange:e=>setNotes(v=>({...v,[p.id]:{...v[p.id],correct:e.target.value}}))})),
           h("label",null,"Why I missed it / rule to remember",h("textarea",{rows:3,value:note.trap||"",onChange:e=>setNotes(v=>({...v,[p.id]:{...v[p.id],trap:e.target.value}}))})),
-          h("div",{className:"bsa-v157-actions"},h("button",{className:"btn",onClick:()=>setEditingNote(null)},"Close without saving notes"),h("button",{className:"btn primary",onClick:saveMistake},"Save Mistake Log notes"))));
+          h("div",{className:"bsa-v157-actions"},h("button",{className:"btn",onClick:()=>setEditingNote(null)},"Close without saving notes"),h("button",{className:"btn primary",onClick:saveMistake},"Save Mistake Log notes")))));
   }
 
 
@@ -6123,12 +6245,15 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         s.learningEvents=s.learningEvents||[];
         const reviewedAt=Date.now();
         for(const question of paper){
-          if(question.kind!=='mcq')continue;
+          // Unanswered exam items still score zero on the exam, but they are
+          // not evidence of an attempted recall or a mistaken concept.
+          if(question.kind!=='mcq'||!answered(question))continue;
           s.learningEvents.push({id:uid('le'),topicId:question.topicId||'',kind:'mcq',sourceId:question.id,
             memoryKey:bsa197QuizKey(question),result:right(question)?'correct':'incorrect',
             guessed:false,assisted:false,at:reviewedAt,date:today(),note:'Mock exam · MCQ'});
         }
         for (const p of misses) {
+          if (!answered(p) || (p.kind==='open'&&!mark[p.id])) continue;
           if (p.kind === "open" && p.cardId) gradeCardIn(s, p.cardId, "again");
           const missQuestion=psPlain(p.q).slice(0,400);
           const missCorrect=String(p.kind === "mcq" ? p.choices.find((c, k) => mxChoiceKey(c, k) === p.key) || "" : p.kind === "calc" ? p.ansText : p.ans).slice(0,400);
@@ -6138,7 +6263,8 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
             ...(p.kind==="mcq"?{sourceMcqId:p.id}:{sourceProblemId:p.id})});
         }
       });
-      toast(`Saved ${score}/${paper.length}. ${plural(misses.length, "miss")} recorded or updated in the Mistake log.`);
+      const recordedMisses=misses.filter(p=>answered(p)&&(p.kind!=='open'||!!mark[p.id])).length;
+      toast(`Saved ${score}/${paper.length}. ${plural(recordedMisses, "answered error")} recorded or updated; skipped items are not counted as recalled.`);
     };
     if (!total) {
       return h("div", { className: "drill done" }, h("span", { className: "muted" }, "Mock exam"), h("p", null, "There is nothing to build a paper from yet. Add flashcards, a problem set with multiple choice, or a computation drill first."), h("button", { className: "btn primary", onClick: onExit }, "Back"));
@@ -6222,14 +6348,14 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         h("p", { className: "muted" }, `${exam ? exam.title : "All topics"} \u00b7 ${fmtMins(usedMins.current)} used of ${fmtMins(cfg.mins)}`),
         unmarked > 0 && h("p", { className: "mx-todo" }, `Mark your ${plural(unmarked, "written answer")} below. The score updates as you go.`),
         byKind.map((x) => h("div", { key: x.k, className: "ready-part" }, h("span", { className: "small" }, MX_LABEL[x.k]), h("div", { className: "bar-sm" }, h("span", { style: { width: `${x.got / x.n * 100}%` } })), h("span", { className: "small muted num" }, `${x.got}/${x.n}`))),
-        byTopic.length > 1 && h(React.Fragment, null, h("p", { className: "panel-kicker", style: { marginTop: ".9rem" } }, "Weakest topics in this paper"), byTopic.slice(0, 5).map(([tid, v]) => h("div", { key: tid || "none", className: "ready-part" }, h("span", { className: "small" }, tid ? topicName(subject, tid) : "Unsorted"), h("div", { className: "bar-sm" }, h("span", { style: { width: `${v.got / v.n * 100}%` } })), h("span", { className: "small muted num" }, `${v.got}/${v.n}`)))),
+        byTopic.length > 1 && h(React.Fragment, null, h("p", { className: "panel-kicker", style: { marginTop: ".9rem" } }, "Lowest-scoring topics in this paper (includes unanswered items)"), byTopic.slice(0, 5).map(([tid, v]) => h("div", { key: tid || "none", className: "ready-part" }, h("span", { className: "small" }, tid ? topicName(subject, tid) : "Unsorted"), h("div", { className: "bar-sm" }, h("span", { style: { width: `${v.got / v.n * 100}%` } })), h("span", { className: "small muted num" }, `${v.got}/${v.n}`)))),
         h("div", { className: "row-end" }, h("button", { className: "btn ghost", onClick: () => printExam(false) }, "Print questions / PDF"), h("button", { className: "btn ghost", onClick: () => printExam(true) }, "Print answer key / PDF")),
         h("div", { className: "row-end" }, h("button", { className: "btn ghost", onClick: onExit }, "Close without saving"), h("button", { className: "btn primary", disabled: unmarked > 0, onClick: () => { save(); onExit(); } }, unmarked > 0 ? `Mark ${unmarked} first` : "Save result and log my misses"))
       ),
       paper.map((p) => h(
         "article",
         { key: p.id, className: `ps-prob mx-item ${right(p) ? "st-got" : p.kind === "open" && !mark[p.id] ? "" : "st-miss"}` },
-        h("header", { className: "ps-prob-head" }, h("span", { className: "ps-no" }, p.no), h("h3", null, MX_LABEL[p.kind]), right(p) ? h("span", { className: "ps-st got" }, "Right") : p.kind === "open" && !mark[p.id] ? h("span", { className: "ps-diff" }, "Needs marking") : h("span", { className: "ps-st miss" }, "Wrong")),
+        h("header", { className: "ps-prob-head" }, h("span", { className: "ps-no" }, p.no), h("h3", null, MX_LABEL[p.kind]), right(p) ? h("span", { className: "ps-st got" }, "Right") : p.kind === "open" && !mark[p.id] ? h("span", { className: "ps-diff" }, "Needs marking") : !answered(p) ? h("span", { className: "ps-diff" }, "Unanswered") : h("span", { className: "ps-st miss" }, "Wrong")),
         h(PsMd, { text: p.q }),
         p.kind === "mcq" && h("ul", { className: "ps-choices" }, p.choices.map((c, k) => {
           const key = mxChoiceKey(c, k);
@@ -10779,7 +10905,7 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
     const [sort,setSort]=useState('original');
     const chosen=sets.find(x=>x.id===open);
     if(chosen)return h(ScreenBoundary,{route:'Problem Set · '+(chosen.title||'untitled'),onHome:()=>setOpen('')},
-      h(PsSetView,{subject,set:chosen,update,toast,go,focusProblem:init?.problemId||null,onBack:()=>setOpen('')}));
+      h(PsSetView,{subject,set:chosen,update,toast,go,focusProblem:init?.problemId||null,resumeWritten:!!init?.resume,onBack:()=>setOpen('')}));
     const q=String(search||'').trim().toLowerCase();
     const visible=sets.filter(x=>!q||String(x.title||'').toLowerCase().includes(q)||String(x.topicText||'').toLowerCase().includes(q)||x.problems.some(p=>(p.title+' '+p.problem+' '+p.subtopic).toLowerCase().includes(q)));
     const ordered=sort==='size'?visible.slice().sort((a,b)=>b.problems.length-a.problems.length):visible;
@@ -10880,7 +11006,7 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
           h('button',{className:'btn',onClick:onClose},'Cancel'),
           h('button',{className:'btn primary',disabled:!chosen.length,onClick:exportNow},'Export '+chosen.length+' problem'+(chosen.length===1?'':'s')))));
   }
-  function PsSetView({ subject, set, update, toast, go, onBack, focusProblem }) {
+  function PsSetView({ subject, set, update, toast, go, onBack, focusProblem, resumeWritten=false }) {
     set={...set,problems:psSafeProblems(set)};
     const [filter, setFilter] = useState("all");
     const [selectedOnly,setSelectedOnly]=useState(!!focusProblem);
@@ -10888,7 +11014,7 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
     const [edit, setEdit] = useState(null);
     const [meta, setMeta] = useState(false);
     const [exportOpen,setExportOpen]=useState(false);
-    const [writtenDrill,setWrittenDrill]=useState(false);
+    const [writtenDrill,setWrittenDrill]=useState(!!resumeWritten);
     const t = psTally(set);
     const groups = psGroupProblems(set.problems.filter((p) => (!selectedOnly||p.id===focusProblem)&&(filter === "all" || (filter === "todo" ? !p.st : p.st === filter))));
     const allGroups = psGroupProblems(set.problems);
@@ -11139,9 +11265,9 @@ ${c.kindHint}` }
     const m = (j.error && j.error.message) || resp.statusText || "";
     if (resp.status === 400 && /api[_ ]?key|API_KEY/i.test(m)) return new Error("Google didn’t accept that key. Make sure it came from aistudio.google.com/apikey and was pasted whole, with no spaces.");
     if (resp.status === 400) return new Error("Google rejected the request: " + m);
-    if (resp.status === 401 || resp.status === 403) return new Error("Google refused the key (" + resp.status + "). Possible causes include key restrictions, missing API permissions, or a disabled Generative Language API. Check the project configuration rather than removing restrictions blindly. " + m);
+    if (resp.status === 401 || resp.status === 403) return new Error("Gemini denied generation (HTTP " + resp.status + "). A key may list models while its project is blocked from generating. Check API key status, model access, project quota/availability and account verification in Google AI Studio. " + m);
     if (resp.status === 404) return new Error("That model isn’t available to this key any more. Tap Change model and pick another from the list.");
-    if (resp.status === 429) return new Error("You’ve hit Google’s rate limit for now. Wait a minute, or switch to a Flash model, which has a much higher free allowance.");
+    if (resp.status === 429) return new Error("Gemini quota or rate limit reached (HTTP 429). Check this project’s current limits in Google AI Studio; switching models may help if that model has remaining quota. " + m);
     if (resp.status === 503) return new Error("Gemini is temporarily unavailable (HTTP 503). The app retried automatically. Google says this usually means server overload. Try another available model or wait and retry. " + m);
     if (resp.status >= 500) return new Error("Gemini server error (HTTP " + resp.status + "): " + m);
     return new Error("Gemini error " + resp.status + ": " + m);
@@ -11177,6 +11303,26 @@ ${c.kindHint}` }
     out.sort((a, b) => score(b) - score(a) || a.id.localeCompare(b.id));
     return out;
   }
+  // A successful models.list response does not prove that generateContent is permitted.
+  // Never mark the connection verified until the selected model answers this tiny request.
+  async function gemProbe(key, model) {
+    if (!key || !model) throw new Error("Enter an API key and select a model first.");
+    let response;
+    try {
+      response = await fetch(GEM.base + "/models/" + encodeURIComponent(model) + ":generateContent?key=" + encodeURIComponent(key), {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: "Reply with OK only." }] }], generationConfig: { temperature: 0, maxOutputTokens: 32 } })
+      });
+    } catch (e) { throw gemNetErr(e); }
+    if (!response.ok) throw await gemErr(response);
+    let data;
+    try { data = await response.json(); } catch (_) { throw new Error("Google returned an unreadable test response. Select another model and retry."); }
+    const candidate = (data.candidates || [])[0];
+    const answer = ((candidate?.content?.parts) || []).filter(p => p && !p.thought && typeof p.text === "string").map(p => p.text).join("").trim();
+    if (!answer) throw new Error("Google accepted the request but returned no text (" + (candidate?.finishReason || data.promptFeedback?.blockReason || "unknown reason") + "). Try a different chat model.");
+    return true;
+  }
+
   // Streams the reply. Falls back to reading the whole body where streaming isn't available.
   async function gemSend({ key, model, system, turns, onText, signal }) {
     const body = {
@@ -11233,14 +11379,15 @@ ${c.kindHint}` }
       for (;;) {
         const r = await reader.read();
         if (r.done) break;
-        buf += dec.decode(r.value, { stream: true });
+        buf += dec.decode(r.value, { stream: true }).replace(/\r\n?/g, "\n");
         const parts = buf.split("\n\n");
         buf = parts.pop();
         for (const p of parts) eat(p);
       }
+      buf += dec.decode().replace(/\r\n?/g, "\n");
       if (buf.trim()) eat(buf);
     } else {
-      const text = await resp.text();
+      const text = (await resp.text()).replace(/\r\n?/g, "\n");
       for (const p of text.split("\n\n")) eat(p);
     }
     if (!got) throw new Error(stopped === "SAFETY" ? "Gemini declined to answer that one. Try rephrasing it." : stopped ? "Gemini stopped early (" + stopped + ")." : "Gemini returned an empty answer. Try again, or pick a different model.");
@@ -11338,38 +11485,60 @@ ${c.kindHint}` }
     const [model, setModel] = useState(() => gemModel());
     const [busy, setBusy] = useState(false);
     const [err, setErr] = useState("");
-    const test = () => {
-      setErr("");
-      setBusy(true);
-      gemListModels(key.trim()).then((ms) => {
-        setModels(ms);
-        setModel((cur) => (cur && ms.some((m) => m.id === cur)) ? cur : (ms.find(m => m.id === "gemini-3.5-flash-lite") || ms[0]).id);
-        setBusy(false);
-      }).catch((e) => { setErr(e.message); setBusy(false); });
+    const [verified, setVerified] = useState(null);
+    const chatModels = models.filter(m => /flash|pro/i.test(m.id) && !/preview|exp|image|tts|live|audio|embedding/i.test(m.id));
+    const validModels = chatModels.length ? chatModels : models;
+    const discover = async () => {
+      setErr(""); setBusy(true); setVerified(null);
+      try {
+        const ms = await gemListModels(key.trim());
+        const usable = ms.filter(m => /flash|pro/i.test(m.id) && !/preview|exp|image|tts|live|audio|embedding/i.test(m.id));
+        const candidates = usable.length ? usable : ms;
+        const preferred = (model && candidates.some(m => m.id === model)) ? model : candidates[0].id;
+        setModels(ms); setModel(preferred);
+      } catch (e) { setModels([]); setErr(e.message || String(e)); }
+      finally { setBusy(false); }
     };
+    const testGeneration = async () => {
+      setErr(""); setBusy(true); setVerified(null);
+      try {
+        await gemProbe(key.trim(), model);
+        setVerified({ key: key.trim(), model });
+      } catch(e) { setErr(e.message || String(e)); }
+      finally { setBusy(false); }
+    };
+    const verifiedCurrent = !!verified && verified.key === key.trim() && verified.model === model;
     const save = () => {
-      lsSet(GEM.k, key.trim());
-      lsSet(GEM.m, model);
-      toast("Connected to Gemini");
-      onDone();
+      if (!verifiedCurrent || !model) { setErr("Test the selected model before saving."); return; }
+      lsSet(GEM.k, key.trim()); lsSet(GEM.m, model);
+      toast("Gemini connection verified with a real response"); onDone();
     };
-    return h(
-      Modal,
-      { title: "Connect Gemini", onClose, wide: true, footer: h(React.Fragment, null, gemKey() && h("button", { className: "btn danger ghost", onClick: () => { if (!window.confirm("Remove the key from this device? Your chats stay.")) return; lsSet(GEM.k, null); lsSet(GEM.m, null); toast("Key removed"); onDone(); } }, "Remove key"), h("span", { className: "spacer" }), h("button", { className: "btn ghost", onClick: onClose }, "Cancel"), models.length ? h("button", { className: "btn primary", onClick: save }, "Save and start") : h("button", { className: "btn primary", disabled: busy || !key.trim(), onClick: test }, busy ? "Checking…" : "Test the key")) },
+    return h(Modal,
+      { title: "Connect Gemini", onClose, wide: true, footer: h(React.Fragment, null,
+        gemKey() && h("button", { className: "btn danger ghost", onClick: () => { if (!window.confirm("Remove the key from this device? Your chats stay.")) return; lsSet(GEM.k, null); lsSet(GEM.m, null); toast("Key removed"); onDone(); } }, "Remove key"),
+        h("span", { className: "spacer" }),
+        h("button", { className: "btn ghost", onClick: onClose }, "Cancel"),
+        !models.length ? h("button", { className: "btn primary", disabled: busy || !key.trim(), onClick: discover }, busy ? "Checking…" : "Find available models") :
+        !verifiedCurrent ? h("button", { className: "btn primary", disabled: busy || !model, onClick: testGeneration }, busy ? "Testing actual reply…" : "Test selected model") :
+        h("button", { className: "btn primary", disabled: busy, onClick: save }, "Save verified connection")
+      ) },
       h("div", { className: "ai-setup" },
-        h("p", null, h("strong", null, "Google AI Plus does not include this."), " That subscription is for the Gemini app at gemini.google.com. The API is a separate product with its own key and its own free allowance, which is plenty for a study tutor."),
+        h("p", null, h("strong", null, "Gemini API connection"), ". The Gemini app subscription and Gemini API access are separate. Finding a model does not prove the model can generate replies."),
         h("ol", null,
-          h("li", null, "Open ", h("a", { href: "https://aistudio.google.com/apikey", target: "_blank", rel: "noopener noreferrer" }, "aistudio.google.com/apikey"), " and sign in with your Google account."),
-          h("li", null, "Create an API key. If it asks for a project, let it make one."),
-          h("li", null, h("strong", null, "Protect your API key."), " This browser-based app sends the key directly to Google. Local storage is not a secure vault; for stronger protection, use a backend proxy and restrict your key where supported."),
-          h("li", null, "Copy it and paste it below.")
+          h("li", null, "Open ", h("a", { href: "https://aistudio.google.com/apikey", target: "_blank", rel: "noopener noreferrer" }, "Google AI Studio"), " and create or check your Gemini API key."),
+          h("li", null, "Paste the key, find models, select one, then run a short real-response test before saving."),
+          h("li", null, h("strong", null, "Keep your key private."), " This browser application sends it directly to Google and stores it locally. A backend proxy would provide stronger protection.")
         ),
-        h(Field, { label: "API key" }, h("input", { type: "password", value: key, placeholder: "AIza…", autoComplete: "off", autoCapitalize: "none", autoCorrect: "off", spellCheck: false, onChange: (e) => { setKey(e.target.value); setModels([]); setErr(""); } })),
+        h(Field, { label: "API key" }, h("input", { type: "password", value: key, placeholder: "AIza…", autoComplete: "off", autoCapitalize: "none", autoCorrect: "off", spellCheck: false, onChange: (e) => { setKey(e.target.value); setModels([]); setVerified(null); setErr(""); } })),
         err && h("p", { className: "error", role: "alert" }, err),
         models.length > 0 && h(React.Fragment, null,
-          h("p", { className: "bk-note" }, "The key works. " + plural(models.length, "model") + " available."),
-          h(Field, { label: "Model", hint: "Flash models are fast and have the most generous free allowance. Pro is slower but stronger on hard computations." },
-            h("select", { value: model, onChange: (e) => setModel(e.target.value) }, models.filter(m => /flash/i.test(m.id) && !/preview|exp|image|tts|live|audio/i.test(m.id)).map((m) => h("option", { key: m.id, value: m.id }, m.name ? m.name + " — " + m.id : m.id))))
+          h("p", { className: "bk-note" }, plural(models.length, "model") + " listed. Select a text model and test whether it can actually reply."),
+          h(Field, { label: "Model", hint: "Model listing and real generation permissions can differ." },
+            h("select", { value: model, disabled: busy, onChange: (e) => { setModel(e.target.value); setVerified(null); setErr(""); } },
+              validModels.map(m => h("option", { key: m.id, value: m.id }, m.name ? m.name + " — " + m.id : m.id))
+            )
+          ),
+          verifiedCurrent && h("p", { className: "bk-note", role: "status" }, "✓ Verified: Gemini returned a real response from " + model + ".")
         )
       )
     );
@@ -11504,7 +11673,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
   function AskView({ subject, toast, go, init, settings, update }) {
     const [mode, setMode] = useState(() => { if(['problem','mcq','exercise','fs-report'].includes(init?.focus?.kind))return 'sources';const m=localPref("askMode"); return ["sources","general","dashboard"].includes(m)?m:"sources"; });
     const CHAT = "bsa_chat_" + subject.id + "_" + mode;
-    const [msgs, setMsgs] = useState(() => { try { return JSON.parse(lsGet(CHAT) || "[]") || []; } catch (e) { return []; } });
+    const [msgs, setMsgs] = useState(() => bsa18ReadTutorChat(CHAT));
     const [selectedModel, setSelectedModel] = useState(gemModel);
     // Initialize this before the model-list effect reads it in its dependency array.
     const [ready, setReady] = useState(gemReady);
@@ -11515,7 +11684,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       if (gemKey()) gemListModels(gemKey()).then(ms => { if (live) setAvailableModels(ms); }).catch(e => { if (live) setModelError(e.message); });
       return () => { live = false; };
     }, [ready]);
-    const changeMode = (next) => { if (busy || next === mode) return; lsSet(CHAT, JSON.stringify(msgs.slice(-60))); const nextChat = "bsa_chat_" + subject.id + "_" + next; try { setMsgs(JSON.parse(lsGet(nextChat) || "[]") || []); } catch(e) { setMsgs([]); } setMode(next); setLocalPref("askMode", next); setCollapsed({}); };
+    const changeMode = (next) => { if (busy || next === mode) return; lsSet(CHAT, JSON.stringify(msgs.slice(-60))); const nextChat = "bsa_chat_" + subject.id + "_" + next; setMsgs(bsa18ReadTutorChat(nextChat)); setMode(next); setLocalPref("askMode", next); setCollapsed({}); };
     const changeModel = (id) => { if (!id || busy) return; lsSet(GEM.m, id); setSelectedModel(id); toast("Model switched to " + id); };
       const [text, setText] = useState(()=>init?.focus?.kind==='fs-report'?'Guide me through applying the selected accounting standard to the actual reported evidence. Ask for my interpretation first.':bsa4TutorDraft(init?.focus));
     const [busy, setBusy] = useState(false);
@@ -11617,6 +11786,9 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
         modelError && h("span", {className:"muted small"}, "Model list unavailable; existing model retained"),
         h(BSA197TutorMemory,{subject,update,toast})
       ),
+      msgs.some(m=>m.err)&&h('div',{className:'bsa18-tutor-alert',role:'status'},
+        h('span',null,'A Tutor reply was interrupted or failed. Your question and the current practice draft are safe.'),
+        h('button',{type:'button',className:'btn ghost',onClick:()=>setSetup(true)},'Check connection')),
       !ready ? h("div", { className: "empty big" },
         h(Icon, { name: "ask", size: 32 }),
         h("h2", null, "Connect Gemini to start"),
@@ -11631,7 +11803,8 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
           return h("div", { key: m.id, className: "ai-msg " + (m.role === "me" ? "me" : "ai") },
             h("span", { className: "ai-who" }, m.role === "me" ? "You" : "Gemini"),
             h("div", { className: "ai-body" + (m.err ? " err" : "") },
-              m.role === "me" ? m.text : (m.text ? h("div", { className: collapsed[m.id] ? "ai-answer-collapsed" : "" }, h(PsMd, { text: m.text })) : null),
+              m.role === "me" ? m.text : (m.text ? h("div", { className: collapsed[m.id] ? "ai-answer-collapsed" : "" }, h(PsMd, { text: m.text })) : h('span',{className:'muted small'},live?'Waiting for Gemini’s reply…':'Reply unavailable. Try sending again.')),
+              m.err && h("button", { className: "btn ghost", type: "button", onClick: () => setSetup(true) }, "Check Gemini connection"),
               m.role === "ai" && m.text && m.text.length > 1500 && !live && h("button", { className: "link-btn", onClick: () => setCollapsed(v => ({...v, [m.id]: !v[m.id]})) }, collapsed[m.id] ? "Expand answer" : "Collapse long answer"),
               live && h("span", { className: "ai-caret", "aria-label": "typing" }),
               m.role === "ai" && !live && m.text && !m.err && h("div", { className: "ai-acts" },
@@ -13038,7 +13211,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const shortlist=report.priorities;
     const selected=report.rows.find(r=>r.subject.id+':'+r.topic.id===focus)||shortlist[0]||report.rows[0];
     const lines=[
-      'Act as an interactive accounting study coach. Use clear English, explain concepts before technical terminology, and ask ONE question at a time.',
+      'Act as an interactive tutor for the selected academic subject, whether accounting, finance, science, mathematics, humanities or another course. Use clear English, explain simply before technical terminology, and ask ONE question at a time.',
       'I will provide source materials in this conversation. Use only those materials for source-specific claims. If they are missing, ask me to supply them. Never invent citations or answer keys.',
       'Guide me before showing an answer, then check my reasoning. Give precise correction and one retention question after each concept.',
       'This dashboard summary is not an exam prediction and contains self-rated activity. Identify uncertainty rather than diagnosing my knowledge from sparse evidence.',
@@ -15767,8 +15940,16 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     const weeks=[28,21,14,7].map((days,i)=>{
       const begin=now-days*BSA197_DAY,end=now-(days-7)*BSA197_DAY;
       const events=(subject.learningEvents||[]).filter(e=>e.kind==='mcq'&&Number(e.at)>=begin&&Number(e.at)<end);
-      const independent=events.filter(e=>e.result==='correct'&&!e.guessed&&!e.assisted).length;
-      return {label:'Week '+(i+1),count:events.length,independent};
+      // A question answered repeatedly on one day is still only one successful
+      // independent retrieval for the learning trend, though each attempt stays
+      // in the raw history for audit and quiz scoring.
+      const unique=new Set();
+      for(const e of events){
+        if(e.result!=='correct'||e.guessed||e.assisted)continue;
+        const day=String(e.date||'').slice(0,10)||(new Date(Number(e.at))).toISOString().slice(0,10);
+        unique.add((e.memoryKey||e.sourceId||e.id||'unknown')+'|'+day);
+      }
+      return {label:'Week '+(i+1),count:events.length,independent:unique.size};
     });
     return {pool:pool.length,mcq,weeks,events:(subject.learningEvents||[]).filter(e=>e.kind==='mcq')};
   }
@@ -15780,7 +15961,8 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     const mapping=new Map(topics.map(t=>[t.id,{id:t.id,title:t.title||t.name||'Topic',correct:0,wrong:0,assisted:0,reviewed:0,cards:0,mistakes:0}]));
     const unlinked={id:'unlinked',title:'Not linked to a roadmap topic',correct:0,wrong:0,assisted:0,reviewed:0,cards:0,mistakes:0};
     const get=id=>mapping.get(id)||unlinked;
-    for(const e of events){const r=get(e.topicId);r.reviewed++;if(e.result==='correct'&&!e.guessed&&!e.assisted)r.correct++;else if(e.result==='incorrect')r.wrong++;else r.assisted++}
+    const resolveEventTopic=bsa20TopicResolver(subject);
+    for(const e of events){const r=get(resolveEventTopic(e));r.reviewed++;if(e.result==='correct'&&!e.guessed&&!e.assisted)r.correct++;else if(e.result==='incorrect')r.wrong++;else r.assisted++}
     for(const c of cards)get(c.topicId).cards++;
     for(const m of mistakes)if(m.status!=='Cleared')get(m.topicId).mistakes++;
     const groups=[...mapping.values(),unlinked].filter(x=>x.reviewed||x.cards||x.mistakes);
@@ -15796,16 +15978,16 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
           h('button',{className:'bsa34-memory-action',onClick:()=>go('mcq',{mode:'due'})},'Open due MCQs ↗')),
         h('div',{className:'bsa34-memory-cards'},[
           [recall.mcq.due,'Due now','Ready for another recall'],[recall.mcq.weak,'Needs practice','Previously missed or guessed'],
-          [recall.mcq.unseen,'Not yet tried','Fresh questions available'],[recall.mcq.strong,'3+ confident recalls','A practice streak, not a predicted grade']
+          [recall.mcq.unseen,'Not yet tried','Fresh questions available'],[recall.mcq.strong,'3+ spaced correct','Independent recall across different days']
         ].map(([value,label,info])=>h('div',{key:label,className:'bsa34-memory-card'},h('strong',null,value),h('span',null,label),h('small',null,info)))),
-        h('div',{className:'bsa34-weekly'},h('div',null,h('strong',null,'Independent recall · past 4 weeks'),h('small',null,'These are counts of recorded correct attempts without hints/guesses. Weeks with no attempts show zero.')),
+        h('div',{className:'bsa34-weekly'},h('div',null,h('strong',null,'Distinct independent recalls · past 4 weeks'),h('small',null,'Each independently correct question counts once per day. The denominator shows all checked attempts, including retries.')),
           h('div',{className:'bsa34-week-bars'},recall.weeks.map(w=>h('div',{key:w.label,className:'bsa34-week'},h('div',{className:'bsa34-week-track'},h('span',{style:{height:(w.count?Math.max(6,Math.round(w.independent/Math.max(...recall.weeks.map(x=>x.count),1)*100)):0)+'%'}})),h('strong',null,w.independent+' / '+w.count),h('small',null,w.label))))),
         h('p',{className:'bsa34-memory-note'},'No study-hour or XP data is used to estimate recall. Topics without tagged attempts remain unclassified.')),
       h('div',{className:'bsa205-snapshot'},[['Recall attempts',total],['Independent correct',confidence],['Events in 7 days',recent],['Journal checks',lab.length]].map(([title,count])=>h('div',{className:'bsa205-snapshot-item',key:title},h('strong',null,count),h('span',null,title)))),
       h(BSA38ProgressCompare,{subject,go}),
       h('div',{className:'bsa205-master-grid'},
-        h('div',{className:'bsa205-card'},h('h2',null,'Your topic evidence'),h('p',{className:'muted small'},'Only linked questions are attributed to topics. Unlinked records stay explicitly unlinked; this is evidence, not a predicted exam score.'),
-          groups.length?groups.map(x=>{const pct=x.reviewed?Math.round(x.correct/x.reviewed*100):0;return h('div',{className:'bsa205-master-row',key:x.id},h('div',null,h('strong',null,x.title),h('small',null,x.correct+' independent correct · '+x.wrong+' missed · '+x.assisted+' guessed/assisted · '+x.mistakes+' open mistakes')),
+        h('div',{className:'bsa205-card'},h('h2',null,'Your topic evidence'),h('p',{className:'muted small'},'Previously unlinked MCQ attempts follow the current assigned question topic when the match is clear. Ambiguous or unrelated records stay unlinked; this is not a predicted exam score.'),
+          groups.length?groups.map(x=>{const pct=x.reviewed?Math.round(x.correct/x.reviewed*100):0;return h('div',{className:'bsa205-master-row',key:x.id},h('div',null,h('strong',null,x.title),h('small',null,x.correct+' independent correct · '+x.wrong+' missed · '+x.assisted+' guessed/assisted/partial · '+x.mistakes+' open mistakes')),
             h('div',{className:'bsa205-progress',role:'progressbar','aria-label':'Independent correct fraction for '+x.title,'aria-valuemin':0,'aria-valuemax':100,'aria-valuenow':pct},h('div',{style:{width:pct+'%'}})),h('small',null,x.reviewed?pct+'% of recorded attempts':'No rated attempts yet'),x.id!=='unlinked'&&h('button',{className:'bsa34-topic-session',onClick:()=>go('study',{focusId:x.id})},'Study this topic ↗'));}):h('p',{className:'muted'},'Answer some quizzes or rate flashcards with linked topics to see evidence here.')),
         h('div',{className:'bsa205-card'},h('h2',null,'Interpret your results'),
           h('div',{className:'bsa205-health-row'},h('span',{className:'bsa205-health-number'},labGood),h('div',null,h('strong',null,'Correct journal-entry checks'),h('p',{className:'muted small'},lab.length+' total attempts, including retries. A correct supplied key is not a guarantee of a correct textbook solution.'))),
@@ -16671,6 +16853,8 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
   function App() {
     const [data, setData] = useState(() => loadLocal() || buildDefault());
     const [nav, setNav] = useState({ tab: "home", opts: {}, key: 0 });
+    const [practiceRevision,setPracticeRevision]=useState(0);
+    useEffect(()=>{const refresh=()=>setPracticeRevision(v=>v+1);window.addEventListener('bsa18:practice-changed',refresh);window.addEventListener('storage',refresh);window.addEventListener('pageshow',refresh);return()=>{window.removeEventListener('bsa18:practice-changed',refresh);window.removeEventListener('storage',refresh);window.removeEventListener('pageshow',refresh);}},[]);
     useEffect(()=>{const handler=e=>{if(e.detail==='joy')setNav(v=>({tab:'joy',opts:{},key:v.key+1}))};window.addEventListener('bsa-life-navigation',handler);return()=>window.removeEventListener('bsa-life-navigation',handler)},[]);
     const [modal, setModal] = useState(null);
     // V4.6.5 safety net: a previously interrupted portal may have left the
@@ -16848,6 +17032,20 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
         window.scrollTo({top:0,behavior:'instant'});
         requestAnimationFrame(()=>{const pane=document.querySelector('#root > .shell > .content');if(pane && pane.scrollTop>0)pane.scrollTop=0;});
       }
+    };
+    const pendingPractices=useMemo(()=>bsa18LatestPractice(data.subjects),[data.subjects,practiceRevision,nav.tab]);
+    const pendingPractice=pendingPractices[0]||null;
+    const resumePractice=(entry)=>{
+      if(!entry)return;
+      if(!data.subjects.some(s=>s.id===entry.subjectId)){toast('This subject is no longer available.');return;}
+      if(data.activeId!==entry.subjectId)setData(d=>({...d,activeId:entry.subjectId}));
+      go(entry.kind==='mcq'?'mcq':'psets',entry.kind==='mcq'?{resume:true}:{open:entry.setId,resume:true});
+    };
+    const discardPractice=(entry)=>{
+      if(!entry)return;
+      if(!window.confirm('Discard this unfinished '+(entry.kind==='mcq'?'quiz':'written practice session')+'? Completed scores and saved study history stay intact.'))return;
+      if(entry.kind==='mcq')bsa197DeleteDraft(entry.subjectId);else bsa18DeleteWritten(entry.subjectId);
+      toast('Unfinished '+(entry.kind==='mcq'?'quiz':'practice session')+' discarded.');
     };
     const shortcutItems = [["home","Today","home"],["subjects","My Subjects","subjects"],["study","Learn & plan","lecture"],["practice","Practice","bolt"],["library","Library","library"],["insights","Progress","chart"]];
     const shortcutGo = (tab) => {
@@ -17084,6 +17282,13 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       h("div",{className:"workspace-topbar v2-topbar"},
         h("div",{className:"workspace-context"},h("span",{className:"workspace-eyebrow"},"STUDY SPACE  /"),h("strong",null,(tabs.find(t=>t[0]===nav.tab)||[null,"Today"])[1]),h("span",{className:"workspace-subject"},subject.code||subject.name)),
         h("div",{className:"workspace-actions v2-top-actions"},h('button',{className:'bsa45-top-guide',onClick:()=>go('guide')},h(Icon,{name:'sparkles',size:16}),'Start here'),h('button',{className:'bsa45-top-dock',onClick:()=>{const hidden=localStorage.getItem('bsa45_dock_hidden')!=='1';window.dispatchEvent(new CustomEvent('bsa45:dock-visibility',{detail:{hidden}}));toast(hidden?'Study Dock hidden':'Study Dock visible');}},'Dock'),h("button",{className:"v2-top-search",onClick:()=>setSpotlightOpen(true),title:"Search · Ctrl/⌘ + K","aria-label":"Search all study materials"},h(Icon,{name:"search",size:16}),"Search",h("kbd",null,"⌘ K")))),
+      pendingPractice && !(nav.tab==='mcq'&&pendingPractice.kind==='mcq'&&nav.opts?.resume&&data.activeId===pendingPractice.subjectId) && !(nav.tab==='psets'&&pendingPractice.kind==='written'&&nav.opts?.open===pendingPractice.setId&&data.activeId===pendingPractice.subjectId) &&
+        h('div',{className:'bsa18-resume-strip',role:'region','aria-label':'Resume unfinished practice'},
+          h('span',{className:'bsa18-resume-icon','aria-hidden':'true'},'↩'),
+          h('div',{className:'bsa18-resume-detail'},h('strong',null,pendingPractice.kind==='mcq'?'Quiz paused':'Practice paused'),
+            h('small',null,(pendingPractice.subjectName||'Subject')+' · '+pendingPractice.label+' · '+pendingPractice.position+'/'+pendingPractice.total)),
+          h('button',{type:'button',className:'btn primary bsa18-resume-btn',onClick:()=>resumePractice(pendingPractice)},'Resume'),
+          h('button',{type:'button',className:'btn ghost bsa18-discard-btn',onClick:()=>discardPractice(pendingPractice)},'Exit / discard')),
       h(ScreenBoundary,{key:nav.tab,route:nav.tab,onHome:()=>go("home")},h(React.Fragment,null,
       // Specialized screens own their headings and side navigation. Rendering a
       // second theme-specific banner here buries lecture content on iPad and
@@ -17222,6 +17427,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       React.createElement('button',{className:'btn',onClick:()=>bsaDownloadSafeDiagnostics(this.state.error)},'Download safe error report'),
       React.createElement('details',null,React.createElement('summary',null,'Technical details'),React.createElement('pre',null,String(this.state.error&&this.state.error.message||'Unknown render error'))));}
   }
+  if(window.__BSA_TEST__)window.__BSA18_TEST_HOOKS__={bsa197QuizKey,bsa197History,bsa197Recall,bsa197Pool,bsa197Pick,smartTopicStats,bsaAdaptiveSignals,bsaReadinessReport,bsa34LearningSnapshot,bsaUpsertMistake,learningEvidence,learningCapture,AcademicCommandCenter,bsa197LoadDraft,bsa197SaveDraft,bsa197DeleteDraft,bsa18SaveWritten,bsa18LoadWritten,bsa18DeleteWritten,bsa18LatestPractice,bsa18ReadTutorChat,MultipleChoiceQuiz,MCQPage,PsWrittenDrill,MockExam,AskView,App};
   // v167: Owner app mounts only after this browser has been approved.
   // Shared student dashboards mount normally; the owner authorization script is never exported.
   let bsaOwnerMounted=false;
