@@ -1332,7 +1332,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
      - Offline edits are counted and kept; they upload as soon as a connection is back. */
   const GH_KEYS = { user: "bsa_gh_user", repo: "bsa_gh_repo", token: "bsa_gh_key", path: "bsa_gh_path" };
   const SYNC_META_KEY = "bsa_sync_meta";
-  const COLLS = ["topics", "cards", "mistakes", "quizzes", "sessions", "days", "lectures", "psets", "mcqSets", "classes", "attend", "tasks", "aiAttempts", "learningEvents", "labAttempts", "todayChecks", "tutorMemories", "studyInbox", "driveSources", "libraryFlags", "cycleRuns", "cycleCases", "practiceSessions", "problemWork"];
+  const COLLS = ["topics", "cards", "mistakes", "quizzes", "sessions", "days", "lectures", "psets", "mcqSets", "classes", "attend", "tasks", "aiAttempts", "learningEvents", "labAttempts", "todayChecks", "tutorMemories", "studyInbox", "driveSources", "libraryFlags", "cycleRuns", "cycleCases", "practiceSessions", "problemWork", "fsReports", "fsAttempts"];
   const TOMB_DAYS = 120;
   const POLL_MS = 3e4;
   const lsGet = (k) => {
@@ -4615,6 +4615,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
   const timerElapsed = (t) => t ? (t.acc || 0) + (t.running ? Date.now() - t.start : 0) : 0;
   function startTimer({ mins, topicId, sessionId, subjectId, label, pomo, round }) {
     setTimerState({ mins, topicId: topicId || null, sessionId: sessionId || null, subjectId, label: label || "", start: Date.now(), startedAt: Date.now(), acc: 0, running: true, pomo: pomo || null, round: round || 1, phase: "work" });
+    window.dispatchEvent(new Event('bsa:show-timer'));
   }
   // A break is a timer too, so the bar keeps counting and you come back on time.
   function startBreak(prev, long) {
@@ -4651,7 +4652,13 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
   function FocusBar({ data, update, toast }) {
     const t = useTimer();
     const focusActive=useRef({id:null,ms:0,last:Date.now()});
-    const [floating,setFloating]=useState(null),[compact,setCompact]=useState(false);
+    const [floating,setFloating]=useState(null),[compact,setCompact]=useState(false),
+      [timerHidden,setTimerHidden]=useState(()=>{try{return localStorage.getItem('bsa43-timer-hidden')==='1'}catch(_){return false}});
+    const showTimer=()=>{setTimerHidden(false);try{localStorage.removeItem('bsa43-timer-hidden')}catch(_){}};
+    const hideTimer=()=>{setTimerHidden(true);try{localStorage.setItem('bsa43-timer-hidden','1')}catch(_){}};
+    useEffect(()=>{window.addEventListener('bsa:show-timer',showTimer);return()=>window.removeEventListener('bsa:show-timer',showTimer)},[]);
+    const previousTimer=useRef(null);
+    useEffect(()=>{const key=t&&(t.startedAt||t.start);if(key&&previousTimer.current&&key!==previousTimer.current)showTimer();previousTimer.current=key||null},[t&&(t.startedAt||t.start)]);
     const dragging=useRef(null);
     const beginDrag=e=>{if(e.button!==0&&e.pointerType==='mouse')return;const r=e.currentTarget.parentElement.getBoundingClientRect();dragging.current={px:e.clientX,py:e.clientY,x:r.left,y:r.top};try{e.currentTarget.setPointerCapture(e.pointerId)}catch(_){}e.preventDefault()};
     const moveDrag=e=>{const d=dragging.current;if(!d)return;const r=e.currentTarget.getBoundingClientRect(),w=Math.min(window.innerWidth-16,r.width),height=Math.min(window.innerHeight-16,r.height);setFloating({x:Math.max(8,Math.min(window.innerWidth-w-8,d.x+e.clientX-d.px)),y:Math.max(8,Math.min(window.innerHeight-height-8,d.y+e.clientY-d.py))})};
@@ -4732,7 +4739,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       document.addEventListener("visibilitychange", wake);
       return () => { document.removeEventListener("visibilitychange", wake); };
     }, [t && t.running]);
-    if (!t) return null;
+    if (!t || timerHidden) return null;
     const subject = data.subjects.find((s) => s.id === t.subjectId);
     const topic = subject && t.topicId && subject.topics.find((x) => x.id === t.topicId);
     const secs = Math.max(0, Math.ceil(left / 1e3));
@@ -4746,6 +4753,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       t.phase === "break" && t.pomo && h("button", { className: "btn", onClick: () => { setTimerState(null); startTimer({ mins: t.pomo.work || 25, topicId: t.topicId, subjectId: t.subjectId, pomo: t.pomo, round: (t.round || 1) + 1 }); } }, "Skip break"),
       h("button",{className:'bsa190-toggle',type:'button',onClick:()=>setCompact(v=>!v),'aria-label':compact?'Expand timer':'Minimize timer','aria-expanded':!compact},compact?'▢':'−'),
       h("button", { className: "btn", onClick: () => setTimerState(t.running ? { ...t, running: false, acc: timerElapsed(t) } : { ...t, running: true, start: Date.now() }) }, t.running ? "Pause" : "Resume"),
+      h("button",{className:'btn bsa43-timer-hide',type:'button',onClick:hideTimer,title:'Hide the timer without stopping or resetting it'},'Hide'),
       h("button", { className: "btn primary", onClick: () => finish(false) }, "Finish")
     );
   }
@@ -9837,7 +9845,7 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
     }
     if (withKey) {
       html += `<h2 class="key">Answer key and solutions</h2>`;
-      for (const p of problems.slice().sort((a, b) => a.no - b.no)) {
+      for (const p of (Array.isArray(problems)?problems:[]).filter(Boolean).slice().sort((a, b) => (Number(a.no)||0) - (Number(b.no)||0))) {
         html += `<div class="prob"><h3>Problem ${p.no}: ${psEsc(p.title)}</h3>${p.answer ? `<p><strong>Answer:</strong></p>${psMdHtml(p.answer)}` : ""}${p.approach ? `<p><strong>Approach:</strong></p>${psMdHtml(p.approach)}` : ""}${p.solution ? psMdHtml(p.solution) : ""}${p.trap ? `<p><strong>Watch out:</strong> ${psInlineHtml(psPlain(p.trap))}</p>` : ""}</div>`;
       }
     }
@@ -9867,9 +9875,30 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
     return L.filter(Boolean).join("\n\n");
   }
   /* ----- grouping helpers ----- */
+  // V4.3: non-destructive adapters for older/imported Problem Set JSON.
+  // Some valid older imports provide `questions`/`items`, or omit fields entirely.
+  // Render a recoverable item instead of letting one malformed set blank the page.
+  function psSafeProblems(set){
+    const raw=Array.isArray(set?.problems)?set.problems:
+      Array.isArray(set?.questions)?set.questions:Array.isArray(set?.items)?set.items:
+      Array.isArray(set?.exercises)?set.exercises:
+      set?.problems&&typeof set.problems==='object'?Object.values(set.problems):[];
+    return raw.filter(x=>x!==null&&x!==undefined).slice(0,10000).map((x,i)=>{
+      const p=typeof x==='object'&&!Array.isArray(x)?x:{problem:String(x)};
+      return {...p,id:p.id||String(set?.id||'set')+':item:'+i,
+        no:Number.isFinite(Number(p.no))?Number(p.no):i+1,
+        title:String(p.title||p.label||'Problem '+(i+1)),
+        problem:typeof (p.problem??p.question??p.prompt??p.text)==='string'?(p.problem??p.question??p.prompt??p.text):bsa43Text(p.problem?.text||p.problem?.body||p.question?.text||'',14000),
+        choices:Array.isArray(p.choices)?p.choices:[],
+        req:Array.isArray(p.req)||typeof p.req==='string'?p.req:(Array.isArray(p.requirements)||typeof p.requirements==='string'?p.requirements:[]),
+        answer:typeof p.answer==='string'?p.answer:String(p.answer??''),
+        solution:typeof p.solution==='string'?p.solution:String(p.solution??''),
+        subtopic:String(p.subtopic||'')};
+    });
+  }
   function psGroupProblems(problems) {
     const map = new Map();
-    for (const p of problems.slice().sort((a, b) => a.no - b.no)) {
+    for (const p of (Array.isArray(problems)?problems:[]).filter(Boolean).slice().sort((a, b) => (Number(a.no)||0) - (Number(b.no)||0))) {
       const k = p.subtopic || "";
       if (!map.has(k)) map.set(k, []);
       map.get(k).push(p);
@@ -9878,10 +9907,10 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
   }
   // Groups lectures or sets by roadmap topic, in roadmap order; unmatched ones by their own topic text.
   function psByTopic(subject, list) {
-    const order = subject.topics.map((t) => t.id);
+    const order = (subject.topics||[]).map((t) => t.id);
     const map = new Map();
     for (const x of list) {
-      const t = x.topicId && subject.topics.find((y) => y.id === x.topicId);
+      const t = x.topicId && (subject.topics||[]).find((y) => y.id === x.topicId);
       const key = t ? t.id : `txt:${norm(x.topicText) || "unsorted"}`;
       if (!map.has(key)) map.set(key, { key, label: t ? [t.code, t.title].filter(Boolean).join(" ") : x.topicText || "Unsorted", std: t ? t.standard : "", items: [] });
       map.get(key).items.push(x);
@@ -9892,8 +9921,9 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
     });
   }
   const psTally = (set) => {
-    const got = set.problems.filter((p) => p.st === "got").length, miss = set.problems.filter((p) => p.st === "miss").length;
-    return { got, miss, todo: set.problems.length - got - miss, n: set.problems.length };
+    const problems=psSafeProblems(set);
+    const got = problems.filter((p) => p.st === "got").length, miss = problems.filter((p) => p.st === "miss").length;
+    return { got, miss, todo: problems.length - got - miss, n: problems.length };
   };
   function PsBar({ t }) {
     if (!t.n) return null;
@@ -10419,9 +10449,45 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
     };
     return h(Modal, { title: item ? "Edit lecture" : "Write a lecture", onClose, wide: true, footer: h(React.Fragment, null, item && h("button", { className: "btn danger", onClick: del }, "Delete"), h("span", { className: "spacer" }), h("button", { className: "btn", onClick: onClose }, "Cancel"), h("button", { className: "btn primary", onClick: save }, "Save lecture")) }, h("div", { className: "grid-2" }, h(Field, { label: "Title" }, h("input", { value: f.title, onChange: (e) => setv("title", e.target.value) })), h(Field, { label: "Topic" }, h(TopicSelect, { subject, value: f.topicId, onChange: (v) => setv("topicId", v || "") }))), h(Field, { label: "Source", hint: "Book, chapter and pages" }, h("input", { value: f.source, onChange: (e) => setv("source", e.target.value) })), h(Field, { label: "Summary" }, h("textarea", { rows: 3, value: f.summary, onChange: (e) => setv("summary", e.target.value) })), h(Field, { label: "Body", hint: "Start each section with ## Heading. Use - for bullets, 1. for steps, **bold** for the rule, and | tables |." }, h("textarea", { className: "code", rows: 12, value: f.body, onChange: (e) => setv("body", e.target.value) })), h("div", { className: "grid-2" }, h(Field, { label: "Key terms", hint: "One per line: Term: meaning" }, h("textarea", { rows: 5, value: f.terms, onChange: (e) => setv("terms", e.target.value) })), h(Field, { label: "Check questions", hint: "One per line: Question | Answer" }, h("textarea", { rows: 5, value: f.checks, onChange: (e) => setv("checks", e.target.value) }))), err && h("p", { className: "error", role: "alert" }, err));
   }
+  /* V4.3: problem sets index with stable route and recoverable source data.
+     Direct listing avoids the legacy page's deeply nested derived render path.
+     Full set reader and structured-answer workspace remain reusable. */
+  function BSA43ProblemSets({subject,update,toast,go,init}){
+    const sets=(Array.isArray(subject.psets)?subject.psets:[]).filter(x=>x&&typeof x==='object')
+      .map(x=>({...x,problems:psSafeProblems(x)}));
+    const [open,setOpen]=useState(init?.open||''),[search,setSearch]=useState('');
+    const [sort,setSort]=useState('original');
+    const chosen=sets.find(x=>x.id===open);
+    if(chosen)return h(ScreenBoundary,{route:'Problem Set · '+(chosen.title||'untitled'),onHome:()=>setOpen('')},
+      h(PsSetView,{subject,set:chosen,update,toast,go,focusProblem:init?.problemId||null,onBack:()=>setOpen('')}));
+    const q=String(search||'').trim().toLowerCase();
+    const visible=sets.filter(x=>!q||String(x.title||'').toLowerCase().includes(q)||String(x.topicText||'').toLowerCase().includes(q)||x.problems.some(p=>(p.title+' '+p.problem+' '+p.subtopic).toLowerCase().includes(q)));
+    const ordered=sort==='size'?visible.slice().sort((a,b)=>b.problems.length-a.problems.length):visible;
+    const count=sets.reduce((n,x)=>n+x.problems.length,0);
+    return h('section',{className:'view bsa43-ps-index'},
+      h('header',{className:'bsa43-ps-heading'},h('div',null,h('span',{className:'v2-eyebrow'},'PRACTICE · YOUR SAVED QUESTIONS'),h('h1',null,'Problem Sets'),
+        h('p',{className:'muted'},'Open a set to solve problems or use structured answers. Your originals and saved work remain unchanged.')),
+        h('div',{className:'bsa43-ps-count'},h('strong',null,String(count)),h('span',null,'problems · '+sets.length+' sets'))),
+      h('div',{className:'bsa43-ps-toolbar'},
+        h('label',null,'Find a set or question',h('input',{type:'search',value:search,onChange:e=>setSearch(e.target.value),placeholder:'Search by topic, question or title…'})),
+        h('label',null,'Sort',h('select',{value:sort,onChange:e=>setSort(e.target.value)},h('option',{value:'original'},'Original order'),h('option',{value:'size'},'Most problems'))),
+        h('button',{className:'btn',onClick:()=>go('library',{tab:'all'})},'Browse topic folders')),
+      !sets.length?h('section',{className:'panel bsa43-ps-empty'},h('h2',null,'No problem sets in this subject yet'),h('p',null,'Import your saved Problem Set JSON through Import & export; existing files are never deleted here.'),h('button',{className:'btn primary',onClick:()=>go('library')},'Open Library')):
+      !ordered.length?h('div',{className:'panel'},'No results. Try another word.'):
+      h('div',{className:'bsa43-ps-grid'},ordered.map((set,i)=>{
+        const tally=psTally(set);
+        return h('article',{className:'bsa43-ps-card',key:set.id||i},
+          h('div',{className:'bsa43-ps-card-top'},h('span',null,String(i+1).padStart(2,'0')+'  /  '+(set.topicText||'Problem Set')),
+            h('span',null,tally.n+' questions')),
+          h('h2',null,set.title||'Untitled set'),
+          set.source&&h('p',{className:'muted small'},String(set.source).slice(0,180)),
+          h('div',{className:'bsa43-ps-progress'},h('span',null,tally.got+' recalled'),h('span',null,tally.miss+' revisit'),h('span',null,tally.todo+' untried')),
+          h('button',{className:'btn primary',type:'button',onClick:()=>setOpen(set.id)},'Open this set'));
+      })));
+  }
   /* ----- Problem sets tab ----- */
   function PsView({ subject, update, toast, go, init }) {
-    const sets = subject.psets || [];
+    const sets = (Array.isArray(subject.psets)?subject.psets:[]).filter(Boolean).map(set=>({...set,problems:psSafeProblems(set)}));
     const [open, setOpen] = useState(init && init.open || null);
     const [topic, setTopic] = useState("all");
     const [query, setQuery] = useState("");
@@ -10495,6 +10561,7 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
           h('button',{className:'btn primary',disabled:!chosen.length,onClick:exportNow},'Export '+chosen.length+' problem'+(chosen.length===1?'':'s')))));
   }
   function PsSetView({ subject, set, update, toast, go, onBack, focusProblem }) {
+    set={...set,problems:psSafeProblems(set)};
     const [filter, setFilter] = useState("all");
     const [selectedOnly,setSelectedOnly]=useState(!!focusProblem);
     const [reveal, setReveal] = useState(() => localPref("psRevealAll", false));
@@ -10518,7 +10585,7 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
       if(allMarked)grantActivityXp('problemset',subject.id+':'+set.id,30,90);
       update((s) => {
       const x = (s.psets || []).find((y) => y.id === set.id);
-      const p = x && x.problems.find((y) => y.id === pid);
+      const p = x && Array.isArray(x.problems) && x.problems.find((y) => y.id === pid);
       if (!p) return;
       const off = !explicit && p.st === st;
       p.st = off ? "" : st;
@@ -11003,6 +11070,18 @@ ${c.kindHint}` }
     if (focus && focus.kind === "lecture") {
       const l = lectures.find(x => x.id === focus.id);
       if (l) source = "LECTURE: " + l.title + "\n" + lxText(l).slice(0, 22000);
+    } else if (focus && focus.kind === 'fs-report') {
+      const report=(subject.fsReports||[]).find(r=>r.id===focus.id);
+      if(report){const task=bsa43Tasks(report,focus.standard||'').find(t=>t.id===focus.taskId);
+        source='CURRENT FINANCIAL STATEMENTS PRACTICE (source JSON not independently verified):\n'+
+          'Company: '+report.company+' · period '+report.periodEnd+' · '+report.scope+'\n'+
+          'Currency/scale: '+report.currency+' ('+report.unit+')\n'+
+          'Source: '+(report.source?.title||'not stated')+' · '+(report.source?.url||'no URL')+'\n'+
+          'Standard being studied: '+String(focus.standard||'not specified')+'\n'+
+          'Question: '+String(task?.question||focus.question||'')+'\n'+
+          'Evidence locator: '+String(task?.source||focus.source||'not supplied')+'\n'+
+          'Do not claim independent audit verification or invent accounting rules. Guide the student without revealing the answer first.';
+      }
     } else if (focus && focus.kind === 'exercise') {
       source='CURRENT EXERCISE (do not invent or reveal an answer key):\n'+String(focus.title||'Practice exercise')+
         '\nQuestion: '+String(focus.question||'').slice(0,7500)+
@@ -11103,7 +11182,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
               h('button',{className:'btn primary',type:'button',disabled:!entry.trim()||notes.length>=12,onClick:add},'Remember this'))))),document.body));
   }
   function AskView({ subject, toast, go, init, settings, update }) {
-    const [mode, setMode] = useState(() => { if(['problem','mcq','exercise'].includes(init?.focus?.kind))return 'sources';const m=localPref("askMode"); return ["sources","general","dashboard"].includes(m)?m:"sources"; });
+    const [mode, setMode] = useState(() => { if(['problem','mcq','exercise','fs-report'].includes(init?.focus?.kind))return 'sources';const m=localPref("askMode"); return ["sources","general","dashboard"].includes(m)?m:"sources"; });
     const CHAT = "bsa_chat_" + subject.id + "_" + mode;
     const [msgs, setMsgs] = useState(() => { try { return JSON.parse(lsGet(CHAT) || "[]") || []; } catch (e) { return []; } });
     const [selectedModel, setSelectedModel] = useState(gemModel);
@@ -11118,7 +11197,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     }, [ready]);
     const changeMode = (next) => { if (busy || next === mode) return; lsSet(CHAT, JSON.stringify(msgs.slice(-60))); const nextChat = "bsa_chat_" + subject.id + "_" + next; try { setMsgs(JSON.parse(lsGet(nextChat) || "[]") || []); } catch(e) { setMsgs([]); } setMode(next); setLocalPref("askMode", next); setCollapsed({}); };
     const changeModel = (id) => { if (!id || busy) return; lsSet(GEM.m, id); setSelectedModel(id); toast("Model switched to " + id); };
-    const [text, setText] = useState(()=>bsa4TutorDraft(init?.focus));
+      const [text, setText] = useState(()=>init?.focus?.kind==='fs-report'?'Guide me through applying the selected accounting standard to the actual reported evidence. Ask for my interpretation first.':bsa4TutorDraft(init?.focus));
     const [busy, setBusy] = useState(false);
     const [setup, setSetup] = useState(false);
     const [focus, setFocus] = useState(() => (init && init.focus) || null);
@@ -11172,28 +11251,26 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       stick.current = false;
       toast("Conversation cleared");
     };
-    const focusLabel = focus && focus.kind === "lecture" ? (lectures.find((x) => x.id === focus.id) || {}).title : focus && focus.kind === "pset" ? (psets.find((x) => x.id === focus.id) || {}).title : focus?.kind==='problem' ? (bsa4ProblemContext(subject,focus.id,focus.problemId)?.title||'Selected problem') : focus?.kind==='mcq' ? 'Selected MCQ' : focus?.kind==='exercise' ? 'Current practice exercise' : "";
+    const focusLabel = focus && focus.kind === "lecture" ? (lectures.find((x) => x.id === focus.id) || {}).title : focus && focus.kind === "pset" ? (psets.find((x) => x.id === focus.id) || {}).title : focus?.kind==='problem' ? (bsa4ProblemContext(subject,focus.id,focus.problemId)?.title||'Selected problem') : focus?.kind==='mcq' ? 'Selected MCQ' : focus?.kind==='exercise' ? 'Current practice exercise' : focus?.kind==='fs-report' ? 'Financial statements · '+(focus.standard||'source practice') : "";
     return h(
       "section",
-      { className: "view ai-wrap", ref: topRef },
+      { className: "view ai-wrap bsa44-tutor", ref: topRef },
       h("div", { className: "page-head ask-compact-head" },
-        h("div", { className: "ask-title-group" }, h("h1", { className: "page-title" }, "Ask Tutor"), h("span", { className: "ask-help-text" }, "Your accounting study companion")),
+        h("div", { className: "ask-title-group" }, h("h1", { className: "page-title" }, "Ask Tutor"), h("span", { className: "ask-help-text" }, "Read · Ask · Practice")),
         h("div", { className: "ask-header-actions" },
           msgs.length > 0 && h("button", { className: "btn ghost ask-nav-button", onClick: () => { stick.current = true; logRef.current?.scrollTo({top:logRef.current.scrollHeight,behavior:"smooth"}); }, title: "Jump to latest message" }, "↓ Latest"),
           h("button", { className: "btn ghost ask-settings-button", onClick: () => setSetup(true), title: "API key and model settings" }, "⚙ Settings"),
           msgs.length > 0 && h("button", { className: "btn ghost ask-clear-button", disabled: busy, onClick: clear, title: "Clear this conversation" }, "Clear")
         )
       ),
-      (['problem','mcq','exercise'].includes(focus?.kind))&&h('div',{className:'bsa4-context-card',role:'status'},
-        h('span',{className:'v2-eyebrow'},'QUESTION ATTACHED · '+subject.name),
-        h('strong',null,focusLabel),
-        h('p',null,(['mcq','exercise'].includes(focus.kind)?focus.question:(bsa4ProblemContext(subject,focus.id,focus.problemId)?.question||'This question was not found in the current subject.')).slice(0,480)),
+      (['problem','mcq','exercise','fs-report'].includes(focus?.kind))&&h('details',{className:'bsa4-context-card bsa44-context-card'},
+        h('summary',null,'✦ Question attached · '+focusLabel+' · Tap for hints and details'),
+        h('p',null,String(['mcq','exercise','fs-report'].includes(focus.kind)?(focus.question||''):(bsa4ProblemContext(subject,focus.id,focus.problemId)?.question||'This question was not found in the current subject.')).slice(0,480)),
         h('div',{className:'bsa4-context-actions'},
           [['Hint','Give me one answer-neutral hint for this exact problem. Wait for my reply.'],
            ['Guide me','Guide me through this exact problem one step at a time. Ask a question first.'],
            ['Check reasoning','Please check my reasoning about the attached question. Ask me to share my attempt before giving the solution.']].map(([label,prompt])=>h('button',{type:'button',key:label,className:'btn ghost',onClick:()=>setText(prompt)},label))),
         h('small',{className:'muted'},'Review the prepared message, then press Send. The answer key is not attached.')),
-      h(BSA197TutorMemory,{subject,update,toast}),
       ready && h("details", { className: "ask-context-details" },
         h("summary", { title: "Change model, tutor mode, and source" },
           h("span", { className: "ask-context-label" }, mode === "sources" ? "📚 Saved sources" : mode === "dashboard" ? "🧭 Dashboard guide" : "💬 General questions"),
@@ -11207,12 +11284,13 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
             !availableModels.some(m => m.id === selectedModel) && h("option", { value: selectedModel }, selectedModel || "Select model"),
             GEM_CHAT_CHOICES.filter(([id]) => availableModels.some(m => m.id === id)).map(([id,label]) => h("option", { key:id, value:id }, label)),
             availableModels.filter(m => !GEM_CHAT_CHOICES.some(([id]) => id === m.id) && /flash/i.test(m.id) && !/preview|exp|image|tts|live|audio/i.test(m.id)).map(m => h("option", { key:m.id, value:m.id }, m.name || m.id)))),
-          mode === "sources" && (lectures.length > 0 || psets.length > 0) && h("label", null, "Use source", h("select", { value:['problem','mcq','exercise'].includes(focus?.kind)?'':focus ? focus.kind+":"+focus.id : "", onChange:e => { const v=e.target.value;setFocus(v?{kind:v.split(":")[0],id:v.split(":").slice(1).join(":")}:null); } },
+          mode === "sources" && (lectures.length > 0 || psets.length > 0) && h("label", null, "Use source", h("select", { value:['problem','mcq','exercise','fs-report'].includes(focus?.kind)?'':focus ? focus.kind+":"+focus.id : "", onChange:e => { const v=e.target.value;setFocus(v?{kind:v.split(":")[0],id:v.split(":").slice(1).join(":")}:null); } },
             h("option", {value:""}, "All saved lectures & problem sets"),
             lectures.length>0 && h("optgroup", {label:"Lectures"}, lectures.map(l=>h("option", {key:l.id,value:"lecture:"+l.id},drShort(l.title,46)))),
             psets.length>0 && h("optgroup", {label:"Problem sets"}, psets.map(x=>h("option", {key:x.id,value:"pset:"+x.id},drShort(x.title,46))))))
         ),
-        modelError && h("span", {className:"muted small"}, "Model list unavailable; existing model retained")
+        modelError && h("span", {className:"muted small"}, "Model list unavailable; existing model retained"),
+        h(BSA197TutorMemory,{subject,update,toast})
       ),
       !ready ? h("div", { className: "empty big" },
         h(Icon, { name: "ask", size: 32 }),
@@ -11220,8 +11298,9 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
         h("p", { className: "muted", style: { maxWidth: "36rem" } }, "One free API key from Google AI Studio. Your Google AI Plus subscription is for the Gemini app and won’t work here — the API is separate, and its free tier is plenty for this."),
         h("button", { className: "btn primary", onClick: () => setSetup(true) }, "Connect Gemini")
       ) : h(React.Fragment, null,
+        h("div", { className: "ai-log", ref: logRef, onScroll: onChatScroll, role:"log", "aria-label":"Tutor conversation", "aria-live":"polite" },
         msgs.length === 0 && h("div", { className: "ask-welcome" }, h("div", { className:"ask-welcome-icon" }, "✦"), h("h2", null, "What are we learning today?"), h("p", { className: "muted" }, "Ask about your lectures, work through a problem, or practice a concept."), h("div", {className:"ask-start-prompts"}, [ ["Explain a concept", "Explain the main concept in my selected lecture with a simple example."], ["Practice with me", "Create an original practice question based on a topic in my saved sources. Ask me one at a time and wait for my answer."], ["Work through a problem", "Help me solve a problem step by step, without revealing the answer immediately."] ].map(([label,q]) => h("button", {key:label,className:"btn ghost",onClick:()=>ask(q)},label)))),
-        h("div", { className: "ai-log", ref: logRef, onScroll: onChatScroll, role:"log", "aria-label":"Tutor conversation", "aria-live":"polite" }, msgs.slice(-60).map((m, i) => {
+        msgs.slice(-60).map((m, i) => {
           const live = busy && i === Math.min(msgs.length, 60) - 1 && m.role === "ai";
           const json = m.role === "ai" && !m.err && !live ? gemFindJSON(m.text) : "";
           return h("div", { key: m.id, className: "ai-msg " + (m.role === "me" ? "me" : "ai") },
@@ -11686,15 +11765,18 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
         clean.lectures=(x.lectures||[]).map(l=>({id:l.id,topicId:l.topicId,topicText:l.topicText,title:l.title,
           source:l.source,summary:l.summary,sections:clone(l.sections||[]),terms:clone(l.terms||[]),checks:clone(l.checks||[]),done:false}));
         clean.psets=(x.psets||[]).map(set=>({id:set.id,topicId:set.topicId,topicText:set.topicText,title:set.title,
-          source:set.source,intro:set.intro,problems:(set.problems||[]).map(p=>({id:p.id,no:p.no,title:p.title,
+          source:set.source,intro:set.intro,problems:psSafeProblems(set).map(p=>({id:p.id,no:p.no,title:p.title,
           subtopic:p.subtopic,topicId:p.topicId,difficulty:p.difficulty,answerFormat:p.answerFormat||'',problem:p.problem,req:clone(p.req||[]),choices:clone(p.choices||[]),
           answer:p.answer,approach:p.approach,solution:p.solution,trap:p.trap,source:p.source,labEntry:clone(p.labEntry||[]),labTopic:p.labTopic,labLevel:p.labLevel,labHint:p.labHint,labExplanation:p.labExplanation,labVerification:p.labVerification,st:''}))}));
         clean.rules=(x.rules||[]).map(r=>({id:r.id,code:r.code,title:r.title,topic:r.topic,category:r.category,collection:r.collection||"",decisionRule:r.decisionRule,treatment:r.treatment,conditions:r.conditions,exceptions:r.exceptions,example:r.example,examTrap:r.examTrap,sourceTitle:r.sourceTitle,sourceLocator:r.sourceLocator,sourceUrl:r.sourceUrl,status:r.status,notes:''}));
         clean.mcqSets=(x.mcqSets||[]).map(set=>({id:set.id,topicId:set.topicId,topicText:set.topicText,title:set.title,
-          source:set.source,intro:set.intro,problems:(set.problems||[]).map(p=>({id:p.id,no:p.no,title:p.title,
+          source:set.source,intro:set.intro,problems:psSafeProblems(set).map(p=>({id:p.id,no:p.no,title:p.title,
           subtopic:p.subtopic,topicId:p.topicId,difficulty:p.difficulty,answerFormat:p.answerFormat||'',problem:p.problem,req:clone(p.req||[]),choices:clone(p.choices||[]),
           answer:p.answer,approach:p.approach,solution:p.solution,trap:p.trap,source:p.source,labEntry:clone(p.labEntry||[]),labTopic:p.labTopic,labLevel:p.labLevel,labHint:p.labHint,labExplanation:p.labExplanation,labVerification:p.labVerification,st:''}))}));
         clean.drills=(x.drills||[]).map(d=>({id:d.id,topicId:d.topicId,topicText:d.topicText,name:d.name,q:d.q,vars:clone(d.vars||[]),given:clone(d.given||[]),ans:d.ans,fmt:d.fmt,dp:d.dp,unit:d.unit,cur:d.cur,steps:clone(d.steps||[]),req:clone(d.req||[]),tol:d.tol}));
+        // Explicit opt-in: only published report content, never private report attempts.
+        clean.fsReports=(x.fsReports||[]).filter(r=>r&&r.share===true).map(r=>({...clone(r),share:true}));
+        clean.fsAttempts=[];
         clean.quizzes=[];
         clean.mistakes=[];clean.sessions=[];clean.grades=[];
         return clean;
@@ -11749,7 +11831,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       replaceOnce('(modal === "data" || modal === "sync" || modal && modal.data) && /* @__PURE__ */ React.createElement(DataModal,',
         '!window.__BSA_SHARED_MODE__ && (modal === "data" || modal === "sync" || modal && modal.data) && /* @__PURE__ */ React.createElement(DataModal,','Import/export/sync modal');
       app=app.replaceAll('Welcome back, John Angel 👋','Welcome to Study Desk 👋').replaceAll('John Angel','Student');
-      const boot="window.__BSA_SHARED_MODE__=true;\nwindow.__BSA_PUBLISHED__=__SNAPSHOT__;\n(function(){\n const raw=window.localStorage;\n const prefix=\"bsa_shared_student_v144:\";\n const mainKey=\"bsa-study-dashboard:v1\";\n const progressKeys=[\"conf\",\"due\",\"last\",\"interval\",\"ease\",\"reps\",\"streak\",\"seen\",\"rating\",\"lastReviewed\",\"nextReview\",\"attempts\",\"lastAttempt\",\"st\",\"done\",\"srs\"];\n const copy=x=>JSON.parse(JSON.stringify(x));\n const read=()=>{try{return JSON.parse(raw.getItem(prefix+mainKey)||\"null\")}catch(_){return null}};\n function mergePublished(){\n   const old=read(), published=window.__BSA_PUBLISHED__;\n   if(!published||!Array.isArray(published.subjects))return old;\n   const doc=copy(published);\n   if(!old||!Array.isArray(old.subjects))return doc;\n   for(const sub of doc.subjects){\n      const prev=old.subjects.find(v=>v.id===sub.id);if(!prev)continue;\n      for(const kind of [\"cards\",\"lectures\"]){\n       for(const item of sub[kind]||[]){\n        const before=(prev[kind]||[]).find(v=>v.id===item.id);\n        if(before)for(const key of progressKeys)if(Object.prototype.hasOwnProperty.call(before,key))item[key]=before[key];\n       }\n      }\n      for(const set of [...(sub.psets||[]),...(sub.mcqSets||[])]){\n       const oldSet=[...(prev.psets||[]),...(prev.mcqSets||[])].find(v=>v.id===set.id);if(!oldSet)continue;\n       for(const pr of set.problems||[]){\n        const oldPr=(oldSet.problems||[]).find(v=>v.id===pr.id);if(!oldPr)continue;\n        for(const key of progressKeys)if(Object.prototype.hasOwnProperty.call(oldPr,key))pr[key]=oldPr[key];\n       }\n      }\n      for(const rule of sub.rules||[]){const previous=(prev.rules||[]).find(x=>x.id===rule.id);if(previous){rule.notes=previous.notes||'';rule.bookmarked=!!previous.bookmarked;rule.ruleReviewConfidence=previous.ruleReviewConfidence||'';rule.ruleReviewCount=Number(previous.ruleReviewCount)||0;rule.ruleReviewedAt=previous.ruleReviewedAt||'';}}\n      // Learner-created flashcards (e.g. from corrected mistakes) stay personal.\n      const publishedCardIds=new Set((sub.cards||[]).map(x=>x.id));\n      for(const personal of prev.cards||[]){\n        if(!publishedCardIds.has(personal.id)&&personal.id){sub.cards.push(copy(personal));publishedCardIds.add(personal.id);}\n      }\n      // These are the STUDENT'S records, not the publisher's data.\n      for(const key of [\"mistakes\",\"sessions\",\"quizzes\",\"learningEvents\",\"days\",\"aiAttempts\"]){if(Array.isArray(prev[key]))sub[key]=copy(prev[key]);}\n   }\n   if(old.activeId&&doc.subjects.some(v=>v.id===old.activeId))doc.activeId=old.activeId;\n   if(old.settings&&typeof old.settings===\"object\")doc.settings={...doc.settings,...old.settings};\n   return doc;\n }\n window.__BSA_RESTORE_CONTENT__=doc=>{\n   const published=window.__BSA_PUBLISHED__;\n   if(!published||!Array.isArray(published.subjects))return doc;\n   const old=read();\n   try{raw.setItem(prefix+mainKey,JSON.stringify(doc));return mergePublished();}\n   finally{try{if(old)raw.setItem(prefix+mainKey,JSON.stringify(old));else raw.removeItem(prefix+mainKey)}catch(_){}}\n };\n window.__BSA_SHARED_STORAGE__={\n   getItem(key){key=String(key);if(key===mainKey){const v=mergePublished();return v?JSON.stringify(v):null;}return raw.getItem(prefix+key)},\n   setItem(key,value){raw.setItem(prefix+String(key),String(value))},\n   removeItem(key){raw.removeItem(prefix+String(key))},\n   clear(){for(let i=raw.length-1;i>=0;i--){const k=raw.key(i);if(k&&k.startsWith(prefix))raw.removeItem(k)}},\n   key(i){let out=[];for(let n=0;n<raw.length;n++){const k=raw.key(n);if(k&&k.startsWith(prefix))out.push(k.slice(prefix.length));}return out[i]||null},\n   get length(){let count=0;for(let n=0;n<raw.length;n++)if((raw.key(n)||\"\").startsWith(prefix))count++;return count;}\n };\n})();".replace('__SNAPSHOT__',JSON.stringify(snapshot).replace(/</g,'\\u003c'));
+      const boot="window.__BSA_SHARED_MODE__=true;\nwindow.__BSA_PUBLISHED__=__SNAPSHOT__;\n(function(){\n const raw=window.localStorage;\n const prefix=\"bsa_shared_student_v144:\";\n const mainKey=\"bsa-study-dashboard:v1\";\n const progressKeys=[\"conf\",\"due\",\"last\",\"interval\",\"ease\",\"reps\",\"streak\",\"seen\",\"rating\",\"lastReviewed\",\"nextReview\",\"attempts\",\"lastAttempt\",\"st\",\"done\",\"srs\"];\n const copy=x=>JSON.parse(JSON.stringify(x));\n const read=()=>{try{return JSON.parse(raw.getItem(prefix+mainKey)||\"null\")}catch(_){return null}};\n function mergePublished(){\n   const old=read(), published=window.__BSA_PUBLISHED__;\n   if(!published||!Array.isArray(published.subjects))return old;\n   const doc=copy(published);\n   if(!old||!Array.isArray(old.subjects))return doc;\n   for(const sub of doc.subjects){\n      const prev=old.subjects.find(v=>v.id===sub.id);if(!prev)continue;\n      for(const kind of [\"cards\",\"lectures\"]){\n       for(const item of sub[kind]||[]){\n        const before=(prev[kind]||[]).find(v=>v.id===item.id);\n        if(before)for(const key of progressKeys)if(Object.prototype.hasOwnProperty.call(before,key))item[key]=before[key];\n       }\n      }\n      for(const set of [...(sub.psets||[]),...(sub.mcqSets||[])]){\n       const oldSet=[...(prev.psets||[]),...(prev.mcqSets||[])].find(v=>v.id===set.id);if(!oldSet)continue;\n       for(const pr of set.problems||[]){\n        const oldPr=(oldSet.problems||[]).find(v=>v.id===pr.id);if(!oldPr)continue;\n        for(const key of progressKeys)if(Object.prototype.hasOwnProperty.call(oldPr,key))pr[key]=oldPr[key];\n       }\n      }\n      for(const rule of sub.rules||[]){const previous=(prev.rules||[]).find(x=>x.id===rule.id);if(previous){rule.notes=previous.notes||'';rule.bookmarked=!!previous.bookmarked;rule.ruleReviewConfidence=previous.ruleReviewConfidence||'';rule.ruleReviewCount=Number(previous.ruleReviewCount)||0;rule.ruleReviewedAt=previous.ruleReviewedAt||'';}}\n      // Learner-created flashcards (e.g. from corrected mistakes) stay personal.\n      const publishedCardIds=new Set((sub.cards||[]).map(x=>x.id));\n      for(const personal of prev.cards||[]){\n        if(!publishedCardIds.has(personal.id)&&personal.id){sub.cards.push(copy(personal));publishedCardIds.add(personal.id);}\n      }\n      // These are the STUDENT'S records, not the publisher's data.\n      for(const key of [\"mistakes\",\"sessions\",\"quizzes\",\"learningEvents\",\"days\",\"aiAttempts\",\"fsAttempts\"]){if(Array.isArray(prev[key]))sub[key]=copy(prev[key]);}\n   }\n   if(old.activeId&&doc.subjects.some(v=>v.id===old.activeId))doc.activeId=old.activeId;\n   if(old.settings&&typeof old.settings===\"object\")doc.settings={...doc.settings,...old.settings};\n   return doc;\n }\n window.__BSA_RESTORE_CONTENT__=doc=>{\n   const published=window.__BSA_PUBLISHED__;\n   if(!published||!Array.isArray(published.subjects))return doc;\n   const old=read();\n   try{raw.setItem(prefix+mainKey,JSON.stringify(doc));return mergePublished();}\n   finally{try{if(old)raw.setItem(prefix+mainKey,JSON.stringify(old));else raw.removeItem(prefix+mainKey)}catch(_){}}\n };\n window.__BSA_SHARED_STORAGE__={\n   getItem(key){key=String(key);if(key===mainKey){const v=mergePublished();return v?JSON.stringify(v):null;}return raw.getItem(prefix+key)},\n   setItem(key,value){raw.setItem(prefix+String(key),String(value))},\n   removeItem(key){raw.removeItem(prefix+String(key))},\n   clear(){for(let i=raw.length-1;i>=0;i--){const k=raw.key(i);if(k&&k.startsWith(prefix))raw.removeItem(k)}},\n   key(i){let out=[];for(let n=0;n<raw.length;n++){const k=raw.key(n);if(k&&k.startsWith(prefix))out.push(k.slice(prefix.length));}return out[i]||null},\n   get length(){let count=0;for(let n=0;n<raw.length;n++)if((raw.key(n)||\"\").startsWith(prefix))count++;return count;}\n };\n})();".replace('__SNAPSHOT__',JSON.stringify(snapshot).replace(/</g,'\\u003c'));
       const sheetPaths=['foundation','components','features','polish'].map(name=>'./assets/styles/'+name+'.css');
       const sheetText=await Promise.all(sheetPaths.map(async path=>{
         const res=await fetch(new URL(path,location.href),{cache:'no-store'});
@@ -13065,16 +13147,21 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       const record={text,page:tab==='lectures'?'Lecture':'Rules Library',tab,
         sourceId:tab==='lectures'?(reader&&reader.dataset.lectureId||''):'',sectionId:section&&section.id||''};
       if(tab==='lectures'&&section&&sel.rangeCount){try{const range=sel.getRangeAt(0);
+        if(!section.contains(range.startContainer)||!section.contains(range.endContainer)){setSelection(null);return;}
         if(section.contains(range.startContainer)&&section.contains(range.endContainer)){
           const prior=range.cloneRange();prior.selectNodeContents(section);prior.setEnd(range.startContainer,range.startOffset);
           const after=range.cloneRange();after.selectNodeContents(section);after.setStart(range.endContainer,range.endOffset);
           record.before=bsa181Text(prior.toString()).slice(-48);record.after=bsa181Text(after.toString()).slice(0,48);
         }}catch(_){}}
       setSelection(record)};
-      let frame=0;
+      // iPadOS text-selection handles often settle after touchend. Re-sample
+      // briefly rather than saving an unfinished selection or covering the menu.
+      let frame=0;const late=new Set();
       const schedule=()=>{if(frame)return;frame=requestAnimationFrame(()=>{frame=0;onSelect()})};
-      ['mouseup','touchend','keyup','selectionchange'].forEach(ev=>document.addEventListener(ev,schedule));
-      return()=>{['mouseup','touchend','keyup','selectionchange'].forEach(ev=>document.removeEventListener(ev,schedule));if(frame)cancelAnimationFrame(frame)};
+      const touchSchedule=()=>{schedule();[180,430].forEach(ms=>{const tid=setTimeout(()=>{late.delete(tid);schedule()},ms);late.add(tid)})};
+      ['mouseup','keyup','selectionchange'].forEach(ev=>document.addEventListener(ev,schedule));
+      document.addEventListener('touchend',touchSchedule,{passive:true});
+      return()=>{['mouseup','keyup','selectionchange'].forEach(ev=>document.removeEventListener(ev,schedule));document.removeEventListener('touchend',touchSchedule);late.forEach(tid=>clearTimeout(tid));if(frame)cancelAnimationFrame(frame)};
     },[subject.id,tab]);
     if(!selection)return null;
     return h('div',{className:'bsa181-selection',role:'status'},h('span',null,'Selected '+selection.text.length+' characters'),h('label',{className:'bsa41-pick-label'},'Label',h('select',{value:kind,onChange:e=>setKind(e.target.value),'aria-label':'Highlight label'},Object.entries(BSA41_HIGHLIGHT_TYPES).map(([id,x])=>h('option',{key:id,value:id},x.label)))),h('button',{className:'btn primary',onClick:()=>{const out=bsa181Add('highlights',{...selection,kind,subjectId:subject.id});toast(out==='duplicate'?'Already highlighted — tap it to edit its note':out?'Highlight saved. Tap the colored passage to add a note.':'Unable to save highlight. Check device storage.');if(out)setSelection(null);try{window.getSelection()?.removeAllRanges()}catch(_){}}},'Save highlight'),h('button',{className:'btn ghost',onClick:()=>setSelection(null)},'×'));
@@ -13904,12 +13991,221 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
         h('button',{className:'btn primary',disabled:!plan||!checked||!(plan.accepted.length+plan.upgrades.length),onClick:importVerified},'Import verified exercises'),
         h('p',{className:'muted small'},'PDF page text and AI proposals are not added automatically. Existing questions are reused when possible. For general calculation problems or MCQs, use your original Problem Sets and MCQ import formats.')));
   }
+  /* V4.4 · Topic Packs & subject-level material health.
+     This is additive: preview first, compare against original records,
+     never silently replace lecture sections, rule decisions or answer keys. */
+  const BSA44_KINDS=[['lecture','Lectures'],['practice','Written problems'],['mcq','MCQs'],['card','Flashcards'],['rule','Rules']];
+  const bsa44Key=v=>String(v==null?'':v).normalize('NFKC').toLocaleLowerCase().replace(/\s+/g,' ').trim();
+  function bsa44Empty(){return {kind:'partial',subject:'',topics:[],cards:[],mistakes:[],quizzes:[],drills:[],drillBad:[],lectures:[],psets:[],mcqSets:[],rules:[],grading:null,book:null}}
+  function bsa44ParseOne(raw,label){
+    let obj=null;
+    for(const candidate of psJSONCandidates(raw)){try{obj=JSON.parse(candidate);break}catch(_){}}
+    if(obj===null)throw Error(label+': expected valid JSON. Check commas and closing brackets.');
+    if(obj&&obj.format==='bsa-topic-pack-v1'){
+      if(!obj||Array.isArray(obj)||typeof obj!=='object')throw Error(label+': expected one topic pack object.');
+      const allowed=['topics','lectures','problemSets','mcqSets','flashcards','rules'];
+      let seen=0,all=bsa44Empty();all.subject=String(obj.subject||'').trim();
+      for(const [key,format,result] of [['topics','', 'topics'],['lectures','bsa-lecture-v1','lectures'],['problemSets','bsa-problemset-v1','psets'],['mcqSets','bsa-mcq-v1','mcqSets'],['flashcards','bsa-flashcards-v1','cards'],['rules','bsa-rulebook-v1','rules']]){
+        const rows=obj[key];if(rows==null)continue;
+        if(!Array.isArray(rows))throw Error(label+': "'+key+'" must be an array.');
+        if(!rows.length)continue;
+        seen+=rows.length;
+        if(seen>1200)throw Error(label+': split this large pack into smaller files (maximum 1,200 items).');
+        const doc=key==='topics'?{subject:obj.subject||'',topics:rows}:{format,subject:obj.subject||'',[key]:rows};
+        const parsed=parseImport(JSON.stringify(doc));
+        if(parsed.kind!=='partial')throw Error(label+': unexpected backup in a topic pack.');
+        all[result].push(...(parsed[result]||[]));
+      }
+      if(!seen)throw Error(label+': the pack has no study materials. Add a lecture, questions, cards, rules, or topics.');
+      // A pack-wide topic label fills missing source labels without guessing a chapter.
+      const labelTopic=String(obj.topic||'').trim().slice(0,180);
+      if(labelTopic){for(const item of [...all.lectures,...all.psets,...all.mcqSets])if(!item.topicText)item.topicText=labelTopic;
+        for(const card of all.cards)if(!card.topicText)card.topicText=labelTopic;
+        for(const rule of all.rules)if(!rule.topic)rule.topic=labelTopic;}
+      return all;
+    }
+    const parsed=parseImport(raw);
+    if(parsed.kind!=='partial')throw Error(label+': this is a full backup. Use Data safety → Restore, not Topic Packs.');
+    if((parsed.mistakes||[]).length||(parsed.quizzes||[]).length||(parsed.drills||[]).length||parsed.grading||parsed.book)throw Error(label+': scores, mistakes, drills, grading and textbook maps belong in their own import tools. This bulk importer only adds topic study materials.');
+    return {...bsa44Empty(),...parsed};
+  }
+  function bsa44Baseline(s){return {...s,topics:s.topics||[],cards:s.cards||[],lectures:s.lectures||[],psets:s.psets||[],mcqSets:s.mcqSets||[],rules:s.rules||[]}}
+  function bsa44Similar(a,b){const fa=bsa205FamilyKey(a),fb=bsa205FamilyKey(b);return bsa198Near(a,b)||(fa.length>50&&fa===fb&&bsa198Fingerprint(a)!==bsa198Fingerprint(b))}
+  function bsa44Prepare(s,p,includeSimilar=false){
+    // Work from a detached draft: preview must never modify uploaded objects.
+    p=JSON.parse(JSON.stringify(p));
+    const next={...bsa44Empty(),...p,lectures:[],psets:[],mcqSets:[],cards:[],rules:[]};
+    const issues=[],stats={duplicate:0,conflict:0,similar:0,existingEnriched:0};
+    const flag=(kind,title,why)=>{stats[kind]++;if(issues.length<100)issues.push({kind,title:bsa205Short(title,110),why})};
+    const oldCards=[...(s.cards||[])];
+    for(const c of p.cards||[]){const hit=[...oldCards,...next.cards].find(x=>bsa44Key(x.q)===bsa44Key(c.q));
+      if(hit){flag(bsa44Key(hit.a)===bsa44Key(c.a)?'duplicate':'conflict',c.q,'Flashcard question already saved'+(bsa44Key(hit.a)!==bsa44Key(c.a)?' with another answer — review manually.':'.'));continue}
+      next.cards.push(c);
+    }
+    const oldRules=[...(s.rules||[])];
+    for(const rule of p.rules||[]){const identity=x=>bsa44Key(bsaRuleCollection(x))+'|'+bsa44Key(x.code||x.title);
+      const hit=[...oldRules,...next.rules].find(x=>identity(x)===identity(rule));
+      if(hit){flag(bsa44Key(hit.decisionRule)===bsa44Key(rule.decisionRule)?'duplicate':'conflict',rule.title,'Rule already exists'+(bsa44Key(hit.decisionRule)!==bsa44Key(rule.decisionRule)?' with a different decision — original preserved.':'.'));continue}
+      next.rules.push(rule);
+    }
+    for(const l of p.lectures||[]){const hit=(s.lectures||[]).find(x=>bsa44Key(x.title)===bsa44Key(l.title))||next.lectures.find(x=>bsa44Key(x.title)===bsa44Key(l.title));
+      if(!hit){next.lectures.push(l);continue}
+      if(hit.topicText&&l.topicText&&matchTopic(s,hit.topicText)&&matchTopic(s,l.topicText)&&matchTopic(s,hit.topicText)!==matchTopic(s,l.topicText)){flag('conflict',l.title,'Same lecture title refers to different topics; existing original preserved.');continue}
+      const sections=[],terms=[],checks=[];
+      for(const section of l.sections||[]){const present=(hit.sections||[]).concat(sections).find(x=>bsa44Key(x.h)===bsa44Key(section.h));
+        if(present){flag(bsa44Key(present.body)===bsa44Key(section.body)?'duplicate':'conflict',l.title+' · '+(section.h||'Section'),'Lecture section already exists'+(bsa44Key(present.body)!==bsa44Key(section.body)?' with different text; existing content protected.':'.'));continue}
+        // Avoid importing identical prose under a differently named heading.
+        if((hit.sections||[]).some(x=>bsa44Key(x.body)===bsa44Key(section.body))){flag('duplicate',l.title,'Identical section content already in this lecture.');continue}
+        sections.push(section);
+      }
+      for(const term of l.terms||[]){const present=(hit.terms||[]).concat(terms).find(x=>bsa44Key(x.t)===bsa44Key(term.t));
+        if(present){flag(bsa44Key(present.d)===bsa44Key(term.d)?'duplicate':'conflict',term.t,'Existing term definition protected.');continue}terms.push(term)}
+      for(const check of l.checks||[]){const present=(hit.checks||[]).concat(checks).find(x=>bsa44Key(x.q)===bsa44Key(check.q));
+        if(present){flag(bsa44Key(present.a)===bsa44Key(check.a)?'duplicate':'conflict',check.q,'Existing self-check answer protected.');continue}checks.push(check)}
+      const newSummary=hit.summary?'':l.summary;
+      if(sections.length||terms.length||checks.length||newSummary){
+        next.lectures.push({...l,sections,terms,checks,summary:newSummary});stats.existingEnriched++;
+      }else if(!(l.sections||[]).length)flag('duplicate',l.title,'Lecture already saved.');
+    }
+    const savedProblems=(s.psets||[]).flatMap(x=>x.problems||[]),savedMcqs=(s.mcqSets||[]).flatMap(x=>x.problems||[]);
+    function acceptSets(sets,old,target,other,label){
+      const prior=new Map();for(const q of old){const k=bsa198Fingerprint(q.problem);if(k)prior.set(k,q)}
+      const sibling=new Set(other.map(x=>bsa198Fingerprint(x.problem)).filter(Boolean));
+      for(const set of sets||[]){const fresh=[];
+        for(const q of set.problems||[]){const key=bsa198Fingerprint(q.problem);
+          if(!key){flag('conflict',set.title,'Empty or unreadable problem text.');continue}
+          const existing=prior.get(key);
+          if(existing){const a=bsa44Key(existing.answer||existing.solution),b=bsa44Key(q.answer||q.solution);
+            flag(a&&b&&a!==b?'conflict':'duplicate',q.title||set.title,a&&b&&a!==b?'Same question has a different saved answer/solution. Existing record protected.':'Identical question already saved.');continue}
+          const similar=old.find(x=>bsa44Similar(x.problem,q.problem));
+          if(similar){flag('similar',q.title||set.title,'Possible variation of a saved question. Compare the numbers and requirements.');if(!includeSimilar)continue}
+          if(sibling.has(key)){flag('similar',q.title||set.title,'This prompt is already present in another question format.');if(!includeSimilar)continue}
+          prior.set(key,q);fresh.push(q);
+        }
+        if(fresh.length)next[target].push({...set,problems:fresh});
+      }
+    }
+    acceptSets(p.psets,savedProblems,'psets',savedMcqs,'Written problems');
+    acceptSets(p.mcqSets,savedMcqs,'mcqSets',savedProblems,'MCQs');
+    return {safe:next,issues,stats};
+  }
+  function bsa44Plan(subject,pieces,includeSimilar){
+    const draft=JSON.parse(JSON.stringify(bsa44Baseline(subject)));
+    const totals={addedTopics:0,addedCards:0,addedRules:0,addedLectures:0,updatedLectures:0,addedSets:0,addedProblems:0,skipped:0,duplicates:0,conflicts:0,similar:0,enriched:0};
+    const issues=[];const perFile=[];
+    for(const piece of pieces){const prepared=bsa44Prepare(draft,piece.parsed,includeSimilar);
+      const counts=applyPartial(draft,prepared.safe);
+      for(const key of ['addedTopics','addedCards','addedRules','addedLectures','updatedLectures','addedSets','addedProblems','skipped'])totals[key]+=Number(counts[key]||0);
+      totals.duplicates+=prepared.stats.duplicate;totals.conflicts+=prepared.stats.conflict;totals.similar+=prepared.stats.similar;totals.enriched+=prepared.stats.existingEnriched;
+      if(issues.length<90)issues.push(...prepared.issues.slice(0,90-issues.length).map(x=>({...x,file:piece.name})));
+      perFile.push({name:piece.name,added:(counts.addedTopics||0)+(counts.addedCards||0)+(counts.addedRules||0)+(counts.addedLectures||0)+(counts.addedProblems||0),duplicates:prepared.stats.duplicate,conflicts:prepared.stats.conflict});
+    }
+    return {totals,issues,perFile};
+  }
+  function bsa44ApplyPack(subject,pieces,includeSimilar){
+    const results=[];
+    for(const piece of pieces){const prepared=bsa44Prepare(subject,piece.parsed,includeSimilar);results.push(applyPartial(subject,prepared.safe));}
+    return results;
+  }
+  const BSA44_PROMPT=`Create ONE valid JSON object for BSA Study Desk using format "bsa-topic-pack-v1" and keys: "subject", "topic", "topics", "lectures", "problemSets", "mcqSets", "flashcards", "rules". The topic should match my actual course outline. Use only my supplied lecture files or authoritative verified sources. Never fabricate references, page numbers, standard text, or worked answers. Mark uncertain content in the source fields and omit unsupported questions. Preserve all amounts and conditions in exercises. Include genuine variation, not paraphrased duplicates. Each lecture needs title, topic, sections [{heading,body}]; each problem set needs title, topic, problems [{problem,answer,solution}]; MCQ sets need problems [{problem,choices:[four choices],answer:"A/B/C/D",solution}]; flashcards need question, answer, topic; rules need title, decisionRule, topic, and precise sourceTitle/sourceLocator if verified. Output only valid JSON, with each section as an array; empty arrays are okay. My existing imports will be checked for duplicates before saving.`;
+  const BSA44_EXAMPLE={format:'bsa-topic-pack-v1',subject:'Replace with your course',topic:'Replace with topic title',topics:[{title:'Replace with topic title'}],lectures:[{title:'Topic overview',topic:'Replace with topic title',source:'Actual textbook and page',sections:[{heading:'Core concept',body:'Replace with accurate source-based explanation'}]}],problemSets:[{title:'Topic practice',topic:'Replace with topic title',problems:[{problem:'Replace with your real question',answer:'Verified answer',solution:'Verified working'}]}],mcqSets:[],flashcards:[{question:'Replace with your question',answer:'Verified answer',topic:'Replace with topic title'}],rules:[]};
+  function BSA44PackImporter({subject,update,toast,initialTopic}){
+    const [raw,setRaw]=useState(''),[docs,setDocs]=useState([]),[fileError,setFileError]=useState(''),[preview,setPreview]=useState(null),[includeSimilar,setIncludeSimilar]=useState(false),[confirmed,setConfirmed]=useState(false),[busy,setBusy]=useState(false),[result,setResult]=useState('');
+    const reset=()=>{setPreview(null);setConfirmed(false);setResult('')};
+    const selectFiles=async e=>{const files=[...(e.target.files||[])];e.target.value='';reset();setFileError('');if(!files.length)return;
+      if(files.length>25){setFileError('Select up to 25 JSON files per batch.');return}
+      setBusy(true);try{const incoming=[];for(const file of files){if(file.size>2*1024*1024)throw Error(file.name+': file exceeds 2 MB. Split into smaller topic packs.');
+        if(!/\.(json|txt|md)$/i.test(file.name))throw Error(file.name+': select JSON or text files containing structured JSON.');
+        const text=await file.text();incoming.push({name:file.name,raw:text,parsed:bsa44ParseOne(text,file.name)});}
+        setDocs(incoming);setFileError('Loaded '+incoming.length+' file'+(incoming.length===1?'':'s')+'. Nothing has been saved. Run Preview first.');
+      }catch(err){setDocs([]);setFileError(err.message||String(err))}finally{setBusy(false)}};
+    const readPieces=()=>{const rows=docs.slice();if(raw.trim())rows.push({name:'Pasted JSON',raw,parsed:bsa44ParseOne(raw,'Pasted JSON')});if(!rows.length)throw Error('Choose JSON files or paste one complete JSON object first.');
+      if(!initialTopic)return rows;
+      // The user reached this importer from a particular topic. Associate unlabelled
+      // material with that topic, without changing any explicit source attribution.
+      return rows.map(row=>{const parsed=JSON.parse(JSON.stringify(row.parsed));
+        for(const item of [...(parsed.lectures||[]),...(parsed.psets||[]),...(parsed.mcqSets||[]),...(parsed.cards||[])])if(!item.topicText&&!item.topicId)item.topicText=initialTopic;
+        for(const item of parsed.rules||[])if(!item.topic&&!item.topicText&&!item.topicId)item.topic=initialTopic;
+        return {...row,parsed};});};
+    const check=()=>{reset();try{const pieces=readPieces();const anySubject=pieces.find(x=>x.parsed.subject&&bsa44Key(x.parsed.subject)!==bsa44Key(subject.name)&&bsa44Key(x.parsed.subject)!==bsa44Key(subject.code));
+      if(anySubject)throw Error('Subject mismatch in '+anySubject.name+': "'+anySubject.parsed.subject+'". Select the correct subject or update this label before importing.');
+      setPreview({pieces,report:bsa44Plan(subject,pieces,includeSimilar)});setFileError('Preview is ready. No study data has changed.');
+    }catch(e){setFileError(e.message||String(e));setPreview(null)}};
+    const save=()=>{if(!preview||!confirmed)return;try{const plan=bsa44Plan(subject,preview.pieces,includeSimilar);const total=plan.totals;
+      if(!(total.addedTopics+total.addedCards+total.addedRules+total.addedLectures+total.addedProblems+total.enriched)){setResult('No new material to save. Existing records were left unchanged.');return}
+      update(s=>{bsa44ApplyPack(s,preview.pieces,includeSimilar)});
+      const summary='Imported '+total.addedTopics+' topics, '+total.addedLectures+' lectures, '+total.addedProblems+' questions, '+total.addedCards+' cards and '+total.addedRules+' rules. '+total.enriched+' lectures extended; duplicates/conflicts skipped.';
+      setDocs([]);setRaw('');setPreview(null);setConfirmed(false);setResult(summary);toast(summary);
+    }catch(e){setResult('Nothing saved: '+(e.message||String(e)))}};
+    const summary=preview?.report?.totals,queued=docs.length+(raw.trim()?1:0);
+    return h('section',{className:'bsa44-importer', 'aria-label':'Bulk topic pack importer'},
+      h('div',{className:'bsa44-import-intro'},h('div',null,h('span',{className:'bsa205-overline'},initialTopic?'ADDING TO · '+initialTopic:'ONE PREVIEW · ALL MATERIAL TYPES'),h('h2',null,'Import an entire topic at once'),h('p',null,'Upload several import JSONs together, or combine lecture notes, practice sets, MCQs, flashcards and rules in one Topic Pack. We compare material against this subject before saving.')),
+        h('span',{className:'bsa44-step-chip'},'1 · Select    2 · Preview    3 · Confirm')),
+      h('div',{className:'bsa44-import-grid'},h('div',{className:'bsa205-card bsa44-import-input'},
+        h('label',{className:'bsa44-file-select'},h('span',{'aria-hidden':'true'},'⇪'),h('strong',null,'Choose JSON files together'),h('small',null,'Multiple files supported · JSON, TXT, MD · up to 25 files'),h('input',{type:'file',multiple:true,accept:'.json,.txt,.md,application/json',onChange:selectFiles,'aria-label':'Choose multiple topic material JSON files'})),
+        docs.length>0&&h('div',{className:'bsa44-files'},docs.map((x,i)=>h('div',{key:i,className:'bsa44-file'},h('span',null,x.name),h('button',{type:'button',className:'btn ghost',onClick:()=>{setDocs(d=>d.filter((_,j)=>j!==i));reset()}},'Remove')))),
+        h('label',{className:'bsa44-field'},'Or paste a complete Topic Pack JSON',h('textarea',{rows:7,value:raw,onChange:e=>{setRaw(e.target.value);reset()},placeholder:'{"format":"bsa-topic-pack-v1","subject":"...","topic":"...","lectures":[],"problemSets":[],"mcqSets":[],"flashcards":[],"rules":[]}',spellCheck:false})),
+        h('div',{className:'bsa44-small-actions'},h('button',{type:'button',className:'btn ghost',onClick:async()=>toast(await copyText((initialTopic?'Create the pack for topic: '+initialTopic+'.\n':'')+BSA44_PROMPT)?'Topic Pack AI prompt copied':'Could not copy prompt')},'Copy AI pack prompt'),
+          h('button',{type:'button',className:'btn ghost',onClick:()=>{const blob=new Blob([JSON.stringify({...BSA44_EXAMPLE,subject:subject.name,topic:initialTopic||BSA44_EXAMPLE.topic},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download='topic-pack-template.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),2000)}},'Download JSON example')),
+        h('p',{className:'muted small'},'AI can create the JSON from your actual source materials using the copied prompt. A PDF itself is not automatically converted into verified lectures or answers.')),
+      h('div',{className:'bsa205-card bsa44-import-review'},h('div',{className:'bsa44-review-head'},h('h3',null,'Import preview'),h('span',{className:'bsa205-tag'},queued+' item'+(queued===1?'':'s')+' selected')),
+        h('label',{className:'bsa44-tick'},h('input',{type:'checkbox',checked:includeSimilar,onChange:e=>{setIncludeSimilar(e.target.checked);reset()}},'Allow similar numerical/question variations after reviewing them')),
+        h('button',{type:'button',className:'btn primary bsa44-review-btn',disabled:busy||!queued,onClick:check},busy?'Reading files…':'Preview & check duplicates'),
+        fileError&&h('p',{className:'bsa44-feedback',role:'status'},fileError),
+        summary?h('div',{className:'bsa44-preview'},
+          h('div',{className:'bsa44-preview-numbers'},[['New topics',summary.addedTopics],['New lectures',summary.addedLectures],['New questions',summary.addedProblems],['New cards',summary.addedCards],['New rules',summary.addedRules],['Extended lectures',summary.enriched]].map(([label,n])=>h('div',{key:label},h('strong',null,n),h('span',null,label)))),
+          h('p',{className:'bsa44-preview-sub'},summary.duplicates+' exact duplicates · '+summary.similar+' similar variants '+(includeSimilar?'included when not exact':'held for review')+' · '+summary.conflicts+' conflicts held back'),
+          preview.report.perFile.length>1&&h('details',null,h('summary',null,'File-by-file preview'),preview.report.perFile.map((x,i)=>h('p',{key:i,className:'muted small'},x.name+' · '+x.added+' new · '+x.duplicates+' duplicate · '+x.conflicts+' conflicts'))),
+          preview.report.issues.length>0&&h('details',{className:'bsa44-issue-list'},h('summary',null,'Review '+preview.report.issues.length+' flagged items'),preview.report.issues.slice(0,55).map((x,i)=>h('p',{key:i},h('strong',null,x.kind.toUpperCase()+': '+x.title),h('small',null,x.why+' · '+x.file)))),
+          h('label',{className:'bsa44-tick bsa44-confirm'},h('input',{type:'checkbox',checked:confirmed,onChange:e=>setConfirmed(e.target.checked)}),'I reviewed the source, answers and conflict warnings. Save only new material.'),
+          h('button',{className:'btn primary bsa44-review-btn',disabled:!confirmed,onClick:save},'Import approved materials')):
+          h('p',{className:'muted small'},'No data changes until you explicitly confirm. Existing answers, lecture sections, personal notes, IDs, scores and attempts are preserved.'))),
+      result&&h('p',{className:'bsa44-result',role:'status'},result));
+  }
+  function bsa44TopicCounters(subject){
+    const topics=(subject.topics||[]).filter(t=>t.kind!=='exam');
+    const map=new Map(topics.map(t=>[t.id,{topic:t,lecture:0,practice:0,mcq:0,card:0,rule:0}]));
+    const unknown={topic:{id:'',title:'Uncategorized / unmatched'},lecture:0,practice:0,mcq:0,card:0,rule:0};
+    const place=(x,k,free)=>{const id=x.topicId&&map.has(x.topicId)?x.topicId:matchTopic(subject,free||x.topicText||x.topic||'');const dest=map.get(id)||unknown;dest[k]++;};
+    for(const L of subject.lectures||[])place(L,'lecture',L.topicText);
+    for(const S of subject.psets||[])for(const Q of S.problems||[])place(Q,'practice',Q.subtopic||Q.topicText||S.topicText||S.topic);
+    for(const S of subject.mcqSets||[])for(const Q of S.problems||[])place(Q,'mcq',Q.subtopic||Q.topicText||S.topicText||S.topic);
+    for(const C of subject.cards||[])place(C,'card',C.topicText);
+    for(const R of subject.rules||[])place(R,'rule',R.topic||R.topicText||R.collection||R.code);
+    return {rows:[...map.values()],unknown};
+  }
+  function BSA44TopicHealth({subject,update,onImport,onBrowse,go}){
+    const [filter,setFilter]=useState(''),[expanded,setExpanded]=useState('');
+    const {rows,unknown}=useMemo(()=>bsa44TopicCounters(subject),[subject]);
+    const visible=rows.filter(x=>bsa44Key([x.topic.code,x.topic.title,x.topic.standard].join(' ')).includes(bsa44Key(filter)));
+    const expected=t=>Array.isArray(t.materialExpectations)?t.materialExpectations:['lecture','practice','card',...(t.standard?['rule']:[])];
+    const has=(row,k)=>k==='practice'?(row.practice+row.mcq)>0:row[k]>0;
+    const covered=rows.filter(r=>expected(r.topic).every(k=>has(r,k))).length;
+    const toggle=(topicId,k)=>update(s=>{const t=(s.topics||[]).find(x=>x.id===topicId);if(!t)return;const from=expected(t);t.materialExpectations=from.includes(k)?from.filter(x=>x!==k):[...from,k]});
+    const unmatched=Object.entries(unknown).filter(([k,v])=>k!=='topic'&&v>0).map(([k,v])=>v+' '+k).join(' · ');
+    return h('section',{className:'bsa44-topics', 'aria-label':'Topic material coverage'},
+      h('div',{className:'bsa44-topic-summary'},h('div',null,h('span',{className:'bsa205-overline'},'CONTENT INVENTORY · NOT A MASTERY SCORE'),h('h2',null,'What does each topic already have?'),h('p',null,'Counts use saved records and explicit topic labels. “Covered” means your selected material types are present — not that a lesson is complete or answers have been verified.')),
+        h('div',{className:'bsa44-coverage-number'},h('strong',null,covered+' / '+rows.length),h('small',null,'topic material checklists filled'))),
+      h('div',{className:'bsa44-topic-tools'},h('input',{type:'search',value:filter,onChange:e=>setFilter(e.target.value),placeholder:'Search topic or standard…','aria-label':'Search topic coverage'}),h('button',{className:'btn primary',onClick:()=>onImport('')},'＋ Import a topic pack')),
+      unmatched&&h('p',{className:'bsa44-unmatched'},'Unmatched materials: '+unmatched+'. Assign them a topic in the original editor before treating this inventory as complete.'),
+      !rows.length&&h('div',{className:'bsa205-card'},h('p',null,'No roadmap topics saved yet. A Topic Pack can create a topic and its materials in one import.')),
+      h('div',{className:'bsa44-topic-list'},visible.map(row=>{const t=row.topic,req=expected(t),missing=req.filter(k=>!has(row,k)),isOpen=expanded===t.id;
+        return h('article',{className:'bsa44-topic-card',key:t.id},
+          h('div',{className:'bsa44-topic-main'},h('div',{className:'bsa44-topic-name'},h('span',{className:'bsa205-overline'},[t.code,t.standard].filter(Boolean).join(' · ')||'TOPIC'),h('h3',null,t.title),h('small',null,missing.length?('Missing: '+missing.map(k=>BSA44_KINDS.find(x=>x[0]===k)?.[1]||k).join(', ')):'All selected material types present')),
+            h('div',{className:'bsa44-type-stats'},BSA44_KINDS.map(([k,label])=>h('div',{key:k,className:'bsa44-type-stat'+(row[k]?' has-content':'')},h('strong',null,row[k]),h('span',null,label)))),
+            h('div',{className:'bsa44-topic-actions'},h('span',{className:'bsa44-status'+(missing.length?' incomplete':'')},missing.length?missing.length+' gaps':'Materials present'),h('button',{className:'btn ghost',onClick:()=>setExpanded(isOpen?'':t.id),'aria-expanded':isOpen},isOpen?'Close details':'Details'),h('button',{className:'btn',onClick:()=>onImport(t.title)},'Add material'))),
+          isOpen&&h('div',{className:'bsa44-topic-details'},h('strong',null,'Required material types for this topic'),h('p',{className:'muted small'},'Select what is relevant for your course; rules are optional for non-standard topics. This checklist is separate from demonstrated mastery.'),
+            h('div',{className:'bsa44-requirements'},BSA44_KINDS.filter(([key])=>key!=='mcq').map(([k,label])=>h('label',{key:k},h('input',{type:'checkbox',checked:req.includes(k),onChange:()=>toggle(t.id,k)}),label))),
+            h('button',{className:'btn',onClick:()=>onBrowse(t.title)},'Find matching questions')));
+      })),visible.length===0&&rows.length>0&&h('p',{className:'muted small'},'No topics matched this search.'));
+  }
   function BSA205Library({subject,update,toast,go,init}){
-    const [tab,setTab]=useState(window.__BSA_SHARED_MODE__?'all':(['all','inbox','sources','import','health'].includes(init?.tab)?init.tab:'all'));
+    const [tab,setTab]=useState(window.__BSA_SHARED_MODE__?'all':(['all','topics','packs','inbox','sources','import','health'].includes(init?.tab)?init.tab:'all'));
     const [query,setQuery]=useState(''),[type,setType]=useState(()=>(subject.psets||[]).some(set=>(set.problems||[]).some(p=>!bsa198StoredKeyValid(p)))?'Written problem':'All'),[topicFilter,setTopicFilter]=useState(init?.topicLabel||'All topics'),[activeGroup,setActiveGroup]=useState(init?.topicLabel||''),[visibleCount,setVisibleCount]=useState(20),[showHidden,setShowHidden]=useState(false),[handoff,setHandoff]=useState('');
     const [selectedProblems,setSelectedProblems]=useState([]),[bulkTopic,setBulkTopic]=useState('');
     const [capture,setCapture]=useState(''),[captureSource,setCaptureSource]=useState(''),[warning,setWarning]=useState('');
     const [browseAllFolders,setBrowseAllFolders]=useState(false);
+    const [packTopic,setPackTopic]=useState('');
     const [groupMode,setGroupMode]=useState('sets'),[setSubtopic,setSetSubtopic]=useState('All');
     const sharedLibrary=!!window.__BSA_SHARED_MODE__;
     const rows=useMemo(()=>bsa205LibraryItems(subject),[subject]);
@@ -13958,13 +14254,14 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       setCapture('');setCaptureSource('');setWarning('Saved to Inbox. You can sort it later.');};
     const updateInbox=(id,status)=>update(s=>{const r=(s.studyInbox||[]).find(x=>x.id===id);if(r)r.status=status});
     const startImport=x=>{setHandoff(x.text);setTab('import')};
+    const openPack=(topic='')=>{setPackTopic(topic);setTab('packs')};
     return h('section',{className:'view bsa205-page'},
       h('div',{className:'bsa205-page-head'},h('div',null,h('span',{className:'bsa205-overline'},'YOUR MATERIALS · ONE PLACE'),h('h1',null,'Study Library'),h('p',null,'Choose a topic to see its questions immediately. Your answers and progress stay saved.')),
-        !sharedLibrary&&h('button',{className:'bsa205-head-action',onClick:()=>setTab('import')},'＋ Import material')),
+        !sharedLibrary&&h('button',{className:'bsa205-head-action',onClick:()=>openPack()},'＋ Import materials')),
       h('p',{className:'bsa3-library-summary'},rows.filter(r=>r.type==='Written problem').length+' written problems · '+(subject.psets||[]).length+' original sets · '+categoryCounts.length+' topics · '+inbox.filter(x=>x.status==='new').length+' inbox items'),
-      !sharedLibrary&&h('div',{className:'bsa205-pagetabs bsa3-library-main-tabs',role:'group','aria-label':'Library areas'},[['all','Written problems'],['inbox','Inbox'],['sources','Source links']].map(([key,label])=>h('button',{key,type:'button',className:tab===key?'selected':'','aria-pressed':tab===key,onClick:()=>setTab(key)},label))),
+      !sharedLibrary&&h('div',{className:'bsa205-pagetabs bsa3-library-main-tabs',role:'group','aria-label':'Library areas'},[['all','Browse library'],['topics','Topic coverage'],['packs','Bulk import'],['inbox','Inbox'],['sources','Sources']].map(([key,label])=>h('button',{key,type:'button',className:tab===key?'selected':'','aria-pressed':tab===key,onClick:()=>setTab(key)},label))),
       h('details',{className:'bsa38-bookmarks'},h('summary',null,'My bookmarked problems ('+bsa38Work(subject,'bookmark:').length+')'),h('div',{className:'bsa38-bookmark-list'},bsa38Work(subject,'bookmark:').length?bsa38Work(subject,'bookmark:').slice(0,60).map(r=>h('button',{className:'btn',key:r.key,onClick:()=>go(r.route||'library',r.opts||{})},r.title||'Saved material')):h('p',null,'Bookmark a problem from a topic folder to find it quickly next time.'))),
-      !sharedLibrary&&h('details',{className:'bsa3-library-extra'},h('summary',null,'Other library tools'),h('div',null,h('button',{className:'btn',onClick:()=>setTab('import')},'Import exercises'),h('button',{className:'btn',onClick:()=>setTab('health')},'Duplicate & library cleanup'),h(BSA38LibraryTriage,{subject,update,toast}))),
+      !sharedLibrary&&h('details',{className:'bsa3-library-extra'},h('summary',null,'Other library tools'),h('div',null,h('button',{className:'btn',onClick:()=>openPack()},'Bulk import topic materials'),h('button',{className:'btn',onClick:()=>setTab('import')},'Accounting Lab importer'),h('button',{className:'btn',onClick:()=>setTab('health')},'Duplicate & library cleanup'),h(BSA38LibraryTriage,{subject,update,toast}))),
       tab==='all'&&h('div',{className:'bsa205-card bsa3-library-browser'},
         h('div',{className:'bsa205-card-head'},h('div',null,h('h2',null,'Find your problems'),h('p',{className:'muted small'},'Browse the original imported sets or study across topics. No questions are moved or duplicated.')),
           !sharedLibrary&&h('div',{className:'bsa34-library-tools'},needsTopic>0&&h('button',{className:'btn bsa34-sort-cta',onClick:()=>{setType('Written problem');setTopicFilter('Uncategorized');setActiveGroup('Uncategorized');setVisibleCount(20)}},'Organize '+needsTopic+' unclassified'),h('button',{className:'btn ghost',onClick:()=>setShowHidden(v=>!v)},showHidden?'Hide archived':'Show archived'))),
@@ -14003,7 +14300,10 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
               !sharedLibrary&&h('button',{className:'btn ghost',onClick:()=>toggleHide(x.key)},hidden.has(x.key)?'Restore':'Hide from Library')))),
           chosenRows.length>visibleCount&&h('button',{className:'btn bsa3-more-questions',onClick:()=>setVisibleCount(n=>n+20)},'Show 20 more ('+(chosenRows.length-visibleCount)+' remaining)'),
           !sharedLibrary&&h('p',{className:'muted small'},'Topic changes only update the original problem label; they do not reset its answer, attempt status, or score.')),
+        h('button',{type:'button',className:'btn bsa43-library-fs',onClick:()=>go('fs-lab')},'Financial Statements · Import / practice →'),
         h('details',{className:'bsa3-library-help'},h('summary',null,'Where are my other tools?'),h('p',null,'Use Study to read, Practice for quizzes and Accounting Lab, and Inbox for unsorted notes. Search covers all materials when “All material types” is selected.'))),
+      !sharedLibrary&&tab==='topics'&&h(BSA44TopicHealth,{subject,update,go,onImport:openPack,onBrowse:(label)=>{setTab('all');setTopicFilter(label);setGroupMode('topics');setActiveGroup(label);setVisibleCount(20)}}),
+      !sharedLibrary&&tab==='packs'&&h(BSA44PackImporter,{key:subject.id+'|'+packTopic,subject,update,toast,initialTopic:packTopic}),
       !sharedLibrary&&tab==='inbox'&&h('div',{className:'bsa205-inbox-grid'},
         h('div',{className:'bsa205-card'},h('h2',null,'Quick capture'),h('p',{className:'muted small'},'Collect problems or ideas now. Organize them when you have time.'),h('textarea',{rows:6,value:capture,onChange:e=>setCapture(e.target.value),placeholder:'Paste a question, a formula, or a note…','aria-label':'New inbox note'}),
           h('input',{value:captureSource,onChange:e=>setCaptureSource(e.target.value),placeholder:'Source / chapter (optional)','aria-label':'Inbox source'}),h('button',{className:'btn primary',disabled:!capture.trim(),onClick:addNote},'Save to Inbox'),warning&&h('p',{className:'bsa205-message'},warning)),
@@ -14036,48 +14336,234 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     if(actual.length>required.length)findings.push('You may have an extra journal line.');
     return [...new Set(findings)].slice(0,4);
   }
-  /* V4.2 — source-aware statements lab. This is an educational classification
-     exercise using an explicitly hypothetical non-financial company. Never
-     label an actual company's old PAS 1 statement as PFRS 18-compliant. */
-  const BSA42_FS_CASES=[
-    {name:'Sales revenue',category:'operating',why:'Sales are earned from the entity\u2019s main revenue-producing activity.'},
-    {name:'Cost of goods sold',category:'operating',why:'Cost of sales is connected with ordinary trading operations.'},
-    {name:'Administrative salaries expense',category:'operating',why:'Administrative expenses are generally in the residual operating category.'},
-    {name:'Interest income from a standalone debt investment',category:'investing',why:'For this assumed non-financial entity, income from a debt investment generating returns largely independently of other resources is investing.'},
-    {name:'Interest expense on a bank loan',category:'financing',why:'For this assumed entity, borrowing costs on a liability arising only from raising finance are in financing.'},
-    {name:'Income tax expense',category:'income taxes',why:'Income taxes are presented in their separate category.'},
-    {name:'Result of a discontinued operation',category:'discontinued operations',why:'Discontinued operations are a separate category under PFRS 18.'}
-  ];
-  function BSA42FinancialStatements({subject,go}){
-    const [answers,setAnswers]=useState({}),[checked,setChecked]=useState(false);
-    const [sourceUrl,setSourceUrl]=useState(''),[sourceTitle,setSourceTitle]=useState(''),[savedLinks,setSavedLinks]=useState(()=>{
-      try{return JSON.parse(localStorage.getItem('bsa42_fs_sources_'+subject.id)||'[]')}catch(_){return []}
+  /* V4.3: Document-driven Financial Statements Lab.
+     No fabricated figures or inferred audit assurance: JSON figures remain
+     'not source verified' until the learner checks them against the PDF.
+     Any standard can be studied: standards are freeform metadata and evidence. */
+  const BSA43_FS_SAMPLE={
+    format:'bsa-financial-statements-v1',
+    company:'EXAMPLE COMPANY (FICTIONAL — DO NOT TREAT AS AN AUDITED REPORT)',
+    periodEnd:'2025-12-31',scope:'consolidated',currency:'PHP',unit:'thousands',
+    source:{title:'Hypothetical teaching illustration',url:'',auditor:'',status:'illustrative'},
+    statements:[{type:'financial-position',title:'Statement of financial position',page:'8',lines:[
+      {label:'Current assets',amount:1250,comparative:1100,note:'3',category:'current-assets'},
+      {label:'Current liabilities',amount:650,comparative:600,note:'6',category:'current-liabilities'},
+      {label:'Property, plant and equipment',amount:2700,comparative:2500,note:'7',standard:'PAS 16'}]},
+      {type:'profit-loss',title:'Statement of profit or loss',page:'9',lines:[
+        {label:'Revenue',amount:3000,comparative:2700,note:'12',standard:'PFRS 15'},
+        {label:'Cost of sales',amount:-1650,comparative:-1500,note:'13'}]}],
+    notes:[{title:'PPE measurement policy',standard:'PAS 16',page:'19',text:'Illustrative note only. An actual entity’s policy, cost and depreciation details must come from its published audited statement.'},
+      {title:'Revenue accounting policy',standard:'PFRS 15',page:'22',text:'Illustrative note only. Check a real entity’s performance obligations and recognition criteria against the original report.'}]
+  };
+  const bsa43Text=(v,n=5000)=>String(v===null||v===undefined?'':v).trim().slice(0,n);
+  const bsa43Number=v=>{
+    if(v===null||v===undefined||v==='')return null;
+    if(typeof v==='number')return Number.isFinite(v)?v:null;
+    const t=String(v).trim().replace(/[₱$\s,]/g,'');
+    const neg=t.startsWith('(')&&t.endsWith(')');
+    const value=Number(neg?t.slice(1,-1):t);
+    return t&&Number.isFinite(value)?(neg?-value:value):null;
+  };
+  function bsa43ParseReport(raw){
+    if(!raw||typeof raw!=='object'||Array.isArray(raw))throw Error('Expected one JSON report object.');
+    if(raw.format&&raw.format!=='bsa-financial-statements-v1')throw Error('Expected format bsa-financial-statements-v1.');
+    const company=bsa43Text(raw.company||raw.entity,160),periodEnd=bsa43Text(raw.periodEnd||raw.reportingDate||raw.year,30);
+    if(company.length<3||!periodEnd)throw Error('Company and reporting date/year are required.');
+    if(!/^(\d{4})(?:-\d{2}-\d{2})?$/.test(periodEnd))throw Error('Reporting period must be YYYY or YYYY-MM-DD.');
+    const source=typeof raw.source==='string'?{title:raw.source}:raw.source&&typeof raw.source==='object'?raw.source:{};
+    let link=bsa43Text(source.url||raw.pdfUrl,1000);
+    if(link){try{const u=new URL(link);if(u.protocol!=='https:')throw Error();link=u.href}catch(_){throw Error('Source URL must be an https:// link.')}}
+    const groups=Array.isArray(raw.statements)?raw.statements:
+      raw.statements&&typeof raw.statements==='object'?Object.entries(raw.statements).map(([key,lines])=>({title:key,lines})):[];
+    if(groups.length>35)throw Error('Limit the import to 35 statements.');
+    const statements=groups.map((group,i)=>{
+      if(!group||typeof group!=='object')throw Error('Statement '+(i+1)+' must be an object.');
+      const items=Array.isArray(group.lines)?group.lines:Array.isArray(group.items)?group.items:[];
+      if(items.length>1000)throw Error('Statement '+(i+1)+' exceeds 1,000 lines.');
+      return {id:bsa43Text(group.id,120)||'statement_'+i,type:bsa43Text(group.type||'other',80),
+        title:bsa43Text(group.title||group.name||'Statement '+(i+1),180),page:bsa43Text(group.page,50),
+        lines:items.map((line,j)=>{
+          if(!line||typeof line!=='object')throw Error('Statement line '+(j+1)+' needs a label and value.');
+          const label=bsa43Text(line.label||line.account||line.name,200);
+          if(!label)throw Error('Statement '+(i+1)+' line '+(j+1)+' has no label.');
+          const value=bsa43Number(line.amount??line.value??line.current);
+          if(value===null&&line.amount!==null&&line.value!==null&&line.current!==null)throw Error('Non-numeric amount on '+label+'. Use a number or null.');
+          if(value!==null&&Math.abs(value)>1e15)throw Error('Amount too large for '+label+'.');
+          const comparative=bsa43Number(line.comparative??line.prior);
+          return {id:bsa43Text(line.id,100)||'line_'+i+'_'+j,label,amount:value,comparative,
+            standard:bsa43Text(line.standard,80),note:bsa43Text(line.note||line.noteRef,80),
+            page:bsa43Text(line.page||group.page,40),category:bsa43Text(line.category,90)};
+        })};
     });
-    useEffect(()=>{setSavedLinks((()=>{try{return JSON.parse(localStorage.getItem('bsa42_fs_sources_'+subject.id)||'[]')}catch(_){return []}})());setAnswers({});setChecked(false)},[subject.id]);
-    const save=()=>{let parsed;try{parsed=new URL(sourceUrl)}catch(_){return alert('Enter a valid https:// source link.')}
-      if(parsed.protocol!=='https:')return alert('Use an https:// report link.');
-      const entry={id:uid('fs-source'),title:sourceTitle.trim().slice(0,140)||'Financial statement source',url:parsed.href};
-      const next=[...savedLinks.filter(x=>x.url!==entry.url),entry].slice(-75);
-      try{localStorage.setItem('bsa42_fs_sources_'+subject.id,JSON.stringify(next));setSavedLinks(next);setSourceUrl('');setSourceTitle('')}catch(_){alert('Could not save link on this device.')}
-    };
-    const categories=['operating','investing','financing','income taxes','discontinued operations'];
-    return h('section',{className:'view bsa42-fs-lab'},
-      h('div',{className:'bsa205-page-head'},h('div',null,h('span',{className:'bsa205-overline'},'REAL-WORLD REPORTING · GUIDED PRACTICE'),h('h1',null,'Financial Statement Lab'),h('p',null,'Study original audited statements and practice presentation rules without inventing figures.'))),
-      h('div',{className:'bsa42-fs-grid'},
-        h('section',{className:'panel'},h('h2',null,'PFRS 18 · Classification practice'),
-          h('p',{className:'muted'},'Hypothetical ordinary retailer. It does not invest or provide financing as a specified main business activity. Categorize each item in profit or loss.'),
-          BSA42_FS_CASES.map((c,i)=>h('label',{key:c.name,className:'bsa42-fs-row'},h('span',null,(i+1)+'. '+c.name),
-            h('select',{value:answers[i]||'',onChange:e=>{setAnswers(p=>({...p,[i]:e.target.value}));setChecked(false)},'aria-label':'Category for '+c.name},h('option',{value:''},'Choose a category'),categories.map(k=>h('option',{key:k,value:k},k))),
-            checked&&h('small',{className:answers[i]===c.category?'bsa42-correct':'bsa42-caution'},(answers[i]===c.category?'✓ ':'Review · ')+c.why))),
-          h('div',{className:'bsa42-fs-actions'},h('button',{className:'btn primary',onClick:()=>setChecked(true)},'Check classifications'),h('button',{className:'btn ghost',onClick:()=>{setAnswers({});setChecked(false)}},'Retry')),
-          checked&&h('p',{role:'status'},BSA42_FS_CASES.filter((c,i)=>answers[i]===c.category).length+' / '+BSA42_FS_CASES.length+' classifications match the model. Check assumptions and explanations above.')),
-        h('section',{className:'panel'},h('h2',null,'Your audited statement sources'),h('p',{className:'muted'},'Link official audited reports. This stores a title and URL only—not the PDF or an AI-generated classification.'),
-          h('label',null,'Document title',h('input',{value:sourceTitle,onChange:e=>setSourceTitle(e.target.value),placeholder:'Company · reporting year · consolidated'})),
-          h('label',null,'Official report URL',h('input',{value:sourceUrl,onChange:e=>setSourceUrl(e.target.value),placeholder:'https://…',inputMode:'url'})),
-          h('button',{className:'btn primary',onClick:save,disabled:!sourceUrl.trim()},'Save source link'),
-          h('div',{className:'bsa42-fs-links'},savedLinks.length?savedLinks.map(x=>h('div',{key:x.id,className:'bsa42-fs-link'},h('a',{href:x.url,target:'_blank',rel:'noopener noreferrer'},x.title),h('button',{className:'btn ghost',onClick:()=>{const next=savedLinks.filter(y=>y.id!==x.id);try{localStorage.setItem('bsa42_fs_sources_'+subject.id,JSON.stringify(next));setSavedLinks(next)}catch(_){}}},'Remove'))):h('p',{className:'muted small'},'No sources saved on this device yet.')),
-          h('p',{className:'muted small'},'Source metadata is local to this device. Official, older statements may use PAS 1 rather than PFRS 18. Exercise classifications must be evaluated under PFRS 18 and the entity\u2019s specific circumstances.'),
-          h('button',{className:'btn',onClick:()=>go('rules')},'Open accounting standards references'))));
+    const notes=Array.isArray(raw.notes)?raw.notes:[];
+    if(notes.length>500)throw Error('Limit the report to 500 notes.');
+    const cleanedNotes=notes.map((n,i)=>({id:bsa43Text(n?.id,100)||'note_'+i,
+      title:bsa43Text(n?.title||n?.heading||'Note '+(i+1),180),
+      standard:bsa43Text(n?.standard,80),page:bsa43Text(n?.page||n?.locator,80),
+      text:bsa43Text(n?.text||n?.body||n?.disclosure,8000)}));
+    if(!statements.some(x=>x.lines.length)&&!cleanedNotes.length)throw Error('Include at least one statement line or disclosure note.');
+    const standards=Array.isArray(raw.standards)?raw.standards.slice(0,150).map((x,i)=>({
+      id:bsa43Text(x?.id,90)||'std_'+i,code:bsa43Text(typeof x==='string'?x:x?.code||x?.standard,90),
+      title:bsa43Text(x?.title,200),page:bsa43Text(x?.page,70),
+      interpretation:bsa43Text(x?.interpretation,3000)})):[];
+    return {id:bsa43Text(raw.id,100)||uid('fs'),format:'bsa-financial-statements-v1',company,periodEnd,
+      currency:bsa43Text(raw.currency||'PHP',20),unit:bsa43Text(raw.unit||'units',50),
+      scope:bsa43Text(raw.scope||'consolidated',80),
+      source:{title:bsa43Text(source.title||source.name,200),url:link,
+        auditor:bsa43Text(source.auditor,150),status:bsa43Text(source.status||'not source verified',70)},
+      statements,notes:cleanedNotes,standards,share:false,verified:false,importedAt:Date.now()};
+  }
+  const bsa43Money=(v,report)=>v===null?'—':new Intl.NumberFormat('en-PH',{maximumFractionDigits:2}).format(v)+' '+report.currency+' ('+report.unit+')';
+  function bsa43Tasks(report,standard){
+    const arr=[];
+    const search=bsa43Text(standard,100).toLowerCase();
+    const relevant=(text)=>!search||String(text||'').toLowerCase().includes(search);
+    for(const group of report.statements||[])for(const line of group.lines||[]){
+      if(!relevant(line.standard)&&!relevant(line.label)&&!relevant(line.category))continue;
+      if(line.amount!==null)arr.push({id:'amount:'+group.id+':'+line.id,type:'number',title:'Read an actual line item',
+        question:'What amount is reported for “'+line.label+'” in '+group.title+'? Include the currency and units.',
+        correct:line.amount,source:'Page '+(line.page||group.page||'not specified')+(line.note?' · Note '+line.note:''),
+        explanation:'Imported record: '+bsa43Money(line.amount,report)+'. Check the original document; the imported number has not been source-verified.',
+        line,group});
+      if(line.amount!==null&&line.comparative!==null){
+        arr.push({id:'change:'+group.id+':'+line.id,type:'number',title:'Calculate the year-on-year change',
+          question:'Calculate the amount change in “'+line.label+'” from the comparative period to '+report.periodEnd+'.',
+          correct:line.amount-line.comparative,source:'Page '+(line.page||group.page||'not specified'),
+          explanation:'Current ('+bsa43Money(line.amount,report)+') minus comparative ('+bsa43Money(line.comparative,report)+') = '+bsa43Money(line.amount-line.comparative,report)+'.',line,group});
+      }
+    }
+    for(const n of report.notes||[]){
+      if(!relevant(n.standard)&&!relevant(n.title)&&!relevant(n.text))continue;
+      arr.push({id:'note:'+n.id,type:'written',title:'Read and apply a disclosure',
+        question:'Using “'+n.title+'”, explain the accounting treatment, its assumptions and the standard that applies. What further information would you need?',
+        source:'Page '+(n.page||'not specified')+(n.standard?' · '+n.standard:''),
+        explanation:n.text||'The imported JSON did not include the note text. Open the source PDF to check.',note:n});
+    }
+    if(search&&!arr.length)arr.push({id:'find:'+search,type:'written',title:'Investigate '+standard,
+      question:'Search this report for evidence relevant to '+standard+'. Identify a note/page, explain what the standard requires, and state clearly if this report does not provide enough evidence.',
+      source:'Your chosen standard · not automatically mapped',
+      explanation:'No matching tagged note or line was imported. This does not prove the standard is inapplicable. Inspect the actual audited report.'});
+    return arr.slice(0,3000);
+  }
+  function BSA43FinancialStatements({subject,update,toast,go}){
+    const reports=Array.isArray(subject.fsReports)?subject.fsReports:[];
+    const [tab,setTab]=useState('reports'),[activeId,setActiveId]=useState(reports[0]?.id||''),
+      [raw,setRaw]=useState(''),[pending,setPending]=useState(null),[err,setErr]=useState(''),
+      [pdfUrl,setPdfUrl]=useState(''),[selectedStandard,setSelectedStandard]=useState(''),
+      [chosenTask,setChosenTask]=useState(''),[attempt,setAttempt]=useState(''),[reveal,setReveal]=useState(false),
+      [lineQuery,setLineQuery]=useState(''),[ownNote,setOwnNote]=useState(''),[ownPage,setOwnPage]=useState('');
+    const report=reports.find(x=>x.id===activeId)||reports[0]||null;
+    const fileRef=useRef(null),pdfRef=useRef(null);
+    useEffect(()=>()=>{if(pdfRef.current)URL.revokeObjectURL(pdfRef.current)},[]);
+    const inspect=(data)=>{try{setPending(bsa43ParseReport(JSON.parse(data)));setErr('')}catch(e){setPending(null);setErr(e.message||String(e))}};
+    const readFile=async e=>{const f=e.target.files?.[0];if(!f)return;
+      try{if(f.size>3000000)throw Error('JSON file is over 3 MB. Split it by year or company.');const body=await f.text();setRaw(body);inspect(body)}catch(x){setErr(x.message);setPending(null)}e.target.value='';};
+    const openPdf=e=>{const f=e.target.files?.[0];if(!f)return;
+      if(f.type!=='application/pdf'&&!/\.pdf$/i.test(f.name)){setErr('Choose a PDF document.');return;}
+      if(pdfRef.current)URL.revokeObjectURL(pdfRef.current);
+      pdfRef.current=URL.createObjectURL(f);setPdfUrl(pdfRef.current);setErr('');e.target.value='';};
+    const commit=()=>{if(!pending)return;const duplicate=reports.find(x=>String(x?.company||'').toLowerCase()===pending.company.toLowerCase()&&x?.periodEnd===pending.periodEnd&&x?.scope===pending.scope);
+      if(duplicate&&!window.confirm('A report for the same entity, period, and scope exists. Replace its source material? Personal practice attempts will be retained.'))return;
+      const saved={...pending,id:duplicate?.id||pending.id,importedAt:Date.now(),share:!!duplicate?.share,verified:false};
+      update(s=>{s.fsReports=s.fsReports||[];s.fsReports=duplicate?s.fsReports.map(r=>r.id===duplicate.id?saved:r):[...s.fsReports,saved]});
+      setActiveId(saved.id);setPending(null);setRaw('');setTab('explore');toast('Report imported as unverified source data. Check it against the original PDF.');};
+    const remove=()=>{if(!report||!window.confirm('Remove this imported report? Export your full study-data backup first. Associated practice attempts will be retained.'))return;
+      update(s=>{s.fsReports=(s.fsReports||[]).filter(x=>x.id!==report.id)});setActiveId('');setTab('reports');};
+    const share=checked=>{if(!report)return;if(checked&&!window.confirm('Publish this report\'s statement lines and notes to the Shared Dashboard next time you republish? Your practice attempts will stay private.'))return;
+      update(s=>{const r=(s.fsReports||[]).find(x=>x.id===report.id);if(r)r.share=checked});};
+    const standards=report?[...new Set([...(report.standards||[]).map(x=>x.code),...(report.notes||[]).map(x=>x.standard),...(report.statements||[]).flatMap(g=>(g.lines||[]).map(l=>l.standard))].filter(Boolean))].sort():[];
+    const tasks=report?bsa43Tasks(report,selectedStandard):[];
+    const task=tasks.find(x=>x.id===chosenTask)||tasks[0];
+    const learnStandard=()=>{if(!report||!selectedStandard.trim()||!ownNote.trim())return;
+      update(s=>{s.fsAttempts=s.fsAttempts||[];s.fsAttempts.push({id:uid('fsapp'),reportId:report.id,standard:selectedStandard.trim(),kind:'standard-application',answer:ownNote.trim().slice(0,12000),locator:ownPage.trim().slice(0,120),verified:false,selfRated:true,date:today()})});
+      setOwnNote('');setOwnPage('');toast('Saved your analysis. This is a study note, not a verified accounting conclusion.');};
+    const saveAttempt=(rating)=>{if(!report||!task||!attempt.trim())return;
+      update(s=>{s.fsAttempts=s.fsAttempts||[];s.fsAttempts.push({id:uid('fsattempt'),reportId:report.id,taskId:task.id,
+        kind:task.type,answer:attempt.trim().slice(0,12000),selfRating:rating,
+        machineCheck:task.type==='number'&&bsa43Number(attempt)!==null?Math.abs(bsa43Number(attempt)-task.correct)<.005:null,
+        source:task.source,verified:false,date:today()})});
+      toast('Attempt saved to this subject. Your rating is self-reported, not proof of mastery.');setAttempt('');setReveal(false);};
+    const openTutor=()=>{if(!report||!task)return;go('ask',{focus:{kind:'fs-report',id:report.id,
+      taskId:task.id,question:task.question,standard:selectedStandard,source:task.source}})};
+    return h('section',{className:'view bsa43-fs-lab'},
+      h('header',{className:'bsa43-fs-header'},h('div',null,h('span',{className:'v2-eyebrow'},'REAL FINANCIAL STATEMENTS · LEARN BY APPLYING'),h('h1',null,'Financial Statements'),
+        h('p',{className:'muted'},'Import structured reported figures, inspect notes, investigate any accounting standard, and practice from the same source.')),h('span',{className:'bsa43-fs-count'},reports.length+' saved '+(reports.length===1?'report':'reports'))),
+      h('nav',{className:'bsa43-fs-tabs','aria-label':'Financial statement workflow'},
+        [['reports','Reports & import'],['explore','Explore'],['practice','Practice'],['standards','Apply standards']].map(([id,label])=>h('button',{key:id,type:'button',className:tab===id?'selected':'',onClick:()=>setTab(id),'aria-current':tab===id?'page':undefined},label))),
+      tab==='reports'&&h('div',{className:'bsa43-fs-columns'},
+        h('section',{className:'panel bsa43-fs-import'},h('h2',null,'Import a financial statement'),
+          h('p',{className:'muted'},'A JSON import creates searchable financial records. The original audited PDF is supporting evidence, not an automatically verified answer key.'),
+          h('div',{className:'bsa43-fs-actions'},
+            h('label',{className:'btn'},'Choose JSON file',h('input',{type:'file',accept:'.json,application/json',onChange:readFile,hidden:true})),
+            h('button',{type:'button',className:'btn',onClick:()=>{const text=JSON.stringify(BSA43_FS_SAMPLE,null,2);setRaw(text);inspect(text)}},'Try fictional example'),
+            h('button',{type:'button',className:'btn ghost',onClick:()=>{navigator.clipboard?.writeText(JSON.stringify(BSA43_FS_SAMPLE,null,2)).then(()=>toast('Example schema copied')).catch(()=>setRaw(JSON.stringify(BSA43_FS_SAMPLE,null,2))) }},'Copy JSON template')),
+          h('label',null,'Paste report JSON',h('textarea',{rows:8,value:raw,onChange:e=>{setRaw(e.target.value);setPending(null);setErr('')},placeholder:'{ "format": "bsa-financial-statements-v1", "company": "...", ... }'})),
+          h('div',{className:'bsa43-fs-actions'},h('button',{className:'btn primary',disabled:!raw.trim(),onClick:()=>inspect(raw)},'Check JSON'),
+            pending&&h('button',{className:'btn primary',onClick:commit},'Import checked report')),
+          pending&&h('div',{className:'bsa43-fs-preview',role:'status'},h('strong',null,pending.company+' · '+pending.periodEnd),
+            h('p',null,pending.statements.length+' statements · '+pending.statements.reduce((n,g)=>n+g.lines.length,0)+' line items · '+pending.notes.length+' notes. Source verification: pending.'),
+            h('p',{className:'muted small'},'Reporting units: '+pending.currency+' ('+pending.unit+'). Check year, group vs separate statements, comparatives, negatives, and note pages before relying on values.')),
+          err&&h('p',{className:'bsa43-fs-error',role:'alert'},err)),
+        h('section',{className:'panel'},h('h2',null,'Your report library'),
+          reports.length?reports.map(r=>h('div',{className:'bsa43-report-card',key:r.id},h('strong',null,r.company),
+            h('small',null,r.periodEnd+' · '+r.scope),h('small',{className:'muted'},'Figures not independently source-verified'),
+            h('div',{className:'bsa43-fs-actions'},h('button',{className:'btn',onClick:()=>{setActiveId(r.id);setTab('explore')}},'Explore'),
+              h('button',{className:'btn',onClick:()=>{setActiveId(r.id);setTab('practice');setChosenTask('')}},'Practice')))):
+          h('p',{className:'muted'},'No imported reports yet. Try the fictional JSON example to learn the workflow.'),
+          h('hr'),h('h3',null,'Original PDF'),h('p',{className:'muted small'},'Open a PDF on this device for comparison. The PDF is not uploaded to a server or permanently stored; import validated JSON to keep searchable figures.'),
+          h('label',{className:'btn'},'Open local PDF',h('input',{type:'file',accept:'.pdf,application/pdf',hidden:true,onChange:openPdf})),
+          pdfUrl&&h('a',{href:pdfUrl,target:'_blank',rel:'noopener noreferrer'},'Open selected PDF in new tab'),
+          h('p',{className:'muted small'},'If you have a public official PDF URL, include it as source.url in the JSON.'))),
+      tab!=='reports'&&!report&&h('div',{className:'panel bsa43-fs-empty'},h('h2',null,'Import a report to begin'),h('p',null,'Explore, Practice and Apply standards all use the same approved source data.'),h('button',{className:'btn primary',onClick:()=>setTab('reports')},'Import a financial statement')),
+      tab!=='reports'&&report&&h('div',{className:'bsa43-fs-work'},
+        h('div',{className:'bsa43-fs-context'},h('label',null,'Current report',h('select',{value:report.id,onChange:e=>{setActiveId(e.target.value);setChosenTask('');setReveal(false)}},reports.map(r=>h('option',{key:r.id,value:r.id},r.company+' · '+r.periodEnd)))),
+          h('span',{className:'muted small'},report.currency+' ('+report.unit+') · '+report.scope),
+          report.source?.url&&h('a',{href:report.source.url,target:'_blank',rel:'noopener noreferrer'},'Open original PDF ↗')),
+        tab==='explore'&&h('div',{className:'bsa43-fs-columns'},
+          h('section',{className:'panel'},h('h2',null,'Explore reported figures'),h('label',null,'Find an item or accounting standard',h('input',{type:'search',value:lineQuery,onChange:e=>setLineQuery(e.target.value),placeholder:'Search revenue, PPE, PFRS 15…'})),
+            (report.statements||[]).map(g=>{
+              const shown=(g.lines||[]).filter(l=>!lineQuery||[l.label,l.note,l.standard,l.category].join(' ').toLowerCase().includes(lineQuery.toLowerCase()));
+              if(!shown.length)return null;
+              return h('div',{key:g.id,className:'bsa43-fs-statement'},h('h3',null,g.title),h('p',{className:'muted small'},'Page '+(g.page||'not specified')),
+                h('div',{className:'bsa43-fs-table-wrap'},h('table',null,h('thead',null,h('tr',null,h('th',null,'Account / item'),h('th',null,report.periodEnd),h('th',null,'Comparative'),h('th',null,'Evidence'))),
+                h('tbody',null,shown.map(l=>h('tr',{key:l.id},h('td',null,l.label),h('td',null,bsa43Money(l.amount,report)),h('td',null,bsa43Money(l.comparative,report)),h('td',null,[l.standard,l.note?'Note '+l.note:'',l.page?'p. '+l.page:''].filter(Boolean).join(' · '))))))));})),
+          h('section',{className:'panel'},h('h2',null,'Notes & audit references'),h('p',{className:'muted small'},'Imported summaries are not a substitute for reading the actual audited disclosures.'),
+            (report.notes||[]).length?(report.notes||[]).map(n=>h('details',{key:n.id,className:'bsa43-note'},h('summary',null,n.title+(n.standard?' · '+n.standard:'')),
+              h('small',null,'Page '+(n.page||'unspecified')),h('p',null,n.text))):h('p',{className:'muted'},'No notes in this JSON.'),
+            h('hr'),h('label',{className:'bsa43-fs-check'},h('input',{type:'checkbox',checked:!!report.share,onChange:e=>share(e.target.checked)}),'Include report in next Shared Dashboard publication'),
+            h('button',{type:'button',className:'btn ghost',onClick:remove},'Remove this report'))),
+        tab==='practice'&&h('div',{className:'bsa43-fs-columns'},
+          h('section',{className:'panel'},h('h2',null,'Practice from '+report.company),
+            h('label',null,'Standard / topic filter (optional)',h('select',{value:selectedStandard,onChange:e=>{setSelectedStandard(e.target.value);setChosenTask('');setReveal(false)}},h('option',{value:''},'All report material'),standards.map(code=>h('option',{key:code,value:code},code)))),
+            h('label',null,'Choose an activity',h('select',{value:task?.id||'',onChange:e=>{setChosenTask(e.target.value);setReveal(false);setAttempt('')}},tasks.map(t=>h('option',{key:t.id,value:t.id},t.title+' · '+t.source)))),
+            task?h('div',{className:'bsa43-fs-question'},h('small',null,task.source),h('h3',null,task.question),
+              h('label',null,'Your answer (before revealing source)',h('textarea',{rows:5,value:attempt,onChange:e=>setAttempt(e.target.value),placeholder:'Explain your reasoning or show your calculation…'})),
+              h('div',{className:'bsa43-fs-actions'},h('button',{className:'btn',onClick:()=>setReveal(v=>!v)},reveal?'Hide source explanation':'Compare with source'),
+                h('button',{className:'btn',onClick:openTutor},'Ask Tutor with this context')),
+              reveal&&h('div',{className:'bsa43-fs-model'},h('strong',null,task.type==='number'?'Imported figure / calculation':'Imported note / evidence'),h('p',null,task.explanation),
+                h('p',{className:'muted small'},'Check the original audited PDF. Imported data may contain transcription or interpretation errors.'),
+                h('div',{className:'bsa43-fs-actions'},h('button',{className:'btn',disabled:!attempt.trim(),onClick:()=>saveAttempt('review')},'Save as needs review'),
+                  h('button',{className:'btn primary',disabled:!attempt.trim(),onClick:()=>saveAttempt('understood')},'Save as understood (self-rated)')))):
+              h('p',{className:'muted'},'This report has no tasks under the selected filter. Try another standard or add its disclosure notes to your JSON.')),
+          h('section',{className:'panel'},h('h2',null,'Progress for this report'),
+            h('p',null,(subject.fsAttempts||[]).filter(x=>x.reportId===report.id).length+' saved attempts / application notes'),
+            h('p',{className:'muted small'},'These are study attempts and personal reflections—not externally checked grades or proof of mastery.'),
+            h('button',{className:'btn',onClick:()=>setTab('standards')},'Apply an additional standard'))),
+        tab==='standards'&&h('div',{className:'bsa43-fs-columns'},
+          h('section',{className:'panel'},h('h2',null,'Apply any accounting standard'),
+            h('p',{className:'muted'},'Not limited to the CFAS standards in your current course. You can investigate any applicable PFRS, PAS, interpretation, or later standard using original evidence.'),
+            h('label',null,'Choose or enter standard',h('input',{value:selectedStandard,onChange:e=>setSelectedStandard(e.target.value),list:'bsa43-standard-list',placeholder:'e.g. PFRS 9, PAS 36, PFRS 18'})),
+            h('datalist',{id:'bsa43-standard-list'},standards.map(v=>h('option',{key:v,value:v}))),
+            h('label',null,'Evidence page / note',h('input',{value:ownPage,onChange:e=>setOwnPage(e.target.value),placeholder:'e.g. Notes 7 and 16; PDF pp. 42–44'})),
+            h('label',null,'Your analysis: rule → actual evidence → treatment → uncertainty',h('textarea',{rows:9,value:ownNote,onChange:e=>setOwnNote(e.target.value),placeholder:'What is the accounting rule? What does this company actually disclose? Are the necessary facts present? What conclusion follows?'})),
+            h('div',{className:'bsa43-fs-actions'},h('button',{className:'btn primary',disabled:!selectedStandard.trim()||!ownNote.trim(),onClick:learnStandard},'Save my application'),
+              h('button',{className:'btn',onClick:()=>{setTab('practice');setChosenTask('')}},'Practice this standard')),
+            h('p',{className:'muted small'},'The dashboard cannot validate compliance from a report excerpt alone. Your entry remains personal and marked unverified.')),
+          h('section',{className:'panel'},h('h2',null,'Reported standards and evidence'),
+            standards.length?standards.map(code=>h('button',{key:code,type:'button',className:'bsa43-standard-chip',onClick:()=>setSelectedStandard(code)},code)):h('p',{className:'muted'},'No standards tagged in this JSON. Enter any standard on the left.'),
+            h('hr'),h('h3',null,'Your saved applications'),
+            (subject.fsAttempts||[]).filter(x=>x.reportId===report.id&&x.kind==='standard-application').slice(-20).reverse().map(x=>h('details',{key:x.id,className:'bsa43-note'},h('summary',null,x.standard+' · '+x.date),h('small',null,x.locator||'No page specified'),h('p',null,x.answer)))))
+      ));
   }
   const BSA205_CYCLE={id:'built-in-service-cycle-v205',title:'Riverbend Services · Month 1',source:'Illustrative fictional case · built-in',verified:true,
     description:'Work one coherent service-business accounting cycle, from transactions to trial balances, financial statements and closing.',
@@ -14664,7 +15150,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const due=(review.due||[]).length+(review.mist||[]).length+(review.prob||[]).length;
     const mistakes=(subject.mistakes||[]).filter(x=>x.status!=='Cleared').length;
     const inbox=(subject.studyInbox||[]).filter(x=>x.status==='new').length;
-    const written=(subject.psets||[]).reduce((n,set)=>n+(set.problems||[]).filter(p=>!bsa198StoredKeyValid(p)).length,0);
+    const written=(subject.psets||[]).reduce((n,set)=>n+psSafeProblems(set).filter(p=>!bsa198StoredKeyValid(p)).length,0);
     const recent=bsa181Read().recent.filter(x=>x.subjectId===subject.id&&!['home','guide'].includes(x.tab)).slice(0,2);
     const journey=bsa33Journey(subject);
     const next=journey.next?{title:'Continue your active study plan',description:(journey.done)+' of '+journey.total+' tasks finished · Next: '+journey.next.title,route:journey.next.route,opts:journey.next.opts||{},label:'Continue: '+journey.next.title}:
@@ -14707,7 +15193,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
           ].map(([n,label])=>h('div',{key:label},h('strong',null,n),h('span',null,label)))),
           h('p',null,'These are counts, not extra places to start. Use the three study steps above.'))),
       h('details',{className:'bsa31-home-extras'},h('summary',null,'Looking for an advanced feature?'),h('div',{className:'bsa205-action-row'},[
-        ['Library & materials','library'],['Accounting Cycle Studio','accounting-cycle'],['Study Schedule','calendar'],['Learning insights','insights'],['Data safety','safety']
+        ['Library & materials','library'],['Financial Statements','fs-lab'],['Accounting Cycle Studio','accounting-cycle'],['Study Schedule','calendar'],['Learning insights','insights'],['Data safety','safety']
       ].map(([label,route])=>h('button',{className:'btn',key:route,onClick:()=>go(route)},label)))),
       h('p',{className:'bsa31-data-note'},'Study plans link to your existing materials. Completing a task requires your confirmation; it never adds XP automatically.'));
   }
@@ -14723,6 +15209,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       {icon:'A',theme:'quiz',title:'Multiple-choice questions',desc:'Choose a quiz set and answer one question at a time.',meta:mcq+' questions available',action:'Open MCQ library',tab:'mcq'},
       {icon:'✎',theme:'written',title:'Written & calculation problems',desc:'Choose a topic folder, then solve a problem from its original set.',meta:written+' written problems',action:'Browse topic folders',tab:'library',opts:{tab:'all'}},
       {icon:'Σ',theme:'journal',title:'Journal entries & Accounting Lab',desc:'Enter debits and credits and check them against saved answer keys.',meta:'Interactive accounting practice',action:'Open Accounting Lab',tab:'accounting-lab'},
+      {icon:'▦',theme:'statements',title:'Financial Statements',desc:'Import a report JSON, explore audited disclosures and apply any accounting standard.',meta:'Source-based case practice',action:'Open Financial Statements',tab:'fs-lab'},
       {icon:'↻',theme:'review',title:'Flashcards & spaced review',desc:due?'Resume questions due for review.':'Open your flashcards and study what you want to remember.',meta:due+' review items due',action:due?'Start due reviews':'Open flashcards',tab:due?'practice':'vault',opts:due?{start:'review'}:{}}
     ];
     const journey=bsa33Journey(subject);
@@ -14810,7 +15297,16 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const activeTimer=useTimer();
     const [dockPos,setDockPos]=useState(()=>{try{const v=JSON.parse(localStorage.getItem('bsa42_dock_position')||'null');return v&&Number.isFinite(v.x)&&Number.isFinite(v.y)?v:null}catch(_){return null}});
     const drag=useRef(null),suppressDockClick=useRef(false);
-    const bounds=(x,y)=>({x:Math.max(8,Math.min(Math.round(x),window.innerWidth-145)),y:Math.max(72,Math.min(Math.round(y),window.innerHeight-60))});
+    const bounds=(x,y)=>({x:Math.max(12,Math.min(Math.round(x),Math.max(12,window.innerWidth-160))),y:Math.max(72,Math.min(Math.round(y),Math.max(72,window.innerHeight-58)))});
+    const panelWidth=Math.min(326,Math.max(250,window.innerWidth-24));
+    const pillX=dockPos?.x??Math.max(12,window.innerWidth-171);
+    const pillY=dockPos?.y??Math.max(80,window.innerHeight-(window.innerWidth<900?160:142));
+    const panelLeft=Math.max(12,Math.min(pillX+152-panelWidth,window.innerWidth-panelWidth-12));
+    const below=pillY<window.innerHeight*.50;
+    const panelStyle={position:'fixed',width:panelWidth+'px',left:panelLeft+'px',bottom:'auto',right:'auto',
+      top:below?Math.min(pillY+55,window.innerHeight-195)+'px':'auto',
+      ...(below?{}:{bottom:Math.max(14,window.innerHeight-pillY+12)+'px'}),
+      maxHeight:(below?Math.max(155,window.innerHeight-pillY-73):Math.max(160,pillY-24))+'px'};
     const startDock=e=>{if(e.button!==undefined&&e.button!==0)return;
       const parent=e.currentTarget.closest('.bsa4-dock');if(!parent)return;
       const rect=parent.getBoundingClientRect();drag.current={id:e.pointerId,x:e.clientX,y:e.clientY,left:rect.left,top:rect.top,moved:false};
@@ -14819,7 +15315,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       const dx=e.clientX-d.x,dy=e.clientY-d.y;if(Math.hypot(dx,dy)>6)d.moved=true;
       if(!d.moved)return;e.preventDefault();setDockPos(bounds(d.left+dx,d.top+dy));};
     const endDock=e=>{const d=drag.current;if(!d||d.id!==e.pointerId)return;drag.current=null;
-      if(d.moved){suppressDockClick.current=true;const next=bounds(d.left+e.clientX-d.x,d.top+e.clientY-d.y);setDockPos(next);
+      if(d.moved){suppressDockClick.current=true;setTimeout(()=>{suppressDockClick.current=false},120);const next=bounds(d.left+e.clientX-d.x,d.top+e.clientY-d.y);setDockPos(next);
         try{localStorage.setItem('bsa42_dock_position',JSON.stringify(next))}catch(_){}}
       try{e.currentTarget.releasePointerCapture?.(e.pointerId)}catch(_){}};
     useEffect(()=>{const fit=()=>setDockPos(p=>p?bounds(p.x,p.y):null);window.addEventListener('resize',fit);return()=>window.removeEventListener('resize',fit)},[]);
@@ -14849,7 +15345,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
           try{localStorage.setItem('bsa42_dock_position',JSON.stringify(p))}catch(_){}}},
         title:'Tap to open. Drag to move; Alt + arrow keys also move the dock.',
         'aria-expanded':open,'aria-controls':'bsa4-study-dock-panel'},h('span',{'aria-hidden':'true'},'✦'),open?'Close Study Dock':'Study Dock'),
-      open&&h('div',{id:'bsa4-study-dock-panel',className:'bsa4-dock-panel'},
+      open&&h('div',{id:'bsa4-study-dock-panel',className:'bsa4-dock-panel',style:panelStyle},
         h('div',{className:'bsa4-dock-header'},h('strong',null,'Your study tools'),h('span',{className:'muted small'},subjectName)),
         h('details',{className:'bsa4-appearance'},
           h('summary',null,'Appearance · Quick colors'),
@@ -14889,10 +15385,51 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
           activeTimer?h('div',{className:'bsa42-timer-actions'},
             h('strong',null,(activeTimer.phase==='break'?'Break':'Focus')+' · '+Math.max(0,Math.ceil((activeTimer.mins*60000-timerElapsed(activeTimer))/60000))+' min left'),
             h('button',{className:'btn primary',onClick:()=>{setTimerState(activeTimer.running?{...activeTimer,running:false,acc:timerElapsed(activeTimer)}:{...activeTimer,running:true,start:Date.now()})}},activeTimer.running?'Pause floating timer':'Resume floating timer'),
-            h('small',{className:'muted'},'Tap Finish in the floating timer to save the completed study minutes.')):
+            h('button',{className:'btn ghost',onClick:()=>window.dispatchEvent(new Event('bsa:show-timer'))},'Show floating timer'),
+            h('small',{className:'muted'},'Pause stops the countdown; Hide dismisses its overlay. Finish logs eligible active minutes.')):
             h('div',{className:'bsa42-timer-actions'},
               [25,50].map(mins=>h('button',{key:mins,className:'btn '+(mins===25?'primary':''),onClick:()=>{startTimer({mins,subjectId:subject.id,topicId:topic?.id||null,label:topic?.title||'Focus'});setOpen(false)}},'Start '+mins+' min focus')),
               h('small',{className:'muted'},'The floating timer appears immediately after you start. No second timer is created.')))));
+  }
+  /* Theme layouts are true navigation presentations, not just different radii.
+     Each view uses the same routes and data, so changing Themes never resets work. */
+  const BSA43_STEPS=[['study','Learn','01'],['practice','Practice','02'],['insights','Review','03']];
+  function BSA43ThemeNavigation({theme,tab,subject,go,opts}){
+    const tabLabel={home:'Today',study:'Learn',practice:'Practice',library:'Library',insights:'Progress',psets:'Problem Sets',
+      lectures:'Lectures',ask:'Tutor','fs-lab':'Financial Statements',vault:'Flashcards',mcq:'MCQs',rules:'References'}[tab]||tab.replace(/-/g,' ');
+    if(theme==='studio')return h(BSA31StudyPath,{tab,opts,go,subject});
+    const core=[['home','Today','home'],['study','Learn','lecture'],['practice','Practice','pset'],['library','Library','book'],['insights','Progress','chart']];
+    const nav=core.map(([route,label,icon])=>h('button',{key:route,type:'button',onClick:()=>go(route),
+      className:tab===route?'active':'','aria-current':tab===route?'page':undefined},
+      h(Icon,{name:icon,size:17}),h('span',null,label)));
+    if(theme==='ios')return h('div',{className:'bsa43-chrome bsa43-chrome-ios'},
+      h('div',{className:'bsa43-ios-heading'},h('span',null,'STUDY DESK  /  '+(subject.code||subject.name)),h('strong',null,tabLabel)),
+      h('nav',{'aria-label':'iOS study sections'},nav));
+    if(theme==='classic')return h('div',{className:'bsa43-chrome bsa43-chrome-classic'},
+      h('div',null,h('small',null,'BSA STUDY DESK  /  '+(subject.code||subject.name)),h('strong',null,tabLabel)),
+      h('nav',{'aria-label':'Classic navigation'},nav));
+    if(theme==='arcade')return h('div',{className:'bsa43-chrome bsa43-chrome-arcade'},
+      h('div',{className:'bsa43-arcade-title'},h('small',null,'★ YOUR STUDY QUEST'),h('strong',null,tabLabel.toUpperCase()),h('span',null,'KEEP GOING  •  '+(subject.code||'STUDY'))),
+      h('nav',{'aria-label':'Arcade destinations'},nav));
+    if(theme==='notebook')return h('div',{className:'bsa43-chrome bsa43-chrome-notebook'},
+      h('div',null,h('span',null,'SUBJECT / '+(subject.code||subject.name)),h('strong',null,tabLabel)),
+      h('nav',{'aria-label':'Notebook index tabs'},nav));
+    if(theme==='bento')return h('div',{className:'bsa43-chrome bsa43-chrome-bento'},
+      h('div',null,h('small',null,'WORKSPACE'),h('strong',null,tabLabel)),
+      h('nav',{'aria-label':'Bento destinations'},nav));
+    if(theme==='blueprint')return h('div',{className:'bsa43-chrome bsa43-chrome-blueprint'},
+      h('div',null,h('span',null,'PLAN / '+(subject.code||'CLASS')),h('strong',null,tabLabel)),
+      h('nav',{'aria-label':'Blueprint workflow'},nav));
+    if(theme==='editorial')return h('div',{className:'bsa43-chrome bsa43-chrome-editorial'},
+      h('div',null,h('small',null,'THE STUDY JOURNAL  •  '+(subject.code||'BSA')),h('strong',null,tabLabel)),
+      h('nav',{'aria-label':'Editorial sections'},nav));
+    if(theme==='glass')return h('div',{className:'bsa43-chrome bsa43-chrome-glass'},
+      h('div',null,h('small',null,'✧  YOUR SPACE  /  '+(subject.code||'STUDY')),h('strong',null,tabLabel)),
+      h('nav',{'aria-label':'Glass floating navigation'},nav));
+    if(theme==='focus')return h('div',{className:'bsa43-chrome bsa43-chrome-focus'},
+      h('span',null,'Studying '+(subject.code||subject.name)+'  /  '+tabLabel),
+      h('nav',{'aria-label':'Focus destinations'},nav));
+    return h(BSA31StudyPath,{tab,opts,go,subject});
   }
   function App() {
     const [data, setData] = useState(() => loadLocal() || buildDefault());
@@ -15040,7 +15577,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       try {
         const qs = new URLSearchParams(location.search);
         const want = qs.get("go");
-        const okTabs = ["study", "library", "insights", "accounting-cycle", "safety", "week", "knowledge", "accounting-lab", "curriculum", "guide", "home", "workspace", "break", "life", "achievements", "stats-clean", "private-vault", "practice", "roadmap", "calendar", "vault", "mistakes", "grades", "lectures", "psets", "rules", "class", "toolkit", "howto"];
+        const okTabs = ["study", "library", "insights", "accounting-cycle", "fs-lab", "safety", "week", "knowledge", "accounting-lab", "curriculum", "guide", "home", "workspace", "break", "life", "achievements", "stats-clean", "private-vault", "practice", "roadmap", "calendar", "vault", "mistakes", "grades", "lectures", "psets", "rules", "class", "toolkit", "howto"];
         if (want && okTabs.includes(want)) {
           setNav({ tab: want, opts: want === "practice" ? { start: "review" } : {}, key: 1 });
           history.replaceState(null, "", location.pathname);
@@ -15133,7 +15670,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       ["library", "Find materials", "book"],
       ["insights", "Your progress", "grade"],
       ["accounting-cycle", "Accounting Cycle", "pset"],
-      ["fs-lab", "Financial Statement Lab", "book"],
+      ["fs-lab", "Financial Statements", "book"],
       ["workspace", "Study Workspace", "book"],
       
       ["accounting-lab", "Accounting Lab", "pset"],
@@ -15151,7 +15688,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       ["mistakes", "Mistake log", "mistakes", activeMistakes],
       ["grades", "Grades", "grade"],
       ["lectures", "Lectures", "lecture", (subject.lectures || []).length],
-      ["psets", "Problem sets", "pset", (subject.psets || []).reduce((a, x) => a + x.problems.filter((p) => p.st === "miss").length, 0)],
+      ["psets", "Problem sets", "pset", (subject.psets || []).reduce((a, x) => a + psSafeProblems(x).filter((p) => p.st === "miss").length, 0)],
       ["mcq", "MCQ library", "cards", (subject.mcqSets || []).reduce((a,x)=>a+(x.problems||[]).length,0)],
       ["rules", "Rules & references", "book", (subject.rules || []).length],
       ["class", "Class", "subjects", (subject.tasks || []).filter((t) => !t.done && t.due && daysUntil(t.due) <= 3).length],
@@ -15175,7 +15712,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       const group=navGroups.find(g=>g.items.includes(nav.tab));
       if(group)setCollapsedNav(prev=>prev[group.name]?{...prev,[group.name]:false}:prev);
     },[nav.tab]);
-    const navAliases={"fs-lab":"financial statements audit reports PFRS 18 IFRS 18",psets:"written problems problem sets worksheets",mcq:"quiz questions multiple choice mcq",vault:"flashcards recall",ask:"tutor gemini ai",calendar:"weekly planner month exam schedule",mistakes:"wrong answers review queue",insights:"analytics progress",library:"find browse organize library",study:"learn session plan",practice:"solve test exercises",workspace:"notes notebook"};
+    const navAliases={"fs-lab":"financial statements audit reports JSON PDF import source evidence standard IFRS PFRS 18 PAS analysis",psets:"written problems problem sets worksheets",mcq:"quiz questions multiple choice mcq",vault:"flashcards recall",ask:"tutor gemini ai",calendar:"weekly planner month exam schedule",mistakes:"wrong answers review queue",insights:"analytics progress",library:"find browse organize library",study:"learn session plan",practice:"solve test exercises",workspace:"notes notebook"};
     const navNeedle=navSearch.trim().toLocaleLowerCase();
     const filteredNavGroups = navGroups.map(group=>({
       ...group,
@@ -15206,8 +15743,8 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
         h("div",{className:"workspace-context"},h("span",{className:"workspace-eyebrow"},"STUDY SPACE  /"),h("strong",null,(tabs.find(t=>t[0]===nav.tab)||[null,"Today"])[1]),h("span",{className:"workspace-subject"},subject.code||subject.name)),
         h("div",{className:"workspace-actions v2-top-actions"},h("button",{className:"v2-top-search",onClick:()=>setSpotlightOpen(true),title:"Search · Ctrl/⌘ + K","aria-label":"Search all study materials"},"⌕  Search",h("kbd",null,"⌘ K")))),
       h(ScreenBoundary,{key:nav.tab,route:nav.tab,onHome:()=>go("home")},h(React.Fragment,null,
-      h(BSA31StudyPath,{tab:nav.tab,opts:nav.opts,go,subject}),
-      nav.tab === "guide" && h(BSA3StartGuide,{go}), nav.tab === "break" && h(BreakCorner), nav.tab === "joy" && h(JoyHub,{go}), nav.tab === "life" && h(StudyLife,{go}), nav.tab === "achievements" && h(AcademicProgress,{go}), nav.tab === "stats-clean" && h(StudyReport,{data,update,toast,go}), nav.tab === "private-vault" && !window.__BSA_SHARED_MODE__ && h(PrivateVault,{toast}), nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data,initialTool:nav.opts?.tool})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), nav.tab === "home" && h(BSA3Today, { ...viewProps }), nav.tab === "study" && h(BSA205Study,{...viewProps}), nav.tab === "library" && h(BSA205Library,{...viewProps}), nav.tab === "insights" && h(BSA205Mastery,{...viewProps}), nav.tab === "accounting-cycle" && h(BSA205Cycle,{...viewProps}), nav.tab === "fs-lab" && h(BSA42FinancialStatements,{...viewProps}), nav.tab === "accounting-lab" && h(BSA187AccountingLab,{subject,update,toast,go,init:nav.opts}), nav.tab === "week" && h(BSA344Schedule,{subject,update,go,openEditor,toast,init:nav.opts,initialMode:"week"}), nav.tab === "knowledge" && h(BSA192KnowledgeMap,{subject,go}), nav.tab === "safety" && h(BSA193DeviceSafety,{data,go,toast}), nav.tab === "practice" && h(React.Fragment,null,h(BSA3Practice,{ ...viewProps, data }),h('div',{className:'bsa42-fs-shortcut'},h('div',null,h('strong',null,'Financial Statement Lab'),h('p',null,'Practice PFRS 18 classifications and link official audited reports.')),h('button',{className:'btn',onClick:()=>go('fs-lab')},'Open statement practice ↗'))), nav.tab === "mcq" && h(MCQPage,{...viewProps}), nav.tab === "rules" && h(RulesLibrary,{...viewProps}), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(BSA344Schedule,{subject,update,go,openEditor,toast,init:nav.opts,initialMode:"month"}), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "workspace" && h(BSA181Workspace, { ...viewProps, initialTab:nav.opts?.tab, undoAvailable:!!undo, onGlobalUndo:doUndo }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(PsView, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps, key:subject.id }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })))),
+      h(BSA43ThemeNavigation,{theme:data.settings.presentationTheme||"studio",tab:nav.tab,opts:nav.opts,go,subject}),
+      nav.tab === "guide" && h(BSA3StartGuide,{go}), nav.tab === "break" && h(BreakCorner), nav.tab === "joy" && h(JoyHub,{go}), nav.tab === "life" && h(StudyLife,{go}), nav.tab === "achievements" && h(AcademicProgress,{go}), nav.tab === "stats-clean" && h(StudyReport,{data,update,toast,go}), nav.tab === "private-vault" && !window.__BSA_SHARED_MODE__ && h(PrivateVault,{toast}), nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data,initialTool:nav.opts?.tool})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), nav.tab === "home" && h(BSA3Today, { ...viewProps }), nav.tab === "study" && h(BSA205Study,{...viewProps}), nav.tab === "library" && h(BSA205Library,{...viewProps}), nav.tab === "insights" && h(BSA205Mastery,{...viewProps}), nav.tab === "accounting-cycle" && h(BSA205Cycle,{...viewProps}), nav.tab === "fs-lab" && h(BSA43FinancialStatements,{...viewProps}), nav.tab === "accounting-lab" && h(BSA187AccountingLab,{subject,update,toast,go,init:nav.opts}), nav.tab === "week" && h(BSA344Schedule,{subject,update,go,openEditor,toast,init:nav.opts,initialMode:"week"}), nav.tab === "knowledge" && h(BSA192KnowledgeMap,{subject,go}), nav.tab === "safety" && h(BSA193DeviceSafety,{data,go,toast}), nav.tab === "practice" && h(React.Fragment,null,h(BSA3Practice,{ ...viewProps, data }),h('div',{className:'bsa42-fs-shortcut'},h('div',null,h('strong',null,'Financial Statement Lab'),h('p',null,'Import report JSON, inspect audited disclosures, and practice any accounting standard.')),h('button',{className:'btn',onClick:()=>go('fs-lab')},'Open Financial Statements ↗'))), nav.tab === "mcq" && h(MCQPage,{...viewProps}), nav.tab === "rules" && h(RulesLibrary,{...viewProps}), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(BSA344Schedule,{subject,update,go,openEditor,toast,init:nav.opts,initialMode:"month"}), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "workspace" && h(BSA181Workspace, { ...viewProps, initialTab:nav.opts?.tab, undoAvailable:!!undo, onGlobalUndo:doUndo }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(BSA43ProblemSets, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps, key:subject.id }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })))),
       h(BSA181HighlightTool,{subject,tab:nav.tab,go,toast}),
       spotlightOpen && h(BSA181Spotlight,{data,go,onSwitch:(id,tab,opts)=>{setData(d=>({...d,activeId:id}));go(tab,opts)},onClose:()=>setSpotlightOpen(false)}),
       /* @__PURE__ */ h("nav",{className:"bottom-nav v2-bottom-nav","aria-label":"Mobile navigation",onTouchStart:touchNavStart,onTouchEnd:touchNavEnd},
