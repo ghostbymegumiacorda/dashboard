@@ -30,7 +30,7 @@ THE SOFTWARE.
   if (window.__BSA_DESK_APP_LOADED__) return;
   window.__BSA_DESK_APP_LOADED__ = true;
   // User-facing release label only. Do not use for storage schemas or caches.
-  const BSA_RELEASE_LABEL = "V2.23";
+  const BSA_RELEASE_LABEL = "V2.24";
   const S = (t, p = null, s = false) => ({ t, p, s });
   const CFAS_TOPICS = [
     {
@@ -1639,6 +1639,13 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     for (const id of mergeOrder([...rm.keys()], [...lm.keys()])) {
       const a = lm.get(id), b = rm.get(id);
       const m = { ...pickNewer(a, b, preferR) };
+      // V2.24: ending a study session is final. A stale copy from an
+      // offline device must not reopen it (or resurrect its floating timer)
+      // during GitHub synchronization. We never unarchive sessions in the UI.
+      if(level==='practice-session'&&a&&b&&(a.archived||b.archived)){
+        const ended=[a,b].filter(x=>x.archived);
+        Object.assign(m,ended.length===2?pickNewer(ended[0],ended[1],preferR):ended[0]);
+      }
       if (level === "subject") {
         for(const c of COLLS){
           // New lecture actions are subject-scoped. The legacy `deleted` map
@@ -1650,7 +1657,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
             for(const key of Object.keys(lectureActions))delete tombstones[key.slice(key.indexOf('::')+2)];
           }
           m[c]=mergeList(a&&a[c],b&&b[c],tombstones,preferR,
-            c==='lectures'?'lecture':c==='topics'?'topic':c==='days'?'day':c==='psets'||c==='mcqSets'?'pset':'item',lectureActions);
+            c==='lectures'?'lecture':c==='topics'?'topic':c==='days'?'day':c==='practiceSessions'?'practice-session':c==='psets'||c==='mcqSets'?'pset':'item',lectureActions);
         }
       } else if (level === 'pset' && (a && a.problems || b && b.problems)) {
         m.problems=mergeList(a&&a.problems,b&&b.problems,deleted,preferR,'item',lectureActions);
@@ -17899,6 +17906,53 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
         h('small',{className:'muted'},'A Tutor explanation is feedback, not a verified answer. Demonstrated understanding still requires independent application and later retrieval.')));
   }
 
+  /* V2.24: Immediately dismiss a saved/ended guided timer, independent of
+     React scheduling, to prevent a visible 'frozen' overlay during slow renders.
+     The session itself is still archived using the existing subject-local data
+     flow; this is only a display latch, not a second academic record store. */
+  const bsa224GuidedHidden=new Map();
+  const bsa224Key=(subjectId,sessionId)=>String(subjectId||'')+'::'+String(sessionId||'');
+  function bsa224MarkGuidedHidden(subjectId,sessionId,reason){
+    if(!subjectId||!sessionId)return;
+    bsa224GuidedHidden.set(bsa224Key(subjectId,sessionId),reason||'save');
+    // Immediately remove the panel from the hit-testing and visual tree.
+    // This also catches older duplicate DOM panels while their React commit
+    // waits for a large lecture/question-bank render.
+    if(typeof document!=='undefined')for(const node of document.querySelectorAll('.bsa212-float')){
+      if(node.dataset.bsaGuidedSubject===String(subjectId)&&node.dataset.bsaGuidedSession===String(sessionId)){
+        node.dataset.bsa224Hidden='true';node.style.setProperty('display','none','important');
+      }
+    }
+    window.dispatchEvent(new CustomEvent('bsa224:guided-visibility',{detail:{subjectId,sessionId,reason:reason||'save'}}));
+  }
+  function bsa224ReleaseGuidedHidden(subjectId,sessionId){
+    bsa224GuidedHidden.delete(bsa224Key(subjectId,sessionId));
+    if(typeof document!=='undefined')for(const node of document.querySelectorAll('.bsa212-float')){
+      if(node.dataset.bsaGuidedSubject===String(subjectId)&&node.dataset.bsaGuidedSession===String(sessionId)){
+        delete node.dataset.bsa224Hidden;node.style.removeProperty('display');
+      }
+    }
+  }
+  function bsa224GuidedIsHidden(subjectId,sessionId){
+    return bsa224GuidedHidden.has(bsa224Key(subjectId,sessionId));
+  }
+  function bsa224SafeOpts(opts){
+    try{return JSON.stringify(opts||{}).length<=3000?(opts||{}):{}}catch(_){return {}}
+  }
+  function bsa224ArchiveSession(subject,id,now=Date.now(),lastTool=null){
+    const x=(subject?.practiceSessions||[]).find(r=>r.id===id);
+    if(!x||x.archived)return false;
+    try{return bsa214Archive(subject,x,now,lastTool)}catch(err){
+      // An invalid optional recap must never strand an active timer.
+      // Keep the original session, pause both clocks, and file a basic record.
+      try{bsa212Freeze(x,now)}catch(_){x.timerStartedAt=null;x.focusPhaseStartedAt=null;x.timerPaused=true}
+      x.archived=true;x.focusEnded=true;x.focusSaved=false;x.focusWaiting=false;
+      x.focusClosedAt=now;x.lastAt=now;
+      if(typeof console!=='undefined')console.warn('Study session recap skipped during safe close:',err);
+      return true;
+    }
+  }
+
   function BSA205Study({subject,update,settings,go,toast,init}){
     const [budget,setBudget]=useState(40),[customEnabled,setCustomEnabled]=useState(false),[customMinutes,setCustomMinutes]=useState('18'),[reflection,setReflection]=useState(''),[focusMode,setFocusMode]=useState('balanced');
     const sessionMinutes=customEnabled?Math.max(5,Math.min(180,Math.round(Number(customMinutes)||18))):budget;
@@ -17934,6 +17988,10 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     const toggle=(id,blockKey)=>update(s=>{const session=(s.practiceSessions||[]).find(x=>x.id===id);if(!session||session.archived)return;
       const b=(session.blocks||[]).find(x=>x.key===blockKey);if(b)b.done=!b.done;session.lastAt=Date.now()},null,{subjectId:subject.id,sessionId:id});
     const bsa211TimerAction=(id,action)=>{
+      if(bsa212Guided(active)&&active?.id===id){
+        if(action==='save')bsa224MarkGuidedHidden(subject.id,id,'save');
+        else if(action==='start')bsa224ReleaseGuidedHidden(subject.id,id);
+      }
       update(s=>{
         const x=(s.practiceSessions||[]).find(r=>r.id===id);
         if(!x||x.archived)return;
@@ -17950,13 +18008,20 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
         }
         x.lastAt=now;
       },null,{subjectId:subject.id,sessionId:id});
-      if(action==='start'&&bsa212Guided(active))window.dispatchEvent(new Event('bsa214:show-focus-timer'));
+      if(action==='start'&&bsa212Guided(active)){
+        bsa224ReleaseGuidedHidden(subject.id,id);
+        window.dispatchEvent(new Event('bsa214:show-focus-timer'));
+      }
+      if(action==='save'&&bsa212Guided(active)){
+        bsa224MarkGuidedHidden(subject.id,id,'save');
+        window.dispatchEvent(new Event('bsa:hide-timer'));
+      }
     };
     const archive=id=>{
-      window.dispatchEvent(new CustomEvent('bsa223:closed-guided',{detail:{id,subjectId:subject.id}}));
+      bsa224MarkGuidedHidden(subject.id,id,'end');
       window.dispatchEvent(new Event('bsa:hide-timer'));
-      update(s=>{const x=(s.practiceSessions||[]).find(r=>r.id===id);if(x)bsa214Archive(s,x,Date.now(),{tab:'study',opts:{}})},null,{subjectId:subject.id,sessionId:id});
-      toast('Session ended and saved. You can start a new plan; your practice records are intact.');
+      update(s=>bsa224ArchiveSession(s,id,Date.now(),{tab:'study',opts:{}}),null,{subjectId:subject.id,sessionId:id});
+      toast('Session ended and saved. Your checked answers and academic records are intact.');
     };
     const start=bsa212Guided(active)?journey.blocks[bsa212PhaseIndex(active)]:journey.next;
     const completed=active?journey.done:0;
@@ -18224,21 +18289,23 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       if(!session||closingId===session.id)return;
       const id=session.id,subjectId=subject.id;
       const close=what==='end'||what==='finish'||(what==='next'&&bsa212PhaseIndex(session)===(session.blocks.length-1));
-      if(close){
-        setClosingId(id);
-        window.dispatchEvent(new CustomEvent('bsa223:closed-guided',{detail:{id,subjectId}}));
+      if(close||what==='save'){
+        bsa224MarkGuidedHidden(subjectId,id,close?'end':'save');
+        if(close){
+          setClosingId(id);
+          window.dispatchEvent(new CustomEvent('bsa223:closed-guided',{detail:{id,subjectId}}));
+        }
         window.dispatchEvent(new Event('bsa:hide-timer'));
       }
       update(s=>{
         const x=(s.practiceSessions||[]).find(r=>r.id===id);
         if(!x||x.archived)return;
-        if(close)bsa214Archive(s,x,Date.now(),nav?{tab:nav.tab,opts:nav.opts||{}}:null);
+        if(close)bsa224ArchiveSession(s,id,Date.now(),nav?{tab:nav.tab,opts:bsa224SafeOpts(nav.opts)}:null);
         else bsa212Action(x,what,Date.now(),arg);
         if(what==='save'){
           const tab=String(nav?.tab||'study');
           const allow=['study','lectures','mcq','psets','practice','vault','mistakes','accounting-lab','accounting-cycle','library','workspace','ask','rules'];
-          const opts=nav?.opts||{};
-          x.focusLastTool={tab:allow.includes(tab)?tab:'study',opts:JSON.stringify(opts).length<3000?opts:{}};
+          x.focusLastTool={tab:allow.includes(tab)?tab:'study',opts:bsa224SafeOpts(nav?.opts)};
         }else if(what==='next')delete x.focusLastTool;
       },null,{subjectId,sessionId:id});
       if(what==='save'){
@@ -18258,7 +18325,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       const r=e.currentTarget.closest('.bsa212-float').getBoundingClientRect();const x=r.left+(e.key==='ArrowRight'?24:e.key==='ArrowLeft'?-24:0),y=r.top+(e.key==='ArrowDown'?24:e.key==='ArrowUp'?-24:0);
       const next=constrain(x,y,r.width,r.height);setPos(next);try{localStorage.setItem('bsa212-floating-pos',JSON.stringify(next))}catch(_){}};
     useEffect(()=>{if(!pos)return;const onResize=()=>setPos(p=>{if(!p)return p;const w=Math.min(expanded?320:240,window.innerWidth-16),h=expanded?330:68;const next=constrain(p.x,p.y,w,h);if(next.x===p.x&&next.y===p.y)return p;try{localStorage.setItem('bsa212-floating-pos',JSON.stringify(next))}catch(_){}return next;});onResize();window.addEventListener('resize',onResize);window.addEventListener('orientationchange',onResize);return()=>{window.removeEventListener('resize',onResize);window.removeEventListener('orientationchange',onResize)}},[!!pos,expanded]);
-    if(!session||session.focusSaved||session.archived||closingId===session.id)return null;
+    if(!session||session.focusSaved||session.archived||closingId===session.id||bsa224GuidedIsHidden(subject.id,session.id))return null;
     const index=bsa212PhaseIndex(session),block=session.blocks[index]||{},waiting=!!session.focusWaiting,ended=!!session.focusEnded;
     const remaining=Math.max(0,bsa212PhaseGoal(session)-bsa212PhaseElapsed(session,now));
     const running=Number(session.focusPhaseStartedAt)>0;
@@ -18270,7 +18337,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     // dashboard panel; avoids repeated compositor paints during scrolling.
     let layer=document.getElementById('bsa213-focus-layer');
     if(!layer){layer=document.createElement('div');layer.id='bsa213-focus-layer';document.body.appendChild(layer);}
-    return ReactDOM.createPortal(h('aside',{className:'bsa212-float'+(expanded?' expanded':'')+(waiting?' is-due':'')+(session.focusSaved?' is-saved':''),'data-dragged':pos?'yes':'no',style:pos?{left:pos.x+'px',top:pos.y+'px',right:'auto',bottom:'auto'}:undefined,role:'region','aria-label':'Floating guided study timer','data-bsa-guided-focus':'v218',
+    return ReactDOM.createPortal(h('aside',{className:'bsa212-float'+(expanded?' expanded':'')+(waiting?' is-due':'')+(session.focusSaved?' is-saved':''),'data-dragged':pos?'yes':'no',style:pos?{left:pos.x+'px',top:pos.y+'px',right:'auto',bottom:'auto'}:undefined,role:'region','aria-label':'Floating guided study timer','data-bsa-guided-focus':'v224','data-bsa-guided-session':String(session.id),'data-bsa-guided-subject':String(subject.id),
       onPointerMove:move,onPointerUp:end,onPointerCancel:end},
       h('div',{className:'bsa212-float-top'},
         h('button',{className:'bsa212-float-grip',type:'button',title:'Drag to move the floating timer on iPad or desktop',onPointerDown:begin,onKeyDown:keyboard,'aria-label':'Move timer: drag with touch or mouse, arrow keys to move, Home to reset position'},'⠿'),
@@ -18296,7 +18363,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
         !ended&&h('div',{className:'bsa214-floating-end'},
           h('button',{type:'button',onClick:()=>action('end')},'End & Save · start something else')),
         ended&&h('div',{className:'bsa212-float-actions'},h('button',{type:'button',onClick:()=>action('finish')},'Finish & file'),h('button',{type:'button',onClick:()=>go('study')},'Review plan')),
-        h('p',{className:'bsa212-float-footnote'},'Elapsed wall time is not a grade. No answers are auto-submitted.'),
+        h('p',{className:'bsa212-float-footnote'},'Elapsed wall time is not a grade. No answers are auto-submitted. · '+BSA_RELEASE_LABEL),
         h('button',{className:'bsa212-float-reset',type:'button',onClick:()=>{setPos(null);try{localStorage.removeItem('bsa212-floating-pos')}catch(_){}}},'Reset position'))),layer);
   }
   function bsa34LearningSnapshot(subject,now=Date.now()){
@@ -19726,7 +19793,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       storeFull&&h('div',{className:'bsa48-save-failure',role:'alert'},h('strong',null,'Changes are not saving on this device.'),h('span',null,'The browser refused a local write. Export a full backup and review storage before further editing.'),h('button',{type:'button',className:'btn',onClick:()=>setModal({data:'export'})},'Open backup')),
       h("div",{className:"workspace-topbar v2-topbar"},
         h("div",{className:"workspace-context"},h("span",{className:"workspace-eyebrow"},"STUDY SPACE  /"),h("strong",null,(tabs.find(t=>t[0]===nav.tab)||[null,"Today"])[1]),h("span",{className:"workspace-subject"},subject.code||subject.name)),
-        h("div",{className:"workspace-actions v2-top-actions"},h('button',{className:'bsa45-top-guide',onClick:()=>go('guide')},h(Icon,{name:'sparkles',size:16}),'Start here'),bsa212Guided(bsa33Journey(subject).session)&&h('button',{className:'bsa214-show-timer-top',type:'button',onClick:()=>{const current=bsa33Journey(subject).session;if(current?.focusSaved){update(s=>{const x=(s.practiceSessions||[]).find(r=>r.id===current.id);if(x)bsa221ResumeSavedSession(x,Date.now());});}window.dispatchEvent(new Event('bsa214:show-focus-timer'));}},bsa33Journey(subject).session.focusSaved?'▶ Resume session':'◷ Show timer'),h('button',{className:'bsa45-top-dock',onClick:()=>{const hidden=localStorage.getItem('bsa45_dock_hidden')!=='1';window.dispatchEvent(new CustomEvent('bsa45:dock-visibility',{detail:{hidden}}));toast(hidden?'Study Dock hidden':'Study Dock visible');}},'Dock'),h("button",{className:"v2-top-search",onClick:()=>setSpotlightOpen(true),title:"Search · Ctrl/⌘ + K","aria-label":"Search all study materials"},h(Icon,{name:"search",size:16}),"Search",h("kbd",null,"⌘ K")))),
+        h("div",{className:"workspace-actions v2-top-actions"},h('button',{className:'bsa45-top-guide',onClick:()=>go('guide')},h(Icon,{name:'sparkles',size:16}),'Start here'),bsa212Guided(bsa33Journey(subject).session)&&h('button',{className:'bsa214-show-timer-top',type:'button',onClick:()=>{const current=bsa33Journey(subject).session;if(current?.focusSaved){bsa224ReleaseGuidedHidden(subject.id,current.id);update(s=>{const x=(s.practiceSessions||[]).find(r=>r.id===current.id);if(x)bsa221ResumeSavedSession(x,Date.now());},null,{subjectId:subject.id,sessionId:current.id});}window.dispatchEvent(new Event('bsa214:show-focus-timer'));}},bsa33Journey(subject).session.focusSaved?'▶ Resume session':'◷ Show timer'),h('button',{className:'bsa45-top-dock',onClick:()=>{const hidden=localStorage.getItem('bsa45_dock_hidden')!=='1';window.dispatchEvent(new CustomEvent('bsa45:dock-visibility',{detail:{hidden}}));toast(hidden?'Study Dock hidden':'Study Dock visible');}},'Dock'),h("button",{className:"v2-top-search",onClick:()=>setSpotlightOpen(true),title:"Search · Ctrl/⌘ + K","aria-label":"Search all study materials"},h(Icon,{name:"search",size:16}),"Search",h("kbd",null,"⌘ K")))),
       pendingPractice && !(nav.tab==='mcq'&&quizRunning) && !(nav.tab==='mcq'&&pendingPractice.kind==='mcq'&&nav.opts?.resume&&data.activeId===pendingPractice.subjectId) && !(nav.tab==='psets'&&pendingPractice.kind==='written'&&nav.opts?.open===pendingPractice.setId&&data.activeId===pendingPractice.subjectId) &&
         h('div',{className:'bsa18-resume-strip',role:'region','aria-label':'Resume unfinished practice'},
           h('span',{className:'bsa18-resume-icon','aria-hidden':'true'},'↩'),
