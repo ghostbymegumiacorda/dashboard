@@ -1,6 +1,6 @@
 (() => {
   // User-facing release label only. Do not use for storage schemas or caches.
-  const BSA_RELEASE_LABEL = "V2.0";
+  const BSA_RELEASE_LABEL = "V2.1";
   const S = (t, p = null, s = false) => ({ t, p, s });
   const CFAS_TOPICS = [
     {
@@ -5472,6 +5472,8 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const checkedPaper=paper.filter(q=>!!revealed[q.id]&&!!answers[q.id]);
     const score=checkedPaper.filter(q=>answers[q.id]===q.key).length;
     const start=()=>{
+      const existing=bsa197LoadDraft(subject.id);
+      if(existing?.ids?.length && !window.confirm('A quiz is paused. Starting a new quiz replaces only that unfinished session. Your checked answers and previous completed scores remain saved. Continue?'))return;
       const picks=bsa197Pick(catalog,mode,count);
       if(!picks.length)return;
       bsa197DeleteDraft(subject.id);
@@ -5711,14 +5713,14 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
 
   /* v153: Independent MCQ library and quiz route. */
   function MCQPage({subject,update,toast,go,init}){
-    const [quizSet,setQuizSet]=useState(init?.resume?'all':(init?.setId||(init?.topicId&&init.topicId!=='all'?'all':null)));
+    const [quizSet,setQuizSet]=useState(()=>init?.resume?'all':(init?.setId||null));
     return h("section",{className:"view mcq-page"},
       h("div",{className:"page-head"},
         h("div",null,h("span",{className:"panel-kicker"},"QUESTION COLLECTIONS"),h("h1",{className:"page-title"},"Multiple-choice questions"),
           h("p",{className:"muted"},"Browse question sets, inspect answers and explanations, or practice one question at a time."))),
       quizSet!==null ? h(React.Fragment,null,
         h("button",{className:"btn",onClick:()=>setQuizSet(null)},"← Back to MCQ library"),
-        h(MultipleChoiceQuiz,{subject,update,toast,go,initialSetId:quizSet,initialTopicId:init?.topicId||'all',initialMode:init?.mode||'smart',autoResume:!!init?.resume,onExit:()=>setQuizSet(null)})) :
+        h(MultipleChoiceQuiz,{subject,update,toast,go,initialSetId:quizSet,initialTopicId:init?.topicId||'all',initialMode:init?.mode||'smart',autoResume:!!init?.resume,onExit:()=>go('practice')})) :
       h(React.Fragment,null,
         h("div",{className:"mcq-page-actions"},
           h("button",{className:"btn primary",onClick:()=>setQuizSet("all")},"Start mixed MCQ quiz"),
@@ -11745,7 +11747,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const focusLabel = focus && focus.kind === "lecture" ? (lectures.find((x) => x.id === focus.id) || {}).title : focus && focus.kind === "pset" ? (psets.find((x) => x.id === focus.id) || {}).title : focus?.kind==='problem' ? (bsa4ProblemContext(subject,focus.id,focus.problemId)?.title||'Selected problem') : focus?.kind==='mcq' ? 'Selected MCQ' : focus?.kind==='exercise' ? 'Current practice exercise' : focus?.kind==='fs-report' ? 'Financial statements · '+(focus.standard||'source practice') : "";
     return h(
       "section",
-      { className: "view ai-wrap bsa44-tutor bsa45-tutor-"+chatDensity, ref: topRef },
+      { className: "view ai-wrap bsa44-tutor bsa45-tutor-"+chatDensity+" bsa21-tutor-screen", ref: topRef, role:"region", "aria-label":"AI Tutor workspace" },
       h("div", { className: "page-head ask-compact-head" },
         h("div", { className: "ask-title-group" }, h("h1", { className: "page-title" }, "Ask Tutor"), h("span", { className: "ask-help-text" }, "Read · Ask · Practice")),
         h("div", { className: "ask-header-actions" },
@@ -16340,7 +16342,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     const focusedMcq=focus!=='all'&&mcqMatching?{topicId:focus.startsWith('label:')?'all':focus}:{};
     return h('section',{className:'view bsa3-practice bsa31-practice bsa33-practice'},
       h('header',{className:'bsa31-practice-hero'},h('span',{className:'bsa205-overline'},'STEP 02 / ACTIVE PRACTICE'),h('h1',null,'Choose how you want to ',h('span',null,'practice.')),
-        h('p',null,'Pick one practice format. Your original questions stay in their libraries, while mistakes feed into Review.')),
+        h('p',null,'Pick one practice format. A saved quiz stays paused until you choose Resume above; opening Practice never resumes it automatically.')),
       journey.next&&h('div',{className:'bsa33-practice-session'},h('span',null,'ACTIVE PLAN · '+journey.done+'/'+journey.total+' TASKS COMPLETE'),h('strong',null,'Focus: '+focusLabel+' · Next: '+journey.next.title),h('button',{onClick:()=>go('study')},'View session plan ↗')),
       h('div',{className:'bsa31-practice-grid'},activities.map((x,i)=>h('button',{type:'button',key:x.theme,className:'bsa31-practice-tile '+x.theme,onClick:()=>go(x.tab,x.theme==='quiz'?focusedMcq:x.theme==='written'&&focus!=='all'?{tab:'all',topicLabel:focus.startsWith('label:')?focus.slice(6):focusLabel}:x.opts||{}), 'aria-label':x.action},
         h('span',{className:'bsa31-practice-tile-top'},h('span',{className:'bsa31-practice-icon','aria-hidden':'true'},x.icon),h('small',null,'OPTION 0'+(i+1))),
@@ -17009,6 +17011,9 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     const go = (tab, opts = {}) => {
       setShortcutsOpen(false);
       if(tab==='split'){tab='workspace';opts={tab:'scratch'}}
+      // Practice is a destination, not an implicit Resume action.
+      // Only the Resume button may open a draft with opts.resume=true.
+      if(tab==='practice' && !opts?.start && opts?.mode!=='advanced')opts={};
       if (tab === "data") {
         if (opts && (opts.tab || opts.prefill)) setModal({ data: opts.tab || "import", prefill: opts.prefill });
         else setModal("data");
