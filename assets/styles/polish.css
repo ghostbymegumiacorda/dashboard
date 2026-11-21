@@ -2548,3 +2548,107 @@ body:has(.bsa45-tutor-compact) .bsa4-dock{display:none!important}
 }
 @media(max-width:420px){.bsa47-note-heading-actions>.btn{font-size:.75rem!important;padding:6px 8px!important}.bsa47-note-heading h2{font-size:1.06rem}}
 @media(prefers-reduced-motion:reduce){.bsa47-note-overlay,.bsa47-note-sheet{animation:none!important;transition:none!important}}
+
+
+/* V4.6.3 — iPad lecture-layout recovery. Focus on learning content.
+   This is a tablet/compact-width adjustment, not a new theme or new feature. */
+@media screen and (min-width:900px) and (max-width:1250px){
+  #root>.shell{--rail:clamp(210px,20vw,242px);grid-template-columns:var(--rail) minmax(0,1fr)!important;min-height:100dvh!important;}
+  #root>.shell>.content{width:100%!important;max-width:none!important;min-width:0!important;
+    box-sizing:border-box!important;padding:14px clamp(16px,2.1vw,26px) calc(48px + env(safe-area-inset-bottom,0px))!important;
+    overflow-x:clip!important;overflow-y:visible!important;}
+  /* The left rail has its own working scroll region; document scroll stays free. */
+  #root>.shell>.rail{max-width:100%;min-width:0;}
+  #root>.shell>.content[data-desk-page="lectures"]>.workspace-topbar{display:none!important;}
+  /* Each deep academic page already has a heading and sidebar navigation.
+     Avoid rendering a second giant heading + five duplicate navigation cards. */
+  #root>.shell>.content:is([data-desk-page="lectures"],[data-desk-page="psets"],
+    [data-desk-page="mcq"],[data-desk-page="vault"],[data-desk-page="ask"],
+    [data-desk-page="rules"],[data-desk-page="library"],[data-desk-page="fs-lab"])
+    .bsa43-chrome{display:none!important;}
+  #root .content[data-desk-page="lectures"]>.view{gap:12px!important;min-width:0!important;
+    padding-bottom:12px;}
+  #root .content[data-desk-page="lectures"] .page-head{gap:12px 16px!important;align-items:center!important;
+    margin:0!important;min-width:0!important;}
+  #root .content[data-desk-page="lectures"] .page-head>.head-actions{gap:7px!important;
+    flex:0 1 auto;min-width:0;max-width:100%;}
+  #root .content[data-desk-page="lectures"] .page-title{font-size:clamp(1.55rem,2.6vw,1.9rem)!important;}
+  #root .content[data-desk-page="lectures"] .page-head .muted{font-size:.85rem!important;line-height:1.45!important;max-width:54ch;}
+  #root .content[data-desk-page="lectures"] .head-actions>.btn{min-height:39px!important;padding:7px 12px!important;
+    font-size:.81rem!important;white-space:normal!important;line-height:1.24!important;}
+  #root .content[data-desk-page="lectures"] .filters{min-width:0;align-items:center;gap:9px!important;}
+  #root .content[data-desk-page="lectures"] .filters>.search{flex:1 1 245px!important;min-width:165px!important;max-width:none!important;}
+  #root .content[data-desk-page="lectures"] .filters>.chip-scroll{flex:1 1 220px;min-width:0!important;max-width:100%;}
+  #root .content[data-desk-page="lectures"] .ps-group{gap:7px!important;min-width:0!important;}
+  #root .content[data-desk-page="lectures"] .ps-group-h{margin:10px 0 2px!important;font-size:1rem!important;}
+  #root .content[data-desk-page="lectures"] .lx-list{gap:7px!important;min-width:0!important;}
+  #root .content[data-desk-page="lectures"] .lx-row{min-width:0!important;align-items:center;gap:10px!important;
+    padding:12px 14px!important;min-height:70px!important;}
+  #root .content[data-desk-page="lectures"] .lx-row-main{min-width:0!important;}
+  #root .content[data-desk-page="lectures"] .lx-row-main>strong{line-height:1.3!important;font-size:.93rem!important;overflow-wrap:anywhere!important;}
+  #root .content[data-desk-page="lectures"] .lx-row-main>.muted{font-size:.76rem!important;line-height:1.4!important;
+    overflow-wrap:anywhere!important;}
+  #root .content[data-desk-page="lectures"] .lx-row>.ps-st{flex:0 0 auto;font-size:.72rem!important;}
+  #root .content[data-desk-page="lectures"] .lx-reader{width:100%;max-width:min(100%,66rem)!important;}
+}
+/* Portrait iPads and phones use the existing bottom navigation rather than
+   having a second five-button chrome at the top of every lecture page. */
+@media screen and (max-width:899px){
+  #root>.shell>.content[data-desk-page="lectures"] .bsa43-chrome{display:none!important;}
+  #root>.shell>.content[data-desk-page="lectures"]{min-width:0!important;
+    padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))!important;}
+  #root .content[data-desk-page="lectures"]>.view{gap:11px!important;padding-bottom:15px;}
+  #root .content[data-desk-page="lectures"] .page-head{align-items:stretch!important;gap:10px!important;}
+  #root .content[data-desk-page="lectures"] .page-title{font-size:1.65rem!important;}
+  #root .content[data-desk-page="lectures"] .page-head .muted{font-size:.85rem!important;line-height:1.4!important;}
+  #root .content[data-desk-page="lectures"] .head-actions{gap:8px!important;flex-wrap:wrap!important;}
+  #root .content[data-desk-page="lectures"] .head-actions>.btn{flex:1 1 160px!important;white-space:normal!important;font-size:.79rem!important;}
+  #root .content[data-desk-page="lectures"] .filters>.search{width:100%!important;flex:1 1 100%!important;}
+  #root .content[data-desk-page="lectures"] .filters>.chip-scroll{width:100%;max-width:100%;}
+  #root .content[data-desk-page="lectures"] .lx-row{gap:9px!important;padding:11px 12px!important;}
+  #root .content[data-desk-page="lectures"] .lx-row-main>strong{font-size:.9rem!important;line-height:1.35!important;}
+  #root .content[data-desk-page="lectures"] .lx-row-main>.muted{font-size:.73rem!important;line-height:1.38!important;overflow-wrap:anywhere;}
+  #root .content[data-desk-page="lectures"] .lx-row>.ps-st{font-size:.66rem!important;padding:3px 7px!important;}
+}
+
+
+/* V4.6.4 — explicit AI Studio entry, correct overlay stacking, accessible storage feedback. */
+#root .bsa48-builder-cta{display:flex;align-items:center;gap:10px;flex:0 0 auto;width:100%;min-width:0;
+ min-height:53px;padding:10px 12px;border:1px solid color-mix(in srgb,var(--accent) 50%,var(--line));border-radius:12px;
+ background:var(--accent-soft);color:var(--text);font:inherit;text-align:left;cursor:pointer;box-sizing:border-box;}
+#root .bsa48-builder-cta>span:first-child{display:grid;place-items:center;width:30px;height:30px;flex:0 0 30px;
+ border-radius:9px;background:var(--surface);color:var(--accent);font-size:1.25rem;}
+#root .bsa48-builder-cta>span:last-child{display:grid;gap:2px;min-width:0;}
+#root .bsa48-builder-cta strong{font-size:.78rem;line-height:1.2;overflow-wrap:anywhere;}
+#root .bsa48-builder-cta small{font-size:.67rem;color:var(--muted);}
+#root .bsa48-builder-cta:hover,#root .bsa48-builder-cta:focus-visible{border-color:var(--accent);outline-offset:2px;}
+#root .bsa48-library-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap;min-width:0;}
+#root .bsa48-library-actions .bsa205-head-action{white-space:normal;min-width:0;}
+#root .bsa48-save-failure{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin:8px 16px;padding:10px 14px;
+ border:1px solid var(--bad);border-radius:12px;background:var(--surface);color:var(--text);font-size:.79rem;}
+#root .bsa48-save-failure>span{flex:1 1 230px;min-width:0;}
+#root .bsa48-store-info{display:grid;gap:8px;}
+#root .bsa48-store-info .muted{margin:0;line-height:1.5;}
+#root .bsa48-store-advice{color:var(--text);border-left:3px solid var(--warn);margin:0;padding:7px 11px;background:var(--surface-2);}
+/* The modal must dominate the sidebar/quick shortcuts' local stacking context. */
+body.modal-open{overflow:hidden!important;overscroll-behavior:none!important;}
+body.modal-open #root .bsa-shortcut-menu{display:none!important;pointer-events:none!important;}
+body>.backdrop{z-index:200500!important;position:fixed!important;inset:0!important;isolation:isolate;
+ overflow:hidden;overscroll-behavior:contain;padding:calc(env(safe-area-inset-top,0px) + 10px) 12px calc(env(safe-area-inset-bottom,0px) + 10px)!important;}
+body>.backdrop>.modal{display:flex;flex-direction:column;min-height:0;min-width:0;
+ max-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 20px)!important;
+ max-width:calc(100vw - 24px)!important;overflow:hidden;}
+body>.backdrop .modal-head{flex:0 0 auto;min-width:0;gap:8px;}
+body>.backdrop .modal-head h2{overflow-wrap:anywhere;min-width:0;}
+body>.backdrop .modal-body{min-width:0;min-height:0;max-width:100%;overflow:auto!important;overscroll-behavior:contain;
+ -webkit-overflow-scrolling:touch;}
+body>.backdrop .modal-body>.tabs{display:flex!important;flex-wrap:nowrap!important;overflow-x:auto!important;overflow-y:hidden!important;
+ max-width:100%;gap:5px;min-height:46px;scrollbar-width:thin;overscroll-behavior-x:contain;}
+body>.backdrop .modal-body>.tabs>button{flex:0 0 auto!important;white-space:nowrap!important;}
+@media(max-width:899px){#root .bsa48-library-actions{justify-content:stretch;}#root .bsa48-library-actions>*{flex:1 1 150px;}
+ #root .bsa48-mobile-ai{font-weight:900;color:var(--accent);}
+ body>.backdrop{place-items:end center;padding:0!important;}
+ body>.backdrop>.modal{width:100%!important;max-width:100%!important;max-height:calc(100dvh - env(safe-area-inset-top,0px))!important;
+ border-radius:18px 18px 0 0;}
+}
+@media(prefers-reduced-motion:reduce){body>.backdrop>.modal{animation:none!important;}}
