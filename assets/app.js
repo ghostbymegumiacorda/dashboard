@@ -1,6 +1,6 @@
 (() => {
   // User-facing release label only. Do not use for storage schemas or caches.
-  const BSA_RELEASE_LABEL = "V2.10";
+  const BSA_RELEASE_LABEL = "V2.12";
   const S = (t, p = null, s = false) => ({ t, p, s });
   const CFAS_TOPICS = [
     {
@@ -16968,10 +16968,123 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     else if(relatedCards.length)push('cards','Recall it again','Review flashcards for this topic, rating what you really remember.','vault',{},minutes<=20?5:10,'review',relatedCards[0].id);
     else push('reflect','Explain what you remember','Without notes, explain one idea and name a part you still need to check.','study',{},minutes<=20?5:8,'review');
     const sum=blocks.reduce((n,b)=>n+b.mins,0);
-    if(sum>minutes){const scaled=blocks.map(b=>Math.max(3,Math.floor(b.mins*minutes/sum)));
+    if(sum!==minutes){const scaled=blocks.map(b=>Math.max(3,Math.floor(b.mins*minutes/sum)));
       let remaining=minutes-scaled.reduce((a,b)=>a+b,0);for(let i=0;remaining>0;i=(i+1)%scaled.length){scaled[i]++;remaining--}
       return blocks.map((b,i)=>({...b,mins:scaled[i]}));}
     return blocks;
+  }
+  /* V2.11: study-plan time is an opt-in wall-clock measure, independent
+     of attempts, self-reported completion, mastery, and FocusBar's Pomodoro.
+     Old plans have no timer fields; never infer elapsed time from createdAt. */
+  function bsa211HasTimer(s){return !!(s&&Number(s.timerStartedAt)>0||s&&Number(s.timerElapsedMs)>0||s&&s.timerPaused===true)}
+  function bsa211ElapsedMs(s,now=Date.now()){
+    if(!bsa211HasTimer(s))return 0;
+    const saved=Math.max(0,Number(s.timerElapsedMs)||0);
+    const started=Number(s.timerStartedAt)||0;
+    return saved+(started>0?Math.max(0,now-started):0);
+  }
+  function bsa211Clock(ms){
+    const seconds=Math.floor(Math.max(0,ms)/1000);
+    const hh=Math.floor(seconds/3600),mm=Math.floor(seconds%3600/60),ss=seconds%60;
+    return (hh?String(hh).padStart(2,'0')+':':'')+String(mm).padStart(2,'0')+':'+String(ss).padStart(2,'0');
+  }
+  /* V2.12: Focus phases remain suggestions; verified learning is still graded
+     only by the underlying MCQ/problem/flashcard engines. No duplicated bank. */
+  const BSA212_MODES=[
+    {id:'balanced',title:'Learn + Practice',desc:'Read, retrieve, apply and correct mistakes'},
+    {id:'learn',title:'Learn a topic',desc:'Build understanding before testing yourself'},
+    {id:'recall',title:'Recall + Review',desc:'Retrieve older knowledge without rereading everything'},
+    {id:'exam',title:'Exam preparation',desc:'Independent practice, application and corrections'}
+  ];
+  function bsa212Allocate(blocks,budget){
+    if(!blocks.length)return [];
+    const minutes=Math.max(15,Math.min(180,Number(budget)||40));
+    const weights=blocks.map(b=>Math.max(1,Number(b.weight)||1));
+    const sum=weights.reduce((x,y)=>x+y,0);
+    const whole=weights.map(w=>Math.max(1,Math.floor(minutes*w/sum)));
+    let rest=minutes-whole.reduce((x,y)=>x+y,0);
+    for(let i=0;rest>0;rest--,i++)whole[i%whole.length]++;
+    for(let i=whole.length-1;rest<0&&i>=0;i--){const take=Math.min(whole[i]-1,-rest);whole[i]-=take;rest+=take;}
+    return blocks.map((b,i)=>{const {weight,...other}=b;return {...other,mins:whole[i],done:false}});
+  }
+  function bsa212ModePlan(subject,budget,settings,focus='all',mode='balanced'){
+    const base=bsa34PlanBlocks(subject,Math.min(90,Math.max(20,Number(budget)||40)),settings,focus);
+    const find=(keys)=>base.find(b=>keys.includes(b.key));
+    const make=(key,title,detail,route,opts,weight,stage,ref='')=>({key,title,detail,route,opts:opts||{},weight,stage,ref,done:false});
+    const choose=(keys,key,title,detail,route,opts,weight,stage)=>{
+      const from=find(keys);
+      return from?{...from,key,title,detail,weight,stage:stage||from.stage,done:false}:
+        make(key,title,detail,route,opts,weight,stage||'learn');
+    };
+    const warm=make('warmup','Recall before reading','Without notes, state what you currently remember about the topic.','study',{},1,'learn');
+    const lesson=choose(['read','prepare'],'lesson','Understand one key idea','Work from your saved lecture; explain why the principle applies.','library',{},4,'learn');
+    const quiz=choose(['mcq'],'mcq','Retrieve without notes','Try the saved MCQs without answer hints.','study',{},4,'practice');
+    const apply=choose(['written','journal','explore'],'apply','Apply it independently','Solve a written problem, calculation or journal entry.','practice',{},4,'practice');
+    const review=choose(['mistakes','cards','reflect'],'review','Correct and review','Reattempt earlier mistakes or retrieve a flashcard.','mistakes',{},2,'review');
+    const teach=make('teachback','Explain it in your own words','Summarize the rule and an exception without looking at notes.','study',{},2,'review');
+    let list;
+    if(mode==='learn') list=[warm,{...lesson,weight:7},teach,{...quiz,title:'Check what you understood',weight:2},review];
+    else if(mode==='recall'){
+      const cards=choose(['cards','mistakes','reflect'],'cards','Recall important terms','Use saved flashcards or mistake cards for independent retrieval.','vault',{},3,'review');
+      list=[warm,{...quiz,weight:5},cards,{...review,weight:3},teach];
+    }else if(mode==='exam')list=[{...warm,weight:1},{...quiz,title:'Timed MCQ practice',weight:6},{...apply,title:'Apply exam-style problems',weight:5},{...review,weight:3},teach];
+    else list=[warm,{...lesson,weight:4},{...quiz,weight:4},{...apply,weight:4},review,teach];
+    if(Number(budget)<=30){
+      if(mode==='learn')list=[warm,{...lesson,weight:7},teach];
+      else if(mode==='recall')list=[warm,{...quiz,weight:5},review];
+      else if(mode==='exam')list=[{...quiz,weight:5},{...apply,weight:5},review];
+      else list=[warm,{...lesson,weight:4},{...quiz,weight:5},teach];
+    }
+    return bsa212Allocate(list,budget);
+  }
+  function bsa212ModeName(mode){return BSA212_MODES.find(m=>m.id===mode)?.title||'Learn + Practice'}
+  function bsa212Guided(s){return !!(s&&!s.archived&&s.focusMode&&Array.isArray(s.blocks)&&s.blocks.length)}
+  function bsa212PhaseIndex(s){return Math.max(0,Math.min((s?.blocks?.length||1)-1,Math.floor(Number(s?.focusPhaseIndex)||0)))}
+  function bsa212PhaseElapsed(s,now=Date.now()){
+    return Math.max(0,Number(s?.focusPhaseElapsedMs)||0)+(Number(s?.focusPhaseStartedAt)>0?Math.max(0,now-Number(s.focusPhaseStartedAt)):0);
+  }
+  function bsa212PhaseGoal(s){const b=s?.blocks?.[bsa212PhaseIndex(s)];return Math.max(1,(Number(b?.mins)||1)+(Number(b?.extraMins)||0))*60000}
+  function bsa212Freeze(s,at){
+    const now=Number(at)||Date.now();
+    if(Number(s.timerStartedAt)>0)s.timerElapsedMs=bsa211ElapsedMs(s,now);
+    if(Number(s.focusPhaseStartedAt)>0)s.focusPhaseElapsedMs=bsa212PhaseElapsed(s,now);
+    s.timerStartedAt=null;s.focusPhaseStartedAt=null;s.timerPaused=true;
+  }
+  /* Mutates only the active practiceSession inside update(...); no grading writes.
+     Expiration caps the current block to its budget after background sleeps. */
+  function bsa212Action(s,action,at=Date.now(),arg=0){
+    if(!bsa212Guided(s))return false;
+    const now=Number(at)||Date.now(),idx=bsa212PhaseIndex(s),block=s.blocks[idx];
+    if(action==='expire'){
+      if(!Number(s.focusPhaseStartedAt)||bsa212PhaseElapsed(s,now)<bsa212PhaseGoal(s))return false;
+      const excess=Math.max(0,bsa212PhaseElapsed(s,now)-bsa212PhaseGoal(s));
+      bsa212Freeze(s,now);s.focusPhaseElapsedMs=bsa212PhaseGoal(s);
+      s.timerElapsedMs=Math.max(0,Number(s.timerElapsedMs||0)-excess);
+      s.focusWaiting=true;s.focusSaved=false;
+    }else if(action==='pause'||action==='save'){
+      bsa212Freeze(s,now);if(action==='save'){s.focusSaved=true}
+    }else if(action==='start'){
+      if(!Number(s.timerStartedAt)&&!s.focusWaiting&&!s.focusEnded){
+        s.timerStartedAt=now;s.focusPhaseStartedAt=now;s.timerPaused=false;s.focusSaved=false;
+      }
+    }else if(action==='extend'){
+      const mins=[5,10,15].includes(Number(arg))?Number(arg):5;
+      if(Number(s.focusPhaseStartedAt))bsa212Freeze(s,now);
+      block.extraMins=(Number(block.extraMins)||0)+mins;
+      s.budget=(Number(s.budget)||40)+mins;
+      s.focusWaiting=false;s.focusSaved=false;s.focusEnded=false;
+      s.timerStartedAt=now;s.focusPhaseStartedAt=now;s.timerPaused=false;
+    }else if(action==='next'){
+      bsa212Freeze(s,now);
+      block.spentMs=(Number(block.spentMs)||0)+Math.max(0,Number(s.focusPhaseElapsedMs)||0);
+      s.focusPhaseElapsedMs=0;s.focusWaiting=false;s.focusSaved=false;
+      if(idx<s.blocks.length-1){
+        s.focusPhaseIndex=idx+1;s.focusPhaseStartedAt=now;s.timerStartedAt=now;s.timerPaused=false;
+      }else{s.focusEnded=true;}
+    }else if(action==='finish'){
+      bsa212Freeze(s,now);s.archived=true;s.focusWaiting=false;s.focusSaved=false;
+    }else return false;
+    s.lastAt=now;return true;
   }
   function bsa205SessionBlocks(subject,budget,settings,focus='all'){return bsa34PlanBlocks(subject,budget,settings,focus)}
   /* Actual attempt evidence is computed from existing events, not a new grading
@@ -16982,37 +17095,74 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     const id=session.focusId||'all';
     const events=(subject.learningEvents||[]).filter(e=>(Number(e.at)||0)>=since&&['correct','incorrect','partial'].includes(e.result));
     const matches=e=>bsa34TopicMatch(e,id,subject);
-    if(block.key==='mcq'){
+    if(block.key==='mcq'||block.route==='mcq'){
       const matched=new Set(mcqDedicatedPool(subject).filter(q=>(!block.opts?.setId||q.setId===block.opts.setId)&&bsa34TopicMatch(q,id,subject)).map(q=>q.id));
       return events.some(e=>e.kind==='mcq'&&(matched.size?matched.has(e.sourceId):block.ref?e.sourceId===block.ref:matches(e)));
     }
-    if(block.key==='written')return events.some(e=>e.kind==='problem'&&(block.ref?e.sourceId===block.ref:matches(e)));
-    if(block.key==='cards')return events.some(e=>e.kind==='flashcard'&&(block.ref?e.sourceId===block.ref:matches(e)));
-    if(block.key==='journal')return (subject.labAttempts||[]).some(a=>Number(a.date)>=since&&(
+    if(block.key==='written'||block.route==='psets')return events.some(e=>e.kind==='problem'&&(block.ref?e.sourceId===block.ref:matches(e)));
+    if(block.key==='cards'||block.route==='vault')return events.some(e=>e.kind==='flashcard'&&(block.ref?e.sourceId===block.ref:matches(e)));
+    if(block.key==='journal'||block.route==='accounting-lab')return (subject.labAttempts||[]).some(a=>Number(a.date)>=since&&( 
       block.ref?.startsWith('builtin:')?Number(a.exercise)===Number(block.ref.slice(8)):a.problemId===block.ref));
     return false;
   }
   function BSA205Study({subject,update,settings,go,toast,init}){
-    const [budget,setBudget]=useState(40),[reflection,setReflection]=useState('');
+    const [budget,setBudget]=useState(40),[reflection,setReflection]=useState(''),[focusMode,setFocusMode]=useState('balanced');
     const [focusId,setFocusId]=useState(init?.focusId||'all');
     const focusChoices=useMemo(()=>bsa34FocusChoices(subject),[subject]);
     useEffect(()=>{if(init?.focusId&&focusChoices.some(x=>x.id===init.focusId))setFocusId(init.focusId)},[init?.focusId,subject.id]);
     const sessions=(subject.practiceSessions||[]).slice().sort((a,b)=>(Number(b.lastAt||b.createdAt)||0)-(Number(a.lastAt||a.createdAt)||0));
     const journey=bsa33Journey(subject);
     const active=journey.session;
-    const proposal=useMemo(()=>bsa205SessionBlocks(subject,budget,settings,focusId),[subject,budget,settings,focusId]);
+    const proposal=useMemo(()=>bsa212ModePlan(subject,budget,settings,focusId,focusMode),[subject,budget,settings,focusId,focusMode]);
     const create=()=>{
       if(active){toast('Finish or file your existing plan before creating a new one.');return}
       if(!proposal.length){toast('Add some lessons or questions first, then build a plan.');return}
-      const newSession={id:uid('session205'),createdAt:Date.now(),lastAt:Date.now(),budget,focusId,focusLabel:bsa34TopicTitle(subject,focusId),blocks:proposal.map(b=>({...b,done:false})),archived:false};
+      if(timerState?.running){toast('Pause or finish your separate Pomodoro timer first to avoid running two study clocks.');return}
+      const createdAt=Date.now();const newSession={id:uid('session205'),createdAt,lastAt:createdAt,budget,focusId,focusLabel:bsa34TopicTitle(subject,focusId),blocks:proposal.map(b=>({...b,done:false})),archived:false,focusMode,focusPhaseIndex:0,focusPhaseElapsedMs:0,focusPhaseStartedAt:createdAt,focusWaiting:false,focusSaved:false,focusEnded:false,timerStartedAt:createdAt,timerElapsedMs:0,timerPaused:false};
       update(s=>{s.practiceSessions=[...(s.practiceSessions||[]),newSession]});
-      setReflection('');toast('Your three-stage study plan is ready. Begin with the first task.');
+      setReflection('');toast('Guided focus started. Your floating phase timer follows you; drag its grip to reposition.');
+    };
+    const enableGuided=id=>{
+      update(s=>{const x=(s.practiceSessions||[]).find(r=>r.id===id);if(!x||x.archived||bsa212Guided(x))return;
+        const now=Date.now(),running=Number(x.timerStartedAt)>0;
+        if(running)x.timerElapsedMs=bsa211ElapsedMs(x,now);
+        // Previous time is retained, never guessed as a new phase's progress.
+        x.focusMode='balanced';x.focusPhaseIndex=Math.max(0,(x.blocks||[]).findIndex(b=>!b.done));
+        x.focusPhaseElapsedMs=0;x.focusPhaseStartedAt=running?now:null;
+        x.focusWaiting=false;x.focusSaved=!running;x.focusEnded=false;
+        x.timerStartedAt=running?now:null;x.timerPaused=!running;x.lastAt=now;
+      });toast('Guided floating timer enabled. Earlier study time and task marks were preserved.');
     };
     const toggle=(id,blockKey)=>update(s=>{const session=(s.practiceSessions||[]).find(x=>x.id===id);if(!session||session.archived)return;
       const b=(session.blocks||[]).find(x=>x.key===blockKey);if(b)b.done=!b.done;session.lastAt=Date.now()});
-    const archive=id=>{update(s=>{const x=(s.practiceSessions||[]).find(r=>r.id===id);if(x){x.archived=true;x.lastAt=Date.now()}});toast('Session filed. Your saved answers, scores and notes are unchanged.');};
-    const start=journey.next;
+    const bsa211TimerAction=(id,action)=>update(s=>{
+      const x=(s.practiceSessions||[]).find(r=>r.id===id);
+      if(!x||x.archived)return;
+      const now=Date.now();
+      if(bsa212Guided(x)){bsa212Action(x,action==='pause'?'pause':'start',now);return}
+      if(action==='pause'&&Number(x.timerStartedAt)>0){
+        x.timerElapsedMs=bsa211ElapsedMs(x,now);x.timerStartedAt=null;x.timerPaused=true;
+      }else if(action==='start'&&!Number(x.timerStartedAt)){
+        x.timerElapsedMs=Math.max(0,Number(x.timerElapsedMs)||0);x.timerStartedAt=now;x.timerPaused=false;
+      }
+      x.lastAt=now;
+    });
+    const archive=id=>{update(s=>{const x=(s.practiceSessions||[]).find(r=>r.id===id);if(x){const now=Date.now();if(bsa212Guided(x))bsa212Action(x,'finish',now);else{if(Number(x.timerStartedAt)>0){x.timerElapsedMs=bsa211ElapsedMs(x,now);x.timerStartedAt=null;x.timerPaused=true;}x.archived=true;x.lastAt=now}}});toast('Session filed. Your saved answers, scores and notes are unchanged.');};
+    const start=bsa212Guided(active)?journey.blocks[bsa212PhaseIndex(active)]:journey.next;
     const completed=active?journey.done:0;
+    const [clockNow,setClockNow]=useState(()=>Date.now());
+    useEffect(()=>{
+      setClockNow(Date.now());
+      if(!active||!Number(active.timerStartedAt))return;
+      const timer=setInterval(()=>setClockNow(Date.now()),1000);
+      return()=>clearInterval(timer);
+    },[active?.id,active?.timerStartedAt]);
+    const plannedMs=Math.max(1,Number(active?.budget)||40)*60000;
+    const elapsedMs=bsa211ElapsedMs(active,clockNow);
+    const remainingMs=Math.max(0,plannedMs-elapsedMs);
+    const timerExists=bsa211HasTimer(active);
+    const timerRunning=Number(active?.timerStartedAt)>0;
+    const timerPercent=Math.min(100,Math.round(elapsedMs/plannedMs*100));
     useEffect(()=>setReflection(active?.reflection||''),[active?.id]);
     const saveReflection=()=>{if(!active)return;update(s=>{const x=(s.practiceSessions||[]).find(r=>r.id===active.id);if(x){x.reflection=reflection.slice(0,1000);x.lastAt=Date.now()}});toast('Reflection saved in this study plan. It does not count as a quiz score.');};
     return h('section',{className:'view bsa205-page bsa33-study'},
@@ -17023,20 +17173,38 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       active?h('div',{className:'bsa33-session-board'},
         h('div',{className:'bsa33-session-top'},
           h('div',null,h('span',{className:'bsa33-eyebrow'},'YOUR CURRENT STUDY PLAN'),h('h2',null,'You are making progress.'),
-            h('p',null,'Focus: '+(active.focusLabel||'Mixed topics')+' · '+(Number(active.budget)||40)+' minutes · '+completed+' of '+journey.total+' activities attempted or checked')),
-          h('span',{className:'bsa33-session-percent'},journey.percent+'%')),
+            h('p',null,'Focus: '+(active.focusLabel||'Mixed topics')+(bsa212Guided(active)?' · '+bsa212ModeName(active.focusMode):'')+' · '+completed+' of '+journey.total+' activities attempted or checked')),
+          h('div',{className:'bsa211-task-rate'},h('strong',{className:'bsa33-session-percent'},journey.percent+'%'),h('small',null,'Tasks completed'))),
         h('div',{className:'bsa33-session-meter',role:'progressbar','aria-valuenow':journey.percent,'aria-valuemin':0,'aria-valuemax':100,'aria-label':'Activities marked complete, not evidence of mastery'},h('span',{style:{width:journey.percent+'%'}})),
+        bsa212Guided(active)&&h('section',{className:'bsa212-current-block'},
+          h('div',null,h('span',{className:'bsa33-eyebrow'},'CURRENT GUIDED PHASE · '+bsa212ModeName(active.focusMode)),h('h3',null,active.blocks[bsa212PhaseIndex(active)]?.title||'Study phase'),
+            h('small',null,(bsa212PhaseIndex(active)+1)+' of '+active.blocks.length+' · '+bsa211Clock(Math.max(0,bsa212PhaseGoal(active)-bsa212PhaseElapsed(active,clockNow)))+' remaining in this step')),
+          h('p',null,active.focusWaiting?'Time is up for this step. Open the floating timer for your options.':active.focusSaved?'Session saved. Resume with the floating timer when ready.':'The mini timer follows you into lectures and practice. Use its handle to move it on iPad or desktop.'),
+          h('button',{className:'btn',onClick:()=>go(active.blocks[bsa212PhaseIndex(active)].route,active.blocks[bsa212PhaseIndex(active)].opts||{})},'Open current activity ↗')),
+        !bsa212Guided(active)&&h('div',{className:'bsa212-legacy-upgrade'},h('div',null,h('strong',null,'Want the floating focus timer?'),h('small',null,'Keep your existing tasks and elapsed time. Guided phases start tracking from this point forward.')),
+          h('button',{className:'btn',onClick:()=>enableGuided(active.id)},'Enable guided focus')),
+        h('section',{className:'bsa211-time-panel','aria-label':'Study session timing'},
+          h('div',{className:'bsa211-time-heading'},h('div',null,h('span',{className:'bsa33-eyebrow'},'STUDY TIME · SEPARATE FROM COMPLETION'),h('strong',null,timerRunning?'Session clock running':timerExists?'Session clock paused':'Time tracking not started')),
+            h('span',{className:'bsa211-time-state'+(timerRunning?' running':'')},timerRunning?'● Running':timerExists?'Ⅱ Paused':'○ Not started')),
+          h('div',{className:'bsa211-time-stats'},
+            h('div',null,h('small',null,'Time goal'),h('strong',null,(Number(active.budget)||40)+' min')),
+            h('div',null,h('small',null,'Elapsed'),h('strong',{className:'bsa211-time-number'},timerExists?bsa211Clock(elapsedMs):'Not tracked')),
+            h('div',null,h('small',null,elapsedMs>=plannedMs&&timerExists?'Over goal':'Remaining'),h('strong',{className:'bsa211-time-number'},!timerExists?'—':elapsedMs>=plannedMs?'+'+bsa211Clock(elapsedMs-plannedMs):bsa211Clock(remainingMs)))),
+          h('div',{className:'bsa211-time-meter',role:'progressbar','aria-valuemin':0,'aria-valuemax':100,'aria-valuenow':timerPercent,'aria-label':'Elapsed time as a percentage of the planned time goal'},h('span',{style:{width:timerPercent+'%'}})),
+          h('div',{className:'bsa211-time-bottom'},
+            h('p',null,'Time is a planning guide, not proof of understanding. Guided phases pause at their time limit and ask what you want to do next; your answers remain untouched.'),
+            h('button',{className:'bsa211-time-button',type:'button',onClick:()=>bsa211TimerAction(active.id,timerRunning?'pause':'start')},timerRunning?'Ⅱ Pause clock':timerExists?'▶ Resume clock':'▶ Start tracking now'))),
         start&&h('div',{className:'bsa33-next-block'},
-          h('div',null,h('span',{className:'bsa33-eyebrow'},'NEXT TASK · '+(active.focusLabel||'YOUR SUBJECT')),h('h3',null,start.title),h('p',null,start.detail||'Continue the next study activity.')),
+          h('div',null,h('span',{className:'bsa33-eyebrow'},(bsa212Guided(active)?'CURRENT PHASE':'NEXT TASK')+' · '+(active.focusLabel||'YOUR SUBJECT')),h('h3',null,start.title),h('p',null,start.detail||'Continue the next study activity.')),
           h('button',{className:'bsa33-button bsa33-button-primary',onClick:()=>go(start.route,start.opts||{})},'Continue: '+start.title,h('span',{'aria-hidden':'true'},'↗'))),
         h('div',{className:'bsa33-task-list','aria-label':'Current study tasks'},journey.blocks.map((block,i)=>h('div',{key:block.key||i,className:'bsa33-task'+(block.effectiveDone?' is-done':'')+(block===start?' is-next':'')},
           h('span',{className:'bsa33-task-index'},String(i+1).padStart(2,'0')),
-          h('div',{className:'bsa33-task-text'},h('strong',null,block.title),h('small',null,block.detail||'Existing study material')),
+          h('div',{className:'bsa33-task-text'},h('strong',null,block.title),h('small',{className:'bsa211-block-time'},(Number(block.mins)||0)+' min suggested · '+(block.detail||'Existing study material'))),
           h('button',{className:'bsa33-task-open',type:'button',onClick:()=>go(block.route,block.opts||{})},'Open '+(block.stage==='learn'?'lesson':block.stage==='review'?'review':'problem'),h('span',{'aria-hidden':'true'},'↗')),
           h('label',{className:'bsa33-task-done'},h('input',{type:'checkbox',checked:!!block.effectiveDone,disabled:!!block.evidence,onChange:()=>toggle(active.id,block.key),'aria-label':'Mark '+block.title+' complete after doing it'}),h('span',null,block.evidence?'Attempt recorded':block.done?'Done':'Mark done'))))),
         h('div',{className:'bsa33-session-footer'},h('span',null,'Answered practice is recognized automatically. Checked tasks are self-reported; neither implies mastery.'),
           h('button',{className:'bsa33-text-button',onClick:()=>archive(active.id)},journey.percent===100?'Finish and file plan':'File this plan')),
-        journey.percent===100&&h('section',{className:'bsa33-reflect', 'aria-label':'End of session reflection'},
+        (journey.percent===100||bsa212Guided(active)&&(active.focusEnded||active.blocks[bsa212PhaseIndex(active)]?.key==='teachback'||active.blocks[bsa212PhaseIndex(active)]?.key==='warmup'))&&h('section',{className:'bsa33-reflect', 'aria-label':'End of session reflection'},
           h('span',{className:'bsa33-eyebrow'},'STEP 03 · REFLECT & REVISIT'),
           h('h3',null,'What can you remember without your notes?'),
           h('p',null,'Try a brief teach-back. Write a key idea and one uncertainty. This is self-reflection, not an automatically graded answer.'),
@@ -17047,7 +17215,9 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
         h('div',{className:'bsa33-create-board'},
           h('div',{className:'bsa33-create-copy'},h('span',{className:'bsa33-eyebrow'},'LET’S PLAN YOUR STUDY TIME'),h('h2',null,'Build a focused session'),h('p',null,'Choose a topic. The plan links to matching materials where available and will never quietly pick a different topic.')),
           h('label',{className:'bsa34-focus-field'},'Focus on one topic',h('select',{value:focusChoices.some(x=>x.id===focusId)?focusId:'all',onChange:e=>setFocusId(e.target.value),'aria-label':'Choose a topic for this study plan'},focusChoices.map(x=>h('option',{key:x.id,value:x.id},x.label)))),
-          h('label',{className:'bsa33-time-field'},'How much time do you have?',h('select',{value:budget,onChange:e=>setBudget(Number(e.target.value))},[20,40,60,90].map(m=>h('option',{key:m,value:m},m+' minutes')))),
+          h('div',{className:'bsa212-mode-picker'},h('span',{className:'bsa33-eyebrow'},'CHOOSE YOUR SESSION GOAL'),
+            h('div',{className:'bsa212-mode-options'},BSA212_MODES.map(m=>h('button',{key:m.id,type:'button','aria-pressed':focusMode===m.id,className:'bsa212-mode'+(focusMode===m.id?' selected':''),onClick:()=>setFocusMode(m.id)},h('strong',null,m.title),h('small',null,m.desc))))),
+          h('label',{className:'bsa33-time-field'},'Study time goal',h('select',{value:budget,onChange:e=>setBudget(Number(e.target.value))},[20,30,40,60,90,120].map(m=>h('option',{key:m,value:m},m+' minutes'))),h('small',null,'Time is distributed across the steps. A small, movable focus timer tracks the active step. You can pause, add time, skip ahead, or save for later.')),
           h('div',{className:'bsa33-proposal-list'},proposal.length?proposal.map((block,i)=>h('div',{key:block.key||i},h('span',null,String(i+1).padStart(2,'0')),h('div',null,h('strong',null,block.title),h('small',null,block.mins+' minutes · '+block.detail)))):
             h('p',null,'No suitable study material is saved for this subject yet. Add a lesson or question in Library first.')),
           h('button',{className:'bsa33-button bsa33-button-primary',disabled:!proposal.length,onClick:create},'Create my session',h('span',{'aria-hidden':'true'},'↗'))),
@@ -17057,7 +17227,64 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
         h('div',{className:'bsa33-utility-panel'},h('h3',null,'Need a specific tool?'),h('p',null,'These are shortcuts, not extra study dashboards.'),h('div',{className:'bsa33-tool-links'},
           [['Find a lecture','lectures'],['Search written problems','library'],['Open AI Tutor','ask'],['Open scratchpad','workspace']].map(([label,tab])=>h('button',{key:tab,onClick:()=>go(tab,tab==='workspace'?{tab:'scratch'}:{})},label,' ↗'))))),
       h('details',{className:'bsa33-history'},h('summary',null,'Previous study plans ('+sessions.length+')'),
-        sessions.length?h('div',{className:'bsa33-history-list'},sessions.slice(0,12).map(s=>h('div',{key:s.id},h('strong',null,bsa205Date(s.createdAt)),h('span',null,(s.blocks||[]).filter(b=>b.done).length+' / '+(s.blocks||[]).length+' completed'),h('small',null,s.archived?'Filed':'Current')))):h('p',null,'Your study session history will appear here.')));
+        sessions.length?h('div',{className:'bsa33-history-list'},sessions.slice(0,12).map(s=>h('div',{key:s.id},h('strong',null,bsa205Date(s.createdAt)),h('span',null,(s.blocks||[]).filter(b=>b.done).length+' / '+(s.blocks||[]).length+' checked · '+(bsa211HasTimer(s)?bsa211Clock(bsa211ElapsedMs(s,clockNow)):'time untracked')),h('small',null,s.archived?'Filed':'Current')))):h('p',null,'Your study session history will appear here.')));
+  }
+  function BSA212FloatingFocus({subject,update,go,toast,nav}){
+    const active=bsa33Journey(subject).session;
+    const session=bsa212Guided(active)?active:null;
+    const [now,setNow]=useState(()=>Date.now());
+    const [expanded,setExpanded]=useState(false);
+    const [pos,setPos]=useState(()=>{try{const p=JSON.parse(localStorage.getItem('bsa212-floating-pos')||'null');return p&&Number.isFinite(p.x)&&Number.isFinite(p.y)?p:null}catch(_){return null}});
+    const drag=useRef(null);
+    useEffect(()=>{if(!session)return;setNow(Date.now());const t=setInterval(()=>setNow(Date.now()),1000);return()=>clearInterval(t)},[session?.id]);
+    useEffect(()=>{if(!session||!Number(session.focusPhaseStartedAt)||session.focusWaiting||session.focusEnded)return;
+      if(bsa212PhaseElapsed(session,now)<bsa212PhaseGoal(session))return;
+      const id=session.id;update(s=>{const x=(s.practiceSessions||[]).find(t=>t.id===id);if(x)bsa212Action(x,'expire',Date.now());});
+    },[session?.id,session?.focusPhaseStartedAt,session?.focusPhaseElapsedMs,session?.focusPhaseIndex,session?.focusWaiting,now]);
+    const action=(what,arg=0)=>{if(!session)return;const id=session.id;update(s=>{const x=(s.practiceSessions||[]).find(r=>r.id===id);if(x){bsa212Action(x,what,Date.now(),arg);if(what==='save'){const tab=String(nav?.tab||'study');const allow=['study','lectures','mcq','psets','practice','vault','mistakes','accounting-lab','accounting-cycle','library','workspace','ask','rules'];const opts=nav?.opts||{};x.focusLastTool={tab:allow.includes(tab)?tab:'study',opts:JSON.stringify(opts).length<3000?opts:{}}}else if(what==='next')delete x.focusLastTool;}});
+      if(what==='save'){setExpanded(false);if(['mcq','psets','practice'].includes(nav?.tab)){toast('Focus session saved. Use the practice screen’s own Save & leave before exiting an unfinished question.');}else{toast('Study session saved. Resume whenever you are ready.');go('study');}}
+      if(what==='finish'){setExpanded(false);toast('Study session filed. Your learning scores remain unchanged.');}
+    };
+    const constrain=(x,y,w,h)=>({x:Math.max(8,Math.min(Math.max(8,window.innerWidth-(w||Math.min(320,window.innerWidth-16))-8),x)),y:Math.max(8,Math.min(Math.max(8,window.innerHeight-(h||(expanded?285:60))-8),y))});
+    const begin=e=>{if(e.pointerType==='mouse'&&e.button!==0)return;const node=e.currentTarget.closest('.bsa212-float');const rect=node.getBoundingClientRect();drag.current={id:e.pointerId,px:e.clientX,py:e.clientY,x:rect.left,y:rect.top};e.currentTarget.setPointerCapture?.(e.pointerId);e.preventDefault()};
+    const move=e=>{const d=drag.current;if(!d||d.id!==e.pointerId)return;const box=e.currentTarget.getBoundingClientRect();setPos(constrain(d.x+e.clientX-d.px,d.y+e.clientY-d.py,box.width,box.height));e.preventDefault()};
+    const end=()=>{drag.current=null;setPos(p=>{if(p){try{localStorage.setItem('bsa212-floating-pos',JSON.stringify(p))}catch(_){}}return p})};
+    const keyboard=e=>{if(!['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Home'].includes(e.key))return;
+      e.preventDefault();if(e.key==='Home'){setPos(null);try{localStorage.removeItem('bsa212-floating-pos')}catch(_){}return}
+      const r=e.currentTarget.closest('.bsa212-float').getBoundingClientRect();const x=r.left+(e.key==='ArrowRight'?24:e.key==='ArrowLeft'?-24:0),y=r.top+(e.key==='ArrowDown'?24:e.key==='ArrowUp'?-24:0);
+      const next=constrain(x,y,r.width,r.height);setPos(next);try{localStorage.setItem('bsa212-floating-pos',JSON.stringify(next))}catch(_){}};
+    useEffect(()=>{if(!pos)return;const onResize=()=>setPos(p=>{if(!p)return p;const w=Math.min(expanded?320:240,window.innerWidth-16),h=expanded?330:68;const next=constrain(p.x,p.y,w,h);try{localStorage.setItem('bsa212-floating-pos',JSON.stringify(next))}catch(_){}return next;});onResize();window.addEventListener('resize',onResize);window.addEventListener('orientationchange',onResize);return()=>{window.removeEventListener('resize',onResize);window.removeEventListener('orientationchange',onResize)}},[!!pos,expanded]);
+    if(!session)return null;
+    const index=bsa212PhaseIndex(session),block=session.blocks[index]||{},waiting=!!session.focusWaiting,ended=!!session.focusEnded;
+    const remaining=Math.max(0,bsa212PhaseGoal(session)-bsa212PhaseElapsed(session,now));
+    const running=Number(session.focusPhaseStartedAt)>0;
+    const totalLeft=Math.max(0,(Number(session.budget)||40)*60000-bsa211ElapsedMs(session,now));
+    return h('aside',{className:'bsa212-float'+(expanded?' expanded':'')+(waiting?' is-due':'')+(session.focusSaved?' is-saved':''),'data-dragged':pos?'yes':'no',style:pos?{left:pos.x+'px',top:pos.y+'px',right:'auto',bottom:'auto'}:undefined,role:'region','aria-label':'Floating guided study timer',
+      onPointerMove:move,onPointerUp:end,onPointerCancel:end},
+      h('div',{className:'bsa212-float-top'},
+        h('button',{className:'bsa212-float-grip',type:'button',title:'Drag to move the floating timer on iPad or desktop',onPointerDown:begin,onKeyDown:keyboard,'aria-label':'Move timer: drag with touch or mouse, arrow keys to move, Home to reset position'},'⠿'),
+        h('button',{className:'bsa212-float-summary',type:'button',onClick:()=>setExpanded(v=>!v),'aria-expanded':expanded},
+          h('strong',{className:'bsa212-float-digits'},ended?'Done':waiting?'Time up':bsa211Clock(remaining)),
+          h('span',null,waiting?(session.focusSaved?'Saved · choose next':'Choose what’s next'):ended?'Wrap up session':(index+1)+'/'+session.blocks.length+' · '+(running?'Focus':session.focusSaved?'Saved':'Paused'))),
+        h('button',{className:'bsa212-float-expand',type:'button',onClick:()=>setExpanded(v=>!v),'aria-label':expanded?'Minimize focus timer':'Show focus timer options'},expanded?'−':'⌄')),
+      expanded&&h('div',{className:'bsa212-float-body'},
+        h('strong',{className:'bsa212-float-phase'},block.title||'Study activity'),
+        h('p',null,block.detail||'Continue your study step.'),
+        h('div',{className:'bsa212-float-meter',role:'progressbar','aria-valuemin':0,'aria-valuemax':100,'aria-valuenow':Math.min(100,Math.round(100*bsa212PhaseElapsed(session,now)/bsa212PhaseGoal(session)))},h('span',{style:{width:Math.min(100,100*bsa212PhaseElapsed(session,now)/bsa212PhaseGoal(session))+'%'}})),
+        h('div',{className:'bsa212-float-meta'},h('span',null,'Step '+(index+1)+' of '+session.blocks.length),h('span',null,'Session left: '+bsa211Clock(totalLeft))),
+        waiting&&h('div',{className:'bsa212-float-notice',role:'status'},'Step time reached. Add time, move on, or save for later. Your answer is not automatically submitted.'),
+        ended&&h('div',{className:'bsa212-float-notice'},'All phases visited. Your checked answers and mastery remain separate.'),
+        !ended&&h('div',{className:'bsa212-float-actions'},
+          !waiting&&h('button',{type:'button',onClick:()=>action(running?'pause':'start')},running?'Pause':'Resume'),
+          h('button',{type:'button',onClick:()=>go(session.focusSaved&&session.focusLastTool?.tab||block.route||'study',session.focusSaved&&session.focusLastTool?.opts||block.opts||{})},session.focusSaved?'Return to saved tool ↗':'Open step ↗'),
+          h('button',{type:'button',onClick:()=>action('next')},index===session.blocks.length-1?'End phases':'Next step →')),
+        (waiting||!ended)&&h('div',{className:'bsa212-float-actions'},
+          h('button',{type:'button',onClick:()=>action('extend',5)},'+5 min'),
+          h('button',{type:'button',onClick:()=>action('extend',10)},'+10 min'),
+          h('button',{type:'button',onClick:()=>action('save')},'Save & leave')),
+        ended&&h('div',{className:'bsa212-float-actions'},h('button',{type:'button',onClick:()=>action('finish')},'Finish & file'),h('button',{type:'button',onClick:()=>go('study')},'Review plan')),
+        h('p',{className:'bsa212-float-footnote'},'Elapsed wall time is not a grade. No answers are auto-submitted.'),
+        h('button',{className:'bsa212-float-reset',type:'button',onClick:()=>{setPos(null);try{localStorage.removeItem('bsa212-floating-pos')}catch(_){}}},'Reset position')));
   }
   function bsa34LearningSnapshot(subject,now=Date.now()){
     const pool=bsa197Pool(mcqDedicatedPool(subject),subject.learningEvents||[],now);
@@ -17528,35 +17755,44 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     const [find,setFind]=useState('');
     const profile=bsa46Profile(subject);
     const selected=subject?.studyConfig?.profile||'auto';
-    const search=find.toLocaleLowerCase();
+    const search=find.trim().toLocaleLowerCase();
     const toolList=tabs.filter(t=>t[0]!=='subjects'&&(!search||(t[1]+' '+t[0]).toLocaleLowerCase().includes(search)));
+    const pinned=toolList.filter(t=>sidebarPrefs.pinned.includes(t[0]));
+    const others=toolList.filter(t=>!sidebarPrefs.pinned.includes(t[0]));
     const opts=[['auto','Automatic suggestion'],...Object.entries(BSA46_PROFILES).map(([id,x])=>[id,x.label])];
+    const toolItem=([id,label])=>h('div',{key:id,className:'bsa46-editor-item'},
+      h('strong',{className:'bsa46-editor-name'},label),
+      h('button',{type:'button',className:'bsa46-pin-switch'+(sidebarPrefs.pinned.includes(id)?' selected':''),onClick:()=>toggleSidebarPin(id),'aria-pressed':sidebarPrefs.pinned.includes(id)},sidebarPrefs.pinned.includes(id)?'★ Pinned':'☆ Pin'),
+      h('label',{className:'bsa211-visible-toggle'},h('input',{type:'checkbox',checked:!sidebarPrefs.hidden.includes(id),onChange:()=>toggleSidebarHide(id)}),'Visible'),
+      sidebarPrefs.pinned.includes(id)&&h('span',{className:'bsa46-move'},
+        h('button',{type:'button',onClick:()=>shiftSidebarPin(id,-1),'aria-label':'Move '+label+' higher'},'↑'),
+        h('button',{type:'button',onClick:()=>shiftSidebarPin(id,1),'aria-label':'Move '+label+' lower'},'↓')));
     return h('section',{className:'bsa46-settings'},
-      h('div',{className:'bsa46-settings-intro'},h('strong',null,subject.name),h('span',null,'Each subject has its own study profile and tool recommendations. Changing these settings never removes course materials, attempts or saved progress.')),
+      h('div',{className:'bsa46-settings-intro'},h('strong',null,subject.name),h('span',null,'Personalize this subject without affecting your saved materials or study history.')),
       h('div',{className:'bsa46-settings-tabs',role:'tablist','aria-label':'Workspace settings'},[['subject','Subject profile'],['sidebar','Sidebar shortcuts'],['appearance','Appearance'],['tools','Tools & data']].map(([id,label])=>h('button',{key:id,className:panel===id?'selected':'',type:'button',role:'tab','aria-selected':panel===id,onClick:()=>setPanel(id)},label))),
-      panel==='subject'&&h('div',{className:'bsa46-settings-body'},
-        h('label',{className:'bsa46-field'},h('strong',null,'How should this subject be taught?'),h('select',{value:selected,onChange:e=>setSubjectProfile(e.target.value),'aria-label':'Subject learning profile'},opts.map(([id,label])=>h('option',{key:id,value:id},label)))),
-        h('div',{className:'bsa46-profile-explain'},h('strong',null,profile.label),h('p',null,profile.summary),selected==='auto'&&h('small',null,'Suggested from the course name. Choose an explicit profile to override it at any time. Unknown subjects default to General study.')),
-        h('h3',null,'Specialized tools for this subject'),h('p',{className:'muted small'},'Universal tools—lectures, MCQs, flashcards, Tutor, Topic Packs and study progress—work with every subject. These extras are optional.'),
-        h('div',{className:'bsa46-special-list'},BSA46_SPECIAL_TOOLS.map(id=>{const tab=tabs.find(t=>t[0]===id),choice=subject?.studyConfig?.tools?.[id]||'auto';return h('label',{key:id,className:'bsa46-special-item'},h('span',null,h('strong',null,tab?.[1]||id),h('small',null,choice==='auto'?(bsa46ToolVisible(subject,id)?'Recommended or existing content found':'Not suggested for this subject'):'Manual override')),h('select',{value:choice,'aria-label':'Visibility of '+(tab?.[1]||id),onChange:e=>setSubjectTool(id,e.target.value)},[['auto','Automatic'],['show','Always show'],['hide','Hide from sidebar']].map(([v,l])=>h('option',{key:v,value:v},l))))})),
-        h('button',{className:'btn ghost',type:'button',onClick:resetSubject},'Restore this subject’s recommendations')),
-      panel==='sidebar'&&h('div',{className:'bsa46-settings-body'},
-        h('h3',null,'Your quick access'),h('p',{className:'muted small'},'Pin up to 6 everyday destinations. Use ↑ and ↓ to reorder. Other features remain under expandable categories and tool search.'),
-        h('div',{className:'bsa46-settings-actions'},h('button',{className:'btn',onClick:reset},'Restore shortcut defaults')),
-        h('input',{type:'search',value:find,onChange:e=>setFind(e.target.value),placeholder:'Find a tool to pin or hide…','aria-label':'Search sidebar settings'}),
-        h('div',{className:'bsa46-editor-grid'},toolList.map(([id,label])=>h('div',{key:id,className:'bsa46-editor-item'},h('span',{className:'bsa46-editor-name'},label),h('button',{type:'button',className:'bsa46-pin-switch'+(sidebarPrefs.pinned.includes(id)?' selected':''),onClick:()=>toggleSidebarPin(id),'aria-pressed':sidebarPrefs.pinned.includes(id)},sidebarPrefs.pinned.includes(id)?'★ Pinned':'☆ Pin'),h('label',null,h('input',{type:'checkbox',checked:!sidebarPrefs.hidden.includes(id),onChange:()=>toggleSidebarHide(id)}),'Visible'),sidebarPrefs.pinned.includes(id)&&h('span',{className:'bsa46-move'},h('button',{type:'button',onClick:()=>shiftSidebarPin(id,-1),'aria-label':'Move '+label+' higher'},'↑'),h('button',{type:'button',onClick:()=>shiftSidebarPin(id,1),'aria-label':'Move '+label+' lower'},'↓')))))),
-      panel==='appearance'&&h('div',{className:'bsa46-settings-body'},
-        h('h3',null,'Small controls, less clutter'),h('p',{className:'muted small'},'The sidebar keeps these utilities behind a single menu. Study Dock and visual preferences remain optional.'),
-        h('div',{className:'bsa47-settings-palettes'},h('strong',null,'Quick colors'),h('span',{className:'muted small'},'Tap a palette to apply it. Your study records will stay unchanged.'),h(ThemeDots,{settings:settings||DEFAULT_SETTINGS,setSettings:setSettings||(()=>{})})),
+      panel==='subject'&&h('div',{className:'bsa46-settings-body',role:'tabpanel'},
+        h('label',{className:'bsa46-field'},h('strong',null,'Teaching approach'),h('select',{value:selected,onChange:e=>setSubjectProfile(e.target.value),'aria-label':'Subject learning profile'},opts.map(([id,label])=>h('option',{key:id,value:id},label)))),
+        h('div',{className:'bsa46-profile-explain'},h('strong',null,profile.label),h('p',null,profile.summary),selected==='auto'&&h('small',null,'Suggested from the subject name. You can override this whenever you want.')),
+        h('details',{className:'bsa211-settings-fold'},h('summary',null,h('span',null,'Advanced · specialized tools'),h('small',null,'Optional per-subject visibility controls')),
+          h('div',{className:'bsa211-fold-body'},h('p',{className:'muted small'},'Core lectures, MCQs, flashcards and Tutor remain available. Change optional tools only if you need to.'),
+            h('div',{className:'bsa46-special-list'},BSA46_SPECIAL_TOOLS.map(id=>{const tab=tabs.find(t=>t[0]===id),choice=subject?.studyConfig?.tools?.[id]||'auto';return h('label',{key:id,className:'bsa46-special-item'},h('span',null,h('strong',null,tab?.[1]||id),h('small',null,choice==='auto'?(bsa46ToolVisible(subject,id)?'Recommended or saved work found':'Not suggested for this subject'):'Manual override')),h('select',{value:choice,'aria-label':'Visibility of '+(tab?.[1]||id),onChange:e=>setSubjectTool(id,e.target.value)},[['auto','Automatic'],['show','Always show'],['hide','Hide from sidebar']].map(([v,l])=>h('option',{key:v,value:v},l))))})),
+            h('button',{className:'btn ghost',type:'button',onClick:resetSubject},'Restore recommended tools')))),
+      panel==='sidebar'&&h('div',{className:'bsa46-settings-body',role:'tabpanel'},
+        h('div',{className:'bsa211-editor-heading'},h('div',null,h('h3',null,'Your quick access'),h('p',{className:'muted small'},'Pin up to six tools, hide optional items, and move pinned shortcuts up or down.')),h('span',{className:'bsa211-pin-count'},sidebarPrefs.pinned.length+' / 6 pinned')),
+        h('input',{type:'search',value:find,onChange:e=>setFind(e.target.value),placeholder:'Search the tools…','aria-label':'Search sidebar settings'}),
+        search?h('div',{className:'bsa46-editor-grid'},toolList.length?toolList.map(toolItem):h('p',{className:'muted'},'No matching tools.')):
+          h('div',{className:'bsa211-shortcut-groups'},
+            h('details',{className:'bsa211-settings-fold',open:undefined,defaultOpen:true},h('summary',null,h('span',null,'Pinned shortcuts'),h('small',null,pinned.length+' shown · click to collapse')),h('div',{className:'bsa211-fold-body bsa46-editor-grid'},pinned.length?pinned.map(toolItem):h('p',{className:'muted'},'Pin any tool below to add it here.'))),
+            h('details',{className:'bsa211-settings-fold'},h('summary',null,h('span',null,'Other tools'),h('small',null,others.length+' available · click to expand')),h('div',{className:'bsa211-fold-body bsa46-editor-grid'},others.map(toolItem)))),
+        h('div',{className:'bsa46-settings-actions'},h('button',{className:'btn',onClick:reset,type:'button'},'Restore shortcut defaults'))),
+      panel==='appearance'&&h('div',{className:'bsa46-settings-body',role:'tabpanel'},
+        h('h3',null,'Appearance'),h('p',{className:'muted small'},'Colors and themes are independent from your academic records.'),
+        h('div',{className:'bsa47-settings-palettes'},h('strong',null,'Quick colors'),h(ThemeDots,{settings:settings||DEFAULT_SETTINGS,setSettings:setSettings||(()=>{})})),
         h('div',{className:'bsa46-setting-buttons'},h('button',{className:'btn',type:'button',onClick:openThemes},'Themes · layouts'),h('button',{className:'btn',type:'button',onClick:openAppearance},'Appearance · all colors'))),
-      panel==='tools'&&h('div',{className:'bsa46-settings-body'},
-        h('h3',null,'Your workspace tools'),h('p',{className:'muted small'},'Import study material, back up your records, find your way around, or hide the floating Study Dock. These actions do not erase your subjects.'),
-        h('div',{className:'bsa47-setting-tool-grid'},
-          h('button',{type:'button',onClick:openImport},'Check topic gaps'),
-          h('button',{type:'button',onClick:openBackup},'Back up or restore'),
-          h('button',{type:'button',onClick:openGuide},'Guided walkthrough'),
-          h('button',{type:'button',onClick:toggleDock},'Show / hide Study Dock')),
-        h('small',{className:'muted'},'Start with Topic gaps to see what is missing. Import JSON in the Library; financial reports belong in Financial Statements Lab.')),
+      panel==='tools'&&h('div',{className:'bsa46-settings-body',role:'tabpanel'},
+        h('h3',null,'Tools and saved data'),h('p',{className:'muted small'},'Access utility tools without adding more items to your sidebar.'),
+        h('div',{className:'bsa47-setting-tool-grid'},h('button',{type:'button',onClick:openImport},'Check topic gaps'),h('button',{type:'button',onClick:openBackup},'Back up or restore'),h('button',{type:'button',onClick:openGuide},'Guided walkthrough'),h('button',{type:'button',onClick:toggleDock},'Show / hide Study Dock')),
+        h('small',{className:'muted'},'Import JSON through Study Library. Back up before changing devices.')),
       h('div',{className:'bsa46-settings-footer'},h('button',{className:'btn primary',type:'button',onClick:close},'Done')));
   }
   /* V4.5: One progressive, usable walkthrough. Checklist is self-reported only. */
@@ -18440,7 +18676,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       spotlightOpen && h(BSA181Spotlight,{data,go,onSwitch:(id,tab,opts)=>{setData(d=>({...d,activeId:id}));go(tab,opts)},onClose:()=>setSpotlightOpen(false)}),
       /* @__PURE__ */ h("nav",{className:"bottom-nav v2-bottom-nav","aria-label":"Mobile navigation",onTouchStart:touchNavStart,onTouchEnd:touchNavEnd},
         [["home","Today","home"],["study","Learn","lecture"],["practice","Practice","bolt"],["library","Library","book"]].map(([k,l,ic])=>h("button",{type:"button",key:k,className:nav.tab===k?"on":"","aria-current":nav.tab===k?"page":undefined,onClick:()=>go(k)},h(Icon,{name:ic}),h("span",null,l))),
-        h("button",{type:"button",onClick:()=>setModal("more"),className:"v2-more-mobile"+(!["home","study","practice","library"].includes(nav.tab)?" on":""),"aria-label":"More tools"},h(Icon,{name:"more"}),h("span",null,"More"))), /* @__PURE__ */ React.createElement("div", { className: `toast${msg ? " show" : ""}`, role: "status", "aria-live": "polite" }, msg), h(FocusBar, { data, update, toast }), h(BSA4StudyDock,{key:subject.id,subject,data,settings:data.settings,setSettings,onSwitch:(id,tab)=>{setData(d=>({...d,activeId:id}));go(tab||'insights')},go,navTab:nav.tab}), modal === "quick" && /* @__PURE__ */ React.createElement(QuickAdd, { onClose: () => setModal(null), onPick: (k) => {
+        h("button",{type:"button",onClick:()=>setModal("more"),className:"v2-more-mobile"+(!["home","study","practice","library"].includes(nav.tab)?" on":""),"aria-label":"More tools"},h(Icon,{name:"more"}),h("span",null,"More"))), /* @__PURE__ */ React.createElement("div", { className: `toast${msg ? " show" : ""}`, role: "status", "aria-live": "polite" }, msg), h(FocusBar, { data, update, toast }), h(BSA212FloatingFocus,{key:subject.id,subject,update,go,toast,nav}), h(BSA4StudyDock,{key:subject.id,subject,data,settings:data.settings,setSettings,onSwitch:(id,tab)=>{setData(d=>({...d,activeId:id}));go(tab||'insights')},go,navTab:nav.tab}), modal === "quick" && /* @__PURE__ */ React.createElement(QuickAdd, { onClose: () => setModal(null), onPick: (k) => {
       if (k === "grade") {
         setModal(null);
         go("grades", { gtab: "scores" });
@@ -18567,7 +18803,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       React.createElement('button',{className:'btn',onClick:()=>bsaDownloadSafeDiagnostics(this.state.error)},'Download safe error report'),
       React.createElement('details',null,React.createElement('summary',null,'Technical details'),React.createElement('pre',null,String(this.state.error&&this.state.error.message||'Unknown render error'))));}
   }
-  if(window.__BSA_TEST__)window.__BSA18_TEST_HOOKS__={bsa197QuizKey,bsa197History,bsa197Recall,bsa197Pool,bsa197Pick,smartTopicStats,bsaAdaptiveSignals,bsaReadinessReport,bsa34LearningSnapshot,bsaUpsertMistake,learningEvidence,learningCapture,AcademicCommandCenter,bsa197LoadDraft,bsa197SaveDraft,bsa197DeleteDraft,bsa18SaveWritten,bsa18LoadWritten,bsa18DeleteWritten,bsa18LatestPractice,bsa18ReadTutorChat,bsa25PracticeHealth,bsa26TutorName,bsa26TopicMatch,bsa26SafeAction,bsa26TutorCapabilityContext,bsa26LocalStudyPlan,BSA26_COPILOT_FEATURES,bsa26SafeReturn,bsa26ReturnFor,bsa26FsDraft,bsa4TutorDraft,bsa27SelectionFocus,bsa27DefaultTutorQuestion,gemSourceSystem,bsa28SourceHistory,bsa28NewTopicRequest,bsa210TutorCore,bsa28ReadReflections,bsa28WriteReflections,bsa29Meaningful,bsa29Candidates,bsa29Pool,bsa29Exact,bsa29ReadDraft,bsa29SaveDraft,bsa210DuplicateSignal,bsa210MaterialPair,bsa210AnswerMeaning,bsa44Prepare,BSA29ClozePractice,psMathSegments,psMathHtml,psS,psInlineHtml,MultipleChoiceQuiz,MCQPage,PsWrittenDrill,MockExam,AskView,App};
+  if(window.__BSA_TEST__)window.__BSA18_TEST_HOOKS__={bsa197QuizKey,bsa197History,bsa197Recall,bsa197Pool,bsa197Pick,smartTopicStats,bsaAdaptiveSignals,bsaReadinessReport,bsa34LearningSnapshot,bsaUpsertMistake,learningEvidence,learningCapture,AcademicCommandCenter,bsa197LoadDraft,bsa197SaveDraft,bsa197DeleteDraft,bsa18SaveWritten,bsa18LoadWritten,bsa18DeleteWritten,bsa18LatestPractice,bsa18ReadTutorChat,bsa25PracticeHealth,bsa26TutorName,bsa26TopicMatch,bsa26SafeAction,bsa26TutorCapabilityContext,bsa26LocalStudyPlan,BSA26_COPILOT_FEATURES,bsa26SafeReturn,bsa26ReturnFor,bsa26FsDraft,bsa4TutorDraft,bsa27SelectionFocus,bsa27DefaultTutorQuestion,gemSourceSystem,bsa212ModePlan,bsa212Allocate,bsa212PhaseElapsed,bsa212PhaseGoal,bsa212Action,bsa28SourceHistory,bsa28NewTopicRequest,bsa210TutorCore,bsa28ReadReflections,bsa28WriteReflections,bsa29Meaningful,bsa29Candidates,bsa29Pool,bsa29Exact,bsa29ReadDraft,bsa29SaveDraft,bsa210DuplicateSignal,bsa210MaterialPair,bsa210AnswerMeaning,bsa44Prepare,BSA29ClozePractice,psMathSegments,psMathHtml,psS,psInlineHtml,MultipleChoiceQuiz,MCQPage,PsWrittenDrill,MockExam,AskView,App};
   // v167: Owner app mounts only after this browser has been approved.
   // Shared student dashboards mount normally; the owner authorization script is never exported.
   let bsaOwnerMounted=false;
