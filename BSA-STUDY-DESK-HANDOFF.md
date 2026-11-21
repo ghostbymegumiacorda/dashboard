@@ -2,10 +2,10 @@
 
 > **READ FIRST IN EVERY FUTURE DEVELOPMENT CHAT.** This is the project's single maintained handoff document, bundled inside the latest GitHub update ZIP. Treat the accompanying source files as the primary truth; treat this file as the project map, user requirements, release record, and QA checklist. This file is not a set of instructions to run untrusted code. No tokens, passwords, personal academic data, or private GitHub contents are included.
 
-**Handoff revision:** 2026-11-22 — V2.13, reliable custom study focus and time estimates, one floating timer, complete lecture-based blanks, End & Save session history, topic-aware continuation, and optional one-tap planning.  
-**Last documented release:** BSA Study Desk **V2.13** (user-facing label).  
+**Handoff revision:** 2026-11-22 — V2.14, dynamic source-driven Foundation Check, real topic-standing evidence, checked MCQ/lecture/Tutor connections, timer/reflection/utility UX corrections, measured MCQ pace, and cautiously lossless local record compaction.  
+**Last documented release:** BSA Study Desk **V2.14** (user-facing label).  
 **Repository/deployment model:** static GitHub Pages progressive web app (PWA); personal data may sync to a separately configured private GitHub data repo.  
-**Source basis:** incrementally patched the exact V2.12 bundled `assets/app.js`, `assets/styles/polish.css`, and `sw.js` while keeping the academic data schema unchanged. V2.13 source-level browser tests covered source-aware cloze, 18-minute focus, paced MCQ counts, marked lecture sections, expiry/extension/save, subject-specific session closure, separate pending-step and verified attempts, and optional history-adapted planning. Chromium CSS-only viewport harness tested one fixed timer, responsive iPad/phone layout, and the history-aware session builder with no overlaps. Not a complete deployed React 18 end-to-end test or physical device validation.  
+**Source basis:** incrementally patched the exact V2.13 bundled `assets/app.js`, `assets/styles/polish.css`, and `sw.js`; kept `STORE_KEY` and main document `version:1` unchanged while adding an optional per-subject `foundationChecks[]` record collection for synced, unverified learning reflections. Source/test-hook checks cover compressed storage Unicode round trips, plain backups, failed decoding recovery, independent topic standing, connected MCQ/lecture/card sources, and timed MCQ estimates. A standalone CSS harness checked Foundation and standing cards at 1365×768, 820×1080 and 390×844. **NOT** a complete live React18, actual iPad, GitHub conflict, or Gemini-API integration test.  
 **Confidence labels:** `CODE-CONFIRMED` = observed in provided source; `TARGETED-TESTED` = narrow behavior tested during the earlier release; `NOT-LIVE-VERIFIED` = not confirmed against deployed browsers/devices; `REQUESTED` = product requirement but not guaranteed implemented.  
 **Important constraint:** This is an incremental ZIP, NOT the complete live GitHub repository; it contains only the listed changed/deployment files plus this handoff. For full source reconstruction, obtain the exact currently deployed `index.html`, unchanged scripts, CSS files, icons, manifests, and other assets from the same repository/revision. Do not invent them.
 
@@ -38,17 +38,17 @@ A future chat still needs the user to attach the latest ZIP or make it accessibl
 
 ## 2. Release state and source provenance
 
-**Verified package:** `dashboard-V2.13-GitHub-update.zip` contains exactly three deployment assets and this single living Markdown handoff.
+**Release package:** `dashboard-V2.14-GitHub-update.zip` contains exactly three deployment assets and this one living Markdown handoff. Only the three runtime files are for GitHub upload.
 
 | Relative path | Bytes | SHA-256 |
 |---|---:|---|
-| `assets/app.js` | 2,014,220 | `7d0c1445758a555c877bbab33f6683813252fb6255f1cfc1d193b561e6796336` |
-| `assets/styles/polish.css` | 421,922 | `450627c9a2f1f0165a8d19d17e2be276d5bbc547be0c7f2881f42c326d334c1e` |
-| `sw.js` | 5,471 | `a615bb89c3e69e5e70c81f2352676b02aedd1a6a85a2bbb6576736f8194c8e5e` |
+| `assets/app.js` | 2,079,820 | `8e34cb05abb377dae0b1e791d3f0432ac2cbdae1dca69977619ea0c7a4ec6f30` |
+| `assets/styles/polish.css` | 428,663 | `d4dd0a6848024b6792cd814ca60ca67e09a1c4db17191851a892baab73322880` |
+| `sw.js` | 5,472 | `8e925733dda2e35ba4858d897027abea654e5710f565792236c74e81ed1cf248` |
 
-- `assets/app.js`: the large, essentially monolithic React application (plain JS/`React.createElement`; React 18 UMD), including many feature modules and past migration safeguards. User-facing label near line 3: `V2.13`.
+- `assets/app.js`: the large, essentially monolithic React application (plain JS/`React.createElement`; React 18 UMD), including many feature modules and past migration safeguards. User-facing label from `BSA_RELEASE_LABEL`: `V2.14`.
 - `assets/styles/polish.css`: layered visual overrides and feature-specific styles. High override density; avoid blindly appending another `!important` rule. Trace the cascade and viewport sizes.
-- `sw.js`: service worker; now uses an independent V2.13 asset-cache identifier (`asset-update-20261122-v213-reliable-focused-recall-r01`). Scoped caches protect parallel deployed sites; essential assets must load successfully before a new offline version activates. Network-first navigation, cache-first core/CDN, stale-while-revalidate secondary assets, and live (uncached) Gemini/GitHub API traffic. Cache key changes are independent of displayed version.
+- `sw.js`: service worker; now uses an independent V2.14 asset-cache identifier (`asset-update-20261122-v214-foundation-storage-guard-r01`). Scoped caches protect parallel deployed sites; essential assets must load successfully before a new offline version activates. Network-first navigation, cache-first core/CDN, stale-while-revalidate secondary assets, and live (uncached) Gemini/GitHub API traffic. Cache key changes are independent of displayed version.
 - **Not in incremental ZIP:** `index.html`, `assets/owner-auth.js`, `assets/updater.js`, `assets/styles/foundation.css`, `assets/styles/components.css`, `assets/styles/features.css`, manifest, icons, avatars, auxiliary AI rules and examples. They may be required in the deployed repository. Do NOT pretend this ZIP alone is a full new installation.
 - `sw.js` still lists external/auxiliary AI files in optional offline shell caching. They are not embedded in this update; do not delete them from the deployed repo simply because this handoff is the only Markdown file in the update ZIP.
 
@@ -72,6 +72,7 @@ A future chat still needs the user to attach the latest ZIP or make it accessibl
 | V2.11 | Study plan distinguishes completed tasks from elapsed wall-clock time, persisted start/pause/resume, full time allocation. Fixed sidebar modal portal CSS and grouped shortcut controls. |
 | **V2.12** | Four guided session modes, adaptive shorter plans, allocated step countdowns, movable/minimizable floating timer across dashboard, pause/add 5 or 10 minutes/next/save, phase-expiry protection, return-to-tool bookmark, optional upgrade of active legacy sessions, and independent completion vs time tracking. |
 | **V2.13** | Single portal-mounted floating timer to avoid duplicated/scrolling ghosts, collapsible Settings/Import/quick colors sidebar utility rail, self-contained theory cloze rejecting orphaned numerical blanks, custom 5–180 minute sessions, quick 5–25-minute one-priority focus, topic-aware unreviewed section pacing and realistically sized MCQ/problem scopes; **End & Save** archives topic-specific session history and unfinished-step bookmark, optional future-plan continuity, a one-click “Plan again for this topic,” and an optional Today launch. |
+| **V2.14** | Source-driven Foundation Check connected to lecture sections, already-checked mistakes/MCQs, cards, fresh practice and AI Tutor; topic standing based on question history/unreviewed sections without claiming verified understanding; quiet timer recovery button, nonautomatic reflection, recent history capped at five, improved rail disclosure styling; 1.35-ish min theory MCQ defaults vs longer calculation work with optional personal pace after sufficient samples; opt-in-readable JSON backups, lossless large-record compaction and honest per-subject storage estimate. |
 
 Each row is a feature history, **not** a claim that all workflows passed end-to-end or on real devices.
 
@@ -88,8 +89,12 @@ Each row is a feature history, **not** a claim that all workflows passed end-to-
 ### Persistent data model
 
 - Core `localStorage` key: **`bsa-study-dashboard:v1`** (`STORE_KEY`, around L317), document `version: 1` (schema, not release). Do not rename this for a release bump.
+- **V2.14 storage format:** The primary study document may be stored as **plain JSON** (small records, as before) or an internal losslessly deflated string with prefix `bsa:packed-json:deflate1:` (for sufficiently large records when the `pako` codec is available). `bsa214MainGet` / `bsa214MainSet` own the only primary-record read/write path. The app bundles the licensed pako codec in `assets/app.js`—its presence in the **actual deployed app asset** is essential for existing compressed records. No IndexedDB migration has occurred. Compression can reduce localStorage usage but cannot override its per-origin quota, prevent site-data clearing, or guarantee limitless material capacity.
+- **COMPATIBILITY WARNING:** Older V2.13 app.js cannot open an already-compressed V2.14 main record without a **readable JSON backup and restore**. Before downgrading, export the complete JSON backup in V2.14. Startup decode errors must trigger `StartupDataRecovery` and **must never overwrite** the original main key; this was regression-tested.
+- **Backup:** `bsa214BackupGet` exports the *uncompressed* main record as ordinary JSON in the existing unified JSON export, with the existing SHA-256 verification and import validation. PDF source shelf remains separate IndexedDB data (not covered by main JSON backups). Backup restore compresses when necessary after validation. A 40 MB imported unified-backup limit still applies. Save backups off-device.
+- **Storage meter:** Import & Export now explicitly distinguishes a 5 MiB comparison reference, physical localStorage bytes, pre-compaction logical main record bytes, subject-level rough uncompressed sizes and browser-wide storage estimates. These are DIFFERENT quotas, not proof of available space. Do not advise clearing browser data as a first response.
 - Default data `{version, updatedAt, activeId, settings, subjects}`, with a seeded CFAS curriculum and initial cards. Real subjects can include topics, cards, mistakes, quizzes, sessions, lectures, problem sets, MCQ sets, classes, attendance, tasks, AI attempts, learning events, and more.
-- Synced subject collections (from `COLLS`): `topics`, `cards`, `mistakes`, `quizzes`, `sessions`, `days`, `lectures`, `psets`, `mcqSets`, `classes`, `attend`, `tasks`, `aiAttempts`, `learningEvents`, `labAttempts`, `todayChecks`, `tutorMemories`, `studyInbox`, `driveSources`, `libraryFlags`, `cycleRuns`, `cycleCases`, `practiceSessions`, `problemWork`, `fsReports`, `fsAttempts`.
+- Synced subject collections (from `COLLS`): `topics`, `cards`, `mistakes`, `quizzes`, `sessions`, `days`, `lectures`, `psets`, `mcqSets`, `classes`, `attend`, `tasks`, `aiAttempts`, `learningEvents`, `labAttempts`, `todayChecks`, `tutorMemories`, `studyInbox`, `driveSources`, `libraryFlags`, `cycleRuns`, `cycleCases`, `practiceSessions`, `problemWork`, `fsReports`, `fsAttempts`, `foundationChecks` (V2.14, optional unverified explanations).
 - `normalizeDoc`, `stampChanges`, `mergeDocs`, and tombstone rules manage compatibility/merging. Tombstone window in code: 120 days. Do not change merge identity, delete handling, or timestamp logic without backup-and-merge tests.
 - Some preferences, saved drafts, Tutor chats and recreational data use additional **device-local** `localStorage` or `sessionStorage` keys. A sync of the main academic document is not a guarantee that every draft or private setting is on another device.
 - Noteworthy separate keys: `bsa_chat_<subject id>_<mode>`, `bsa28_mcq_reflections_<subject id>`, `bsa_gem_key`, `bsa_gem_model`, GitHub keys `bsa_gh_user`, `bsa_gh_repo`, `bsa_gh_key`, `bsa_gh_path`, sync metadata `bsa_sync_meta`, personalized sidebar `bsa45-sidebar-prefs`. Never serialize passwords, access tokens, or secret vault payload into the handoff.
@@ -237,7 +242,7 @@ The table below is derived from the `BSA26_COPILOT_FEATURES` catalog (catalog ca
 
 ## 8. Known issues, gaps, risks, and deliberately NOT completed work
 
-| Issue / idea | Current status at V2.13 | Safe next step |
+| Issue / idea | Current status at V2.14 | Safe next step |
 |---|---|---|
 | Weak questions stay in Weak mode after one correct | CODE-CONFIRMED behavior | Introduce transparent Improving vs Due states after designing migration-free queue logic. |
 | Mathematical rendering in arbitrary imported lecture | Partial renderer fixes; source corruption may remain | Validate raw source vs display and API-generated output; no invented numbers. |
@@ -253,6 +258,9 @@ The table below is derived from the `BSA26_COPILOT_FEATURES` catalog (catalog ca
 | Separate one-click Start Quiz from new MCQ without bank | Saved bank required | Show honest no-matching-bank message and import/generate valid questions workflow. |
 | Automatically reconstructing an entire repo from incremental ZIP | Impossible | Require exact other unchanged deployment assets or repo snapshot. |
 | Detecting every semantic duplicate | V2.10 has better local synonym, intent, concept, amount and paraphrase heuristics, not a full AI semantic equivalence engine | Review flagged ambiguous overlaps; verify missed paraphrases and material variations against original sources. False positives and false negatives remain possible. |
+| Truly verifying understanding from a written explanation | V2.14 saves typed Foundation Check + optionally asks Tutor to challenge it, but self-explanation and model feedback are NOT objectively verified proof. | Require independent transfer/application and later due recall; verify source answers before relying on AI conclusions. |
+| LocalStorage growth after V2.14 | Lossless deflate extends capacity for sufficiently compressible records, not unlimited, and older code needs an exported JSON backup to downgrade. | If growth becomes large, design explicit, fully tested IndexedDB migration with rollback and sync compatibility; never silently delete/migrate academic records. |
+| MCQ pace measurement | Per-question `elapsedMs` now recorded on checked questions if elapsed 12s–15min; planner requires at least six eligible samples, caps personalization conservatively. | Check real-world timing and difficulty; click-throughs/idle data cannot be treated as learning speed. |
 
 **Known release behavior != exhaustive QA.** Preserve all prior functionality and regression-test it when adding features; avoid declaring “fixed everything” without evidence.
 
@@ -322,6 +330,16 @@ The table below is derived from the `BSA26_COPILOT_FEATURES` catalog (catalog ca
 - **Limits:** Source-section review marks and assessed learning events remain the strongest evidence. A manually checked study phase is *self-report*, not proven understanding; it may be postponed on a same-day continuity plan but does not raise mastery. A partial lecture section preserves its section ID, not the exact word/scroll offset. Unsubmitted in-progress MCQ/problem answers require their separate Save & Leave mechanism. Topic ID `all` represents a mixed-subject session and cannot truthfully attribute all work to a single topic. Timing estimates are conservative, not a guaranteed finish time.
 - **Tests:** Chromium source-hook state tests validated archive and elapsed timing, topic A/B isolation, pending phase and bookmarks, an old-record-safe path, no learning evidence mutation, opt-out and different-mode protections, budget preserved after adaptation, and a quick session remaining one activity. Existing V2.13 realistic reading/MCQ pace, cloze, expiry/extension and viewport tests passed again. CSS-only session builder no-overlap tests passed at desktop 1365×768, iPad-size 820×1080, and phone 390×844; **not** a physical device or complete production React18 app test.
 
+### V2.14 change record — foundation-first study and safer local data
+
+- **Learning goal:** User wants studying, not material hoarding. `bsa214TopicStanding` estimates same-topic unseen/weak/due/3+-spaced-correct MCQ states, unreviewed lecture sections, open mistakes, checked/independent-correct attempts, unfinished saved study work and unverified teach-backs. These categories must remain separate; a user clicking Done or writing an explanation is not evidence of mastery.
+- **Connected Foundation Check:** `BSA214FoundationCheck` is reached from `BSA205Study`, checked MCQs and individual lecture sections. `bsa214FoundationSources` dynamically chooses materials within the current subject/topic: previously checked wrong questions first, then relevant (especially unreviewed) lecture sections, previously checked questions and Concept Vault cards. No fixed accounting concept list; other subjects work too. **Never include an unseen answer key** in the source. Learner answers (a) why/how and (b) a changed-scenario application without notes, optionally reveals the source, saves their reflection in a separately synced per-subject `foundationChecks[]` collection marked `self-explanation-unverified`, and can ask Tutor to challenge it. A separate button opens new MCQ retrieval for a confirmed topic; if topic association is absent, no silent unrelated quiz. No automatic grade or mastery promotion, no fabricated evaluation.
+- **Study plan UX:** study screen prioritizes real topic standing over mere time/checklist percent. Reflection displays only after an explicit `Finish & reflect` click; marking a block Done does not summon a stale reflection. Recent archived plans list only the five newest, with the same-topic session carry-forward explanation retained. Global mini-timer keeps a viewport-level portal singleton and now has a direct Show floating timer recovery action; on use, expands and clears stale drag coordinates. A tidy minimal Settings/Import/Quick Colors toggle replaces bulky rail utility styling.
+- **MCQ timing:** `bsa213McqEstimate` initial ordinary theory estimate ≈1.35 min/question (complex multi-step/numerical ≈3.8+ min, varying with length); `bsa213McqScope` uses capped trimmed independent per-question `elapsedMs` after >=6 valid recorded samples. Measured time is planning evidence, not speed-based mastery, and long idle measurements are excluded. Short focus plans still choose one feasible activity, with conservative question count/partial-lecture estimates and no false promise of completion.
+- **Storage:** `bsa214Pack`, `bsa214Unpack`, `bsa214MainGet`, `bsa214MainSet`, `bsa214BackupGet` provide optically invisible **lossless deflate** for large main study records; app bundles pako MIT license. Primary `STORE_KEY` remains the same, no data schema version bump. Storage UI now displays actual main-record size, compressed/uncompressed comparison, subject breakdown and clearer limits. Existing backups remain human-readable JSON, the existing integrity checks remain, and read failure protects raw bytes rather than replacing data. Auto-compaction is not an indefinite capacity solution. **When downgrading from V2.14 to older versions, FIRST export a verified readable complete backup in V2.14 and restore it on the older version.**
+- **QA:** Node app/service-worker syntax check; headless Chromium source hooks (React16 test runtime, not a full React18 app) covered plain/deflated Unicode round-trip, SHA-ready plain backup value, backup preview, corrupted compressed startup guard, separate topic standing and contextual sources, and MCQ timing with eligible samples; no JS page errors in these isolated tests. CSS harness passed 1365×768 desktop, 820×1080 iPad-sized and 390×844 phone-sized horizontal-overflow checks for source-driven study panels. Not physical device, live deployed PWA, real GitHub merge, or actual Gemini API QA.
+- **Upload:** Only `assets/app.js`, `assets/styles/polish.css`, `sw.js`; retain this single up-to-date handoff Markdown separately. Back up personal academic records before deployment; verify service-worker update and recovery with a real device.
+
 ## 9. Engineering / validation contract for the next AI
 
 **Before editing:**
@@ -345,14 +363,14 @@ The table below is derived from the `BSA26_COPILOT_FEATURES` catalog (catalog ca
 
 **Packaging rule:**
 
-- New user-facing version `V2.13` only after actual application change (not merely repackaging docs); increment scoped SW cache ID independently as needed. Keep schema version unchanged unless deliberately migrating.
+- New user-facing version `V2.14` only after actual application change (not merely repackaging docs); increment scoped SW cache ID independently as needed. Keep schema version unchanged unless deliberately migrating.
 - ZIP must list changed site files with exact relative paths; user additionally requests `assets/styles/polish.css` in every deployment ZIP. **Include exactly this one updated Markdown file at ZIP root.**
 - Do not include tests, old release notes, image assets or internal debugging scripts unless changed/needed. Only site files should be uploaded to GitHub; this handoff may remain local if user does not want docs published on the site.
 - Update hashes, source version, feature list, known issues, QA results and release history **inside this file only**. Keep the filename stable so new chats find it easily.
 
-## 10. High-value source anchors (updated for V2.13)
+## 10. High-value source anchors (updated for V2.14)
 
-Line numbers in older anchor sections may describe their original release; prefer symbol-name searches in the bundled V2.13 `assets/app.js` and the regenerated function index below.
+Line numbers in older anchor sections may describe their original release; prefer symbol-name searches in the bundled V2.14 `assets/app.js` and the regenerated function index below.
 
 - `buildDefault` — `assets/app.js:371`
 - `loadLocal` — `assets/app.js:374`
@@ -422,107 +440,278 @@ Line numbers in older anchor sections may describe their original release; prefe
 - `DashboardV205Home` — `assets/app.js:17185`
 - `App` — `assets/app.js:17579`
 
-## 11. Complete named function index (V2.13)
+## 11. Complete named function index (V2.14)
 
-678 named function declarations from the actual V2.13 `assets/app.js`. Search by symbol name; historical line numbers can shift.
+1339 identified named function/callable declarations from the current V2.14 `assets/app.js` (regular-expression index; source remains authoritative). All line numbers are from this ZIP. Search the actual source by symbol name for complete dependencies.
 
-- `buildCfas` (L353), `buildDefault` (L371), `loadLocal` (L374), `stdTokens` (L402), `matchTopic` (L405), `normTopic` (L430), `normCard` (L452)
-- `normMistake` (L459), `normQuiz` (L472), `parseQA` (L479), `psJSONCandidates` (L494), `bsaRuleText` (L515), `bsaRuleUrl` (L516), `bsaRuleNormalize` (L517)
-- `bsaParseTypedMaterial` (L529), `bsaMergeRules` (L550), `bsaRuleCollection` (L566), `bsaRuleCollections` (L577), `bsaRuleHasSource` (L586), `bsaRuleSearch` (L587), `bsaPdfDatabase` (L594)
-- `bsaPdfList` (L600), `bsaPdfRemove` (L601), `bsaPdfAdd` (L602), `bsaPdfOpenFile` (L618), `PdfSourceShelf` (L623), `add` (L627), `remove` (L628)
-- `RulesLibrary` (L641), `selectionToggle` (L659), `selectionAll` (L660), `selectionReset` (L661), `selectedExport` (L662), `deleteSelectedRules` (L667), `undoDeletedRules` (L670)
-- `openGroup` (L684), `backToLibrary` (L685), `closeRule` (L686), `openRule` (L687), `startEdit` (L688), `save` (L689), `saveNotes` (L696)
-- `toggleSave` (L697), `markReview` (L698), `exportCollection` (L699), `parseImport` (L828), `applyPartial` (L901), `bsaRecordText` (L968), `bsaMistakeMatch` (L971)
-- `bsaUpsertMistake` (L980), `bsaImportIdentity` (L1005), `previewPartial` (L1011), `Modal` (L1036), `Field` (L1075), `TopicSelect` (L1078), `copyText` (L1081)
-- `readiness` (L1101), `ExamPostMortem` (L1116), `pmPending` (L1155), `TopicEditor` (L1159), `CardEditor` (L1199), `FlipCard` (L1218), `Drill` (L1231)
-- `MistakeEditor` (L1261), `QuizEditor` (L1281), `SubjectModal` (L1296), `bsa26SessionGet` (L1349), `bsa26SessionSet` (L1350), `ghConfig` (L1351), `deviceName` (L1356)
-- `b64encode` (L1366), `b64decode` (L1372), `bsa16LectureKey` (L1383), `bsa16ActionClock` (L1384), `bsa16SetLectureAction` (L1388), `bsa16MergeLectureActions` (L1396), `bsa16ApplyLectureActions` (L1407)
-- `bsa16SameChapter` (L1416), `bsa16DeleteLectureRecords` (L1420), `bsa16UndoLectureRecords` (L1429), `normalizeDoc` (L1447), `stampChanges` (L1483), `latestOf` (L1540), `mergeOrder` (L1546)
-- `pickNewer` (L1563), `mergeList` (L1569), `mergeDocs` (L1604), `emit` (L1650), `useSync` (L1655), `useTick` (L1666), `ghFetch` (L1677)
-- `ghError` (L1690), `ghGet` (L1697), `ghPut` (L1725), `markDirty` (L1737), `runSync` (L1746), `startSyncLoop` (L1824), `syncView` (L1918)
-- `SyncBadge` (L1925), `docSummary` (L1936), `GitHubPanel` (L1943), `packJSON` (L2265), `StarterPacks` (L2273), `bsaResourceDownload` (L2324), `BsaResourceHub` (L2329)
-- `bsaImportQuality` (L2349), `duplicate` (L2354), `bsaTopicConnections` (L2384), `DataModal` (L2400), `dueState` (L2620), `dueRel` (L2627), `DueChip` (L2633)
-- `SessionEditor` (L2650), `UpNext` (L2679), `CalendarView` (L2687), `Icon` (L2896), `ThemeDots` (L2915), `Track` (L2936), `Ring` (L2943)
-- `learningCapture` (L2948), `bsa20TopicResolver` (L2982), `learningEvidence` (L3007), `learningNextAction` (L3013), `bsa22SelfRatedEvidence` (L3024), `bsa22IndependentCorrect` (L3027), `bsaAdaptiveSignals` (L3035)
-- `smartTopicStats` (L3071), `AiPracticeLab` (L3110), `run` (L3142), `StudyEnhancements` (L3197), `StudyFlow` (L3241), `SmartStudyPanel` (L3279), `homePreferences` (L3294)
-- `AcademicCommandCenter` (L3295), `loadRoutineDate` (L3347), `saveRoutineDate` (L3357), `DailyStudyPath` (L3369), `WorkflowRibbon` (L3404), `FeatureGuide` (L3428), `NewHereCard` (L3441)
-- `HomeView` (L3450), `RoadmapView` (L3574), `VaultView` (L3696), `MistakesView` (L3778), `QuickAdd` (L3837), `MoreSheet` (L3848), `upcomingExams` (L3888)
-- `focusExam` (L3892), `fuzzIvl` (L3904), `schedule` (L3911), `forecast` (L3959), `fcWorst` (L3974), `smoothDay` (L3983), `ForecastPanel` (L3999)
-- `bumpDay` (L4036), `examForTopic` (L4051), `calBump` (L4069), `calStats` (L4076), `CalibrationPanel` (L4094), `gradeCardIn` (L4117), `gradeMistakeIn` (L4127)
-- `buildReview` (L4138), `findProb` (L4170), `probsDue` (L4177), `gradeProbIn` (L4185), `gapCheck` (L4207), `examPressure` (L4233), `buildAll` (L4238)
-- `AllSubjectsPanel` (L4254), `interleave` (L4269), `cardStrength` (L4281), `examReadiness` (L4290), `examMix` (L4307), `studyDaySet` (L4326), `streakOf` (L4333)
-- `weekMinutes` (L4343), `retentionPct` (L4348), `say` (L4359), `budgetQueue` (L4372), `BudgetPanel` (L4391), `noteAllowed` (L4404), `askNotify` (L4407)
-- `maybeRemind` (L4415), `StudySession` (L4438), `ComputeSet` (L4773), `startTimer` (L4869), `startBreak` (L4874), `useTimer` (L4878), `chime` (L4888)
-- `FocusBar` (L4905), `LeechPanel` (L5015), `attendStats` (L5063), `ClassLife` (L5076), `RoiPanel` (L5178), `ActivityStrip` (L5211), `playStudyFeedbackSound` (L5245)
-- `playQuizFeedbackSound` (L5249), `note` (L5276), `mcqAssignedTopic` (L5316), `mcqDedicatedPool` (L5343), `bsa197QuizKey` (L5368), `bsa197History` (L5378), `bsa197Recall` (L5387)
-- `bsa197Pool` (L5408), `bsa197Pick` (L5413), `bsa197DraftKey` (L5431), `bsa197LoadDraft` (L5432), `bsa18PracticeChanged` (L5439), `bsa18SavedAt` (L5442), `bsa197SaveDraft` (L5446)
-- `bsa197DeleteDraft` (L5457), `bsa18WrittenKey` (L5460), `bsa18LoadWritten` (L5461), `bsa18SaveWritten` (L5467), `bsa18DeleteWritten` (L5471), `bsa18LatestPractice` (L5472), `bsa28SourceHistory` (L5489)
-- `bsa28NewTopicRequest` (L5495), `bsa28ReflectionKey` (L5500), `bsa28ReadReflections` (L5501), `bsa28WriteReflections` (L5505), `bsa18ReadTutorChat` (L5511), `MultipleChoiceQuiz` (L5522), `MCQBankExplorer` (L5814)
-- `MCQPage` (L5872), `bsa39Requirements` (L5893), `bsa39Mode` (L5899), `bsa39DraftKey` (L5909), `bsa39Load` (L5910), `bsa39Save` (L5911), `bsa39Number` (L5912)
-- `bsa39Rows` (L5913), `bsa39RowSummary` (L5914), `bsa22AccountKey` (L5915), `bsa22ParseMoney` (L5925), `bsa39KeyCheck` (L5932), `bsa39Text` (L5964), `BSA39AnswerEditor` (L5971)
-- `PsWrittenDrill` (L5996), `bsaSmartQueue` (L6149), `add` (L6159), `bsaWeeklyEvidence` (L6171), `timestamp` (L6173), `BSA29ClozePractice` (L6188), `PracticeView` (L6300)
-- `mxPool` (L6464), `MockExam` (L6490), `customVars` (L6741), `applyTheme` (L6768), `CustomThemeEditor` (L6783), `BSA41ThemesModal` (L6828), `AppearanceModal` (L6849)
-- `ExamReadyMini` (L6944), `gcDefaultScale` (L7001), `gcDefault` (L7013), `gcNorm` (L7030), `gcPartRaw` (L7081), `gcCompute` (L7094), `gcLetter` (L7114)
-- `gcRemaining` (L7120), `gcSummary` (L7138), `gcNeed` (L7162), `gcSemester` (L7178), `gcFromJSON` (L7195), `gcMergeStructure` (L7243), `gcCrc32` (L7282)
-- `gcZip` (L7288), `gcSheetXml` (L7359), `gcSheetName` (L7376), `gcXlsx` (L7384), `nlmGuessKind` (L7418), `nlmContext` (L7626), `bsaPromptIsJsonPrompt` (L7705)
-- `bsaPromptFillBrackets` (L7706), `bsaBuildGuidedPrompt` (L7718), `NotebookLMPrompts` (L7793), `setExtra` (L7822), `setCount` (L7823), `setField` (L7835), `gcRetention` (L7942)
-- `gcScholar` (L7953), `gcTier` (L7973), `gcNeedView` (L7980), `gcWarnings` (L7987), `gcBlank` (L7999), `NumInput` (L8015), `gcSnap` (L8053)
-- `GcTrajectory` (L8066), `GcOverview` (L8095), `gcPullable` (L8163), `GcPullQuizzes` (L8167), `GcPullAttendance` (L8188), `GcEditor` (L8203), `GcScale` (L8350)
-- `GcSettings` (L8389), `GcStart` (L8414), `GcImportBox` (L8430), `gcListFor` (L8474), `gcWorkbook` (L8482), `gcReportHtml` (L8551), `gcTextSummary` (L8597)
-- `gcPrint` (L8621), `gcSaveFile` (L8645), `GcExport` (L8680), `GcGoals` (L8693), `GcAll` (L8734), `GcWhatIf` (L8777), `GradesView` (L8837)
-- `GradeMini` (L8959), `drLex` (L9005), `drCompile` (L9024), `or` (L9033), `and` (L9034), `cmp` (L9035), `add` (L9046)
-- `mul` (L9051), `unary` (L9063), `power` (L9069), `postfix` (L9074), `primary` (L9080), `drNiceStep` (L9124), `drVar` (L9130)
-- `drGivenRow` (L9167), `drStep` (L9175), `drNorm` (L9184), `drCheck` (L9236), `drFmt` (L9264), `drFill` (L9274), `drDraw` (L9289)
-- `drMake` (L9298), `drPool` (L9338), `drPickSet` (L9352), `drSets` (L9373), `drFromJSON` (L9384), `drApply` (L9405), `bkChapter` (L9418)
-- `bkNorm` (L9441), `bkOf` (L9452), `bkMerge` (L9463), `bkFromJSON` (L9503), `drExampleFor` (L9566), `BkPanel` (L9623), `BkEditor` (L9644)
-- `DrPanel` (L9742), `drToForm` (L9759), `drFromForm` (L9777), `DrSample` (L9801), `DrForm` (L9811), `DrManager` (L9826), `psRepairJSON` (L9949)
-- `psS` (L9980), `psNormProblem` (L10013), `psNormSet` (L10044), `psNormLecture` (L10069), `psFromJSON` (L10120), `psApply` (L10151), `psBlocks` (L10214)
-- `psMathHtml` (L10269), `psMathSegments` (L10325), `psInline` (L10352), `PsMd` (L10374), `psMdHtml` (L10400), `PersonalizationCorner` (L10422), `psPrint` (L10496)
-- `psSetText` (L10516), `lxText` (L10531), `psSafeProblems` (L10542), `psGroupProblems` (L10560), `psByTopic` (L10570), `PsBar` (L10589), `PsSampleCard` (L10597)
-- `bsa29Clean` (L10611), `bsa29Meaningful` (L10612), `bsa29HasAnswer` (L10617), `bsa213ClozeQuality` (L10624), `bsa213DefinitionQuestion` (L10642), `bsa29Candidates` (L10648), `lxCloze` (L10695)
-- `bsa29Pool` (L10696), `bsa29Exact` (L10710), `bsa29DraftKey` (L10714), `bsa29ReadDraft` (L10715), `bsa29SaveDraft` (L10721), `lxStudied` (L10734), `lxDueList` (L10738)
-- `LxDueChip` (L10741), `xrefLecture` (L10752), `LecturePracticeGenerator` (L10776), `generate` (L10782), `save` (L10814), `SmartScheduleBuilder` (L10842), `build` (L10846)
-- `save` (L10865), `LxView` (L10878), `PsEmpty` (L10984), `lxSourcePresentation` (L10989), `bsa13LectureHeading` (L11013), `bsaRevisionExcerpt` (L11018), `bsa41LectureHighlights` (L11029)
-- `bsa41UpdateHighlight` (L11030), `bsa41ExportNotes` (L11032), `bsa41ImportNotes` (L11040), `bsa41Locate` (L11058), `bsa41DecorateHtml` (L11068), `BSA41MarkedText` (L11113), `LxReader` (L11119)
-- `LxEditor` (L11327), `BSA43ProblemSets` (L11367), `PsView` (L11401), `PsExportCustomizer` (L11427), `PsSetView` (L11475), `PsProblem` (L11540), `PsProblemEditor` (L11556)
-- `PsSetEditor` (L11582), `gemErr` (L11728), `gemNetErr` (L11741), `gemListModels` (L11747), `gemProbe` (L11774), `gemSend` (L11793), `gemContext` (L11865)
-- `gemSystem` (L11914), `gemFindJSON` (L11931), `GemSetup` (L11950), `gemSourceSystem` (L12027), `bsa210TutorCore` (L12146), `gemGeneralSystem` (L12162), `bsa26TutorName` (L12168)
-- `bsa26Words` (L12205), `bsa26TopicMatch` (L12206), `bsa26TutorCapabilityContext` (L12223), `bsa26SafeAction` (L12246), `bsa26Action` (L12270), `bsa26LocalStudyPlan` (L12271), `gemDashboardSystem` (L12340)
-- `bsa4ContextKey` (L12345), `bsa4ReadContext` (L12346), `bsa4SaveContext` (L12347), `bsa4ProblemContext` (L12348), `bsa26SafeReturn` (L12361), `bsa26ReturnFor` (L12372), `bsa26FocusExcerpt` (L12403)
-- `bsa4TutorDraft` (L12413), `bsa197TutorQuizBehavior` (L12439), `bsa197TutorContext` (L12442), `BSA197TutorMemory` (L12448), `AskView` (L12478), `setBadge` (L12707), `holdScreen` (L12716)
-- `CurriculumView` (L12735), `InkPad` (L12791), `ClassmatePublisher` (L13055), `RetentionTools` (L13279), `bsaBackupKeys` (L13342), `bsaValidMainRecord` (L13350), `bsaBackupPreview` (L13363)
-- `bsaBackupDigest` (L13371), `bsaDownloadUnifiedBackup` (L13377), `bsaInspectUnifiedBackup` (L13396), `bsaApplyInspectedBackup` (L13429), `ToolkitView` (L13455), `HowToCorner` (L13605), `grantFocusXp` (L13642)
-- `grantActivityXp` (L13656), `grantFlashcardReviewXp` (L13670), `bsaAchievementDetails` (L13676), `AcademicProgress` (L13697), `Game2048` (L13719), `SudokuGame` (L13737), `MinesweeperGame` (L13749)
-- `useJoy` (L13764), `lifePetStatus` (L13785), `StudyLifeHomeWidget` (L13790), `readLife` (L13819), `lifeEarned` (L13820), `PixelScholar` (L13828), `LifeTownMap` (L13853)
-- `activeSeason` (L13871), `StudyLife` (L13873), `JoyHub` (L13918), `SnakeGame` (L13951), `WordGuessGame` (L13970), `NonogramGame` (L13983), `BubblePopGame` (L13990)
-- `BreakCorner` (L14004), `StudyTimeAudit` (L14032), `bsaReadinessReport` (L14052), `BsaReadinessCoach` (L14081), `bsaV164ReadExamPrefs` (L14128), `bsaV164ExamPriority` (L14132), `BsaExamPlanner` (L14144)
-- `BsaMistakePatterns` (L14172), `BsaRecommendationCheck` (L14192), `BsaTopicMasteryPanel` (L14211), `StudyReport` (L14230), `bsaVaultKey` (L14313), `bsaVaultEncrypt` (L14317), `bsaVaultDecrypt` (L14324)
-- `bsaDeviceKeyGet` (L14336), `bsaDeviceVaultEncrypt` (L14362), `bsaDeviceVaultDecrypt` (L14368), `PrivateVault` (L14378), `bsa181Read` (L14468), `bsa181Write` (L14469), `bsa181Text` (L14470)
-- `bsa181Add` (L14471), `bsa181Remove` (L14472), `bsa181Restore` (L14473), `bsa181Recent` (L14474), `bsa181Links` (L14475), `BSA181Workspace` (L14476), `BSA181Spotlight` (L14508)
-- `bsa27SelectionFocus` (L14517), `bsa27DefaultTutorQuestion` (L14533), `BSA181HighlightTool` (L14539), `StartupDataRecovery` (L14624), `BSA185LayoutEditor` (L14664), `bsa25PracticeHealth` (L14676), `BSA193DeviceSafety` (L14712)
-- `bsa187Verify` (L14794), `bsa198Validate` (L14825), `bsa198StoredKeyValid` (L14849), `bsa198Catalog` (L14861), `bsa198PlanBatch` (L14874), `bsa198Parse` (L14900), `bsa198DeclaredSubject` (L14910)
-- `bsa198StorePlan` (L14914), `BSA187AccountingLab` (L14932), `bsa188Tasks` (L15090), `bsa196BudgetTasks` (L15109), `BSA188Today` (L15113), `BSA189Companion` (L15150), `BSA191WeeklyPlanner` (L15171)
-- `BSA344Schedule` (L15198), `bsa15Clean` (L15215), `bsa15Excerpt` (L15219), `bsa15LectureList` (L15224), `bsa15SectionList` (L15227), `bsa15Process` (L15230), `bsa15ComparisonTable` (L15240)
-- `bsa15Timeline` (L15256), `bsa15ProblemBlocks` (L15287), `BSA15VisualStudio` (L15295), `BSA192KnowledgeMap` (L15470), `DashboardV2Home` (L15475), `bsa205LoadScript` (L15570), `BSA205Sources` (L15573)
-- `addSource` (L15581), `bsa3TopicLabel` (L15606), `bsa205LibraryItems` (L15611), `bsa3GroupRows` (L15622), `bsa38GroupOriginalSets` (L15626), `bsa205Duplicates` (L15634), `bsa205InboxPlan` (L15641)
-- `bsa205FileBase64` (L15647), `bsa205ExtractPdfText` (L15648), `bsa205GemDraft` (L15659), `BSA205Importer` (L15674), `bsa49TopicParts` (L15724), `bsa49ResolveTopic` (L15732), `bsa49CanonicalizePack` (L15758)
-- `bsa49UnmatchedLabels` (L15769), `BSA49TopicLinks` (L15778), `bsa49MatchesSubject` (L15788), `bsa49PackPrompt` (L15799), `bsa13CheckGeneratedJSON` (L15818), `bsa44Empty` (L15867), `bsa44ParseOne` (L15868)
-- `bsa44Baseline` (L15901), `bsa210Tokens` (L15926), `bsa210Intent` (L15935), `bsa210Concept` (L15945), `bsa210Numbers` (L15957), `bsa210DuplicateSignal` (L15963), `bsa210AnswerMeaning` (L15989)
-- `bsa210MaterialPair` (L15999), `bsa44Similar` (L16009), `bsa44Prepare` (L16010), `acceptSets` (L16071), `bsa44Plan` (L16097), `bsa44ApplyPack` (L16110), `bsa47ExpectedMaterials` (L16142)
-- `bsa47HasMaterial` (L16147), `bsa47TopicGapPrompt` (L16148), `BSA49SmartFlow` (L16171), `BSA45ImportCenter` (L16203), `BSA44PackImporter` (L16232), `bsa44TopicCounters` (L16287), `BSA44TopicHealth` (L16299)
-- `bsa45SafeLibrarySubject` (L16325), `BSA205Library` (L16330), `bsa205Diagnose` (L16463), `bsa43ParseReport` (L16564), `bsa46CrossChecks` (L16628), `BSA46Statement` (L16644), `BSA46Checks` (L16668)
-- `bsa43Tasks` (L16674), `bsa26FsDraftKey` (L16705), `bsa26FsDraft` (L16708), `BSA43FinancialStatements` (L16715), `bsa205CycleValidate` (L16859), `bsa205Ledger` (L16871), `bsa205CycleReports` (L16875)
-- `BSA205Cycle` (L16888), `bsa34FocusChoices` (L16967), `bsa34TopicMatch` (L16977), `bsa34TopicTitle` (L16983), `bsa34PlanBlocks` (L16984), `bsa211HasTimer` (L17016), `bsa211ElapsedMs` (L17017)
-- `bsa211Clock` (L17023), `bsa212Allocate` (L17036), `bsa213Words` (L17050), `bsa213ReadScope` (L17055), `bsa213McqEstimate` (L17088), `bsa213McqScope` (L17094), `bsa213WrittenMinutes` (L17102)
-- `bsa213ScopeExplanation` (L17108), `bsa213ScopeLongBlock` (L17115), `bsa213QuickPlan` (L17154), `bsa212ModePlan` (L17215), `bsa212ModeName` (L17246), `bsa212Guided` (L17247), `bsa212PhaseIndex` (L17248)
-- `bsa212PhaseElapsed` (L17249), `bsa212PhaseGoal` (L17252), `bsa212Freeze` (L17253), `bsa212Action` (L17261), `bsa214RecentClosed` (L17298), `bsa214Archive` (L17308), `bsa214HistoryLabel` (L17345)
-- `bsa214AdaptProposal` (L17358), `bsa205SessionBlocks` (L17390), `bsa34BlockEvidence` (L17393), `BSA205Study` (L17409), `BSA212FloatingFocus` (L17560), `bsa34LearningSnapshot` (L17623), `BSA205Mastery` (L17643)
-- `bsa38Calc` (L17690), `bsa38ValidateTemplate` (L17704), `bsa38ParseImport` (L17720), `bsa38Generate` (L17721), `bsa38Work` (L17726), `bsa38SaveWork` (L17727), `bsa38Day` (L17728)
-- `bsa38AddDays` (L17729), `BSA38Variations` (L17730), `BSA38Oral` (L17761), `BSA38MasteryCheckpoint` (L17775), `BSA38PracticeStudio` (L17782), `BSA38ExamCatchup` (L17788), `bsa38SuggestTopic` (L17812)
-- `BSA38LibraryTriage` (L17819), `BSA38ProgressCompare` (L17846), `bsa33Journey` (L17863), `bsa33RouteName` (L17876), `BSA31StudyPath` (L17877), `bsa32ManilaDay` (L17933), `bsa32DailyLine` (L17942)
-- `BSA3Today` (L17948), `BSA3Practice` (L18009), `bsa46SuggestedProfile` (L18061), `bsa46ProfileId` (L18071), `bsa46Profile` (L18072), `bsa46ToolVisible` (L18073), `bsa46TutorGuidance` (L18082)
-- `bsa46ImportGuidance` (L18087), `BSA45SidebarEditor` (L18088), `BSA3StartGuide` (L18144), `DashboardV205Home` (L18158), `BSA4StudyDock` (L18197), `BSA43ThemeNavigation` (L18306), `bsa13IconName` (L18349)
-- `BSA13IconPicker` (L18357), `bsa13MaterialCounts` (L18374), `BSA11SubjectSwitcher` (L18386), `BSA12Subjects` (L18444), `App` (L18552), `bsaDownloadSafeDiagnostics` (L19120)
+- `S` (L30), `bsa214Pack` (L349), `bsa214Unpack` (L359), `bsa214MainGet` (L369), `bsa214MainSet` (L370)
+- `bsa214BackupGet` (L371), `uid` (L373), `pad` (L374), `today` (L375), `norm` (L379)
+- `clone` (L380), `buildCfas` (L408), `buildDefault` (L426), `loadLocal` (L429), `topicName` (L448)
+- `studyTopics` (L453), `itemTopic` (L454), `stdTokens` (L461), `matchTopic` (L464), `pick` (L472)
+- `first` (L476), `statusFrom` (L480), `normTopic` (L489), `normCard` (L511), `normMistake` (L518)
+- `normQuiz` (L531), `parseQA` (L538), `psJSONCandidates` (L553), `bsaRuleText` (L574), `bsaRuleUrl` (L575)
+- `bsaRuleNormalize` (L576), `bsaParseTypedMaterial` (L588), `bsaMergeRules` (L609), `identity` (L613), `titleKey` (L614)
+- `bsaRuleCollection` (L625), `bsaRuleCollections` (L636), `bsaRuleHasSource` (L645), `bsaRuleSearch` (L646), `bsaPdfDatabase` (L653)
+- `bsaPdfList` (L659), `bsaPdfRemove` (L660), `bsaPdfAdd` (L661), `bsaPdfOpenFile` (L677), `PdfSourceShelf` (L682)
+- `load` (L684), `add` (L686), `remove` (L687), `RulesLibrary` (L700), `emptyRule` (L702)
+- `selectionToggle` (L718), `selectionAll` (L719), `selectionReset` (L720), `selectedExport` (L721), `deleteSelectedRules` (L726)
+- `undoDeletedRules` (L729), `saveRuleUpdate` (L742), `openGroup` (L743), `backToLibrary` (L744), `closeRule` (L745)
+- `openRule` (L746), `startEdit` (L747), `save` (L748), `saveNotes` (L755), `toggleSave` (L756)
+- `markReview` (L757), `exportCollection` (L758), `parseImport` (L887), `applyPartial` (L960), `bsaRecordText` (L1027)
+- `bsaMistakeMatch` (L1030), `bsaUpsertMistake` (L1039), `bsaImportIdentity` (L1064), `previewPartial` (L1070), `Modal` (L1095)
+- `onKey` (L1101), `Field` (L1134), `TopicSelect` (L1137), `copyText` (L1140), `readiness` (L1160)
+- `ExamPostMortem` (L1175), `set` (L1180), `pmPending` (L1214), `TopicEditor` (L1218), `CardEditor` (L1258)
+- `FlipCard` (L1277), `Drill` (L1290), `answer` (L1296), `k` (L1303), `MistakeEditor` (L1320)
+- `QuizEditor` (L1340), `SubjectModal` (L1355), `lsGet` (L1394), `lsSet` (L1401), `bsa26SessionGet` (L1408)
+- `bsa26SessionSet` (L1409), `ghConfig` (L1410), `deviceName` (L1415), `b64encode` (L1425), `b64decode` (L1431)
+- `sigOf` (L1437), `docSig` (L1438), `bsa16LectureKey` (L1442), `bsa16ActionClock` (L1443), `bsa16SetLectureAction` (L1447)
+- `bsa16MergeLectureActions` (L1455), `bsa16ApplyLectureActions` (L1466), `bsa16SameChapter` (L1475), `bsa16DeleteLectureRecords` (L1479), `bsa16UndoLectureRecords` (L1488)
+- `normalizeDoc` (L1506), `stampChanges` (L1542), `latestOf` (L1599), `mergeOrder` (L1605), `pickNewer` (L1622)
+- `mergeList` (L1628), `mergeDocs` (L1663), `saveMeta` (L1704), `syncSnapshot` (L1708), `emit` (L1709)
+- `useSync` (L1714), `useTick` (L1725), `ghRepoUrl` (L1734), `ghFileUrl` (L1735), `ghFetch` (L1736)
+- `ghError` (L1749), `ghGet` (L1756), `ghPut` (L1784), `markDirty` (L1796), `runSync` (L1805)
+- `startSyncLoop` (L1883), `onOnline` (L1884), `onOffline` (L1885), `onVis` (L1886), `onFocus` (L1890)
+- `ago` (L1967), `fmtStamp` (L1976), `syncView` (L1977), `SyncBadge` (L1984), `docSummary` (L1995)
+- `n` (L1997), `GitHubPanel` (L2002), `formCfg` (L2015), `connect` (L2027), `choose` (L2038)
+- `turnOff` (L2052), `forcePull` (L2059), `forcePush` (L2066), `opt` (L2073), `packJSON` (L2324)
+- `StarterPacks` (L2332), `bsaResourceDownload` (L2384), `BsaResourceHub` (L2389), `bsaImportQuality` (L2409), `duplicate` (L2414)
+- `bsaTopicConnections` (L2444), `isTopic` (L2449), `DataModal` (L2460), `check` (L2472), `doImport` (L2495)
+- `backup` (L2534), `parseD` (L2661), `isoOf` (L2665), `addDays` (L2666), `daysUntil` (L2671)
+- `fmtDay` (L2672), `fmtTime` (L2673), `fmtMins` (L2678), `plural` (L2684), `weekNum` (L2685)
+- `dueState` (L2690), `dueRel` (L2697), `DueChip` (L2703), `sessTopic` (L2709), `byTime` (L2714)
+- `defaultTopic` (L2715), `SessionEditor` (L2720), `addSub` (L2726), `UpNext` (L2749), `CalendarView` (L2757)
+- `setDue` (L2781), `setSession` (L2785), `move` (L2789), `pickDay` (L2793), `evColor` (L2804)
+- `evPill` (L2805), `dayItem` (L2814), `doFill` (L2829), `Icon` (L2966), `ThemeDots` (L2985)
+- `pageRange` (L3001), `Track` (L3006), `Ring` (L3013), `learningCapture` (L3018), `bsa20TopicResolver` (L3052)
+- `resolve` (L3067), `learningEvidence` (L3077), `learningNextAction` (L3083), `bsa22SelfRatedEvidence` (L3094), `bsa22IndependentCorrect` (L3097)
+- `bsaAdaptiveSignals` (L3105), `weighted` (L3122), `smartTopicStats` (L3141), `AiPracticeLab` (L3180), `run` (L3212)
+- `StudyEnhancements` (L3267), `StudyFlow` (L3311), `SmartStudyPanel` (L3349), `homePreferences` (L3364), `AcademicCommandCenter` (L3365)
+- `apply` (L3367), `toCards` (L3380), `loadRoutineDate` (L3417), `saveRoutineDate` (L3427), `DailyStudyPath` (L3439)
+- `commit` (L3448), `stepLink` (L3453), `taskAction` (L3460), `WorkflowRibbon` (L3474), `FeatureGuide` (L3498)
+- `jump` (L3502), `NewHereCard` (L3511), `HomeView` (L3520), `RoadmapView` (L3644), `toggle` (L3661)
+- `setTopic` (L3674), `VaultView` (L3766), `printVaultCards` (L3778), `normalizedPair` (L3790), `duplicateIds` (L3791)
+- `toggleSelected` (L3800), `leaveSelection` (L3801), `deleteSelected` (L3802), `linkedId` (L3809), `match` (L3810)
+- `rate` (L3812), `MistakesView` (L3848), `mName` (L3861), `toCard` (L3865), `QuickAdd` (L3907)
+- `MoreSheet` (L3918), `fmtIvl` (L3944), `shuffle` (L3945), `localPref` (L3953), `setLocalPref` (L3957)
+- `upcomingExams` (L3958), `focusExam` (L3962), `fuzzIvl` (L3974), `schedule` (L3981), `forecast` (L4029)
+- `fcWorst` (L4044), `smoothDay` (L4053), `ForecastPanel` (L4069), `smooth` (L4077), `bumpDay` (L4106)
+- `examForTopic` (L4121), `calBump` (L4139), `calStats` (L4146), `CalibrationPanel` (L4164), `gradeCardIn` (L4187)
+- `mistakeDue` (L4196), `gradeMistakeIn` (L4197), `cardIsDue` (L4207), `buildReview` (L4208), `rank` (L4211)
+- `probDue` (L4239), `findProb` (L4240), `probsDue` (L4247), `gradeProbIn` (L4255), `gapCheck` (L4277)
+- `flat` (L4278), `stem` (L4279), `examPressure` (L4303), `buildAll` (L4308), `AllSubjectsPanel` (L4324)
+- `interleave` (L4339), `cardStrength` (L4351), `examReadiness` (L4360), `examMix` (L4377), `studyDaySet` (L4396)
+- `streakOf` (L4403), `weekMinutes` (L4413), `retentionPct` (L4418), `sayOK` (L4425), `sayStop` (L4426)
+- `sayClean` (L4428), `say` (L4429), `budgetQueue` (L4442), `take` (L4445), `BudgetPanel` (L4461)
+- `noteAllowed` (L4474), `askNotify` (L4477), `maybeRemind` (L4485), `StudySession` (L4508), `owner` (L4520)
+- `clearHf` (L4544), `next` (L4573), `write` (L4594), `gradeCard` (L4601), `pickConf` (L4621)
+- `gradeMistake` (L4622), `gradeProb` (L4628), `rnd` (L4777), `peso` (L4778), `parseAmount` (L4839)
+- `ComputeSet` (L4843), `nextP` (L4873), `setTimerState` (L4933), `timerElapsed` (L4938), `startTimer` (L4939)
+- `startBreak` (L4944), `useTimer` (L4948), `chime` (L4958), `FocusBar` (L4975), `showTimer` (L4980)
+- `hideTimer` (L4981), `beginDrag` (L4986), `moveDrag` (L4987), `keyDrag` (L4988), `endDrag` (L4989)
+- `finish` (L4998), `wake` (L5059), `LeechPanel` (L5085), `unpark` (L5088), `park` (L5097)
+- `cutLimit` (L5129), `attendStats` (L5133), `classOn` (L5144), `attendOn` (L5145), `ClassLife` (L5146)
+- `addClass` (L5151), `setClass` (L5155), `delClass` (L5159), `markAttend` (L5163), `addTask` (L5171)
+- `setTask` (L5175), `delTask` (L5179), `RoiPanel` (L5248), `ActivityStrip` (L5281), `val` (L5286)
+- `playStudyFeedbackSound` (L5315), `playQuizFeedbackSound` (L5319), `note` (L5346), `v` (L5360), `transpose` (L5361)
+- `mcqAssignedTopic` (L5386), `known` (L5388), `mcqDedicatedPool` (L5413), `bsa197QuizKey` (L5438), `bsa197History` (L5448)
+- `bsa197Recall` (L5457), `bsa197Pool` (L5478), `bsa197Pick` (L5483), `bsa197DraftKey` (L5501), `bsa197LoadDraft` (L5502)
+- `bsa18PracticeChanged` (L5509), `bsa18SavedAt` (L5512), `bsa197SaveDraft` (L5516), `bsa197DeleteDraft` (L5527), `bsa18WrittenKey` (L5530)
+- `bsa18LoadWritten` (L5531), `bsa18SaveWritten` (L5537), `bsa18DeleteWritten` (L5541), `bsa18LatestPractice` (L5542), `bsa28SourceHistory` (L5559)
+- `bsa28NewTopicRequest` (L5565), `bsa28ReflectionKey` (L5570), `bsa28ReadReflections` (L5571), `bsa28WriteReflections` (L5575), `bsa18ReadTutorChat` (L5581)
+- `MultipleChoiceQuiz` (L5592), `writeReflection` (L5601), `start` (L5624), `resume` (L5633), `recordCheckedIn` (L5655)
+- `checkAnswer` (L5675), `record` (L5686), `onQuizKey` (L5717), `leave` (L5749), `discard` (L5754)
+- `MCQBankExplorer` (L5892), `MCQPage` (L5950), `bsa39Requirements` (L5971), `bsa39Mode` (L5977), `bsa39DraftKey` (L5987)
+- `bsa39Load` (L5988), `bsa39Save` (L5989), `bsa39Number` (L5990), `bsa39Rows` (L5991), `bsa39RowSummary` (L5992)
+- `bsa22AccountKey` (L5993), `bsa22ParseMoney` (L6003), `bsa39KeyCheck` (L6010), `normRow` (L6024), `bsa39Text` (L6042)
+- `BSA39AnswerEditor` (L6049), `change` (L6051), `setRow` (L6053), `PsWrittenDrill` (L6074), `restoredOrder` (L6078)
+- `randomOrder` (L6082), `persist` (L6093), `labelFor` (L6097), `existingFor` (L6098), `num` (L6106)
+- `toggleRandom` (L6111), `startMistakeEditor` (L6116), `saveMistake` (L6121), `markMiss` (L6134), `markGot` (L6142)
+- `changeRating` (L6147), `bsaSmartQueue` (L6227), `priority` (L6238), `bsaWeeklyEvidence` (L6249), `timestamp` (L6251)
+- `collect` (L6252), `BSA29ClozePractice` (L6266), `store` (L6279), `begin` (L6280), `skip` (L6296)
+- `reviewUncertain` (L6311), `saveToVault` (L6315), `askWhy` (L6326), `exactCount` (L6336), `unsureCount` (L6337)
+- `PracticeView` (L6378), `startSmart` (L6392), `startReview` (L6396), `mxKey` (L6537), `mxChoiceKey` (L6541)
+- `mxPool` (L6542), `ok` (L6544), `MockExam` (L6568), `right` (L6602), `answered` (L6610)
+- `printExam` (L6613), `byTopic` (L6722), `hexToRgb` (L6769), `rgbToHex` (L6776), `mixHex` (L6777)
+- `relLum` (L6781), `contrastOf` (L6788), `rgba` (L6792), `isHex` (L6793), `customVars` (L6819)
+- `applyTheme` (L6846), `CustomThemeEditor` (L6861), `setC` (L6863), `BSA41ThemesModal` (L6906), `AppearanceModal` (L6927)
+- `tile` (L6929), `ExamReadyMini` (L7022), `gcId` (L7069), `gcNum` (L7070), `gcDefaultScale` (L7079)
+- `gcPart` (L7089), `gcComp` (L7090), `gcDefault` (L7091), `cs` (L7092), `gcNorm` (L7108)
+- `arr` (L7110), `w` (L7111), `gcWavg` (L7147), `gcTrans` (L7156), `gcPartRaw` (L7159)
+- `gcCompute` (L7172), `tr` (L7173), `gcDec` (L7185), `gcRoundPct` (L7186), `gcSorted` (L7191)
+- `gcLetter` (L7192), `gcRemaining` (L7198), `gcSummary` (L7216), `share` (L7220), `gcNeed` (L7240)
+- `gcFmt` (L7251), `gcPctTxt` (L7252), `gcQpiTxt` (L7253), `gcSumWeights` (L7254), `gcSemester` (L7256)
+- `gcFromJSON` (L7273), `list` (L7276), `name` (L7284), `wt` (L7285), `items` (L7286)
+- `gcMergeStructure` (L7321), `key` (L7325), `GC_CRC` (L7351), `gcCrc32` (L7360), `gcZip` (L7366)
+- `gcXml` (L7422), `gcCol` (L7423), `gcSheetXml` (L7437), `gcSheetName` (L7454), `gcXlsx` (L7462)
+- `nlmGuessKind` (L7496), `nlmContext` (L7704), `label` (L7708), `bsaPromptIsJsonPrompt` (L7783), `bsaPromptFillBrackets` (L7784)
+- `bsaBuildGuidedPrompt` (L7796), `NotebookLMPrompts` (L7871), `setExtra` (L7900), `setCount` (L7901), `setField` (L7913)
+- `choosePrompt` (L7925), `chooseKind` (L7926), `fieldInput` (L7927), `GC_PROMPT` (L7988), `gcGoals` (L8016)
+- `gcSameLetter` (L8017), `gcRetention` (L8020), `gcScholar` (L8031), `gcStateCls` (L8048), `gcSingular` (L8049)
+- `gcPctItem` (L8050), `gcTier` (L8051), `GcLetter` (L8057), `gcNeedView` (L8058), `gcWarnings` (L8065)
+- `off` (L8067), `gcBlank` (L8077), `NumInput` (L8093), `show` (L8094), `gcSnap` (L8131)
+- `GcTrajectory` (L8144), `x` (L8152), `y` (L8153), `GcOverview` (L8173), `pos` (L8183)
+- `gcQuizLabel` (L8240), `gcPullable` (L8241), `GcPullQuizzes` (L8245), `GcPullAttendance` (L8266), `GcEditor` (L8281)
+- `del` (L8283), `addItem` (L8286), `pullQuiz` (L8296), `pullAttend` (L8300), `weight` (L8335)
+- `pctOf` (L8336), `GcScale` (L8428), `upper` (L8431), `GcSettings` (L8467), `GcStart` (L8492)
+- `GcImportBox` (L8508), `gcListFor` (L8552), `gcRoundLabel` (L8558), `gcNum2` (L8559), `gcWorkbook` (L8560)
+- `H` (L8562), `N` (L8563), `B` (L8564), `BN` (L8565), `NOTE` (L8566)
+- `gcEsc` (L8627), `gcReportHtml` (L8629), `q` (L8633), `its` (L8662), `gcTextSummary` (L8675)
+- `gcPrint` (L8699), `done` (L8708), `gcSaveFile` (L8723), `GcExport` (L8758), `xlsx` (L8760)
+- `html` (L8761), `GcGoals` (L8771), `GcAll` (L8812), `GcWhatIf` (L8855), `GradesView` (L8915)
+- `setGoals` (L8917), `setTab` (L8919), `flush` (L8928), `out` (L8950), `vis` (L8951)
+- `GradeMini` (L9037), `drRound` (L9062), `drPva` (L9066), `drFva` (L9067), `drLex` (L9083)
+- `drCompile` (L9102), `isOp` (L9108), `startsOperand` (L9109), `bool` (L9110), `or` (L9111)
+- `and` (L9112), `cmp` (L9113), `mul` (L9129), `unary` (L9141), `power` (L9147)
+- `postfix` (L9152), `primary` (L9158), `drEval` (L9196), `drFmtOf` (L9200), `drDecimals` (L9201)
+- `drNiceStep` (L9202), `drVar` (L9208), `range` (L9211), `drGivenRow` (L9245), `drStep` (L9253)
+- `drNorm` (L9262), `drList` (L9306), `drIsRandom` (L9307), `drSplitPh` (L9309), `drCheck` (L9314)
+- `need` (L9316), `holes` (L9333), `drFmt` (L9342), `drGivenFmt` (L9351), `drFill` (L9352)
+- `drDraw` (L9367), `drMake` (L9376), `drParse` (L9410), `drPool` (L9416), `drPickSet` (L9430)
+- `drShort` (L9450), `drSets` (L9451), `drFromJSON` (L9462), `drLooksLike` (L9482), `drApply` (L9483)
+- `bkChapter` (L9496), `bkNorm` (L9519), `bkOf` (L9530), `bkIsPages` (L9538), `bkMerge` (L9541)
+- `bkInScope` (L9560), `bkTopicLabel` (L9561), `bkParseJSON` (L9565), `bkFromJSON` (L9581), `drExampleFor` (L9644)
+- `bkTopicLine` (L9652), `nlmPromptFor` (L9694), `bkHasPage` (L9700), `BkPanel` (L9701), `bkPageIn` (L9718)
+- `BkEditor` (L9722), `setCh` (L9729), `merge` (L9730), `addBulk` (L9735), `applyJSON` (L9744)
+- `restore` (L9771), `DrPanel` (L9820), `drNum` (L9833), `drToForm` (L9837), `drFromForm` (L9855)
+- `lines` (L9856), `DrSample` (L9879), `DrForm` (L9889), `DrManager` (L9904), `openEdit` (L9933)
+- `closeEdit` (L9937), `saveEdit` (L9941), `importJSON` (L9961), `psRepairJSON` (L10027), `psPick` (L10045)
+- `psArr` (L10056), `psS` (L10058), `psPlain` (L10077), `psList` (L10078), `psDiff` (L10084)
+- `psNormProblem` (L10091), `psNormSet` (L10122), `psNormLecture` (L10147), `psLooksSet` (L10196), `psLooksLecture` (L10197)
+- `psFromJSON` (L10198), `psApply` (L10229), `psCells` (L10290), `psIsSep` (L10291), `psBlocks` (L10292)
+- `psMathHtml` (L10347), `braced` (L10349), `convert` (L10359), `psMathSegments` (L10403), `psInline` (L10430)
+- `psNumCell` (L10451), `PsMd` (L10452), `psEsc` (L10476), `psInlineHtml` (L10477), `psMdHtml` (L10478)
+- `cell` (L10486), `loadPdfProfile` (L10493), `profileEscape` (L10494), `pdfProfileMarkup` (L10495), `PersonalizationCorner` (L10500)
+- `edit` (L10502), `field` (L10504), `psPrint` (L10574), `psSetText` (L10594), `lxText` (L10609)
+- `psSafeProblems` (L10620), `psGroupProblems` (L10638), `psByTopic` (L10648), `psTally` (L10662), `PsBar` (L10667)
+- `psSampleFits` (L10673), `psSampleIn` (L10674), `PsSampleCard` (L10675), `bsa29Clean` (L10689), `bsa29Meaningful` (L10690)
+- `bsa29HasAnswer` (L10695), `bsa213ClozeQuality` (L10702), `bsa213DefinitionQuestion` (L10720), `bsa29Candidates` (L10726), `push` (L10729)
+- `lxCloze` (L10773), `bsa29Pool` (L10774), `bsa29Exact` (L10788), `clean` (L10789), `bsa29DraftKey` (L10792)
+- `bsa29ReadDraft` (L10793), `bsa29SaveDraft` (L10799), `lxDue` (L10810), `lxIsDue` (L10811), `lxStudied` (L10812)
+- `lxDueList` (L10816), `LxDueChip` (L10819), `xrefLecture` (L10830), `LecturePracticeGenerator` (L10854), `generate` (L10860)
+- `SmartScheduleBuilder` (L10920), `build` (L10924), `LxView` (L10956), `deleteLecture` (L10970), `undoLectureDelete` (L10983)
+- `lxOpenLecture` (L11017), `lxBackToList` (L11026), `lectureId` (L11037), `PsEmpty` (L11062), `lxSourcePresentation` (L11067)
+- `bsa13LectureHeading` (L11091), `bsaRevisionExcerpt` (L11096), `bsa41LectureHighlights` (L11107), `bsa41UpdateHighlight` (L11108), `bsa41ExportNotes` (L11110)
+- `bsa41ImportNotes` (L11118), `bsa41Locate` (L11136), `bsa41DecorateHtml` (L11146), `BSA41MarkedText` (L11191), `activate` (L11193)
+- `LxReader` (L11197), `seek` (L11205), `openHighlight` (L11230), `jumpHighlight` (L11241), `createHighlightCard` (L11242)
+- `addCards` (L11255), `addCloze` (L11268), `LxEditor` (L11406), `toMd` (L11407), `setv` (L11410)
+- `BSA43ProblemSets` (L11446), `PsView` (L11480), `PsExportCustomizer` (L11506), `chooseRange` (L11511), `exportNow` (L11527)
+- `PsSetView` (L11554), `printVisible` (L11567), `mark` (L11569), `logMistake` (L11593), `toggleAll` (L11601)
+- `PsProblem` (L11619), `PsProblemEditor` (L11635), `PsSetEditor` (L11661), `reset` (L11672), `psProbHint` (L11709)
+- `PS_SET_SHAPE` (L11710), `gemKey` (L11803), `gemModel` (L11804), `gemReady` (L11805), `gemErr` (L11807)
+- `gemNetErr` (L11820), `gemListModels` (L11826), `score` (L11838), `gemProbe` (L11853), `gemSend` (L11872)
+- `cancel` (L11900), `eat` (L11905), `gemContext` (L11944), `gemSystem` (L11993), `gemFindJSON` (L12010)
+- `GemSetup` (L12029), `gemSourceSystem` (L12106), `bsa210TutorCore` (L12225), `gemGeneralSystem` (L12241), `bsa26TutorName` (L12247)
+- `bsa26Words` (L12284), `bsa26TopicMatch` (L12285), `bsa26TutorCapabilityContext` (L12302), `bsa26SafeAction` (L12325), `bsa26Action` (L12349)
+- `bsa26LocalStudyPlan` (L12350), `gemDashboardSystem` (L12419), `bsa4ContextKey` (L12424), `bsa4ReadContext` (L12425), `bsa4SaveContext` (L12426)
+- `bsa4ProblemContext` (L12427), `bsa26SafeReturn` (L12440), `bsa26ReturnFor` (L12451), `bsa26FocusExcerpt` (L12482), `bsa4TutorDraft` (L12492)
+- `bsa197TutorQuizBehavior` (L12518), `bsa197TutorContext` (L12521), `BSA197TutorMemory` (L12527), `AskView` (L12557), `changeMode` (L12577)
+- `changeModel` (L12581), `returnHere` (L12587), `saveTeachingPrefs` (L12596), `renameTutor` (L12597), `detachQuestion` (L12598)
+- `onChatScroll` (L12610), `ask` (L12612), `clear` (L12675), `setBadge` (L12786), `holdScreen` (L12795)
+- `CurriculumView` (L12814), `enroll` (L12825), `hasStudyData` (L12834), `bulkRemove` (L12836), `InkPad` (L12870)
+- `saveShapes` (L12888), `undoShape` (L12897), `redoShape` (L12898), `compositeInk` (L12899), `exportInkImage` (L12907)
+- `renderInkPage` (L12908), `shapeBounds` (L12909), `vectorElement` (L12910), `snapshot` (L12920), `repaint` (L12921)
+- `checkpoint` (L12925), `undo` (L12926), `redo` (L12927), `coords` (L12928), `clampZoom` (L12929)
+- `zoomAt` (L12930), `point` (L12947), `distance` (L12948), `midpoint` (L12949), `moveTouch` (L12961)
+- `end` (L12977), `zoomButton` (L12987), `drawShape` (L12989), `clearPreview` (L12990), `previewAt` (L12991)
+- `pointSegmentDistance` (L12993), `vectorHit` (L12994), `selectAt` (L13004), `eraseVectorAt` (L13006), `eraseRasterAt` (L13038)
+- `down` (L13040), `up` (L13075), `duplicatePage` (L13094), `movePage` (L13095), `downloadNotebookPdfTip` (L13096)
+- `exportNotebook` (L13097), `importNotebook` (L13098), `exportPng` (L13099), `print` (L13100), `ClassmatePublisher` (L13134)
+- `setPermission` (L13142), `esc` (L13196), `sections` (L13197), `dashboardHtml` (L13205), `sharedSnapshot` (L13207)
+- `replaceOnce` (L13250), `safeSharedHtml` (L13300), `make` (L13305), `download` (L13323), `RetentionTools` (L13358)
+- `review` (L13373), `addCardsToQueue` (L13375), `addProblemsToQueue` (L13376), `addLectureChecksToQueue` (L13378), `importAttemptsToQueue` (L13379)
+- `addExamMistakes` (L13380), `normalizeExam` (L13394), `examCorrect` (L13395), `printStudySheet` (L13397), `addJournal` (L13407)
+- `exportRows` (L13408), `bsaBackupKeys` (L13421), `bsaValidMainRecord` (L13429), `bsaBackupPreview` (L13442), `bsaBackupDigest` (L13450)
+- `bsaDownloadUnifiedBackup` (L13456), `bsaInspectUnifiedBackup` (L13475), `bsaApplyInspectedBackup` (L13508), `ToolkitView` (L13534), `chooseRestore` (L13540)
+- `confirmRestore` (L13549), `worksheetNumber` (L13574), `worksheetExport` (L13580), `txNumber` (L13588), `txTotals` (L13589)
+- `txInvalidAmount` (L13591), `txTrialPrint` (L13597), `txSave` (L13598), `txEdit` (L13599), `txPrintOne` (L13600)
+- `txCsv` (L13601), `txImport` (L13602), `txPrint` (L13603), `newNote` (L13607), `openNote` (L13608)
+- `saveNote` (L13609), `exportText` (L13610), `printArea` (L13611), `addAttempt` (L13630), `evaluate` (L13631)
+- `sum` (L13632), `HowToCorner` (L13684), `readProgress` (L13718), `progressTotal` (L13719), `progressRank` (L13720)
+- `grantFocusXp` (L13721), `grantActivityXp` (L13735), `grantFlashcardReviewXp` (L13749), `bsaAchievementDetails` (L13755), `AcademicProgress` (L13776)
+- `Game2048` (L13798), `fresh` (L13799), `SudokuGame` (L13816), `restart` (L13823), `verify` (L13824)
+- `MinesweeperGame` (L13828), `around` (L13832), `reveal` (L13835), `joyDefault` (L13841), `readJoy` (L13842)
+- `useJoy` (L13843), `joyDay` (L13848), `lifePetStatus` (L13864), `StudyLifeHomeWidget` (L13869), `lifeDefault` (L13897)
+- `readLife` (L13898), `lifeEarned` (L13899), `PixelScholar` (L13907), `LifeTownMap` (L13932), `step` (L13936)
+- `activeSeason` (L13950), `StudyLife` (L13952), `count` (L13958), `position` (L13963), `changeAvatar` (L13964)
+- `JoyHub` (L13997), `SnakeGame` (L14030), `WordGuessGame` (L14049), `submit` (L14052), `NonogramGame` (L14062)
+- `clues` (L14065), `BubblePopGame` (L14069), `click` (L14072), `BreakCorner` (L14083), `resetGame` (L14092)
+- `turn` (L14096), `StudyTimeAudit` (L14111), `bsaReadinessReport` (L14131), `BsaReadinessCoach` (L14160), `bsaV164ReadExamPrefs` (L14207)
+- `bsaV164ExamPriority` (L14211), `BsaExamPlanner` (L14223), `BsaMistakePatterns` (L14251), `BsaRecommendationCheck` (L14271), `BsaTopicMasteryPanel` (L14290)
+- `StudyReport` (L14309), `roll` (L14314), `fmt` (L14330), `pct` (L14331), `reasons` (L14332)
+- `action` (L14333), `doReset` (L14334), `metric` (L14340), `bsaBytes` (L14390), `bsaBase64` (L14391)
+- `bsaVaultKey` (L14392), `bsaVaultEncrypt` (L14396), `bsaVaultDecrypt` (L14403), `bsaDeviceKeyGet` (L14415), `fetch` (L14423)
+- `bsaDeviceVaultEncrypt` (L14441), `bsaDeviceVaultDecrypt` (L14447), `PrivateVault` (L14457), `copy` (L14498), `bsa181Empty` (L14546)
+- `bsa181Read` (L14547), `bsa181Write` (L14548), `bsa181Text` (L14549), `bsa181Add` (L14550), `bsa181Remove` (L14551)
+- `bsa181Restore` (L14552), `bsa181Recent` (L14553), `bsa181Links` (L14554), `BSA181Workspace` (L14555), `notify` (L14567)
+- `saveCapture` (L14568), `saveScratch` (L14569), `shown` (L14572), `BSA181Spotlight` (L14587), `bsa27SelectionFocus` (L14596)
+- `bsa27DefaultTutorQuestion` (L14612), `BSA181HighlightTool` (L14618), `dismissSelection` (L14623), `saveSelection` (L14624), `touchSchedule` (L14655)
+- `onOutside` (L14659), `StartupDataRecovery` (L14703), `exportRaw` (L14705), `bsaNextKey` (L14735), `bsaNextRead` (L14736)
+- `bsaNextSave` (L14737), `bsa185Default` (L14739), `bsa185Read` (L14740), `BSA185LayoutEditor` (L14744), `bsa25PracticeHealth` (L14756)
+- `BSA193DeviceSafety` (L14792), `bsa187Blank` (L14860), `bsa187Account` (L14861), `bsa187Number` (L14873), `bsa187Verify` (L14874)
+- `normalized` (L14877), `bsa198Text` (L14894), `bsa198Fingerprint` (L14895), `bsa198Near` (L14896), `amounts` (L14899)
+- `bsa198Validate` (L14905), `bsa198StoredKeyValid` (L14929), `bsa198Catalog` (L14941), `bsa198PlanBatch` (L14954), `bsa198Parse` (L14980)
+- `bsa198DeclaredSubject` (L14990), `bsa198StorePlan` (L14994), `bsa198AttemptKey` (L15011), `BSA187AccountingLab` (L15012), `legacy` (L15022)
+- `stats` (L15026), `importLegacy` (L15046), `checkImport` (L15051), `applyImport` (L15053), `saveManual` (L15062)
+- `duplicateCount` (L15073), `searchLists` (L15074), `bsa188Tasks` (L15170), `bsa196BudgetTasks` (L15189), `BSA188Today` (L15193)
+- `checked` (L15200), `importOld` (L15209), `BSA189Companion` (L15230), `motionChange` (L15241), `BSA191WeeklyPlanner` (L15251)
+- `changeSession` (L15261), `BSA344Schedule` (L15278), `bsa15Clean` (L15295), `bsa15Excerpt` (L15299), `bsa15LectureList` (L15304)
+- `bsa15SectionList` (L15307), `bsa15Process` (L15310), `bsa15ComparisonTable` (L15320), `split` (L15325), `bsa15Timeline` (L15336)
+- `bsa15ProblemBlocks` (L15367), `BSA15VisualStudio` (L15375), `onMapPointerDown` (L15405), `onMapPointerMove` (L15410), `onMapPointerEnd` (L15423)
+- `onMapClickCapture` (L15430), `panMap` (L15435), `centerSelectedMap` (L15463), `openSection` (L15469), `BSA192KnowledgeMap` (L15550)
+- `DashboardV2Home` (L15555), `layoutOrder` (L15559), `layoutVisible` (L15560), `updateLayout` (L15561), `card` (L15590)
+- `bsa205Money` (L15638), `bsa205Date` (L15639), `bsa205Short` (L15640), `bsa205DriveId` (L15643), `bsa205LoadScript` (L15650)
+- `BSA205Sources` (L15653), `addSource` (L15661), `mb` (L15668), `bsa205FamilyKey` (L15683), `bsa3TopicLabel` (L15686)
+- `bsa205LibraryItems` (L15691), `safe` (L15692), `bsa3GroupRows` (L15702), `bsa38GroupOriginalSets` (L15706), `bsa205Duplicates` (L15714)
+- `bsa205InboxKey` (L15720), `bsa205InboxPlan` (L15721), `bsa205FileBase64` (L15727), `bsa205ExtractPdfText` (L15728), `bsa205GemDraft` (L15739)
+- `BSA205Importer` (L15754), `addInbox` (L15764), `importVerified` (L15768), `bsa44Key` (L15798), `bsa49TopicParts` (L15804)
+- `normalize` (L15808), `bsa49ResolveTopic` (L15812), `bsa49CanonicalizePack` (L15838), `canonical` (L15840), `attach` (L15842)
+- `bsa49UnmatchedLabels` (L15849), `BSA49TopicLinks` (L15858), `bsa49SubjectWords` (L15867), `bsa49MatchesSubject` (L15868), `strip` (L15875)
+- `bsa49PackPrompt` (L15879), `bsa13CheckGeneratedJSON` (L15898), `required` (L15902), `bsa44Empty` (L15947), `bsa44ParseOne` (L15948)
+- `bsa44Baseline` (L15981), `bsa210Tokens` (L16006), `bsa210Intent` (L16015), `bsa210Concept` (L16025), `bsa210Numbers` (L16037)
+- `bsa210DuplicateSignal` (L16043), `polarity` (L16048), `bsa210AnswerMeaning` (L16069), `bsa210MaterialPair` (L16079), `bsa44Similar` (L16089)
+- `bsa44Prepare` (L16090), `flag` (L16095), `acceptSets` (L16151), `bsa44Plan` (L16177), `bsa44ApplyPack` (L16190)
+- `bsa47ExpectedMaterials` (L16222), `bsa47HasMaterial` (L16227), `bsa47TopicGapPrompt` (L16228), `BSA49SmartFlow` (L16251), `BSA45ImportCenter` (L16283)
+- `copyGap` (L16293), `BSA44PackImporter` (L16312), `selectFiles` (L16315), `readPieces` (L16322), `bsa44TopicCounters` (L16367)
+- `place` (L16371), `BSA44TopicHealth` (L16379), `expected` (L16383), `has` (L16384), `bsa45SafeLibrarySubject` (L16405)
+- `a` (L16406), `sets` (L16407), `BSA205Library` (L16410), `updateProblemTopic` (L16442), `bulkMove` (L16449)
+- `toggleHide` (L16462), `addNote` (L16463), `updateInbox` (L16467), `startImport` (L16468), `openPack` (L16469)
+- `bsa205Diagnose` (L16543), `bsa43Text` (L16635), `bsa43Number` (L16636), `bsa43ParseReport` (L16644), `bsa43Money` (L16698)
+- `bsa46Figure` (L16700), `bsa46ReportYear` (L16701), `bsa46StatementKind` (L16702), `bsa46CrossChecks` (L16708), `amount` (L16711)
+- `BSA46Statement` (L16724), `BSA46Checks` (L16748), `bsa43Tasks` (L16754), `relevant` (L16757), `bsa26FsDraftKey` (L16785)
+- `bsa26FsDraft` (L16788), `BSA43FinancialStatements` (L16795), `inspect` (L16807), `readFile` (L16808), `openPdf` (L16810)
+- `learnStandard` (L16827), `saveAttempt` (L16830), `openTutor` (L16837), `bsa205CycleValidate` (L16939), `bsa205Ledger` (L16951)
+- `bsa205CycleReports` (L16955), `BSA205Cycle` (L16968), `saveReports` (L16979), `changeLedger` (L16980), `checkLedger` (L16987)
+- `checkStatements` (L16988), `newRun` (L16992), `draftSave` (L16997), `loadCase` (L16998), `select` (L17004)
+- `bsa34FocusChoices` (L17047), `bsa34TopicMatch` (L17057), `bsa34TopicTitle` (L17063), `bsa34PlanBlocks` (L17064), `bsa211HasTimer` (L17096)
+- `bsa211ElapsedMs` (L17097), `bsa211Clock` (L17103), `bsa212Allocate` (L17116), `bsa213Words` (L17130), `bsa213ReadScope` (L17135)
+- `bsa213McqEstimate` (L17168), `bsa213McqScope` (L17174), `bsa213WrittenMinutes` (L17189), `bsa213ScopeExplanation` (L17195), `bsa213ScopeLongBlock` (L17202)
+- `bsa213QuickPlan` (L17241), `bsa212ModePlan` (L17302), `find` (L17305), `bsa212ModeName` (L17333), `bsa212Guided` (L17334)
+- `bsa212PhaseIndex` (L17335), `bsa212PhaseElapsed` (L17336), `bsa212PhaseGoal` (L17339), `bsa212Freeze` (L17340), `bsa212Action` (L17348)
+- `bsa214RecentClosed` (L17385), `bsa214Archive` (L17395), `bsa214HistoryLabel` (L17432), `bsa214AdaptProposal` (L17445), `bsa205SessionBlocks` (L17477)
+- `bsa34BlockEvidence` (L17480), `matches` (L17485), `bsa214TopicStanding` (L17499), `bsa214FoundationSources` (L17515), `BSA214FoundationCheck` (L17557)
+- `BSA205Study` (L17597), `create` (L17610), `enableGuided` (L17618), `bsa211TimerAction` (L17631), `archive` (L17643)
+- `saveReflection` (L17660), `BSA212FloatingFocus` (L17763), `constrain` (L17780), `keyboard` (L17784), `bsa34LearningSnapshot` (L17827)
+- `BSA205Mastery` (L17847), `get` (L17854), `bsa38Calc` (L17894), `mult` (L17904), `bsa38ValidateTemplate` (L17908)
+- `bsa38ParseImport` (L17924), `bsa38Generate` (L17925), `bsa38Work` (L17930), `bsa38SaveWork` (L17931), `bsa38Day` (L17932)
+- `bsa38AddDays` (L17933), `BSA38Variations` (L17934), `preview` (L17943), `BSA38Oral` (L17965), `speak` (L17970)
+- `BSA38MasteryCheckpoint` (L17979), `BSA38PracticeStudio` (L17986), `BSA38ExamCatchup` (L17992), `bsa38SuggestTopic` (L18016), `tokens` (L18019)
+- `BSA38LibraryTriage` (L18023), `copyPrompt` (L18028), `previewAI` (L18031), `applyAI` (L18035), `BSA38ProgressCompare` (L18050)
+- `stat` (L18053), `bsa33Journey` (L18067), `bsa33RouteName` (L18080), `BSA31StudyPath` (L18081), `bsa32ManilaDay` (L18137)
+- `bsa32DailyLine` (L18146), `BSA3Today` (L18152), `tick` (L18156), `BSA3Practice` (L18213), `bsa46SuggestedProfile` (L18265)
+- `bsa46ProfileId` (L18275), `bsa46Profile` (L18276), `bsa46ToolVisible` (L18277), `bsa46TutorGuidance` (L18286), `bsa46ImportGuidance` (L18291)
+- `BSA45SidebarEditor` (L18292), `toolItem` (L18302), `BSA3StartGuide` (L18348), `DashboardV205Home` (L18362), `BSA4StudyDock` (L18401)
+- `setDockHidden` (L18404), `bounds` (L18409), `startDock` (L18419), `moveDock` (L18426), `endDock` (L18429)
+- `BSA43ThemeNavigation` (L18510), `bsa13IconName` (L18553), `BSA13IconPicker` (L18561), `bsa13MaterialCounts` (L18578), `BSA11SubjectSwitcher` (L18590)
+- `labelOf` (L18597), `setPosition` (L18598), `resize` (L18609), `escape` (L18610), `BSA12Subjects` (L18648)
+- `parseTerm` (L18660), `codes` (L18669), `sort` (L18670), `year` (L18672), `updateCourse` (L18684)
+- `toggleLayout` (L18689), `removeCourse` (L18690), `archiveCourse` (L18702), `subjectCard` (L18708), `App` (L18756)
+- `repair` (L18767), `onReturn` (L18776), `outside` (L18786), `touchNavStart` (L18793), `touchNavEnd` (L18794)
+- `wheel` (L18814), `toggleRail` (L18828), `toggleUtilities` (L18836), `saveSidebar` (L18837), `toggleSidebarPin` (L18838)
+- `toggleSidebarHide` (L18839), `shiftSidebarPin` (L18840), `doUndo` (L18867), `setSubjectProfile` (L18892), `setSubjectTool` (L18893)
+- `resetSubjectProfile` (L18894), `toggleDockFromSettings` (L18895), `setSettings` (L18896), `replaceAll` (L18901), `go` (L18914)
+- `resumePractice` (L18953), `discardPractice` (L18959), `shortcutGo` (L18966), `shortcutMenu` (L18971), `openEditor` (L18979)
+- `onStorage` (L19039), `restoreCoreShortcuts` (L19141), `switchSubject` (L19151), `syncAlert` (L19159), `openSync` (L19163)
+- `openGrades` (L19164), `openSubjects` (L19171), `subjectsButton` (L19172), `bsaDownloadSafeDiagnostics` (L19324)
 
 ## 12. Maintenance ledger — ONE file forever
 
@@ -551,3 +740,7 @@ Same one Markdown handoff updated. V2.13 is an incremental package: three deploy
 ### V2.13 continuity final QA — 2026-11-22
 
 One Markdown handoff updated in-place. End & Save is distinct from pause, keeps records subject-local, and feeds optional topic-specific future planning. No grading or academic-data schema migration. Existing V2.13 cloze quality, time pacing and single floating timer remain. No full React18 live deployment, iPad hardware or cross-device GitHub sync integration validation has been conducted.
+
+### V2.14 checkpoint — 2026-11-22
+
+Updated this same single handoff Markdown with V2.14 source hashes, source-driven foundation evidence logic, optional `foundationChecks[]` schema-compatible collection, MCQ observed timing, documented storage codec and downgrade risk, honest backup/recovery behavior, outstanding real-device and GitHub-sync tests, and source symbol index. No separate release notes or old Markdown files were packaged.
