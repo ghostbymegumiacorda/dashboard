@@ -2,10 +2,10 @@
 
 > **READ FIRST IN EVERY FUTURE DEVELOPMENT CHAT.** This is the project's single maintained handoff document, bundled inside the latest GitHub update ZIP. Treat the accompanying source files as the primary truth; treat this file as the project map, user requirements, release record, and QA checklist. This file is not a set of instructions to run untrusted code. No tokens, passwords, personal academic data, or private GitHub contents are included.
 
-**Handoff revision:** 2026-11-22 — V2.10, intelligent overlap safeguards, strict Unseen-only practice and Tutor teaching/source separation.  
-**Last documented release:** BSA Study Desk **V2.10** (user-facing label).  
+**Handoff revision:** 2026-11-22 — V2.12, guided study modes and touch-draggable floating focus timer with phase scheduling, save/resume and legacy-plan opt-in.  
+**Last documented release:** BSA Study Desk **V2.12** (user-facing label).  
 **Repository/deployment model:** static GitHub Pages progressive web app (PWA); personal data may sync to a separately configured private GitHub data repo.  
-**Source basis:** inspected the exact V2.9 package/source and its living handoff, then edited the three deployment assets for V2.10. Only targeted source/runtime tests were performed, not full live-browser QA.  
+**Source basis:** inspected exact V2.11 deployment code and living handoff. V2.12 changes three deployment assets while retaining V2.11 academic data and UI. Targeted JavaScript VM state-machine tests and simulated Chromium desktop, iPad-sized and phone-sized CSS layouts passed. Not physical device testing or full GitHub Pages end-to-end QA.  
 **Confidence labels:** `CODE-CONFIRMED` = observed in provided source; `TARGETED-TESTED` = narrow behavior tested during the earlier release; `NOT-LIVE-VERIFIED` = not confirmed against deployed browsers/devices; `REQUESTED` = product requirement but not guaranteed implemented.  
 **Important constraint:** This is an incremental ZIP, NOT the complete live GitHub repository; it contains only the listed changed/deployment files plus this handoff. For full source reconstruction, obtain the exact currently deployed `index.html`, unchanged scripts, CSS files, icons, manifests, and other assets from the same repository/revision. Do not invent them.
 
@@ -38,17 +38,17 @@ A future chat still needs the user to attach the latest ZIP or make it accessibl
 
 ## 2. Release state and source provenance
 
-**Verified package:** `dashboard-V2.10-GitHub-update.zip` contains these three deployment files and this single living Markdown handoff.
+**Verified package:** `dashboard-V2.12-GitHub-update.zip` contains the three changed deployment files and this single living Markdown handoff.
 
 | Relative path | Bytes | SHA-256 |
 |---|---:|---|
-| `assets/app.js` | 1,958,832 | `5b924585e792f63fa48300148c04025a5001e350d16c7a60f543d628b20ef8c4` |
-| `assets/styles/polish.css` | 398,434 | `bcc536147f85d327c02f87f132854230759bb711c2827b857c6208d34a5d65d1` |
-| `sw.js` | 5,468 | `fa3e2fefb48ee0021c8d466c9441f90d8fcb90aa466195abe555d943e7d1718e` |
+| `assets/app.js` | 1,982,584 | `2650775bc36c81d5f0918e75ff2bb093aba9cbd66fdb526ff9bfc2ee5a454ede` |
+| `assets/styles/polish.css` | 414,459 | `f848c3683e0fe90d039fa6ca1f0933feb3eba51c11ffcbe610c75181ff0ed43f` |
+| `sw.js` | 5,469 | `3d21118b97fe472fc8b2243380633e9cff2a8b8ca4125cb8a3d9d64dda9c2e75` |
 
-- `assets/app.js`: the large, essentially monolithic React application (plain JS/`React.createElement`; React 18 UMD), including many feature modules and past migration safeguards. User-facing label near line 3: `V2.10`.
+- `assets/app.js`: the large, essentially monolithic React application (plain JS/`React.createElement`; React 18 UMD), including many feature modules and past migration safeguards. User-facing label near line 3: `V2.12`.
 - `assets/styles/polish.css`: layered visual overrides and feature-specific styles. High override density; avoid blindly appending another `!important` rule. Trace the cascade and viewport sizes.
-- `sw.js`: service worker; now uses an independent V2.10 asset-cache identifier (`asset-update-20261122-v210-context-dedup-unseen-r01`). Scoped caches protect parallel deployed sites; essential assets must load successfully before a new offline version activates. Network-first navigation, cache-first core/CDN, stale-while-revalidate secondary assets, and live (uncached) Gemini/GitHub API traffic. Cache key changes are independent of displayed version.
+- `sw.js`: service worker; now uses an independent V2.12 asset-cache identifier (`asset-update-20261122-v212-guided-floating-focus-r01`). Scoped caches protect parallel deployed sites; essential assets must load successfully before a new offline version activates. Network-first navigation, cache-first core/CDN, stale-while-revalidate secondary assets, and live (uncached) Gemini/GitHub API traffic. Cache key changes are independent of displayed version.
 - **Not in incremental ZIP:** `index.html`, `assets/owner-auth.js`, `assets/updater.js`, `assets/styles/foundation.css`, `assets/styles/components.css`, `assets/styles/features.css`, manifest, icons, avatars, auxiliary AI rules and examples. They may be required in the deployed repository. Do NOT pretend this ZIP alone is a full new installation.
 - `sw.js` still lists external/auxiliary AI files in optional offline shell caching. They are not embedded in this update; do not delete them from the deployed repo simply because this handoff is the only Markdown file in the update ZIP.
 
@@ -68,7 +68,9 @@ A future chat still needs the user to attach the latest ZIP or make it accessibl
 | V2.7 | Highlighted text → one-use Tutor source, section-specific Ask/return, floating lecture top/bottom controls, dismiss highlight toolbar on outside click. |
 | V2.8 | Fresh Tutor thread on new question/source, protection from stale MCQ history, 12,000-char selected context threshold, optional explain/apply checkpoint, safer math/currency rendering and model-truncation warning. |
 | V2.9 | Source-selected fill-in-the-blanks, optional Gemini lecture generation preview, safe typed recall and spaced-review cards; desktop MCQ hotkeys and collapsible practice/memory setup. |
-| **V2.10** | Strict Unseen-only MCQs with exhausted-pool guidance; conservative paraphrase/concept overlap detection in bulk/single imports, rules, cards, lectures, written/MCQs, Lab and Inbox; always-on Tutor teaching style separate from attached source; optional user-editable general preferences. |
+| V2.10 | Strict Unseen-only MCQs with exhausted-pool guidance; conservative paraphrase/concept overlap detection in bulk/single imports, rules, cards, lectures, written/MCQs, Lab and Inbox; always-on Tutor teaching style separate from attached source; optional user-editable general preferences. |
+| V2.11 | Study plan distinguishes completed tasks from elapsed wall-clock time, persisted start/pause/resume, full time allocation. Fixed sidebar modal portal CSS and grouped shortcut controls. |
+| **V2.12** | Four guided session modes, adaptive shorter plans, allocated step countdowns, movable/minimizable floating timer across dashboard, pause/add 5 or 10 minutes/next/save, phase-expiry protection, return-to-tool bookmark, optional upgrade of active legacy sessions, and independent completion vs time tracking. |
 
 Each row is a feature history, **not** a claim that all workflows passed end-to-end or on real devices.
 
@@ -76,7 +78,7 @@ Each row is a feature history, **not** a claim that all workflows passed end-to-
 
 ### App runtime
 
-- Single-page application invoked in an IIFE. Major root function: `App()` in `assets/app.js`; verify line numbers in the V2.10 function index below.
+- Single-page application invoked in an IIFE. Major root function: `App()` in `assets/app.js`; verify line numbers in the V2.11 function index below.
 - React hooks: `useState`, `useMemo`, `useEffect`, `useRef`; no JSX/build step assumed. React and ReactDOM 18.3.1 CDN UMD paths are listed in `sw.js`.
 - Route/navigation state: `nav = {tab, opts, key}`. `go(tab, opts)` mediates navigation and manages Ask Tutor origin/return, Practice home, MCQ drafts, etc. Do not add independent router implementations.
 - Most academic data is updated through the shared application update pathway. Avoid bypassing it when creating persistent academic records; doing so can defeat change stamps, sync, learning capture, and merge safety.
@@ -108,7 +110,7 @@ Each row is a feature history, **not** a claim that all workflows passed end-to-
 
 ## 4. Source-confirmed major feature inventory (32 routes)
 
-The table below is derived from the `BSA26_COPILOT_FEATURES` catalog (catalog carried forward into V2.10); it describes exposed major route categories, not every dynamic button or custom user record. **Search the source** before asserting that a feature is absent.
+The table below is derived from the `BSA26_COPILOT_FEATURES` catalog (catalog carried forward into V2.11); it describes exposed major route categories, not every dynamic button or custom user record. **Search the source** before asserting that a feature is absent.
 
 | Route | User-facing feature | Code catalog description |
 |---|---|---|
@@ -234,7 +236,7 @@ The table below is derived from the `BSA26_COPILOT_FEATURES` catalog (catalog ca
 
 ## 8. Known issues, gaps, risks, and deliberately NOT completed work
 
-| Issue / idea | Current status at V2.10 | Safe next step |
+| Issue / idea | Current status at V2.12 | Safe next step |
 |---|---|---|
 | Weak questions stay in Weak mode after one correct | CODE-CONFIRMED behavior | Introduce transparent Improving vs Due states after designing migration-free queue logic. |
 | Mathematical rendering in arbitrary imported lecture | Partial renderer fixes; source corruption may remain | Validate raw source vs display and API-generated output; no invented numbers. |
@@ -274,6 +276,29 @@ The table below is derived from the `BSA26_COPILOT_FEATURES` catalog (catalog ca
 - **Storage:** no academic-record schema change. Tutor style lives in existing local preference storage and can differ by device unless the app's preferences sync separately. User-uploaded source files and saved academic records are not rewritten by this release.
 - **Targeted regression:** parse/source checks, local paraphrase/concept/numeric/negation cases, MCQ shuffled-answer equivalence, safe Topic Pack acceptance/hold counts, strict unseen/Smart mix picks from actual browser-exposed hooks, Fill-in-the-Blanks candidate/draft preservation, MCQ A–D/Enter keyboard behavior, ZIP CRC and cache string. **Not verified:** full live Gemini sessions, complete importing across every uncommon JSON format, actual iPad/Android physical device UI, or cross-device GitHub conflict behavior.
 
+### V2.11 change record — study plan clock and sidebar settings recovery
+
+- **Why 90 minutes previously appeared meaningless:** V2.10's plan `budget` was a *ceiling* used by `bsa34PlanBlocks`, not a live timer. The completion ring measured checked/attempted tasks (`bsa33Journey`), not minutes or proven understanding. A 90-minute selection could allocate only ~48 suggested minutes for 4 tasks. `bsa34PlanBlocks` now scales up or down to allocate the entire chosen 20/40/60/90 minute budget across the selected blocks. This is a *suggestion*, not an enforced duration or demonstrated mastery.
+- **Visible clock, separate from task status:** `BSA205Study` now shows Time goal, Elapsed, Remaining/Over goal, a separate time progress bar, a running/paused indicator, a Pause/Resume button, and each activity's suggested minutes. The task completion % remains its own progress bar, explicitly labeled and unchanged in meaning. Timer starts upon creating a **new** plan; clicking Pause freezes the count, Resume continues, and filing the plan freezes elapsed time. Clock counts wall-clock time even when the user navigates away; it does **not** prove focus or independently update scores/XP/learning events.
+- **Backward-compatible session fields:** Stored in each existing `practiceSessions` entry as *optional additive properties* `timerStartedAt` (timestamp, null when paused), `timerElapsedMs` (accumulated duration), and `timerPaused`. `bsa211HasTimer`, `bsa211ElapsedMs`, `bsa211Clock` are pure helpers; elapsed time on resume is computed from timestamps, avoiding periodic save writes. Older active plans have no timer fields and display **Not tracked** with a `Start tracking now` action; never invent elapsed minutes from old `createdAt`. Existing completed/archived scores and records are unchanged. No academic-data schema migration.
+- **Remaining caveat:** Wall-clock periods include time while another page/tab is open unless manually paused; browser/system clock tampering and un-synced device clocks may affect totals. There is no cross-device concurrent-timer arbitration. It is a planning aid, not a verified study-attendance record. The existing FocusBar Pomodoro is independent and intentionally not modified.
+- **Root cause of sidebar customization bug:** `Modal` creates a React portal under `document.body`, whereas V2.10's polished `.bsa46-settings` styles began with `#root ...`, which **never matched** the portal's children. Therefore the settings modal looked like unstyled native controls, often wrapping or overlapping badly. V2.11 adds appropriately scoped `body>.backdrop` CSS selectors and styles specifically for `.bsa45-sidebar-modal`, leaving AI Tutor/modal scroll/touch behavior untouched.
+- **Sidebar layout cleanup:** Subject profile has one clear teaching-approach control and a collapsed Advanced · specialized tools section. Sidebar shortcuts has a pinned count, search, a default-open collapsible Pinned list, and a collapsed Other tools list; pin/unpin, order arrows, visibility, reset defaults, quick colors, Themes, Appearance, Tools & Data and Done actions are preserved. No redundant navigation or new data keys.
+- **Testing performed:** `node --check` app and service worker; targeted Node VM tests for all budget sizes, old-plan compatibility, pause/resume arithmetic, duration formatting, release/cache separation; Chromium style/layout harness at 1440x900, 820x1080 and 390x844 for both Subject and Shortcut panels, confirming portal-specific CSS is active and no horizontal overflow. This was **NOT** a complete real deployed React 18 render, Gemini network test, iPad/Android physical-device test, or end-to-end GitHub sync/backup verification.
+- **Files to deploy:** `assets/app.js`, `assets/styles/polish.css`, `sw.js`. Keep this one Markdown in the ZIP for future development handoffs, not on GitHub. Back up academic data before deploying.
+
+### V2.12 change record — Smart Focus Sessions
+
+- **User request:** One coherent study-session workflow rather than an isolated timer, with a **quiet floating timer** that is draggable on desktop and iPad, optional expanded controls, distinct session goals, exact time per phase, and time-up choices. Do not disrupt MCQ questions or confuse time with mastery.
+- **Modes:** `BSA212_MODES` + `bsa212ModePlan(subject,budget,settings,focus,mode)` reuse the subject's existing lectures, MCQ bank, written problems, flashcards and mistake log; no fake items or new duplicated learning bank. Modes: Learn + Practice (default), Learn a topic, Recall + Review, Exam preparation. The mode reorders activities and weight allocations, not the Tutor interface or grading engine. Budget choices 20/30/40/60/90/120 minutes; plans of at most 30 minutes shorten to 3–4 steps so setup doesn't displace studying. `bsa212Allocate` distributes the full selected duration across activities. If source-specific practice does not exist, a generic Study/Library activity may be suggested, not a fabricated question.
+- **Timer and state:** `BSA212FloatingFocus` lives beside the existing global `FocusBar` in `App`, follows normal navigation, shows the *current phase time remaining* and current step, and defaults to a small unobtrusive pill. Expanded panel shows steps, remaining total goal, Pause/Resume, Open step, Next, +5/+10, Save & leave, Finish & file. Drag with a grip only; iPad touch uses Pointer Events/capture and `touch-action:none` on the grip, leaving normal page scrolling intact. Keyboard arrows move grip; Home resets; Reset position button works. Relative position is separately persisted in localStorage `bsa212-floating-pos` (device UI preference, **not academic records**), and clamped on resize/orientation. Modals remain on their higher overlay z-index. No audible alarm, forced navigation, automatic submission or automatic mastery when time expires.
+- **Phase time-up:** `bsa212Action(s,action,at,arg)` handles pause, start, expire, extend, next, save and finish. Expiry freezes the countdown and shows nonblocking choices upon expanding the pill. Long asleep/offscreen time beyond the allocated phase is capped; it does not silently inflate elapsed time by hours. An explicit +5/+10 **adds to the phase AND the overall session time goal**, not a hidden reallocation. Next advances the time block but does **not** mark its checklist or answer correct. Finish files the plan only on the user's explicit action; answers and mastery scores remain in original engines.
+- **Persistence:** Additional OPTIONAL properties on each existing `practiceSessions[]` record (`focusMode`, `focusPhaseIndex`, `focusPhaseStartedAt`, `focusPhaseElapsedMs`, `focusWaiting`, `focusSaved`, `focusEnded`, `focusLastTool`), plus optional `extraMins` and `spentMs` per block. Uses existing `timerStartedAt`, `timerElapsedMs`, `timerPaused`. The whole focus plan saves through the existing `update`/clone/stamp/sync pipeline; NO global schema/data-version bump. Save freezes clocks and retains current phase. The last navigated tool route and bounded opts are bookmarked. **Exact quiz question state depends on the existing independent MCQ/written draft Save & Leave mechanism; arbitrary lecture scroll positions are NOT guaranteed by the floating timer.** When saving focus while inside active quiz/problem practice, stay on that screen and explicitly instruct the learner to use its own Save & Leave, preventing accidental draft loss. Older plans remain usable without invented new phase times; the Study Plan screen offers **Enable guided focus** opt-in, preserving earlier elapsed time/checklist marks. New sessions start guided by default.
+- **Separate timers:** The pre-existing independent Pomodoro `FocusBar` is not replaced and can be invoked separately. Creating a guided plan while that Pomodoro is already running is blocked with a friendly toast to reduce double clocks; no change to Pomodoro data/XP behavior. This does NOT fully arbitrate timers started later elsewhere; avoid claiming comprehensive inter-timer conflict protection.
+- **Evidence and UX:** `bsa34BlockEvidence` now recognizes guided block routes for genuine MCQ/written/card/accounting-lab attempts, while labels and self-reported completion remain distinct. The next-task header follows the current guided phase rather than jumping back to an incomplete earlier stage; the teach-back reflection becomes accessible in warm-up and teach-back stages, not only at 100% completion. The Study Plan shows time goal, elapsed time, current phase and stage time separately; history keeps elapsed time. No scheduled background reminders, artificial focus grade or automation.
+- **Testing:** `node --check` app/service worker, Node VM tests for 4 modes × 6 budgets, exact allocation, unique phase keys, phase/pause/time-up/sleep cap/extension/next/save/resume/finish, compatibility with V2.11 old sessions, and source assertions for actual global mounting/keyboard/touch and answer-evidence routing. Chromium **CSS harness** at 1365×768, 820×1080, and 390×844 confirmed expanded/collapsed widget fits screen and drag grip `touch-action:none`. This is NOT a full deployed React18 application render or physical iPad/Android test; verify actual touch dragging and quiz navigation on devices before treating as fully QA'd.
+- **Deployment:** Only `assets/app.js`, `assets/styles/polish.css`, `sw.js` upload to GitHub; this one living Markdown stays in ZIP for future AI handoff. Back up academic data before deploying. Keep source edits minimal, avoid changing AI Tutor layout, and preserve V2.10 Tutor context/duplicate checking and V2.11 modal fix.
+
 ## 9. Engineering / validation contract for the next AI
 
 **Before editing:**
@@ -302,9 +327,9 @@ The table below is derived from the `BSA26_COPILOT_FEATURES` catalog (catalog ca
 - Do not include tests, old release notes, image assets or internal debugging scripts unless changed/needed. Only site files should be uploaded to GitHub; this handoff may remain local if user does not want docs published on the site.
 - Update hashes, source version, feature list, known issues, QA results and release history **inside this file only**. Keep the filename stable so new chats find it easily.
 
-## 10. High-value source anchors (updated for V2.10)
+## 10. High-value source anchors (updated for V2.12)
 
-Line numbers are based on this exact V2.8 `assets/app.js` and will move after edits. Prefer symbol name searches.
+Line numbers in older anchor sections may describe their original release; prefer symbol-name searches in the bundled V2.11 `assets/app.js` and the regenerated function index below.
 
 - `buildDefault` — `assets/app.js:371`
 - `loadLocal` — `assets/app.js:374`
@@ -374,9 +399,9 @@ Line numbers are based on this exact V2.8 `assets/app.js` and will move after ed
 - `DashboardV205Home` — `assets/app.js:17185`
 - `App` — `assets/app.js:17579`
 
-## 11. Complete named function index (V2.10)
+## 11. Complete named function index (V2.12)
 
-Extracted 620 named function declarations from the exact V2.10 app.js. Nested functions and repeated names are included; line numbers refer to **this release only**.
+633 named function declarations extracted from the exact V2.12 app.js. Nested declarations and repeated names may appear. These line numbers change each release.
 
 `buildCfas (L353)`, `buildDefault (L371)`, `loadLocal (L374)`, `stdTokens (L402)`, `matchTopic (L405)`, `normTopic (L430)`, `normCard (L452)`, `normMistake (L459)`
 
@@ -512,27 +537,31 @@ Extracted 620 named function declarations from the exact V2.10 app.js. Nested fu
 
 `BSA49TopicLinks (L15741)`, `bsa49MatchesSubject (L15751)`, `bsa49PackPrompt (L15762)`, `bsa13CheckGeneratedJSON (L15781)`, `bsa44Empty (L15830)`, `bsa44ParseOne (L15831)`, `bsa44Baseline (L15864)`, `bsa210Tokens (L15889)`
 
-`bsa210Intent (L15898)`, `bsa210Concept (L15908)`, `bsa210Numbers (L15920)`, `bsa210DuplicateSignal (L15924)`, `bsa210AnswerMeaning (L15950)`, `bsa210MaterialPair (L15960)`, `bsa44Similar (L15970)`, `bsa44Prepare (L15971)`
+`bsa210Intent (L15898)`, `bsa210Concept (L15908)`, `bsa210Numbers (L15920)`, `bsa210DuplicateSignal (L15926)`, `bsa210AnswerMeaning (L15952)`, `bsa210MaterialPair (L15962)`, `bsa44Similar (L15972)`, `bsa44Prepare (L15973)`
 
-`acceptSets (L16032)`, `bsa44Plan (L16058)`, `bsa44ApplyPack (L16071)`, `bsa47ExpectedMaterials (L16103)`, `bsa47HasMaterial (L16108)`, `bsa47TopicGapPrompt (L16109)`, `BSA49SmartFlow (L16132)`, `BSA45ImportCenter (L16164)`
+`acceptSets (L16034)`, `bsa44Plan (L16060)`, `bsa44ApplyPack (L16073)`, `bsa47ExpectedMaterials (L16105)`, `bsa47HasMaterial (L16110)`, `bsa47TopicGapPrompt (L16111)`, `BSA49SmartFlow (L16134)`, `BSA45ImportCenter (L16166)`
 
-`BSA44PackImporter (L16192)`, `bsa44TopicCounters (L16248)`, `BSA44TopicHealth (L16260)`, `bsa45SafeLibrarySubject (L16286)`, `BSA205Library (L16291)`, `bsa205Diagnose (L16424)`, `bsa43ParseReport (L16525)`, `bsa46CrossChecks (L16589)`
+`BSA44PackImporter (L16194)`, `bsa44TopicCounters (L16250)`, `BSA44TopicHealth (L16262)`, `bsa45SafeLibrarySubject (L16288)`, `BSA205Library (L16293)`, `bsa205Diagnose (L16426)`, `bsa43ParseReport (L16527)`, `bsa46CrossChecks (L16591)`
 
-`BSA46Statement (L16605)`, `BSA46Checks (L16629)`, `bsa43Tasks (L16635)`, `bsa26FsDraftKey (L16666)`, `bsa26FsDraft (L16669)`, `BSA43FinancialStatements (L16676)`, `bsa205CycleValidate (L16820)`, `bsa205Ledger (L16832)`
+`BSA46Statement (L16607)`, `BSA46Checks (L16631)`, `bsa43Tasks (L16637)`, `bsa26FsDraftKey (L16668)`, `bsa26FsDraft (L16671)`, `BSA43FinancialStatements (L16678)`, `bsa205CycleValidate (L16822)`, `bsa205Ledger (L16834)`
 
-`bsa205CycleReports (L16836)`, `BSA205Cycle (L16849)`, `bsa34FocusChoices (L16928)`, `bsa34TopicMatch (L16938)`, `bsa34TopicTitle (L16944)`, `bsa34PlanBlocks (L16945)`, `bsa205SessionBlocks (L16974)`, `bsa34BlockEvidence (L16977)`
+`bsa205CycleReports (L16838)`, `BSA205Cycle (L16851)`, `bsa34FocusChoices (L16930)`, `bsa34TopicMatch (L16940)`, `bsa34TopicTitle (L16946)`, `bsa34PlanBlocks (L16947)`, `bsa211HasTimer (L16979)`, `bsa211ElapsedMs (L16980)`
 
-`BSA205Study (L16993)`, `bsa34LearningSnapshot (L17060)`, `BSA205Mastery (L17080)`, `bsa38Calc (L17127)`, `bsa38ValidateTemplate (L17141)`, `bsa38ParseImport (L17157)`, `bsa38Generate (L17158)`, `bsa38Work (L17163)`
+`bsa211Clock (L16986)`, `bsa212Allocate (L16999)`, `bsa212ModePlan (L17010)`, `bsa212ModeName (L17040)`, `bsa212Guided (L17041)`, `bsa212PhaseIndex (L17042)`, `bsa212PhaseElapsed (L17043)`, `bsa212PhaseGoal (L17046)`
 
-`bsa38SaveWork (L17164)`, `bsa38Day (L17165)`, `bsa38AddDays (L17166)`, `BSA38Variations (L17167)`, `BSA38Oral (L17198)`, `BSA38MasteryCheckpoint (L17212)`, `BSA38PracticeStudio (L17219)`, `BSA38ExamCatchup (L17225)`
+`bsa212Freeze (L17047)`, `bsa212Action (L17055)`, `bsa205SessionBlocks (L17089)`, `bsa34BlockEvidence (L17092)`, `BSA205Study (L17108)`, `BSA212FloatingFocus (L17232)`, `bsa34LearningSnapshot (L17289)`, `BSA205Mastery (L17309)`
 
-`bsa38SuggestTopic (L17249)`, `BSA38LibraryTriage (L17256)`, `BSA38ProgressCompare (L17283)`, `bsa33Journey (L17300)`, `bsa33RouteName (L17313)`, `BSA31StudyPath (L17314)`, `bsa32ManilaDay (L17370)`, `bsa32DailyLine (L17379)`
+`bsa38Calc (L17356)`, `bsa38ValidateTemplate (L17370)`, `bsa38ParseImport (L17386)`, `bsa38Generate (L17387)`, `bsa38Work (L17392)`, `bsa38SaveWork (L17393)`, `bsa38Day (L17394)`, `bsa38AddDays (L17395)`
 
-`BSA3Today (L17385)`, `BSA3Practice (L17445)`, `bsa46SuggestedProfile (L17497)`, `bsa46ProfileId (L17507)`, `bsa46Profile (L17508)`, `bsa46ToolVisible (L17509)`, `bsa46TutorGuidance (L17518)`, `bsa46ImportGuidance (L17523)`
+`BSA38Variations (L17396)`, `BSA38Oral (L17427)`, `BSA38MasteryCheckpoint (L17441)`, `BSA38PracticeStudio (L17448)`, `BSA38ExamCatchup (L17454)`, `bsa38SuggestTopic (L17478)`, `BSA38LibraryTriage (L17485)`, `BSA38ProgressCompare (L17512)`
 
-`BSA45SidebarEditor (L17524)`, `BSA3StartGuide (L17571)`, `DashboardV205Home (L17585)`, `BSA4StudyDock (L17624)`, `BSA43ThemeNavigation (L17733)`, `bsa13IconName (L17776)`, `BSA13IconPicker (L17784)`, `bsa13MaterialCounts (L17801)`
+`bsa33Journey (L17529)`, `bsa33RouteName (L17542)`, `BSA31StudyPath (L17543)`, `bsa32ManilaDay (L17599)`, `bsa32DailyLine (L17608)`, `BSA3Today (L17614)`, `BSA3Practice (L17674)`, `bsa46SuggestedProfile (L17726)`
 
-`BSA11SubjectSwitcher (L17812)`, `BSA12Subjects (L17871)`, `App (L17978)`, `bsaDownloadSafeDiagnostics (L18542)`
+`bsa46ProfileId (L17736)`, `bsa46Profile (L17737)`, `bsa46ToolVisible (L17738)`, `bsa46TutorGuidance (L17747)`, `bsa46ImportGuidance (L17752)`, `BSA45SidebarEditor (L17753)`, `BSA3StartGuide (L17809)`, `DashboardV205Home (L17823)`
+
+`BSA4StudyDock (L17862)`, `BSA43ThemeNavigation (L17971)`, `bsa13IconName (L18014)`, `BSA13IconPicker (L18022)`, `bsa13MaterialCounts (L18039)`, `BSA11SubjectSwitcher (L18050)`, `BSA12Subjects (L18109)`, `App (L18216)`
+
+`bsaDownloadSafeDiagnostics (L18780)`
 
 ## 12. Maintenance ledger — ONE file forever
 
@@ -545,3 +574,11 @@ Latest bundle contains three deployment assets and this exact Markdown. Confirm 
 ### V2.10 checkpoint — 2026-11-22
 
 Updated the same sole Markdown document after V2.10 code changes. This is an **incremental deployment ZIP**, not a full source repository. Install `assets/app.js`, `assets/styles/polish.css`, `sw.js`; retain this MD locally for future chats. Always verify the actual latest ZIP before continuing.
+
+### V2.11 checkpoint — 2026-11-22
+
+Updated the same one Markdown handoff, preserved V2.10 and earlier release history, and recorded the study-timing semantics, backwards-compatible timer fields, true sidebar-modal root cause, known risks, tests and exact asset hashes. This is an incremental GitHub update, not a full site repository.
+
+### V2.12 checkpoint — 2026-11-22
+
+Updated this same single handoff with guided focus goals, floating touch-drag semantics, additive session storage fields, explicit timer time-up decisions, legacy-plan compatibility, quiz-draft safety, tests, known limitations, and hashes from the actual deployment assets. Do not include another `.md` file in the ZIP.
