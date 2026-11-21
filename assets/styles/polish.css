@@ -3683,3 +3683,25 @@ body>.backdrop .bsa16-delete-dialog .modal-foot>.btn{min-width:0;white-space:nor
 #root .bsa18-tutor-alert .btn{flex:none;white-space:nowrap;font-size:.72rem}
 @media(max-width:680px){#root .bsa18-resume-strip{gap:7px;padding:7px 9px;margin:5px 0 8px;border-radius:12px;flex-wrap:wrap}#root .bsa18-resume-icon{width:27px;height:27px}#root .bsa18-resume-detail{flex-basis:calc(100% - 42px)}#root .bsa18-resume-detail strong{font-size:.76rem}#root .bsa18-resume-detail small{font-size:.66rem}#root .bsa18-resume-strip>.btn{flex:1 1 0;min-height:31px!important}#root .bsa18-tutor-alert{flex-wrap:wrap}}
 @media(prefers-reduced-motion:reduce){#root .bsa18-resume-strip{transition:none!important}}
+
+
+/* V2.1 desktop Ask screen recovery: override legacy zero-sized, clipped and
+   animated containers without affecting other routes or user theme palettes. */
+#root>.shell>.content[data-desk-page="ask"]>.bsa21-tutor-screen{
+  display:flex!important;flex-direction:column!important;visibility:visible!important;
+  opacity:1!important;animation:none!important;position:relative!important;
+  width:100%!important;max-width:none!important;min-width:0!important;
+  height:auto!important;min-height:420px!important;overflow:visible!important;
+  padding-bottom:24px!important;isolation:isolate;
+}
+#root>.shell>.content[data-desk-page="ask"]>.bsa21-tutor-screen>.ask-compact-head{
+  display:flex!important;flex-shrink:0!important;visibility:visible!important;
+}
+#root>.shell>.content[data-desk-page="ask"]>.bsa21-tutor-screen>.ai-log{
+  display:flex!important;flex-direction:column!important;flex:0 1 auto!important;
+  width:100%!important;min-height:240px!important;overflow-y:auto!important;
+}
+#root>.shell>.content[data-desk-page="ask"]>.bsa21-tutor-screen>.ask-composer{
+  display:block!important;position:relative!important;flex-shrink:0!important;
+  width:100%!important;max-width:100%!important;
+}
