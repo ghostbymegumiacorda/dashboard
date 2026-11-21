@@ -4652,7 +4652,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
   function FocusBar({ data, update, toast }) {
     const t = useTimer();
     const focusActive=useRef({id:null,ms:0,last:Date.now()});
-    const [floating,setFloating]=useState(null),[compact,setCompact]=useState(false),
+    const [floating,setFloating]=useState(null),[compact,setCompact]=useState(true),
       [timerHidden,setTimerHidden]=useState(()=>{try{return localStorage.getItem('bsa43-timer-hidden')==='1'}catch(_){return false}});
     const showTimer=()=>{setTimerHidden(false);try{localStorage.removeItem('bsa43-timer-hidden')}catch(_){}};
     const hideTimer=()=>{setTimerHidden(true);try{localStorage.setItem('bsa43-timer-hidden','1')}catch(_){}};
@@ -4747,14 +4747,14 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     return h(
       "div",
       { className: `focus-bar bsa190-focus${compact?" bsa190-collapsed":""}${t.running ? "" : " paused"}`, role: "timer", "aria-label": "Focus timer",style:floating?{left:floating.x,top:floating.y,bottom:'auto',transform:'none'}:{},onPointerMove:moveDrag,onPointerUp:endDrag,onPointerCancel:endDrag },
-      h("button",{type:'button',className:'bsa190-handle',title:'Drag to move the timer',onPointerDown:beginDrag,onKeyDown:keyDrag,'aria-label':'Drag focus timer; use arrow keys to move, Home to reset'},'⠿'),
-      h("span", { className: "focus-ring", style: { "--p": `${pct}%` }, "aria-hidden": "true" }),
+      !compact&&h("button",{type:'button',className:'bsa190-handle',title:'Drag to move the timer',onPointerDown:beginDrag,onKeyDown:keyDrag,'aria-label':'Drag focus timer; use arrow keys to move, Home to reset'},'⠿'),
+      !compact&&h("span", { className: "focus-ring", style: { "--p": `${pct}%` }, "aria-hidden": "true" }),
       h("div", { className: "focus-text" }, h("strong", null, `${Math.floor(secs / 60)}:${pad(secs % 60)}`), h("span", { className: "muted small" }, t.phase === "break" ? (t.label || "Break") : t.running ? "Focus" : "Paused", t.pomo && t.phase !== "break" ? ` \u00b7 round ${t.round || 1}` : "", topic && t.phase !== "break" ? `, ${topic.code || topic.title}` : !topic && t.label && t.phase !== "break" ? `, ${t.label}` : "")),
       t.phase === "break" && t.pomo && h("button", { className: "btn", onClick: () => { setTimerState(null); startTimer({ mins: t.pomo.work || 25, topicId: t.topicId, subjectId: t.subjectId, pomo: t.pomo, round: (t.round || 1) + 1 }); } }, "Skip break"),
-      h("button",{className:'bsa190-toggle',type:'button',onClick:()=>setCompact(v=>!v),'aria-label':compact?'Expand timer':'Minimize timer','aria-expanded':!compact},compact?'▢':'−'),
-      h("button", { className: "btn", onClick: () => setTimerState(t.running ? { ...t, running: false, acc: timerElapsed(t) } : { ...t, running: true, start: Date.now() }) }, t.running ? "Pause" : "Resume"),
-      h("button",{className:'btn bsa43-timer-hide',type:'button',onClick:hideTimer,title:'Hide the timer without stopping or resetting it'},'Hide'),
-      h("button", { className: "btn primary", onClick: () => finish(false) }, "Finish")
+      h("button",{className:'bsa190-toggle',type:'button',onClick:()=>setCompact(v=>!v),'aria-label':compact?'Expand timer controls':'Minimize timer controls','aria-expanded':!compact},compact?'Controls':'−'),
+      !compact&&h("button", { className: "btn", onClick: () => setTimerState(t.running ? { ...t, running: false, acc: timerElapsed(t) } : { ...t, running: true, start: Date.now() }) }, t.running ? "Pause" : "Resume"),
+      !compact&&h("button",{className:'btn bsa43-timer-hide',type:'button',onClick:hideTimer,title:'Hide the timer without stopping or resetting it'},'Hide'),
+      !compact&&h("button", { className: "btn primary", onClick: () => finish(false) }, "Finish")
     );
   }
 
@@ -11201,6 +11201,8 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const [busy, setBusy] = useState(false);
     const [setup, setSetup] = useState(false);
     const [focus, setFocus] = useState(() => (init && init.focus) || null);
+    const [chatDensity,setChatDensity]=useState(()=>localPref('bsa45_tutor_density')==='comfortable'?'comfortable':'compact');
+    const detachQuestion=()=>{if(!focus)return;const draft=bsa4TutorDraft(focus);setFocus(null);if(text===draft)setText('');bsa4SaveContext(subject.id,{setId:null,problemId:null});toast('Attached question removed. Chat history was not changed.');};
     const abort = useRef(null);
     const endRef = useRef(null);
     const logRef = useRef(null);
@@ -11254,27 +11256,30 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const focusLabel = focus && focus.kind === "lecture" ? (lectures.find((x) => x.id === focus.id) || {}).title : focus && focus.kind === "pset" ? (psets.find((x) => x.id === focus.id) || {}).title : focus?.kind==='problem' ? (bsa4ProblemContext(subject,focus.id,focus.problemId)?.title||'Selected problem') : focus?.kind==='mcq' ? 'Selected MCQ' : focus?.kind==='exercise' ? 'Current practice exercise' : focus?.kind==='fs-report' ? 'Financial statements · '+(focus.standard||'source practice') : "";
     return h(
       "section",
-      { className: "view ai-wrap bsa44-tutor", ref: topRef },
+      { className: "view ai-wrap bsa44-tutor bsa45-tutor-"+chatDensity, ref: topRef },
       h("div", { className: "page-head ask-compact-head" },
         h("div", { className: "ask-title-group" }, h("h1", { className: "page-title" }, "Ask Tutor"), h("span", { className: "ask-help-text" }, "Read · Ask · Practice")),
         h("div", { className: "ask-header-actions" },
           msgs.length > 0 && h("button", { className: "btn ghost ask-nav-button", onClick: () => { stick.current = true; logRef.current?.scrollTo({top:logRef.current.scrollHeight,behavior:"smooth"}); }, title: "Jump to latest message" }, "↓ Latest"),
-          h("button", { className: "btn ghost ask-settings-button", onClick: () => setSetup(true), title: "API key and model settings" }, "⚙ Settings"),
+          h("button", { className: "btn ghost ask-settings-button", onClick: () => setSetup(true), title: "API key and model settings" }, "⚙"),
+          h("button", { className: "btn ghost bsa45-density-toggle", onClick: () => {const next=chatDensity==='compact'?'comfortable':'compact';setChatDensity(next);setLocalPref('bsa45_tutor_density',next);}, title: "Change chat density" }, chatDensity==='compact'?"A+":"A−"),
           msgs.length > 0 && h("button", { className: "btn ghost ask-clear-button", disabled: busy, onClick: clear, title: "Clear this conversation" }, "Clear")
         )
       ),
-      (['problem','mcq','exercise','fs-report'].includes(focus?.kind))&&h('details',{className:'bsa4-context-card bsa44-context-card'},
-        h('summary',null,'✦ Question attached · '+focusLabel+' · Tap for hints and details'),
-        h('p',null,String(['mcq','exercise','fs-report'].includes(focus.kind)?(focus.question||''):(bsa4ProblemContext(subject,focus.id,focus.problemId)?.question||'This question was not found in the current subject.')).slice(0,480)),
-        h('div',{className:'bsa4-context-actions'},
-          [['Hint','Give me one answer-neutral hint for this exact problem. Wait for my reply.'],
-           ['Guide me','Guide me through this exact problem one step at a time. Ask a question first.'],
-           ['Check reasoning','Please check my reasoning about the attached question. Ask me to share my attempt before giving the solution.']].map(([label,prompt])=>h('button',{type:'button',key:label,className:'btn ghost',onClick:()=>setText(prompt)},label))),
-        h('small',{className:'muted'},'Review the prepared message, then press Send. The answer key is not attached.')),
+      (['problem','mcq','exercise','fs-report'].includes(focus?.kind))&&h('div',{className:'bsa45-attachment-row'},
+        h('details',{className:'bsa4-context-card bsa44-context-card'},
+          h('summary',null,h('span',{className:'bsa45-attachment-icon'},'✦'),h('span',{className:'bsa45-attachment-title'},'Attached · '+focusLabel),h('span',{className:'bsa45-attachment-chevron'},'Details')),
+          h('p',null,String(['mcq','exercise','fs-report'].includes(focus.kind)?(focus.question||''):(bsa4ProblemContext(subject,focus.id,focus.problemId)?.question||'This question was not found in the current subject.')).slice(0,480)),
+          h('div',{className:'bsa4-context-actions'},
+            [['Hint','Give me one answer-neutral hint for this exact problem. Wait for my reply.'],
+             ['Guide me','Guide me through this exact problem one step at a time. Ask a question first.'],
+             ['Check reasoning','Please check my reasoning about the attached question. Ask me to share my attempt before giving the solution.']].map(([label,prompt])=>h('button',{type:'button',key:label,className:'btn ghost',onClick:()=>setText(prompt)},label))),
+          h('small',{className:'muted'},'The answer key is not attached.')),
+        h('button',{className:'bsa45-detach',type:'button',onClick:detachQuestion,'aria-label':'Remove attached question',title:'Detach this question without deleting messages'},'×')),
       ready && h("details", { className: "ask-context-details" },
         h("summary", { title: "Change model, tutor mode, and source" },
           h("span", { className: "ask-context-label" }, mode === "sources" ? "📚 Saved sources" : mode === "dashboard" ? "🧭 Dashboard guide" : "💬 General questions"),
-          h("span", { className: "ask-context-hint" }, " · Change context")),
+          h("span", { className: "ask-context-hint" }, " · Modes & sources")),
         h("div", { className: "ask-context-grid" },
           h("label", null, "Tutor mode", h("select", { value: mode, disabled: busy, onChange: e => changeMode(e.target.value) },
             h("option", { value: "sources" }, "Focused · saved sources"),
@@ -13178,6 +13183,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
         h('h2',null,'This section needs a fresh start'),
         h('p',null,'Your existing study data has not been cleared. Other sections can still open.'),
         h('p',{className:'muted small'},'Section: '+this.props.route),
+        h('details',{className:'bsa45-error-details'},h('summary',null,'Technical detail (safe to share without your study records)'),h('code',null,String(this.state.error?.message||'Unknown display error').slice(0,500))),
         h('div',{className:'bsa-screen-recovery-actions'},
           h('button',{className:'btn primary',onClick:()=>this.setState({error:null})},'Try again'),
           h('button',{className:'btn',onClick:this.props.onHome},'Back to Today'),
@@ -13366,7 +13372,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       source:source.slice(0,240),hint:bsa198Text(raw.hint).slice(0,750),explanation:bsa198Text(raw.explanation||raw.reason).slice(0,2500),solution}};
   }
   function bsa198StoredKeyValid(p){
-    if(!Array.isArray(p.labEntry)||p.labEntry.length<2||p.labEntry.length>16)return false;
+    if(!p||typeof p!=='object'||!Array.isArray(p.labEntry)||p.labEntry.length<2||p.labEntry.length>16)return false;
     let debit=0,credit=0;
     for(const row of p.labEntry){
       if(!Array.isArray(row)||row.length<3||typeof row[0]!=='string'||!row[0].trim())return false;
@@ -13890,16 +13896,17 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     return match?[match.code,match.title].filter(Boolean).join(' · '):String(freeLabel||'').trim()||'Uncategorized';
   }
   function bsa205LibraryItems(s){const rows=[];
+    const safe=a=>Array.isArray(a)?a.filter(x=>x&&typeof x==='object'&&!Array.isArray(x)):[];
     const push=(x,kind)=>rows.push({...x,topic:bsa3TopicLabel(s,x.topicId,x.topicText),kind});
-    for(const x of s.lectures||[])push({key:'lecture:'+x.id,id:x.id,type:'Lecture',title:x.title||'Untitled lecture',text:x.title+' '+(x.summary||''),source:x.source||'',route:'lectures',opts:{open:x.id},topicId:x.topicId||'',topicText:x.topicText||''},'lecture');
-    for(const x of s.psets||[])for(const p of x.problems||[])push({key:'problem:'+p.id,id:p.id,setId:x.id,type:bsa198StoredKeyValid(p)?'Journal problem':'Written problem',title:p.title||x.title||'Written problem',text:p.problem||'',source:p.source||x.source||'',route:bsa198StoredKeyValid(p)?'accounting-lab':'psets',opts:bsa198StoredKeyValid(p)?{problemId:p.id}:{open:x.id,problemId:p.id},collectionId:x.id,collectionTitle:x.title||'Untitled Problem Set',verified:p.labVerification==='Source checked',topicId:p.topicId||(p.subtopic?'':x.topicId)||'',topicText:p.subtopic||x.topicText||x.topic||'',setTitle:x.title||''},'problem');
-    for(const x of s.mcqSets||[])for(const p of x.problems||[])push({key:'mcq:'+p.id,id:p.id,type:'MCQ',title:x.title||'Multiple choice',text:p.problem||'',source:p.source||x.source||'',route:'mcq',topicId:p.topicId||x.topicId||'',topicText:p.subtopic||x.topicText||x.topic||''},'mcq');
-    for(const x of s.cards||[])push({key:'card:'+x.id,id:x.id,type:'Flashcard',title:x.q||x.front||'Flashcard',text:x.q||x.front||'',route:'vault',topicId:x.topicId||'',topicText:x.topicText||''},'card');
-    for(const x of s.rules||[])push({key:'rule:'+x.id,id:x.id,type:'Reference rule',title:x.title||'Rule',text:x.decisionRule||'',source:x.sourceTitle||'',verified:x.status==='Source checked',route:'rules',topicId:x.topicId||'',topicText:x.topicText||''},'rule');
+    for(const x of safe(s.lectures))push({key:'lecture:'+x.id,id:x.id,type:'Lecture',title:x.title||'Untitled lecture',text:x.title+' '+(x.summary||''),source:x.source||'',route:'lectures',opts:{open:x.id},topicId:x.topicId||'',topicText:x.topicText||''},'lecture');
+    for(const x of safe(s.psets))for(const p of safe(x.problems))push({key:'problem:'+p.id,id:p.id,setId:x.id,type:bsa198StoredKeyValid(p)?'Journal problem':'Written problem',title:p.title||x.title||'Written problem',text:p.problem||'',source:p.source||x.source||'',route:bsa198StoredKeyValid(p)?'accounting-lab':'psets',opts:bsa198StoredKeyValid(p)?{problemId:p.id}:{open:x.id,problemId:p.id},collectionId:x.id,collectionTitle:x.title||'Untitled Problem Set',verified:p.labVerification==='Source checked',topicId:p.topicId||(p.subtopic?'':x.topicId)||'',topicText:p.subtopic||x.topicText||x.topic||'',setTitle:x.title||''},'problem');
+    for(const x of safe(s.mcqSets))for(const p of safe(x.problems))push({key:'mcq:'+p.id,id:p.id,type:'MCQ',title:x.title||'Multiple choice',text:p.problem||'',source:p.source||x.source||'',route:'mcq',topicId:p.topicId||x.topicId||'',topicText:p.subtopic||x.topicText||x.topic||''},'mcq');
+    for(const x of safe(s.cards))push({key:'card:'+x.id,id:x.id,type:'Flashcard',title:x.q||x.front||'Flashcard',text:x.q||x.front||'',route:'vault',topicId:x.topicId||'',topicText:x.topicText||''},'card');
+    for(const x of safe(s.rules))push({key:'rule:'+x.id,id:x.id,type:'Reference rule',title:x.title||'Rule',text:x.decisionRule||'',source:x.sourceTitle||'',verified:x.status==='Source checked',route:'rules',topicId:x.topicId||'',topicText:x.topicText||''},'rule');
     return rows;
   }
   // Grouping helper is deliberately pure so large libraries can be unit-tested.
-  function bsa3GroupRows(rows){const map=new Map();for(const item of rows){const label=item.topic||'Uncategorized';if(!map.has(label))map.set(label,[]);map.get(label).push(item);}
+  function bsa3GroupRows(rows){const map=new Map();for(const item of rows){const label=String(item.topic||'Uncategorized');if(!map.has(label))map.set(label,[]);map.get(label).push(item);}
     return [...map].sort(([a],[b])=>a==='Uncategorized'?1:b==='Uncategorized'?-1:a.localeCompare(b,undefined,{numeric:true}));}
   // V3.8: preserve original Problem Set identity while optionally browsing across topics.
   // This is a view-only grouping and never alters/imports/copies any problems.
@@ -14109,6 +14116,51 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
   }
   const BSA44_PROMPT=`Create ONE valid JSON object for BSA Study Desk using format "bsa-topic-pack-v1" and keys: "subject", "topic", "topics", "lectures", "problemSets", "mcqSets", "flashcards", "rules". The topic should match my actual course outline. Use only my supplied lecture files or authoritative verified sources. Never fabricate references, page numbers, standard text, or worked answers. Mark uncertain content in the source fields and omit unsupported questions. Preserve all amounts and conditions in exercises. Include genuine variation, not paraphrased duplicates. Each lecture needs title, topic, sections [{heading,body}]; each problem set needs title, topic, problems [{problem,answer,solution}]; MCQ sets need problems [{problem,choices:[four choices],answer:"A/B/C/D",solution}]; flashcards need question, answer, topic; rules need title, decisionRule, topic, and precise sourceTitle/sourceLocator if verified. Output only valid JSON, with each section as an array; empty arrays are okay. My existing imports will be checked for duplicates before saving.`;
   const BSA44_EXAMPLE={format:'bsa-topic-pack-v1',subject:'Replace with your course',topic:'Replace with topic title',topics:[{title:'Replace with topic title'}],lectures:[{title:'Topic overview',topic:'Replace with topic title',source:'Actual textbook and page',sections:[{heading:'Core concept',body:'Replace with accurate source-based explanation'}]}],problemSets:[{title:'Topic practice',topic:'Replace with topic title',problems:[{problem:'Replace with your real question',answer:'Verified answer',solution:'Verified working'}]}],mcqSets:[],flashcards:[{question:'Replace with your question',answer:'Verified answer',topic:'Replace with topic title'}],rules:[]};
+  const BSA45_FS_PROMPT=`TASK: Convert the supplied financial statement PDF into ONE importable BSA Study Desk financial report JSON object. Output ONLY parsable JSON, without a code fence.
+Use EXACT format: "bsa-financial-statements-v1" and keys: "format", "company", "periodEnd" (YYYY-MM-DD or YYYY), "scope" (consolidated or separate), "currency", "unit", "source", "statements", "notes", "standards".
+source: {"title":"exact original report name","url":"https://... if verified, otherwise empty string","auditor":"only if clearly stated","status":"not source verified"}.
+statements: [{"type":"financial-position|profit-loss|cash-flows|changes-in-equity|other","title":"exact title printed on the statement","page":"PDF page","lines":[{"kind":"section|item|subtotal|total","label":"exact statement line","amount":0,"comparative":0,"note":"note number if printed","page":"source PDF page","indent":0,"category":"optional","standard":"only if source-supported"}]}].
+PRESENTATION IS ESSENTIAL. Copy the REAL statement hierarchy and order exactly. Use kind="section" for headings such as ASSETS / Current Assets / Operating Activities, with amount=null and comparative=null; use kind="subtotal" for Gross profit, Total current assets, and similar; use kind="total" for final balances such as TOTAL ASSETS or CASH AT YEAR END; use kind="item" for accounts. Negative costs/outflows must be negative and will display in parentheses. Do not convert a breakdown into a plain unordered list. Include all complete statements visible: Statement of Financial Position (balance sheet); Profit or Loss and OCI where presented; Cash Flows (operating/investing/financing and opening/closing cash); Statement of Changes in Equity; and relevant notes. Never make up an unseen statement or figures.
+Add comparativePeriodEnd (YYYY-MM-DD) if stated; otherwise use null. Use currency and units once for each report, preserve actual note-number column. Do NOT invent calculated totals: only import amounts actually printed, and only classify a line as total if the original identifies it as total.
+notes: [{"title":"actual note heading","standard":"PAS/PFRS if identifiable","page":"source PDF page","text":"accurate brief extracted explanation, preserving conditions"}].
+standards: [{"code":"PAS 16","title":"name only if verified","page":"evidence page","interpretation":"observed policy or evidence, not a legal compliance verdict"}].
+Check units and comparative years; parentheses mean negative numbers. Missing/illegible amounts must be null, NEVER zero. Use null only for missing figures, numeric zero only if actually zero. Do not calculate new values or infer compliance. Preserve separate versus consolidated scope, currency, note/page references, and audit report wording accurately. If the PDF is incomplete, return only the supported portions; never invent. A successful JSON parse does NOT independently verify the report; the learner compares it with the original PDF.`;
+  const BSA45_AUDIT_PROMPT=`Compare a draft BSA Study Desk JSON import against the supplied original source, without guessing. Review: exact source identity, topic, unique non-duplicative coverage, correct numerical figures, complete problem conditions, answer keys, standards references, page locators, missing disclosures, and unsupported claims. Identify every mismatch in a table with item, issue, evidence location, and proposed correction. Never say source checked unless you actually inspected the relevant source page. Do not silently rewrite my existing saved data. After listing corrections, provide a separate corrected JSON only when all changed material is evidence-supported.`;
+  const BSA45_PROBLEM_PROMPT=`From only the attached chapter or worksheet, create a BSA Study Desk Topic Pack JSON with format "bsa-topic-pack-v1" and arrays "topics", "lectures", "problemSets", "mcqSets", "flashcards", "rules". Focus on faithful accounting exercises and worked solutions; do not make up amounts, facts, sources, pages, or answer keys. Each written problem: {"problem":"full question and required tasks","answer":"answer checked from source","solution":"clear calculation/reasoning"}. Each MCQ: {"problem":"question","choices":["A...","B...","C...","D..."],"answer":"A","solution":"why correct and why distractors fail"}. Set unused arrays to []. Include topic and subject names. Provide ONLY valid JSON.`;
+  const BSA45_LECTURE_PROMPT=`Create a BSA Study Desk Topic Pack JSON for the specified topic, with format "bsa-topic-pack-v1", subject, topic, and arrays topics, lectures, problemSets, mcqSets, flashcards, rules. Extract accurate explanations from the attached source, not generic filler. lectures: [{"title":"...","topic":"...","source":"real chapter/page if visible","sections":[{"heading":"...","body":"clear explanation and example using only supplied source"}]}]. Use [] for other content. Cover definitions, scope, recognition, measurement, exceptions, required disclosures, and worked examples only to the extent supported. Do not fabricate a page or regulation. Return ONLY JSON.`;
+  const BSA45_FLASH_PROMPT=`Create a BSA Study Desk Topic Pack JSON from the source with format "bsa-topic-pack-v1", subject, topic, and arrays topics, lectures, problemSets, mcqSets, flashcards, rules. Focus on 15–25 distinctive active-recall flashcards, each {"question":"one precise question","answer":"short correct answer","topic":"same exact topic"}. Do not copy the same fact as multiple near-identical prompts. Include nuanced distinctions only when supported. Set other arrays to []. Return ONLY JSON.`;
+  const BSA45_RULES_PROMPT=`Create a BSA Study Desk Topic Pack JSON from the verified accounting standard excerpts, format "bsa-topic-pack-v1" plus subject, topic, and arrays topics, lectures, problemSets, mcqSets, flashcards, rules. rules: [{"title":"specific rule","decisionRule":"if/then decision and important exceptions","topic":"...","sourceTitle":"real standard/source","sourceLocator":"actual section/page if supplied"}]. Cover recognition, measurement, presentation, disclosure and exceptions ONLY where supported. Distinguish mandatory requirements from common textbook shortcuts. Set other arrays to []. Return ONLY valid JSON.`;
+  const BSA45_IMPORT_PROMPTS=[
+    ['full','Full Topic Pack','All materials together',BSA44_PROMPT,'packs'],
+    ['lecture','Lecture notes','Source-grounded explanations',BSA45_LECTURE_PROMPT,'packs'],
+    ['practice','Practice questions','Written sets and MCQs',BSA45_PROBLEM_PROMPT,'packs'],
+    ['cards','Flashcards','Distinct retrieval prompts',BSA45_FLASH_PROMPT,'packs'],
+    ['rules','Rules & standards','Cited recognition and measurement rules',BSA45_RULES_PROMPT,'packs'],
+    ['financial','Financial Statements JSON','Real statements, notes and standards',BSA45_FS_PROMPT,'fs-lab'],
+    ['check','Quality & duplicate audit','Check correctness before import',BSA45_AUDIT_PROMPT,'packs']
+  ];
+  function BSA45ImportCenter({subject,go,toast,onPack}){
+    const [chosen,setChosen]=useState('full');
+    const [topic,setTopic]=useState('');
+    const [source,setSource]=useState('');
+    const [showPrompt,setShowPrompt]=useState(true);
+    const entry=BSA45_IMPORT_PROMPTS.find(row=>row[0]===chosen)||BSA45_IMPORT_PROMPTS[0];
+    const prompt=entry[3]+'\n\nSUBJECT: '+(subject.name||subject.code||'')+(topic.trim()?'\nTOPIC: '+topic.trim():'')+(source.trim()?'\nSOURCE: '+source.trim():'')+'\n\nPlease check all material for repeated or overlapping content before producing the JSON.';
+    const copy=async()=>toast(await copyText(prompt)?'AI import prompt copied. Attach the actual source to your AI tool.':'Copy unavailable. Select and copy the prompt manually.');
+    return h('section',{className:'bsa45-import-hub'},
+      h('header',{className:'bsa45-hub-hero'},h('span',{className:'bsa205-overline'},'ONE PLACE · ALL IMPORTS'),h('h2',null,'Import Center'),h('p',null,'Choose what you are importing. Copy the matching AI prompt, prepare the JSON from your real source, then review it in the correct importer.'),h('small',null,'Never import a raw AI answer without checking the source and figures. Existing data is kept until you confirm an import.')),
+      h('div',{className:'bsa45-hub-steps'},['1 · Choose material','2 · Copy its prompt','3 · Review JSON & duplicates','4 · Import'].map(t=>h('span',{key:t},t))),
+      h('div',{className:'bsa45-hub-layout'},
+        h('nav',{className:'bsa45-hub-choices','aria-label':'Choose import material'},BSA45_IMPORT_PROMPTS.map(([id,label,description])=>h('button',{key:id,type:'button',className:'bsa45-hub-choice'+(chosen===id?' selected':''),onClick:()=>setChosen(id),'aria-pressed':chosen===id},h('strong',null,label),h('small',null,description)))),
+        h('article',{className:'bsa45-hub-panel'},h('span',{className:'bsa205-overline'},'PREPARE YOUR SOURCE'),h('h3',null,entry[1]),h('p',null,entry[2]),
+          h('div',{className:'bsa45-hub-fields'},h('label',null,'Topic (optional)',h('input',{value:topic,onChange:e=>setTopic(e.target.value),placeholder:'e.g. PAS 16 — Property, Plant and Equipment'})),h('label',null,'Source / exact pages (optional)',h('input',{value:source,onChange:e=>setSource(e.target.value),placeholder:'e.g. Millan 2023, Chapter 7, pp. 101–112'}))),
+          h('div',{className:'bsa45-hub-actions'},h('button',{className:'btn primary',onClick:copy},'Copy this AI prompt'),h('button',{className:'btn',onClick:()=>setShowPrompt(v=>!v)},showPrompt?'Hide prompt preview':'Show prompt preview')),
+          showPrompt&&h('textarea',{className:'bsa45-hub-preview',readOnly:true,rows:11,value:prompt,'aria-label':'AI import prompt preview',onFocus:e=>e.target.select()}),
+          h('div',{className:'bsa45-hub-destination'},h('strong',null,'Where to import the JSON'),h('p',null,chosen==='financial'?'Financial Statements → Reports & import. Review figures and source notes before saving.':'Study Library → Bulk import. Review exact duplicates, similar questions and conflicts first.'),
+            h('button',{className:'btn primary',onClick:()=>chosen==='financial'?go('fs-lab'):onPack()},chosen==='financial'?'Open Financial Statements importer':'Open Topic Pack importer')))),
+      h('p',{className:'bsa45-hub-foot'},'One Topic Pack can include lectures, questions, flashcards and rules together. Financial statement reports have a separate JSON structure because amounts, note pages and report periods must be checked independently.'));
+  }
+
   function BSA44PackImporter({subject,update,toast,initialTopic}){
     const [raw,setRaw]=useState(''),[docs,setDocs]=useState([]),[fileError,setFileError]=useState(''),[preview,setPreview]=useState(null),[includeSimilar,setIncludeSimilar]=useState(false),[confirmed,setConfirmed]=useState(false),[busy,setBusy]=useState(false),[result,setResult]=useState('');
     const reset=()=>{setPreview(null);setConfirmed(false);setResult('')};
@@ -14199,8 +14251,16 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
             h('button',{className:'btn',onClick:()=>onBrowse(t.title)},'Find matching questions')));
       })),visible.length===0&&rows.length>0&&h('p',{className:'muted small'},'No topics matched this search.'));
   }
+  function bsa45SafeLibrarySubject(subject){
+    const a=v=>Array.isArray(v)?v.filter(x=>x&&typeof x==='object'&&!Array.isArray(x)):[];
+    const sets=v=>a(v).map(x=>({...x,problems:a(x.problems)}));
+    return {...subject,topics:a(subject.topics),lectures:a(subject.lectures),psets:sets(subject.psets),mcqSets:sets(subject.mcqSets),cards:a(subject.cards),rules:a(subject.rules),libraryFlags:a(subject.libraryFlags),studyInbox:a(subject.studyInbox),tutorMemories:a(subject.tutorMemories)};
+  }
   function BSA205Library({subject,update,toast,go,init}){
-    const [tab,setTab]=useState(window.__BSA_SHARED_MODE__?'all':(['all','topics','packs','inbox','sources','import','health'].includes(init?.tab)?init.tab:'all'));
+    subject=bsa45SafeLibrarySubject(subject);
+    const [tab,setTab]=useState(window.__BSA_SHARED_MODE__?'all':(['all','topics','packs','hub','inbox','sources','import','health'].includes(init?.tab)?init.tab:'all'));
+    const [advancedOpen,setAdvancedOpen]=useState(false);
+    useEffect(()=>{if(init?.tab&&['all','topics','packs','hub','inbox','sources','import','health'].includes(init.tab))setTab(init.tab)},[init?.tab]);
     const [query,setQuery]=useState(''),[type,setType]=useState(()=>(subject.psets||[]).some(set=>(set.problems||[]).some(p=>!bsa198StoredKeyValid(p)))?'Written problem':'All'),[topicFilter,setTopicFilter]=useState(init?.topicLabel||'All topics'),[activeGroup,setActiveGroup]=useState(init?.topicLabel||''),[visibleCount,setVisibleCount]=useState(20),[showHidden,setShowHidden]=useState(false),[handoff,setHandoff]=useState('');
     const [selectedProblems,setSelectedProblems]=useState([]),[bulkTopic,setBulkTopic]=useState('');
     const [capture,setCapture]=useState(''),[captureSource,setCaptureSource]=useState(''),[warning,setWarning]=useState('');
@@ -14257,11 +14317,12 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const openPack=(topic='')=>{setPackTopic(topic);setTab('packs')};
     return h('section',{className:'view bsa205-page'},
       h('div',{className:'bsa205-page-head'},h('div',null,h('span',{className:'bsa205-overline'},'YOUR MATERIALS · ONE PLACE'),h('h1',null,'Study Library'),h('p',null,'Choose a topic to see its questions immediately. Your answers and progress stay saved.')),
-        !sharedLibrary&&h('button',{className:'bsa205-head-action',onClick:()=>openPack()},'＋ Import materials')),
+        !sharedLibrary&&h('button',{className:'bsa205-head-action',onClick:()=>setTab('hub')},'＋ Import materials')),
       h('p',{className:'bsa3-library-summary'},rows.filter(r=>r.type==='Written problem').length+' written problems · '+(subject.psets||[]).length+' original sets · '+categoryCounts.length+' topics · '+inbox.filter(x=>x.status==='new').length+' inbox items'),
-      !sharedLibrary&&h('div',{className:'bsa205-pagetabs bsa3-library-main-tabs',role:'group','aria-label':'Library areas'},[['all','Browse library'],['topics','Topic coverage'],['packs','Bulk import'],['inbox','Inbox'],['sources','Sources']].map(([key,label])=>h('button',{key,type:'button',className:tab===key?'selected':'','aria-pressed':tab===key,onClick:()=>setTab(key)},label))),
+      !sharedLibrary&&h('div',{className:'bsa205-pagetabs bsa3-library-main-tabs',role:'group','aria-label':'Library areas'},[['all','Browse library'],['hub','Import Center'],['topics','Topic coverage'],['packs','Bulk import'],['inbox','Inbox'],['sources','Sources']].map(([key,label])=>h('button',{key,type:'button',className:tab===key?'selected':'','aria-pressed':tab===key,onClick:()=>setTab(key)},label))),
+      tab==='hub'&&!sharedLibrary&&h(BSA45ImportCenter,{subject,go,toast,onPack:()=>openPack()}),
       h('details',{className:'bsa38-bookmarks'},h('summary',null,'My bookmarked problems ('+bsa38Work(subject,'bookmark:').length+')'),h('div',{className:'bsa38-bookmark-list'},bsa38Work(subject,'bookmark:').length?bsa38Work(subject,'bookmark:').slice(0,60).map(r=>h('button',{className:'btn',key:r.key,onClick:()=>go(r.route||'library',r.opts||{})},r.title||'Saved material')):h('p',null,'Bookmark a problem from a topic folder to find it quickly next time.'))),
-      !sharedLibrary&&h('details',{className:'bsa3-library-extra'},h('summary',null,'Other library tools'),h('div',null,h('button',{className:'btn',onClick:()=>openPack()},'Bulk import topic materials'),h('button',{className:'btn',onClick:()=>setTab('import')},'Accounting Lab importer'),h('button',{className:'btn',onClick:()=>setTab('health')},'Duplicate & library cleanup'),h(BSA38LibraryTriage,{subject,update,toast}))),
+      !sharedLibrary&&h('details',{className:'bsa3-library-extra',open:advancedOpen,onToggle:e=>setAdvancedOpen(e.currentTarget.open)},h('summary',null,'Advanced library tools'),advancedOpen&&h('div',null,h('button',{className:'btn',onClick:()=>openPack()},'Bulk import topic materials'),h('button',{className:'btn',onClick:()=>setTab('import')},'Accounting Lab importer'),h('button',{className:'btn',onClick:()=>setTab('health')},'Duplicate & library cleanup'),h(ScreenBoundary,{route:'library-triage',onHome:()=>setAdvancedOpen(false)},h(BSA38LibraryTriage,{subject,update,toast})))),
       tab==='all'&&h('div',{className:'bsa205-card bsa3-library-browser'},
         h('div',{className:'bsa205-card-head'},h('div',null,h('h2',null,'Find your problems'),h('p',{className:'muted small'},'Browse the original imported sets or study across topics. No questions are moved or duplicated.')),
           !sharedLibrary&&h('div',{className:'bsa34-library-tools'},needsTopic>0&&h('button',{className:'btn bsa34-sort-cta',onClick:()=>{setType('Written problem');setTopicFilter('Uncategorized');setActiveGroup('Uncategorized');setVisibleCount(20)}},'Organize '+needsTopic+' unclassified'),h('button',{className:'btn ghost',onClick:()=>setShowHidden(v=>!v)},showHidden?'Hide archived':'Show archived'))),
@@ -14340,20 +14401,79 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
      No fabricated figures or inferred audit assurance: JSON figures remain
      'not source verified' until the learner checks them against the PDF.
      Any standard can be studied: standards are freeform metadata and evidence. */
+  // A demonstrative, arithmetically consistent set of statements; NEVER real audited data.
+  // Values are in PHP thousands, and all sections/totals are explicitly identified.
   const BSA43_FS_SAMPLE={
     format:'bsa-financial-statements-v1',
-    company:'EXAMPLE COMPANY (FICTIONAL — DO NOT TREAT AS AN AUDITED REPORT)',
-    periodEnd:'2025-12-31',scope:'consolidated',currency:'PHP',unit:'thousands',
-    source:{title:'Hypothetical teaching illustration',url:'',auditor:'',status:'illustrative'},
-    statements:[{type:'financial-position',title:'Statement of financial position',page:'8',lines:[
-      {label:'Current assets',amount:1250,comparative:1100,note:'3',category:'current-assets'},
-      {label:'Current liabilities',amount:650,comparative:600,note:'6',category:'current-liabilities'},
-      {label:'Property, plant and equipment',amount:2700,comparative:2500,note:'7',standard:'PAS 16'}]},
-      {type:'profit-loss',title:'Statement of profit or loss',page:'9',lines:[
-        {label:'Revenue',amount:3000,comparative:2700,note:'12',standard:'PFRS 15'},
-        {label:'Cost of sales',amount:-1650,comparative:-1500,note:'13'}]}],
-    notes:[{title:'PPE measurement policy',standard:'PAS 16',page:'19',text:'Illustrative note only. An actual entity’s policy, cost and depreciation details must come from its published audited statement.'},
-      {title:'Revenue accounting policy',standard:'PFRS 15',page:'22',text:'Illustrative note only. Check a real entity’s performance obligations and recognition criteria against the original report.'}]
+    company:'SAMPLE LEARNING COMPANY (FICTIONAL)',periodEnd:'2025-12-31',comparativePeriodEnd:'2024-12-31',
+    scope:'separate',currency:'PHP',unit:'thousands',
+    source:{title:'Fictional classroom illustration — NOT an audited financial report',url:'',auditor:'',status:'illustrative'},
+    statements:[
+      {type:'financial-position',title:'Statement of Financial Position',page:'1',lines:[
+        {kind:'section',label:'ASSETS'},
+        {kind:'section',label:'Current assets'},
+        {label:'Cash and cash equivalents',amount:450,comparative:350,note:'3',category:'current-assets'},
+        {label:'Trade receivables',amount:300,comparative:250,note:'4',category:'current-assets'},
+        {label:'Inventories',amount:350,comparative:300,note:'5',category:'current-assets'},
+        {kind:'subtotal',label:'Total current assets',amount:1100,comparative:900},
+        {kind:'section',label:'Non-current assets'},
+        {label:'Property, plant and equipment, net',amount:1900,comparative:1600,note:'6',category:'non-current-assets'},
+        {kind:'subtotal',label:'Total non-current assets',amount:1900,comparative:1600},
+        {kind:'total',label:'TOTAL ASSETS',amount:3000,comparative:2500},
+        {kind:'section',label:'LIABILITIES'},
+        {kind:'section',label:'Current liabilities'},
+        {label:'Trade payables',amount:400,comparative:350,note:'7'},
+        {label:'Accrued liabilities',amount:100,comparative:50,note:'7'},
+        {kind:'subtotal',label:'Total current liabilities',amount:500,comparative:400},
+        {kind:'section',label:'Non-current liabilities'},
+        {label:'Long-term borrowings',amount:800,comparative:700,note:'8'},
+        {kind:'subtotal',label:'Total non-current liabilities',amount:800,comparative:700},
+        {kind:'subtotal',label:'Total liabilities',amount:1300,comparative:1100},
+        {kind:'section',label:'EQUITY'},
+        {label:'Share capital',amount:1000,comparative:1000,note:'9'},
+        {label:'Retained earnings',amount:700,comparative:400,note:'9'},
+        {kind:'subtotal',label:'Total equity',amount:1700,comparative:1400},
+        {kind:'total',label:'TOTAL LIABILITIES AND EQUITY',amount:3000,comparative:2500}
+      ]},
+      {type:'profit-loss',title:'Statement of Profit or Loss and Other Comprehensive Income',page:'2',lines:[
+        {label:'Revenue',amount:2500,comparative:2100,note:'10'},
+        {label:'Cost of sales',amount:-1500,comparative:-1300,note:'11'},
+        {kind:'subtotal',label:'Gross profit',amount:1000,comparative:800},
+        {label:'Operating expenses',amount:-500,comparative:-450,note:'12'},
+        {kind:'subtotal',label:'Operating profit',amount:500,comparative:350},
+        {label:'Finance costs',amount:-100,comparative:-100,note:'8'},
+        {kind:'subtotal',label:'Profit before income tax',amount:400,comparative:250},
+        {label:'Income tax expense',amount:-100,comparative:-50,note:'13'},
+        {kind:'subtotal',label:'Profit for the year',amount:300,comparative:200},
+        {kind:'section',label:'Other comprehensive income'},
+        {label:'Other comprehensive income',amount:0,comparative:0},
+        {kind:'total',label:'TOTAL COMPREHENSIVE INCOME',amount:300,comparative:200}
+      ]},
+      {type:'cash-flows',title:'Statement of Cash Flows',page:'3',lines:[
+        {kind:'section',label:'Cash flows from operating activities'},
+        {kind:'subtotal',label:'Net cash from operating activities',amount:500,comparative:420},
+        {kind:'section',label:'Cash flows from investing activities'},
+        {label:'Purchase of property, plant and equipment',amount:-400,comparative:-300,note:'6'},
+        {kind:'subtotal',label:'Net cash used in investing activities',amount:-400,comparative:-300},
+        {kind:'section',label:'Cash flows from financing activities'},
+        {kind:'subtotal',label:'Net cash from (used in) financing activities',amount:0,comparative:-50},
+        {kind:'subtotal',label:'Net increase in cash and cash equivalents',amount:100,comparative:70},
+        {label:'Cash and cash equivalents at beginning of year',amount:350,comparative:280},
+        {kind:'total',label:'CASH AND CASH EQUIVALENTS AT END OF YEAR',amount:450,comparative:350,note:'3'}
+      ]},
+      {type:'changes-in-equity',title:'Statement of Changes in Equity (Simplified)',page:'4',lines:[
+        {kind:'section',label:'Share capital'},
+        {label:'Share capital, opening balance',amount:1000,comparative:1000},
+        {kind:'subtotal',label:'Share capital, closing balance',amount:1000,comparative:1000},
+        {kind:'section',label:'Retained earnings'},
+        {label:'Retained earnings, opening balance',amount:400,comparative:200},
+        {label:'Profit for the year',amount:300,comparative:200},
+        {kind:'subtotal',label:'Retained earnings, closing balance',amount:700,comparative:400},
+        {kind:'total',label:'TOTAL EQUITY AT YEAR END',amount:1700,comparative:1400}
+      ]}
+    ],
+    notes:[{title:'Basis of preparation',page:'5',text:'Fictional teaching example only. These are not a company’s published audited financial statements.'},
+      {title:'Property, plant and equipment',standard:'PAS 16',page:'6',text:'Sample illustration only. The carrying amounts are not evidence from an audited report.'}]
   };
   const bsa43Text=(v,n=5000)=>String(v===null||v===undefined?'':v).trim().slice(0,n);
   const bsa43Number=v=>{
@@ -14387,10 +14507,15 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
           const label=bsa43Text(line.label||line.account||line.name,200);
           if(!label)throw Error('Statement '+(i+1)+' line '+(j+1)+' has no label.');
           const value=bsa43Number(line.amount??line.value??line.current);
-          if(value===null&&line.amount!==null&&line.value!==null&&line.current!==null)throw Error('Non-numeric amount on '+label+'. Use a number or null.');
+          const originalAmount=line.amount??line.value??line.current??null;
+          if(value===null&&originalAmount!==null)throw Error('Non-numeric amount on '+label+'. Use a number or null.');
           if(value!==null&&Math.abs(value)>1e15)throw Error('Amount too large for '+label+'.');
-          const comparative=bsa43Number(line.comparative??line.prior);
-          return {id:bsa43Text(line.id,100)||'line_'+i+'_'+j,label,amount:value,comparative,
+          const priorRaw=line.comparative??line.prior??null;
+          const comparative=bsa43Number(priorRaw);
+          if(priorRaw!==null&&comparative===null)throw Error('Non-numeric comparative on '+label+'. Use a number or null.');
+          const kind=['section','subtotal','total','item','note'].includes(line.kind)?line.kind:'item';
+          const indent=Number.isInteger(line.indent)&&line.indent>=0&&line.indent<=3?line.indent:0;
+          return {kind,indent,id:bsa43Text(line.id,100)||'line_'+i+'_'+j,label,amount:value,comparative,
             standard:bsa43Text(line.standard,80),note:bsa43Text(line.note||line.noteRef,80),
             page:bsa43Text(line.page||group.page,40),category:bsa43Text(line.category,90)};
         })};
@@ -14406,7 +14531,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       id:bsa43Text(x?.id,90)||'std_'+i,code:bsa43Text(typeof x==='string'?x:x?.code||x?.standard,90),
       title:bsa43Text(x?.title,200),page:bsa43Text(x?.page,70),
       interpretation:bsa43Text(x?.interpretation,3000)})):[];
-    return {id:bsa43Text(raw.id,100)||uid('fs'),format:'bsa-financial-statements-v1',company,periodEnd,
+    return {id:bsa43Text(raw.id,100)||uid('fs'),format:'bsa-financial-statements-v1',company,periodEnd,comparativePeriodEnd:bsa43Text(raw.comparativePeriodEnd||raw.priorPeriodEnd,30),
       currency:bsa43Text(raw.currency||'PHP',20),unit:bsa43Text(raw.unit||'units',50),
       scope:bsa43Text(raw.scope||'consolidated',80),
       source:{title:bsa43Text(source.title||source.name,200),url:link,
@@ -14414,6 +14539,61 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       statements,notes:cleanedNotes,standards,share:false,verified:false,importedAt:Date.now()};
   }
   const bsa43Money=(v,report)=>v===null?'—':new Intl.NumberFormat('en-PH',{maximumFractionDigits:2}).format(v)+' '+report.currency+' ('+report.unit+')';
+  // Statement columns carry currency / units ONCE in the heading, as in real reports.
+  const bsa46Figure=v=>v===null||v===undefined?'—':v<0?'('+new Intl.NumberFormat('en-PH',{maximumFractionDigits:2}).format(Math.abs(v))+')':new Intl.NumberFormat('en-PH',{maximumFractionDigits:2}).format(v);
+  const bsa46ReportYear=(v,fallback)=>{const m=String(v||'').match(/^(\d{4})/);return m?m[1]:fallback};
+  const bsa46StatementKind=line=>{
+    if(['section','subtotal','total','note'].includes(line.kind))return line.kind;
+    if(/^total (assets|liabilities and (?:shareholders.? )?equity|comprehensive income)$/i.test(line.label.trim()))return 'total';
+    if(/^(?:net profit|gross profit|operating profit|profit for the year|total current assets|total equity|total liabilities)$/i.test(line.label.trim()))return 'subtotal';
+    return 'item';
+  };
+  function bsa46CrossChecks(report){
+    const tests=[],financial=(report.statements||[]).find(g=>/financial.position|balance.sheet/i.test(g.type+' '+g.title)),
+      cash=(report.statements||[]).find(g=>/cash.flow/i.test(g.type+' '+g.title));
+    const amount=(group,pattern,key='amount')=>{if(!group)return null;const x=(group.lines||[]).find(r=>pattern.test(r.label.trim()));return x?.[key]??null};
+    for(const key of ['amount','comparative']){
+      const yr=key==='amount'?bsa46ReportYear(report.periodEnd,'current'):bsa46ReportYear(report.comparativePeriodEnd,String(Number(bsa46ReportYear(report.periodEnd,'2025'))-1));
+      const assets=amount(financial,/^total assets$/i,key),liabEq=amount(financial,/^total liabilities and (?:shareholders.? )?equity$/i,key);
+      if(assets!==null&&liabEq!==null)tests.push({name:yr+' accounting equation',good:Math.abs(assets-liabEq)<.005,detail:'Total assets '+bsa46Figure(assets)+' vs. liabilities + equity '+bsa46Figure(liabEq)});
+      const cashStart=amount(cash,/^cash and cash equivalents at beginning of (?:the )?year$/i,key),cashEnd=amount(cash,/^cash and cash equivalents at end of (?:the )?year$/i,key),delta=amount(cash,/^net (?:increase|decrease) in cash and cash equivalents$/i,key);
+      if(cashStart!==null&&cashEnd!==null&&delta!==null)tests.push({name:yr+' cash reconciliation',good:Math.abs(cashStart+delta-cashEnd)<.005,detail:'Beginning '+bsa46Figure(cashStart)+' + change '+bsa46Figure(delta)+' = ending '+bsa46Figure(cashEnd)});
+    }
+    const existing=(report.statements||[]).map(g=>g.type);
+    const required=[['financial-position','Financial position'],['profit-loss','Profit or loss / OCI'],['cash-flows','Cash flows'],['changes-in-equity','Changes in equity']];
+    for(const [code,label] of required)if(!existing.includes(code))tests.push({name:label,good:null,detail:'Not included in this import. This may be an incomplete source, not a reporting error.'});
+    return tests;
+  }
+  function BSA46Statement({group,report,query}){
+    const shown=(group.lines||[]).filter(l=>!query||[l.label,l.note,l.standard,l.category].join(' ').toLowerCase().includes(query.toLowerCase()));
+    if(!shown.length)return null;
+    const current=bsa46ReportYear(report.periodEnd,'Current'),previous=bsa46ReportYear(report.comparativePeriodEnd,String(Number(current)-1));
+    const asAt=/financial-position|balance-sheet/i.test(group.type)?'As at ':'For the year ended ';
+    const date=report.periodEnd?.length===10?new Date(report.periodEnd+'T12:00:00').toLocaleDateString('en-PH',{month:'long',day:'numeric',year:'numeric'}):String(report.periodEnd);
+    const rows=shown.map((line,i)=>{
+      const kind=bsa46StatementKind(line);
+      return h('tr',{key:line.id||i,className:'bsa46-row bsa46-'+kind+' bsa46-indent-'+Math.min(3,Math.max(0,line.indent||0))},
+        h('td',null,line.label),h('td',{className:'bsa46-note-cell'},line.note||''),
+        h('td',{className:'bsa46-number'},kind==='section'?'':bsa46Figure(line.amount)),
+        h('td',{className:'bsa46-number'},kind==='section'?'':bsa46Figure(line.comparative)));
+    });
+    return h('article',{className:'bsa46-statement',key:group.id},
+      h('header',{className:'bsa46-statement-heading'},h('span',{className:'bsa46-company'},report.company),
+        h('h3',null,group.title),h('p',null,asAt+date),
+        h('small',null,report.currency+' · '+report.unit+(group.page?' · Source PDF page '+group.page:''))),
+      h('div',{className:'bsa46-table-scroll'},
+        h('table',{className:'bsa46-statement-table'},
+          h('colgroup',null,h('col',{className:'bsa46-col-account'}),h('col',{className:'bsa46-col-note'}),h('col',{className:'bsa46-col-amt'}),h('col',{className:'bsa46-col-amt'})),
+          h('thead',null,h('tr',null,h('th',{scope:'col'},'Particulars'),h('th',{scope:'col'},'Note'),h('th',{scope:'col'},current),h('th',{scope:'col'},previous))),
+          h('tbody',null,rows))),
+      h('small',{className:'bsa46-unverified'},'Imported figures · check against the original source before using for assignments or decisions'));
+  }
+  function BSA46Checks({report}){
+    const tests=bsa46CrossChecks(report);return h('section',{className:'bsa46-checks','aria-label':'Financial statement validation checks'},
+      h('strong',null,'Statement checks'),
+      h('p',null,'Arithmetic tests use imported totals only. Passing does not verify the audit report, classifications, notes or accounting-standard compliance.'),
+      tests.length?tests.map((t,i)=>h('div',{key:i,className:'bsa46-check '+(t.good===null?'unavailable':t.good?'ok':'issue')},h('span',null,t.good===null?'—':t.good?'✓':'!'),h('div',null,h('strong',null,t.name),h('small',null,t.detail)))):h('small',null,'No matching statement subtotals to check. Confirm source labels and supply totals.'));
+  }
   function bsa43Tasks(report,standard){
     const arr=[];
     const search=bsa43Text(standard,100).toLowerCase();
@@ -14463,6 +14643,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       if(pdfRef.current)URL.revokeObjectURL(pdfRef.current);
       pdfRef.current=URL.createObjectURL(f);setPdfUrl(pdfRef.current);setErr('');e.target.value='';};
     const commit=()=>{if(!pending)return;const duplicate=reports.find(x=>String(x?.company||'').toLowerCase()===pending.company.toLowerCase()&&x?.periodEnd===pending.periodEnd&&x?.scope===pending.scope);
+      if(duplicate&&JSON.stringify({...duplicate,id:'',importedAt:0,share:false,verified:false})===JSON.stringify({...pending,id:'',importedAt:0,share:false,verified:false})){toast('This report is already imported; no duplicate was added.');return;}
       if(duplicate&&!window.confirm('A report for the same entity, period, and scope exists. Replace its source material? Personal practice attempts will be retained.'))return;
       const saved={...pending,id:duplicate?.id||pending.id,importedAt:Date.now(),share:!!duplicate?.share,verified:false};
       update(s=>{s.fsReports=s.fsReports||[];s.fsReports=duplicate?s.fsReports.map(r=>r.id===duplicate.id?saved:r):[...s.fsReports,saved]});
@@ -14493,6 +14674,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       tab==='reports'&&h('div',{className:'bsa43-fs-columns'},
         h('section',{className:'panel bsa43-fs-import'},h('h2',null,'Import a financial statement'),
           h('p',{className:'muted'},'A JSON import creates searchable financial records. The original audited PDF is supporting evidence, not an automatically verified answer key.'),
+          h('div',{className:'bsa45-fs-prompt-link'},h('button',{className:'btn primary',onClick:async()=>toast(await copyText(BSA45_FS_PROMPT)?'Financial Statements JSON prompt copied. Attach the audited PDF to your AI tool.':'Copy unavailable: use Import Center for the prompt.')},'Copy Financial Statements AI prompt'),h('button',{className:'btn ghost',onClick:()=>go('library',{tab:'hub'})},'See all import prompts')),
           h('div',{className:'bsa43-fs-actions'},
             h('label',{className:'btn'},'Choose JSON file',h('input',{type:'file',accept:'.json,application/json',onChange:readFile,hidden:true})),
             h('button',{type:'button',className:'btn',onClick:()=>{const text=JSON.stringify(BSA43_FS_SAMPLE,null,2);setRaw(text);inspect(text)}},'Try fictional example'),
@@ -14502,7 +14684,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
             pending&&h('button',{className:'btn primary',onClick:commit},'Import checked report')),
           pending&&h('div',{className:'bsa43-fs-preview',role:'status'},h('strong',null,pending.company+' · '+pending.periodEnd),
             h('p',null,pending.statements.length+' statements · '+pending.statements.reduce((n,g)=>n+g.lines.length,0)+' line items · '+pending.notes.length+' notes. Source verification: pending.'),
-            h('p',{className:'muted small'},'Reporting units: '+pending.currency+' ('+pending.unit+'). Check year, group vs separate statements, comparatives, negatives, and note pages before relying on values.')),
+            h('p',{className:'muted small'},'Reporting units: '+pending.currency+' ('+pending.unit+'). Check year, group vs separate statements, comparatives, negatives, and note pages before relying on values.'),h(BSA46Checks,{report:pending})),
           err&&h('p',{className:'bsa43-fs-error',role:'alert'},err)),
         h('section',{className:'panel'},h('h2',null,'Your report library'),
           reports.length?reports.map(r=>h('div',{className:'bsa43-report-card',key:r.id},h('strong',null,r.company),
@@ -14519,14 +14701,12 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
         h('div',{className:'bsa43-fs-context'},h('label',null,'Current report',h('select',{value:report.id,onChange:e=>{setActiveId(e.target.value);setChosenTask('');setReveal(false)}},reports.map(r=>h('option',{key:r.id,value:r.id},r.company+' · '+r.periodEnd)))),
           h('span',{className:'muted small'},report.currency+' ('+report.unit+') · '+report.scope),
           report.source?.url&&h('a',{href:report.source.url,target:'_blank',rel:'noopener noreferrer'},'Open original PDF ↗')),
-        tab==='explore'&&h('div',{className:'bsa43-fs-columns'},
+        tab==='explore'&&h('div',{className:'bsa43-fs-columns bsa46-fs-explore'},
           h('section',{className:'panel'},h('h2',null,'Explore reported figures'),h('label',null,'Find an item or accounting standard',h('input',{type:'search',value:lineQuery,onChange:e=>setLineQuery(e.target.value),placeholder:'Search revenue, PPE, PFRS 15…'})),
-            (report.statements||[]).map(g=>{
-              const shown=(g.lines||[]).filter(l=>!lineQuery||[l.label,l.note,l.standard,l.category].join(' ').toLowerCase().includes(lineQuery.toLowerCase()));
-              if(!shown.length)return null;
-              return h('div',{key:g.id,className:'bsa43-fs-statement'},h('h3',null,g.title),h('p',{className:'muted small'},'Page '+(g.page||'not specified')),
-                h('div',{className:'bsa43-fs-table-wrap'},h('table',null,h('thead',null,h('tr',null,h('th',null,'Account / item'),h('th',null,report.periodEnd),h('th',null,'Comparative'),h('th',null,'Evidence'))),
-                h('tbody',null,shown.map(l=>h('tr',{key:l.id},h('td',null,l.label),h('td',null,bsa43Money(l.amount,report)),h('td',null,bsa43Money(l.comparative,report)),h('td',null,[l.standard,l.note?'Note '+l.note:'',l.page?'p. '+l.page:''].filter(Boolean).join(' · '))))))));})),
+            h('div',{className:'bsa46-sheets'},(report.statements||[]).map(g=>h(BSA46Statement,{key:g.id,group:g,report,query:lineQuery}))),
+            !lineQuery&&h(BSA46Checks,{report}),
+            h('div',{className:'bsa46-print-actions'},h('button',{type:'button',className:'btn',onClick:()=>window.print()},'Print statements / Save PDF'),
+              h('small',null,'Financial statement presentation is preserved when printing. Totals remain source-supplied, not auto-created.'))),
           h('section',{className:'panel'},h('h2',null,'Notes & audit references'),h('p',{className:'muted small'},'Imported summaries are not a substitute for reading the actual audited disclosures.'),
             (report.notes||[]).length?(report.notes||[]).map(n=>h('details',{key:n.id,className:'bsa43-note'},h('summary',null,n.title+(n.standard?' · '+n.standard:'')),
               h('small',null,'Page '+(n.page||'unspecified')),h('p',null,n.text))):h('p',{className:'muted'},'No notes in this JSON.'),
@@ -15232,25 +15412,42 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
         ['accounting-cycle','Full Accounting Cycle'],['psets','Original Problem Sets'],['practice','Advanced review options']
       ].map(([tab,label])=>h('button',{className:'btn',key:label,onClick:()=>go(tab,tab==='practice'?{mode:'advanced'}:{})},label)))));
   }
-  /* Guided walkthrough carried forward from V3.0; no data migration. */
+
+  function BSA45SidebarEditor({tabs,sidebarPrefs,toggleSidebarPin,toggleSidebarHide,shiftSidebarPin,reset,close}){
+    return h('section',{className:'bsa45-sidebar-editor'},
+      h('p',{className:'muted'},'Pin important tools to Quick access and hide sections you rarely use. This changes only your navigation, not study records.'),
+      h('div',{className:'bsa45-sidebar-editor-tools'},h('button',{className:'btn',onClick:reset},'Restore defaults'),h('button',{className:'btn primary',onClick:close},'Done')),
+      h('div',{className:'bsa45-editor-grid'},tabs.filter(t=>t[0]!=='subjects').map(([id,label])=>
+        h('div',{key:id,className:'bsa45-editor-row'},h('strong',null,label),
+          h('button',{type:'button',className:'btn ghost','aria-pressed':sidebarPrefs.pinned.includes(id),onClick:()=>toggleSidebarPin(id)},sidebarPrefs.pinned.includes(id)?'★ Pinned':'☆ Pin'),
+          h('label',null,h('input',{type:'checkbox',checked:!sidebarPrefs.hidden.includes(id),onChange:()=>toggleSidebarHide(id)}),'Show'),
+          sidebarPrefs.pinned.includes(id)&&h('span',{className:'bsa45-move-controls'},
+            h('button',{className:'btn ghost',type:'button',onClick:()=>shiftSidebarPin(id,-1),'aria-label':'Move '+label+' up'},'↑'),
+            h('button',{className:'btn ghost',type:'button',onClick:()=>shiftSidebarPin(id,1),'aria-label':'Move '+label+' down'},'↓'))))));
+  }
+  /* V4.5: One progressive, usable walkthrough. Checklist is self-reported only. */
   const BSA3_GUIDE=[
-    {title:'Find a written problem',where:'Library → Written problems',steps:'Open a topic folder, choose a written question, and use search when needed.',tab:'library',opts:{tab:'all'}},
-    {title:'Try multiple-choice practice',where:'Practice → Multiple-choice questions',steps:'Choose an MCQ set, answer a question, and review its explanation.',tab:'mcq'},
-    {title:'Try journal entries',where:'Practice → Accounting Lab',steps:'Open an exercise, enter debit and credit lines, and compare your work with the answer key.',tab:'accounting-lab'},
-    {title:'Check a textbook source',where:'Library → PDF links',steps:'Save a Google Drive link to a large textbook. Keep the original PDF in your cloud drive.',tab:'library',opts:{tab:'sources'}},
-    {title:'Protect your records',where:'Data safety',steps:'Export your study-data backup. Website source ZIPs do not include your saved progress.',tab:'safety'}
+    {title:'Choose your subject',where:'Subject switcher',steps:'Use the course switcher near the top of the sidebar (or mobile header). Your materials and progress are saved per subject.',tab:'home'},
+    {title:'Find what to study',where:'Study Library → Topic coverage',steps:'See lectures, practice questions, flashcards, and rules already saved for each topic. A gap means material is missing, not that you have failed to learn it.',tab:'library',opts:{tab:'topics'}},
+    {title:'Import a whole topic',where:'Study Library → Import Center',steps:'Choose several JSON files or one Topic Pack, review duplicates and conflicting answers, then confirm. Importing should never overwrite previous marks or learning history.',tab:'library',opts:{tab:'hub'}},
+    {title:'Learn the concept',where:'Plan & learn',steps:'Select one topic and read its source material. Try to explain the main idea from memory before checking it.',tab:'study'},
+    {title:'Answer before revealing',where:'Practice questions',steps:'Practice from memory first; reveal feedback after an attempt. Your self-rated completion is not counted as demonstrated mastery.',tab:'practice'},
+    {title:'Chat with your tutor',where:'Ask Tutor',steps:'Ask one question at a time. An attached problem can be detached with ×. Change the model or source using the compact “Modes & sources” control.',tab:'ask'},
+    {title:'Fix a mistake',where:'Mistake log',steps:'Review the correction and solve a similar question later. This is where your weak concepts turn into future retrieval practice.',tab:'mistakes'},
+    {title:'Make the dashboard yours',where:'Customize sidebar & tools',steps:'Pin or hide sidebar items, collapse groups, hide the Study Dock, and minimize the timer to a small chip. Export a backup before changing devices.',tab:'safety'}
   ];
   function BSA3StartGuide({go}){
-    const [done,setDone]=useState(()=>{try{return JSON.parse(localStorage.getItem('bsa-v3-guide-tested')||'[]')}catch(_){return []}});
-    const mark=(i)=>{const next=done.includes(i)?done.filter(x=>x!==i):[...done,i];setDone(next);try{localStorage.setItem('bsa-v3-guide-tested',JSON.stringify(next))}catch(_){}};
-    return h('section',{className:'view bsa3-guide'},
-      h('header',{className:'bsa3-guide-head'},h('span',{className:'bsa205-overline'},'BSA STUDY DESK V3.3'),h('h1',null,'Start here'),h('p',null,'You do not have to learn every tool. Test these five everyday workflows, one at a time.'),h('div',{className:'bsa3-guide-progress'},h('strong',null,done.length+' of '+BSA3_GUIDE.length+' checked'),h('span',null,'Only you can mark a step tested. This checklist does not change XP, scores or course records.'))),
-      h('div',{className:'bsa3-guide-steps'},BSA3_GUIDE.map((step,i)=>h('article',{key:i,className:'bsa3-guide-step'},
-        h('span',{className:'bsa3-guide-n'},String(i+1).padStart(2,'0')),
-        h('div',null,h('h2',null,step.title),h('small',null,step.where),h('p',null,step.steps),
-          h('div',{className:'bsa3-guide-actions'},h('button',{className:'btn primary',onClick:()=>go(step.tab,step.opts||{})},'Go to: '+step.where),
-          h('label',null,h('input',{type:'checkbox',checked:done.includes(i),onChange:()=>mark(i)}),'I tested this')))))),
-      h('details',{className:'bsa3-guide-more'},h('summary',null,'What about the other tools?'),h('p',null,'They are still available inside Study, Practice, Library, Progress and the expanded navigation. You can ignore them until you need them.')));
+    const [done,setDone]=useState(()=>{try{return JSON.parse(localStorage.getItem('bsa-v45-guide-tested')||'[]')}catch(_){return []}});
+    const [step,setStep]=useState(0);
+    const [showMap,setShowMap]=useState(false);
+    const mark=(i)=>{const next=done.includes(i)?done.filter(x=>x!==i):[...done,i];setDone(next);try{localStorage.setItem('bsa-v45-guide-tested',JSON.stringify(next))}catch(_){}};
+    const item=BSA3_GUIDE[step];
+    return h('section',{className:'view bsa45-guide'},
+      h('header',{className:'bsa45-guide-hero'},h('span',{className:'bsa205-overline'},'WELCOME · BSA STUDY DESK V4.5'),h('h1',null,'One step at a time.'),h('p',null,'You do not have to learn every feature today. Follow the core workflow, practice each step, and leave the advanced tools for when you need them.'),h('div',{className:'bsa45-guide-progress'},h('strong',null,done.length+' of '+BSA3_GUIDE.length+' tried'),h('div',{role:'progressbar','aria-valuemin':0,'aria-valuemax':BSA3_GUIDE.length,'aria-valuenow':done.length,style:{'--bsa-progress':Math.round(done.length/BSA3_GUIDE.length*100)+'%'}})),h('small',null,'Checking a step means you tried it. It does not increase your mastery score.')),
+      h('div',{className:'bsa45-guide-layout'},
+        h('nav',{className:'bsa45-guide-list','aria-label':'Walkthrough steps'},BSA3_GUIDE.map((x,i)=>h('button',{key:i,type:'button',className:'bsa45-guide-nav-item'+(step===i?' selected':'')+(done.includes(i)?' completed':''),onClick:()=>setStep(i),'aria-current':step===i?'step':undefined},h('span',null,done.includes(i)?'✓':String(i+1).padStart(2,'0')),h('strong',null,x.title)))),
+        h('article',{className:'bsa45-guide-step'},h('span',{className:'bsa205-overline'},'STEP '+(step+1)+' OF '+BSA3_GUIDE.length),h('h2',null,item.title),h('p',{className:'bsa45-guide-location'},'Where: '+item.where),h('p',null,item.steps),h('div',{className:'bsa45-guide-action-row'},h('button',{className:'btn primary',onClick:()=>go(item.tab,item.opts||{})},'Open '+item.where),h('label',{className:'bsa45-guide-check'},h('input',{type:'checkbox',checked:done.includes(step),onChange:()=>mark(step)},'I tried this step')),h('button',{className:'btn',disabled:step===0,onClick:()=>setStep(i=>Math.max(0,i-1))},'Back'),h('button',{className:'btn',disabled:step===BSA3_GUIDE.length-1,onClick:()=>setStep(i=>Math.min(BSA3_GUIDE.length-1,i+1))},'Next →')))),
+      h('details',{className:'bsa45-guide-featuremap',open:showMap,onToggle:e=>setShowMap(e.currentTarget.open)},h('summary',null,'Where are all the other features?'),h('div',{className:'bsa45-map-grid'},[['Import Center','library','Prompts for topic packs and financial reports'],['Lectures','lectures','Read saved lesson notes'],['Concept vault','vault','Flashcards and review'],['Problem sets','psets','Written practice and worked solutions'],['MCQ library','mcq','Multiple-choice questions'],['Financial statements','fs-lab','Explore a financial report from structured JSON'],['Study Toolkit','toolkit','Timer, journal and handwriting tools'],['Progress','insights','See recorded progress without guessing mastery'],['Schedule','calendar','Plan sessions and deadlines'],['Backup & restore','safety','Protect your data before updates']].map(([label,tab,desc])=>h('button',{key:tab,type:'button',className:'bsa45-guide-maplink',onClick:()=>go(tab)},h('strong',null,label),h('span',null,desc),'↗')))));
   }
   /* v205: One calm launch pad instead of a catalog of every button. */
   function DashboardV205Home({subject,go,settings,openEditor,update,toast}){
@@ -15272,7 +15469,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
           h('div',{className:'bsa205-hero-actions'},h('button',{className:'bsa205-primary-action',onClick:()=>go('study')},'Start a study session  ↗'),
             h('button',{className:'bsa205-hero-secondary',onClick:()=>go('library',{tab:'inbox'})},'Open Study Inbox'))),
         h('div',{className:'bsa205-hero-orb','aria-hidden':'true'},h('span',null,'Σ'),h('small',null,subject.code||'BSA'))),
-      h('div',{className:'bsa3-first-run'},h('div',null,h('strong',null,'New here? Try the 5-minute walkthrough'),h('p',null,'Find a question, try a quiz, and check your source links without exploring every menu.')),h('button',{className:'btn primary',onClick:()=>go('guide')},'Show me around')),
+      h('div',{className:'bsa3-first-run'},h('div',null,h('strong',null,'New here? Try the 5-minute walkthrough'),h('p',null,'Find a question, try a quiz, and check your source links without exploring every menu.')),h('button',{className:'btn primary',onClick:()=>go('guide')},'Show me around'),h('button',{className:'btn',onClick:()=>go('library',{tab:'hub'})},'Import Center')),
       h('div',{className:'bsa205-home-main'},
         h('section',{className:'bsa205-next-card'},h('span',{className:'bsa205-overline'},'SUGGESTED NEXT STEP · BASED ON SAVED DATA'),h('h2',null,next.title),h('p',null,next.description),
           h('button',{className:'btn primary',onClick:()=>go(next.route,next.opts||{})},next.label,' ↗')),
@@ -15294,6 +15491,9 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
      the *existing* FocusBar; never run a duplicate clock here. */
   function BSA4StudyDock({subject,data,onSwitch,go,navTab,settings,setSettings}){
     const [open,setOpen]=useState(false),[pane,setPane]=useState('session');
+    const [hidden,setHidden]=useState(()=>{try{return localStorage.getItem('bsa45_dock_hidden')==='1'}catch(_){return false}});
+    const setDockHidden=value=>{setHidden(value);if(value)setOpen(false);try{localStorage.setItem('bsa45_dock_hidden',value?'1':'0')}catch(_){}};
+    useEffect(()=>{const fn=e=>setDockHidden(!!e.detail?.hidden);window.addEventListener('bsa45:dock-visibility',fn);return()=>window.removeEventListener('bsa45:dock-visibility',fn)},[]);
     const activeTimer=useTimer();
     const [dockPos,setDockPos]=useState(()=>{try{const v=JSON.parse(localStorage.getItem('bsa42_dock_position')||'null');return v&&Number.isFinite(v.x)&&Number.isFinite(v.y)?v:null}catch(_){return null}});
     const drag=useRef(null),suppressDockClick=useRef(false);
@@ -15335,6 +15535,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       .sort((a,b)=>(a.latest||0)-(b.latest||0)).slice(0,6);
     useEffect(()=>{setPick(0);setReveal(false);},[subject.id,context.topicId]);
     useEffect(()=>{if(!open)return;const fn=e=>{if(e.key==='Escape')setOpen(false)};document.addEventListener('keydown',fn);return()=>document.removeEventListener('keydown',fn)},[open]);
+    if(hidden)return null;
     return h('aside',{className:'bsa4-dock'+(open?' expanded':'')+(dockPos?.x<window.innerWidth/2?' dock-at-left':'')+(dockPos&&dockPos.y<window.innerHeight/2?' dock-near-top':''),
       style:dockPos?{left:dockPos.x+'px',top:dockPos.y+'px',right:'auto',bottom:'auto'}:undefined,'aria-label':'Study Dock'},
       h('button',{type:'button',className:'bsa4-dock-trigger',onPointerDown:startDock,onPointerMove:moveDock,onPointerUp:endDock,onPointerCancel:endDock,
@@ -15346,7 +15547,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
         title:'Tap to open. Drag to move; Alt + arrow keys also move the dock.',
         'aria-expanded':open,'aria-controls':'bsa4-study-dock-panel'},h('span',{'aria-hidden':'true'},'✦'),open?'Close Study Dock':'Study Dock'),
       open&&h('div',{id:'bsa4-study-dock-panel',className:'bsa4-dock-panel',style:panelStyle},
-        h('div',{className:'bsa4-dock-header'},h('strong',null,'Your study tools'),h('span',{className:'muted small'},subjectName)),
+        h('div',{className:'bsa4-dock-header'},h('strong',null,'Your study tools'),h('span',{className:'muted small'},subjectName),h('button',{type:'button',className:'bsa45-dock-hide',onClick:()=>setDockHidden(true),'aria-label':'Hide Study Dock'},'Hide dock')),
         h('details',{className:'bsa4-appearance'},
           h('summary',null,'Appearance · Quick colors'),
           h('p',{className:'muted small'},'These controls change colors only. Use Themes for a different UI presentation.'),
@@ -15452,6 +15653,12 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const touchNavEnd=e=>{const start=bottomSwipe.current;bottomSwipe.current=null;const end=e.changedTouches?.[0];if(!start||!end)return;const dx=end.clientX-start.x,dy=end.clientY-start.y;if(Math.abs(dx)<65||Math.abs(dy)>35)return;const ix=swipeTabs.indexOf(start.tab);if(ix<0)return;const target=swipeTabs[ix+(dx<0?1:-1)];if(target)go(target)};
     // v3.8.1: organize by learner intent, not the subject that originally created a tool.
     const [collapsedNav, setCollapsedNav] = useState({"Study materials":true,"Practice & questions":true,"Review & progress":true,"Schedule & school":true,"More tools":true});
+    const [sidebarPrefs,setSidebarPrefs]=useState(()=>{try{const x=JSON.parse(localStorage.getItem('bsa45-sidebar-prefs')||'null');return {pinned:Array.isArray(x?.pinned)?x.pinned:['home','study','practice','library','ask','guide'],hidden:Array.isArray(x?.hidden)?x.hidden:[]}}catch(_){return {pinned:['home','study','practice','library','ask','guide'],hidden:[]}}});
+    const [sidebarEdit,setSidebarEdit]=useState(false);
+    const saveSidebar=fn=>setSidebarPrefs(old=>{const next=fn(old);try{localStorage.setItem('bsa45-sidebar-prefs',JSON.stringify(next))}catch(_){}return next});
+    const toggleSidebarPin=id=>saveSidebar(v=>({...v,pinned:v.pinned.includes(id)?v.pinned.filter(x=>x!==id):[...v.pinned,id]}));
+    const toggleSidebarHide=id=>saveSidebar(v=>({...v,hidden:v.hidden.includes(id)?v.hidden.filter(x=>x!==id):[...v.hidden,id]}));
+    const shiftSidebarPin=(id,delta)=>saveSidebar(v=>{const a=v.pinned.slice(),i=a.indexOf(id),j=i+delta;if(j<0||j>=a.length)return v;[a[i],a[j]]=[a[j],a[i]];return {...v,pinned:a}});
     const [editor, setEditor] = useState(null);
     const [msg, setMsg] = useState("");
     const [downloads, setDownloads] = useState(null);
@@ -15716,7 +15923,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const navNeedle=navSearch.trim().toLocaleLowerCase();
     const filteredNavGroups = navGroups.map(group=>({
       ...group,
-      tabs:tabs.filter(t=>group.items.includes(t[0]) && (!navNeedle || [t[1],group.name,navAliases[t[0]]||"",(DESK_FEATURE_GUIDE.find(f=>f.id===t[0])||{}).desc||""].join(" ").toLocaleLowerCase().includes(navNeedle)))
+      tabs:tabs.filter(t=>group.items.includes(t[0]) && (navNeedle||!sidebarPrefs.pinned.includes(t[0])) && (!sidebarPrefs.hidden.includes(t[0])||t[0]===nav.tab) && (!navNeedle || [t[1],group.name,navAliases[t[0]]||"",(DESK_FEATURE_GUIDE.find(f=>f.id===t[0])||{}).desc||""].join(" ").toLocaleLowerCase().includes(navNeedle)))
     })).filter(group=>group.tabs.length);
     const jumpLinks = [
       ["home","StudyFlow","home"], ["howto","How-To","book"], ["practice","Practice","bolt"],
@@ -15738,10 +15945,10 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     };
     const viewProps = { key: `${subject.id}-${nav.key}`, subject, update, toast, go, openEditor, init: nav.opts, settings: data.settings, setSettings };
     const subjectPicker = (id) => /* @__PURE__ */ React.createElement("select", { id, className: "subject-select", value: data.activeId, onChange: (e) => switchSubject(e.target.value), "aria-label": "Active subject" }, (() => {const groups=new Map();data.subjects.forEach(s=>{const matched=PROSPECTUS.flatMap(t=>t.courses.map(c=>({...c,term:t.term}))).find(c=>String(c.code).trim().toLowerCase()===String(s.code||"").trim().toLowerCase());const label=s.curriculumTerm||(matched&&matched.term)||"Other / custom subjects";if(!groups.has(label))groups.set(label,[]);groups.get(label).push(s);});return [...groups].sort((a,b)=>a[0].localeCompare(b[0],undefined,{numeric:true})).map(([term,subjects])=>React.createElement("optgroup",{key:term,label:term},subjects.map(s=>React.createElement("option",{key:s.id,value:s.id},s.code?`${s.code} · ${s.name}`:s.name))));})());
-    return /* @__PURE__ */ React.createElement("div", { className: "shell" }, /* @__PURE__ */ React.createElement("aside", { className: "rail", "aria-label": "Main" }, /* @__PURE__ */ h("div",{className:"bsa-shortcut-anchor"},React.createElement("button", { className: "brand brand-home-button", type: "button", onClick: () => setShortcutsOpen(v=>!v), title: "Open quick shortcuts", "aria-label": "Open quick shortcuts", "aria-expanded":shortcutsOpen,"aria-haspopup":"menu" }, /* @__PURE__ */ React.createElement("span", { className: "brand-mark", "aria-hidden": "true" }, "Σ"), /* @__PURE__ */ React.createElement("span", null, "BSA Study Desk")),shortcutMenu()), /* @__PURE__ */ React.createElement("div", { className: "rail-subject" }, /* @__PURE__ */ React.createElement("span", { className: "rail-label" }, "You are studying"), subjectPicker("subj"), /* @__PURE__ */ React.createElement("button", { className: "link-btn", onClick: () => setModal("subjects") }, "+ Add new subject")), h("div",{className:"rail-nav-wrap"},h("label",{className:"nav-search-label",htmlFor:"desk-nav-search"},"Need another tool?"),h("input",{id:"desk-nav-search",className:"nav-search",type:"search",placeholder:"Search tools…",value:navSearch,onChange:e=>setNavSearch(e.target.value),"aria-label":"Search dashboard tools"}),h("nav",{className:"rail-nav","aria-label":"Study Desk sections"},filteredNavGroups.map(group=>h("section",{className:"nav-group",key:group.name},h("button",{className:"nav-group-heading",type:"button","aria-expanded":Boolean(navSearch||!collapsedNav[group.name]),onClick:()=>setCollapsedNav(prev=>({...prev,[group.name]:!prev[group.name]}))},h("span",null,group.name),h("span",{className:"nav-chevron","aria-hidden":"true"},navSearch||!collapsedNav[group.name]?"⌄":"›")),(navSearch||!collapsedNav[group.name])?h("div",{className:"nav-group-links"},group.tabs.map(([k,l,ic,n])=>h("button",{key:k,className:nav.tab===k?"on":"","aria-current":nav.tab===k?"page":undefined,title:(DESK_FEATURE_GUIDE.find(f=>f.id===k)||{}).desc||l,onClick:()=>go(k)},h(Icon,{name:ic}),h("span",null,l),n?h("span",{className:"n"},n):null))):null)))), /* @__PURE__ */ React.createElement("div", { className: "rail-tools" }, /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("data") }, /* @__PURE__ */ React.createElement(Icon, { name: "data", size: 18 }), " Import & export"), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("themes") }, "◇ Themes"), React.createElement("button", { onClick: () => setModal("look") }, /* @__PURE__ */ React.createElement(Icon, { name: "look", size: 18 }), " Appearance"), /* @__PURE__ */ React.createElement(ThemeDots, { settings: data.settings, setSettings })), React.createElement(SyncBadge, { onOpen: openSync })), /* @__PURE__ */ React.createElement("header", { className: "mobilebar" }, /* @__PURE__ */ h("div",{className:"bsa-shortcut-anchor mobile"},React.createElement("button", { className: "brand-mark mobile-home-button", type: "button", onClick: () => setShortcutsOpen(v=>!v), title: "Open quick shortcuts", "aria-label": "Open quick shortcuts", "aria-expanded":shortcutsOpen,"aria-haspopup":"menu" }, "Σ"),shortcutMenu()), subjectPicker("subj-m"), h("button",{className:"icon-btn",onClick:()=>setSpotlightOpen(true),"aria-label":"Search dashboard"},"⌕"), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal(syncAlert ? "sync" : "data"), "aria-label": syncAlert ? "Import, export and sync (needs attention)" : "Import and export", "data-sync": syncAlert }, /* @__PURE__ */ React.createElement(Icon, { name: "data" })), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal("themes"), "aria-label": "Themes", title: "Themes" }, "◇"), React.createElement("button", { className: "icon-btn", onClick: () => setModal("look"), "aria-label": "Appearance" }, /* @__PURE__ */ React.createElement(Icon, { name: "look" }))), /* @__PURE__ */ React.createElement("main", { className: "content bsa33-content", "data-desk-page": nav.tab },
+    return /* @__PURE__ */ React.createElement("div", { className: "shell" }, /* @__PURE__ */ React.createElement("aside", { className: "rail", "aria-label": "Main" }, /* @__PURE__ */ h("div",{className:"bsa-shortcut-anchor"},React.createElement("button", { className: "brand brand-home-button", type: "button", onClick: () => setShortcutsOpen(v=>!v), title: "Open quick shortcuts", "aria-label": "Open quick shortcuts", "aria-expanded":shortcutsOpen,"aria-haspopup":"menu" }, /* @__PURE__ */ React.createElement("span", { className: "brand-mark", "aria-hidden": "true" }, "Σ"), /* @__PURE__ */ React.createElement("span", null, "BSA Study Desk")),shortcutMenu()), /* @__PURE__ */ React.createElement("div", { className: "rail-subject" }, /* @__PURE__ */ React.createElement("span", { className: "rail-label" }, "You are studying"), subjectPicker("subj"), /* @__PURE__ */ React.createElement("button", { className: "link-btn", onClick: () => setModal("subjects") }, "+ Add new subject")), h("div",{className:"rail-nav-wrap"},h('div',{className:'bsa45-sidebar-head'},h('button',{type:'button',className:'bsa45-walkthrough-shortcut',onClick:()=>go('guide')},'✦ Guided walkthrough'),h('button',{type:'button',className:'bsa45-customize-icon',onClick:()=>setSidebarEdit(true),'aria-label':'Customize sidebar',title:'Customize sidebar'},'⚙')),h("label",{className:"nav-search-label",htmlFor:"desk-nav-search"},"Need another tool?"),h("input",{id:"desk-nav-search",className:"nav-search",type:"search",placeholder:"Search tools…",value:navSearch,onChange:e=>setNavSearch(e.target.value),"aria-label":"Search dashboard tools"}),h("nav",{className:"rail-nav","aria-label":"Study Desk sections"},!navNeedle&&h('section',{className:'bsa45-pinned-block','aria-label':'Pinned shortcuts'},h('strong',null,'QUICK ACCESS'),sidebarPrefs.pinned.filter(id=>!sidebarPrefs.hidden.includes(id)).map(id=>{const found=tabs.find(t=>t[0]===id);return found&&h('button',{key:id,type:'button',className:'bsa45-pin-link'+(nav.tab===id?' on':''),onClick:()=>go(id)},h(Icon,{name:found[2]}),h('span',null,found[1]));})),filteredNavGroups.map(group=>h("section",{className:"nav-group",key:group.name},h("button",{className:"nav-group-heading",type:"button","aria-expanded":Boolean(navSearch||!collapsedNav[group.name]),onClick:()=>setCollapsedNav(prev=>({...prev,[group.name]:!prev[group.name]}))},h("span",null,group.name),h("span",{className:"nav-chevron","aria-hidden":"true"},navSearch||!collapsedNav[group.name]?"⌄":"›")),(navSearch||!collapsedNav[group.name])?h("div",{className:"nav-group-links"},group.tabs.map(([k,l,ic,n])=>h("button",{key:k,className:nav.tab===k?"on":"","aria-current":nav.tab===k?"page":undefined,title:(DESK_FEATURE_GUIDE.find(f=>f.id===k)||{}).desc||l,onClick:()=>go(k)},h(Icon,{name:ic}),h("span",null,l),n?h("span",{className:"n"},n):null))):null)))), /* @__PURE__ */ React.createElement("div", { className: "rail-tools" }, /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("data") }, /* @__PURE__ */ React.createElement(Icon, { name: "data", size: 18 }), " Import & export"),h('button',{type:'button',onClick:()=>setSidebarEdit(true)},'⚙ Customize sidebar'),h('button',{type:'button',onClick:()=>{const hidden=localStorage.getItem('bsa45_dock_hidden')!=='1';window.dispatchEvent(new CustomEvent('bsa45:dock-visibility',{detail:{hidden}}));toast(hidden?'Study Dock hidden · use this control to restore it':'Study Dock visible');}},'✦ Show / hide Study Dock'), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("themes") }, "◇ Themes"), React.createElement("button", { onClick: () => setModal("look") }, /* @__PURE__ */ React.createElement(Icon, { name: "look", size: 18 }), " Appearance"), /* @__PURE__ */ React.createElement(ThemeDots, { settings: data.settings, setSettings })), React.createElement(SyncBadge, { onOpen: openSync })), /* @__PURE__ */ React.createElement("header", { className: "mobilebar" }, /* @__PURE__ */ h("div",{className:"bsa-shortcut-anchor mobile"},React.createElement("button", { className: "brand-mark mobile-home-button", type: "button", onClick: () => setShortcutsOpen(v=>!v), title: "Open quick shortcuts", "aria-label": "Open quick shortcuts", "aria-expanded":shortcutsOpen,"aria-haspopup":"menu" }, "Σ"),shortcutMenu()), subjectPicker("subj-m"), h("button",{className:"icon-btn",onClick:()=>setSpotlightOpen(true),"aria-label":"Search dashboard"},"⌕"), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal(syncAlert ? "sync" : "data"), "aria-label": syncAlert ? "Import, export and sync (needs attention)" : "Import and export", "data-sync": syncAlert }, /* @__PURE__ */ React.createElement(Icon, { name: "data" })), /* @__PURE__ */ h('button',{className:'icon-btn',onClick:()=>go('guide'),'aria-label':'Guided walkthrough',title:'Guided walkthrough'},'?'),h('button',{className:'icon-btn',onClick:()=>setSidebarEdit(true),'aria-label':'Customize sidebar',title:'Customize sidebar'},'☷'),React.createElement("button", { className: "icon-btn", onClick: () => setModal("themes"), "aria-label": "Themes", title: "Themes" }, "◇"), React.createElement("button", { className: "icon-btn", onClick: () => setModal("look"), "aria-label": "Appearance" }, /* @__PURE__ */ React.createElement(Icon, { name: "look" }))), /* @__PURE__ */ React.createElement("main", { className: "content bsa33-content", "data-desk-page": nav.tab },
       h("div",{className:"workspace-topbar v2-topbar"},
         h("div",{className:"workspace-context"},h("span",{className:"workspace-eyebrow"},"STUDY SPACE  /"),h("strong",null,(tabs.find(t=>t[0]===nav.tab)||[null,"Today"])[1]),h("span",{className:"workspace-subject"},subject.code||subject.name)),
-        h("div",{className:"workspace-actions v2-top-actions"},h("button",{className:"v2-top-search",onClick:()=>setSpotlightOpen(true),title:"Search · Ctrl/⌘ + K","aria-label":"Search all study materials"},"⌕  Search",h("kbd",null,"⌘ K")))),
+        h("div",{className:"workspace-actions v2-top-actions"},h('button',{className:'bsa45-top-guide',onClick:()=>go('guide')},'✦ Start here'),h('button',{className:'bsa45-top-dock',onClick:()=>{const hidden=localStorage.getItem('bsa45_dock_hidden')!=='1';window.dispatchEvent(new CustomEvent('bsa45:dock-visibility',{detail:{hidden}}));toast(hidden?'Study Dock hidden':'Study Dock visible');}},'Dock'),h("button",{className:"v2-top-search",onClick:()=>setSpotlightOpen(true),title:"Search · Ctrl/⌘ + K","aria-label":"Search all study materials"},"⌕  Search",h("kbd",null,"⌘ K")))),
       h(ScreenBoundary,{key:nav.tab,route:nav.tab,onHome:()=>go("home")},h(React.Fragment,null,
       h(BSA43ThemeNavigation,{theme:data.settings.presentationTheme||"studio",tab:nav.tab,opts:nav.opts,go,subject}),
       nav.tab === "guide" && h(BSA3StartGuide,{go}), nav.tab === "break" && h(BreakCorner), nav.tab === "joy" && h(JoyHub,{go}), nav.tab === "life" && h(StudyLife,{go}), nav.tab === "achievements" && h(AcademicProgress,{go}), nav.tab === "stats-clean" && h(StudyReport,{data,update,toast,go}), nav.tab === "private-vault" && !window.__BSA_SHARED_MODE__ && h(PrivateVault,{toast}), nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data,initialTool:nav.opts?.tool})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), nav.tab === "home" && h(BSA3Today, { ...viewProps }), nav.tab === "study" && h(BSA205Study,{...viewProps}), nav.tab === "library" && h(BSA205Library,{...viewProps}), nav.tab === "insights" && h(BSA205Mastery,{...viewProps}), nav.tab === "accounting-cycle" && h(BSA205Cycle,{...viewProps}), nav.tab === "fs-lab" && h(BSA43FinancialStatements,{...viewProps}), nav.tab === "accounting-lab" && h(BSA187AccountingLab,{subject,update,toast,go,init:nav.opts}), nav.tab === "week" && h(BSA344Schedule,{subject,update,go,openEditor,toast,init:nav.opts,initialMode:"week"}), nav.tab === "knowledge" && h(BSA192KnowledgeMap,{subject,go}), nav.tab === "safety" && h(BSA193DeviceSafety,{data,go,toast}), nav.tab === "practice" && h(React.Fragment,null,h(BSA3Practice,{ ...viewProps, data }),h('div',{className:'bsa42-fs-shortcut'},h('div',null,h('strong',null,'Financial Statement Lab'),h('p',null,'Import report JSON, inspect audited disclosures, and practice any accounting standard.')),h('button',{className:'btn',onClick:()=>go('fs-lab')},'Open Financial Statements ↗'))), nav.tab === "mcq" && h(MCQPage,{...viewProps}), nav.tab === "rules" && h(RulesLibrary,{...viewProps}), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(BSA344Schedule,{subject,update,go,openEditor,toast,init:nav.opts,initialMode:"month"}), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "workspace" && h(BSA181Workspace, { ...viewProps, initialTab:nav.opts?.tab, undoAvailable:!!undo, onGlobalUndo:doUndo }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(BSA43ProblemSets, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps, key:subject.id }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })))),
@@ -15757,7 +15964,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     } }), modal === "more" && /* @__PURE__ */ React.createElement(MoreSheet, { onClose: () => setModal(null), onPick: (k) => setModal(k), settings: data.settings, setSettings, go: (t) => {
       setModal(null);
       go(t);
-    } }), modal && modal.nlm && h(Modal, { key: "bsa-direct-prompt-" + (modal.nlm.pid || "all") + "-" + subject.id, title: "AI Prompt Studio", wide: true, className: "bsa-prompt-modal", onClose: () => setModal(null) }, h(NotebookLMPrompts, { key: "bsa-prompt-" + (modal.nlm.pid || "all") + "-" + subject.id, subject, toast, initPid: modal.nlm.pid, initTopic: modal.nlm.topicId, onImport: () => setModal({ data: "import" }) })), modal === "themes" && h(BSA41ThemesModal,{settings:data.settings,setSettings,onClose:()=>setModal(null)}), modal === "look" && /* @__PURE__ */ React.createElement(AppearanceModal, { settings: data.settings, setSettings, onClose: () => setModal(null) }), modal === "subjects" && /* @__PURE__ */ React.createElement(SubjectModal, { data, update, onClose: () => setModal(null), toast }), (modal === "data" || modal === "sync" || modal && modal.data) && /* @__PURE__ */ React.createElement(DataModal, { data, update, replaceAll, onClose: () => setModal(null), toast, downloads, initTab: modal && modal.data ? modal.data : modal === "sync" ? "github" : "import", prefill: modal && modal.prefill }), (editor == null ? void 0 : editor.type) === "card" && /* @__PURE__ */ React.createElement(
+    } }), modal && modal.nlm && h(Modal, { key: "bsa-direct-prompt-" + (modal.nlm.pid || "all") + "-" + subject.id, title: "AI Prompt Studio", wide: true, className: "bsa-prompt-modal", onClose: () => setModal(null) }, h(NotebookLMPrompts, { key: "bsa-prompt-" + (modal.nlm.pid || "all") + "-" + subject.id, subject, toast, initPid: modal.nlm.pid, initTopic: modal.nlm.topicId, onImport: () => setModal({ data: "import" }) })), sidebarEdit&&h(Modal,{title:'Customize sidebar',onClose:()=>setSidebarEdit(false),wide:true,className:'bsa45-sidebar-modal'},h(BSA45SidebarEditor,{tabs,sidebarPrefs,toggleSidebarPin,toggleSidebarHide,shiftSidebarPin,reset:()=>saveSidebar(()=>({pinned:['home','study','practice','library','ask','guide'],hidden:[]})),close:()=>setSidebarEdit(false)})), modal === "themes" && h(BSA41ThemesModal,{settings:data.settings,setSettings,onClose:()=>setModal(null)}), modal === "look" && /* @__PURE__ */ React.createElement(AppearanceModal, { settings: data.settings, setSettings, onClose: () => setModal(null) }), modal === "subjects" && /* @__PURE__ */ React.createElement(SubjectModal, { data, update, onClose: () => setModal(null), toast }), (modal === "data" || modal === "sync" || modal && modal.data) && /* @__PURE__ */ React.createElement(DataModal, { data, update, replaceAll, onClose: () => setModal(null), toast, downloads, initTab: modal && modal.data ? modal.data : modal === "sync" ? "github" : "import", prefill: modal && modal.prefill }), (editor == null ? void 0 : editor.type) === "card" && /* @__PURE__ */ React.createElement(
       CardEditor,
       {
         subject,
