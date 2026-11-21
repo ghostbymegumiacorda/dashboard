@@ -3135,3 +3135,164 @@ html[data-desk-theme] .bsa4-dock-panel,
 .bsa-v1-outline-warning summary{font-weight:700;cursor:pointer;overflow-wrap:anywhere}
 .bsa-v1-outline-warning p{font-size:.85rem;margin:7px 0 0;overflow-wrap:anywhere}
 @media(max-width:700px){.bsa-v1-subtopic-tools{grid-template-columns:1fr}.bsa-v1-subtopic-tools input{max-width:none}}
+
+
+/* V1.1 — unified app shell and independently scrolling navigation. */
+@media (min-width:900px) {
+  #root > .shell,
+  #root > .shell.bsa47-rail-collapsed {
+    --rail:clamp(244px,19vw,282px);
+    display:grid!important;
+    grid-template-columns:var(--rail) minmax(0,1fr)!important;
+    align-items:start!important;
+    width:100%!important;
+    min-height:100dvh!important;
+    height:auto!important;
+    overflow:visible!important;
+  }
+  #root > .shell.bsa47-rail-collapsed {
+    --rail:72px!important;
+    grid-template-columns:72px minmax(0,1fr)!important;
+  }
+  #root > .shell > aside.rail {
+    position:fixed!important;
+    inset:0 auto 0 0!important;
+    top:0!important;
+    left:0!important;
+    display:flex!important;
+    flex-direction:column!important;
+    width:var(--rail)!important;
+    height:100vh!important;
+    height:100dvh!important;
+    max-height:100dvh!important;
+    min-height:0!important;
+    overflow:hidden!important;
+    padding:12px 11px!important;
+    gap:10px!important;
+    box-sizing:border-box!important;
+    z-index:25!important;
+    background:var(--surface)!important;
+    border-right:1px solid var(--line)!important;
+    box-shadow:4px 0 20px -22px var(--text);
+    overscroll-behavior:contain!important;
+  }
+  #root > .shell.bsa47-rail-collapsed > aside.rail {
+    width:72px!important;
+    padding:10px 7px 12px!important;
+  }
+  #root > .shell > .content {
+    grid-column:2!important;
+    grid-row:1!important;
+    width:100%!important;
+    min-width:0!important;
+    overflow-x:clip!important;
+    overflow-y:visible!important;
+  }
+  #root > .shell > aside.rail > .rail-nav-wrap.bsa46-rail-nav {
+    flex:1 1 auto!important;
+    display:flex!important;
+    flex-direction:column!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    overscroll-behavior-y:contain!important;
+    touch-action:pan-y!important;
+    scrollbar-width:thin;
+    scrollbar-color:color-mix(in srgb,var(--accent) 30%,var(--line)) transparent;
+    scrollbar-gutter:stable;
+    padding:6px 4px 16px!important;
+  }
+  #root > .shell > aside.rail .bsa47-rail-header,
+  #root > .shell > aside.rail .rail-subject,
+  #root > .shell > aside.rail .bsa47-utility-rail {
+    flex:0 0 auto!important;
+  }
+  #root > .shell > aside.rail .bsa47-utility-rail {
+    padding-top:9px!important;
+    padding-bottom:3px!important;
+    gap:7px!important;
+    background:var(--surface)!important;
+  }
+}
+/* Show the custom selector in both the full rail and the mobile bar. */
+.bsa11-subject-wrap{width:100%;min-width:0;position:relative;flex:0 1 auto}
+.bsa11-subject-trigger{
+  display:flex;align-items:center;gap:9px;
+  box-sizing:border-box;width:100%;min-width:0;min-height:55px;
+  border-radius:13px;border:1px solid var(--line);background:var(--surface);
+  color:var(--text);font:inherit;line-height:1.2;
+  padding:8px 10px;text-align:left;cursor:pointer;
+  transition:border-color .16s ease,background .16s ease,box-shadow .16s ease;
+}
+.bsa11-subject-trigger:hover,.bsa11-subject-trigger[aria-expanded="true"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 5%,var(--surface));box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 12%,transparent)}
+.bsa11-subject-trigger:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.bsa11-course-glyph{width:33px;height:33px;display:grid;place-items:center;flex:0 0 33px;border-radius:10px;background:var(--accent-soft);color:var(--accent);font-size:1.25rem}
+.bsa11-subject-text{display:grid;gap:2px;flex:1;min-width:0}
+.bsa11-subject-text small{font-size:.62rem!important;font-weight:800!important;letter-spacing:.055em!important;color:var(--muted)!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bsa11-subject-text strong{display:block;font-size:.85rem;line-height:1.18;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
+.bsa11-subject-chevron{flex:0 0 auto;color:var(--muted);font-size:1.2rem;line-height:1}
+.bsa11-popover-outside{position:fixed;inset:0;z-index:180;border:0;padding:0;background:transparent;cursor:default}
+.bsa11-subject-popover{position:fixed;z-index:181;max-width:calc(100vw - 20px);display:flex;flex-direction:column;
+  box-sizing:border-box;max-height:min(520px,calc(100dvh - 38px));
+  border:1px solid color-mix(in srgb,var(--accent) 16%,var(--line));
+  border-radius:20px;background:var(--surface);color:var(--text);
+  box-shadow:0 22px 65px #0003,0 2px 8px #0001;overflow:hidden;padding:12px;gap:10px;
+  animation:bsa11-popover-enter .15s cubic-bezier(.2,.75,.2,1) both;}
+@keyframes bsa11-popover-enter{from{opacity:.6;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+.bsa11-subject-pop-head{display:flex;align-items:flex-start;justify-content:space-between;padding:3px 3px 0;gap:10px}
+.bsa11-subject-pop-head>div{display:grid;gap:2px}
+.bsa11-subject-pop-head strong{font-size:1rem;font-weight:850}
+.bsa11-subject-pop-head small{color:var(--muted);font-size:.73rem}
+.bsa11-subject-pop-head button{width:34px;height:34px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);color:var(--text);cursor:pointer;font-size:1.25rem}
+.bsa11-subject-search{display:flex;align-items:center;gap:7px;padding:0 10px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--muted);min-height:43px}
+.bsa11-subject-search input{min-width:0;flex:1;width:100%;border:0;outline:0;background:transparent;color:var(--text);font:inherit;font-size:.84rem;min-height:38px}
+.bsa11-subject-search:focus-within{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.bsa11-subject-list{display:grid;align-content:start;gap:7px;flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:1px 2px 4px}
+.bsa11-subject-group{display:grid;gap:5px}
+.bsa11-group-label{font-size:.64rem;color:var(--muted);font-weight:820;text-transform:uppercase;letter-spacing:.07em;padding:5px 8px 2px}
+.bsa11-subject-choice{display:flex;align-items:center;gap:10px;padding:9px;border:1px solid transparent;border-radius:12px;background:transparent;color:var(--text);text-align:left;font:inherit;cursor:pointer;min-height:54px;width:100%}
+.bsa11-subject-choice:hover,.bsa11-subject-choice:focus-visible{border-color:var(--line);background:var(--surface-2);outline:none}
+.bsa11-subject-choice.is-active{background:var(--accent-soft);border-color:color-mix(in srgb,var(--accent) 38%,var(--line))}
+.bsa11-choice-monogram{width:35px;height:35px;flex:0 0 35px;display:grid;place-items:center;border:1px solid var(--line);background:var(--surface-2);border-radius:10px;font-weight:850;color:var(--accent)}
+.bsa11-choice-copy{display:grid;gap:1px;min-width:0;flex:1}
+.bsa11-choice-copy strong{font-size:.84rem;font-weight:800;overflow-wrap:anywhere}
+.bsa11-choice-copy small{font-size:.72rem;color:var(--muted)}
+.bsa11-choice-check{color:var(--accent);font-weight:900;font-size:1.15rem}
+.bsa11-no-results{margin:12px 8px;color:var(--muted);font-size:.85rem}
+.bsa11-subject-actions{padding-top:8px;border-top:1px solid var(--line)}
+.bsa11-subject-actions button{width:100%;padding:11px;border:1px solid var(--line);border-radius:11px;background:var(--surface-2);color:var(--text);font:inherit;font-weight:800;font-size:.84rem;cursor:pointer}
+.bsa11-subject-actions button:hover{border-color:var(--accent)}
+/* Compact course card; no second native dropdown chrome. */
+#root .rail .rail-subject{gap:8px!important;margin:0!important;padding:11px!important;border-radius:16px!important}
+#root .rail .rail-subject>.link-btn{font-size:.73rem;min-height:27px}
+/* Keep ordinary body scrolling; do not change document overflow to a second scroller. */
+html,body,#root{overflow-x:clip!important}
+@media (max-width:899px){
+  #root .mobilebar>.bsa11-subject-wrap{flex:1 1 auto;max-width:100%;min-width:0}
+  #root .mobilebar .bsa11-subject-trigger{min-height:43px;padding:5px 9px;border-radius:12px;gap:7px}
+  #root .mobilebar .bsa11-course-glyph{width:28px;height:28px;flex-basis:28px;border-radius:8px;font-size:1.05rem}
+  #root .mobilebar .bsa11-subject-text strong{font-size:.78rem}
+  #root .mobilebar .bsa11-subject-text small{font-size:.57rem!important}
+  #root .mobilebar .bsa11-subject-chevron{font-size:1rem}
+}
+@media (max-width:530px){
+  #root .mobilebar .bsa11-course-glyph{display:none}
+  #root .mobilebar .icon-btn[aria-label="Guided walkthrough"]{display:none!important}
+}
+@media(max-width:400px){
+  #root .mobilebar .bsa46-mobile-settings{display:none!important}
+  .bsa11-subject-text small{display:none}
+}
+/* App-like compact core workspace: eliminate a redundant full-width second nav. */
+#root .bsa31-home .bsa31-hero{min-height:0!important;padding:clamp(18px,2.5vw,28px)!important;border-radius:21px!important;overflow:hidden!important}
+#root .bsa31-home .bsa31-hero .bsa205-hero-copy{max-width:min(100%,800px)!important}
+#root .bsa31-home .bsa31-hero h1{font-size:clamp(1.85rem,3.4vw,3rem)!important;line-height:1.07!important;max-width:780px!important}
+#root .bsa31-home .bsa31-hero .bsa205-hero-orb{opacity:.42!important;transform:scale(.8)!important;pointer-events:none!important}
+#root .bsa31-home .bsa31-hero .bsa31-hero-next{padding:10px 13px!important;margin:11px 0!important}
+#root .bsa31-home .bsa31-route-card{min-height:165px!important;padding:17px 18px!important;border-radius:18px!important}
+#root .bsa31-home .bsa31-route-cards{gap:10px!important}
+#root .bsa31-home .bsa205-hero-actions{gap:8px!important;flex-wrap:wrap}
+@media(max-width:899px){#root .bsa31-home .bsa31-hero{padding:18px!important}#root .bsa31-home .bsa31-hero h1{font-size:clamp(1.7rem,6vw,2.5rem)!important}}
+@media(prefers-reduced-motion:reduce){.bsa11-subject-popover{animation:none!important}}
