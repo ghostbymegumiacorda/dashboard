@@ -4321,3 +4321,37 @@ body:has(>.backdrop) #bsa216-scroll-layer .bsa216-scroll-rail{display:none!impor
 body:has(> .backdrop) #bsa216-scroll-layer .bsa216-scroll-rail,
 body:has(> .bsa344-modal-backdrop) #bsa216-scroll-layer .bsa216-scroll-rail,
 body.modal-open #bsa216-scroll-layer .bsa216-scroll-rail{display:none!important}
+
+/* V2.21 — the requested subtle bottom-RIGHT scroll controls. No left
+   positioning remains active, including on tablet and mobile. */
+#bsa216-scroll-layer .bsa216-scroll-rail{
+  top:auto!important;left:auto!important;right:calc(12px + env(safe-area-inset-right,0px))!important;
+  bottom:calc(14px + env(safe-area-inset-bottom,0px))!important;
+  transform:none!important;opacity:.83;z-index:101;
+}
+@media(max-width:760px){#bsa216-scroll-layer .bsa216-scroll-rail{
+  left:auto!important;right:calc(8px + env(safe-area-inset-right,0px))!important;
+  bottom:calc(100px + env(safe-area-inset-bottom,0px))!important;
+}}
+/* Keep an undragged guided timer above the bottom-right scroll rail.
+   A manually positioned timer respects its user-chosen location. */
+#bsa213-focus-layer .bsa212-float:not([data-dragged="yes"]){
+  bottom:calc(126px + env(safe-area-inset-bottom,0px))!important;
+}
+@media(max-width:760px){#bsa213-focus-layer .bsa212-float:not([data-dragged="yes"]){
+  bottom:calc(216px + env(safe-area-inset-bottom,0px))!important;
+}}
+#root .bsa221-resume{min-height:42px;font-weight:750}
+
+/* V2.22 — publishing feedback beside the Publish button, not hidden below setup. */
+#root .share-panel .bsa222-publish-status {
+  margin: 10px 0 20px;
+  padding: 10px 13px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: .78rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
