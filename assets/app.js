@@ -347,7 +347,7 @@
     { id: "sand", name: "Warm Sand", sub: "Calm beige", dots: ["#f4eadc", "#926337", "#3b7d78"] },
     { id: "custom", name: "Custom", sub: "Pick your own colors", dots: ["#101828", "#7c9cff", "#ffb547"] }
   ];
-  const DEFAULT_SETTINGS = { favoriteSkins: ["slate","ateneo","emerald","light","lamplight","oled","sunset"], skin: "slate", fontScale: 1, contrast: false, comfort: false, calm: false, newPerDay: 10, maxPerDay: 120, speakRate: 1, pomoOn: false, pomoWork: 25, pomoBreak: 5, pomoLong: 15, remindAt: "" };
+  const DEFAULT_SETTINGS = { favoriteSkins: ["slate","ateneo","emerald","light","lamplight","oled","sunset"], skin: "slate", presentationTheme: "studio", fontScale: 1, contrast: false, comfort: false, calm: false, newPerDay: 10, maxPerDay: 120, speakRate: 1, pomoOn: false, pomoWork: 25, pomoBreak: 5, pomoLong: 15, remindAt: "" };
   function buildCfas() {
     return {
       id: "cfas",
@@ -2577,7 +2577,8 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       };
       for (const t of subject.topics) if (t.due && ISO_RE.test(t.due)) add(t.due, { kind: t.kind === "exam" ? "exam" : "due", t, key: t.id });
       for (const s of sessions) if (s.date && ISO_RE.test(s.date)) add(s.date, { kind: "session", s, key: s.id });
-      const rank = { exam: 0, due: 1, session: 2 };
+      for (const t of (subject.tasks || [])) if (t.due && ISO_RE.test(t.due) && !t.done) add(t.due, { kind: "task", t, key: t.id });
+      const rank = { exam: 0, due: 1, task: 2, session: 3 };
       for (const l of map.values()) l.sort((a, b) => rank[a.kind] - rank[b.kind] || (a.kind === "session" ? byTime(a.s, b.s) : 0));
       return map;
     }, [subject]);
@@ -2604,9 +2605,10 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const gridStart = isoOf(new Date(cur.y, cur.m, 1 - first.getDay()));
     const cells = Array.from({ length: rows * 7 }, (_, i) => addDays(gridStart, i));
     const dow = Array.from({ length: 7 }, (_, i) => new Date(2026, 0, 4 + i).toLocaleDateString(void 0, { weekday: "short" }));
-    const evColor = (e) => e.kind === "exam" ? "var(--text)" : e.kind === "due" ? dueState(e.t) === "over" ? "var(--bad)" : dueState(e.t) === "done" ? "var(--ok)" : "var(--warn)" : e.s.done ? "var(--ok)" : "var(--accent)";
+    const evColor = (e) => e.kind === "exam" ? "var(--text)" : e.kind === "due" ? dueState(e.t) === "over" ? "var(--bad)" : dueState(e.t) === "done" ? "var(--ok)" : "var(--warn)" : e.kind === "task" ? "var(--warn)" : e.s.done ? "var(--ok)" : "var(--accent)";
     const evPill = (e) => {
       if (e.kind === "exam") return h("span", { key: e.key, className: "ev ev-exam" }, e.t.title);
+      if (e.kind === "task") return h("span", { key: e.key, className: "ev ev-due" }, e.t.title || e.t.name || "Class task");
       if (e.kind === "due") return h("span", { key: e.key, className: "ev ev-due", "data-status": e.t.status, "data-due": dueState(e.t) }, e.t.code || e.t.title, " due");
       const t = e.s.topicId && subject.topics.find((x) => x.id === e.s.topicId);
       return h("span", { key: e.key, className: `ev ev-session${e.s.done ? " done" : ""}` }, t ? t.code || t.title : "Review", e.s.time ? " " + fmtTime(e.s.time) : "");
@@ -2614,6 +2616,10 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const dayEvs = days.get(sel) || [];
     const n = daysUntil(sel);
     const dayItem = (e) => {
+      if (e.kind === "task") return h('li',{key:e.key,className:'day-item'},
+        h('span',{className:'kind-mark',style:{'--c':'var(--warn)'},'aria-hidden':'true'}),
+        h('div',{className:'day-body'},h('span',{className:'t'},e.t.title||e.t.name||'Class task'),h('span',{className:'muted small'},'Class task due')),
+        h('button',{className:'btn ghost',onClick:()=>go('class')},'Open'));
       if (e.kind === "session") {
         const s = e.s;
         return h("li", { key: e.key, className: `day-item${s.done ? " done" : ""}` }, h("input", { type: "checkbox", checked: !!s.done, "aria-label": "Mark session done", onChange: (ev) => setSession(s.id, (x) => {
@@ -2718,7 +2724,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
   }
   function ThemeDots({ settings, setSettings }) {
     const favorites = (Array.isArray(settings.favoriteSkins) ? settings.favoriteSkins : DEFAULT_SETTINGS.favoriteSkins).filter(id => SKINS.some(s => s.id === id)).slice(0, 7);
-    return /* @__PURE__ */ React.createElement("div", { className: "theme-dots", role: "group", "aria-label": "Favorite themes" }, favorites.map(id => SKINS.find(s => s.id === id)).filter(Boolean).map((s) => /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React.createElement("div", { className: "theme-dots", role: "group", "aria-label": "Favorite color palettes" }, favorites.map(id => SKINS.find(s => s.id === id)).filter(Boolean).map((s) => /* @__PURE__ */ React.createElement(
       "button",
       {
         key: s.id,
@@ -3178,7 +3184,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     {id:'stats-clean',name:'Study report',role:'Reflect',desc:'Review learning outcomes and get practical next steps.',group:'Study',icon:'grade'},
     {id:'vault',name:'Flashcard collection',role:'Organize',desc:'Browse or organize the flashcards available in this subject.',group:'Organize',icon:'cards'},
     {id:'roadmap',name:'Course topics',role:'Plan topics',desc:'Track topics and subtopics from your course syllabus.',group:'Organize',icon:'roadmap'},
-    {id:'calendar',name:'Calendar',role:'Plan time',desc:'Manage upcoming study sessions, tasks and important dates.',group:'Organize',icon:'calendar'},
+    {id:'calendar',name:'Study Schedule',role:'Plan time',desc:'Manage upcoming study sessions, tasks and important dates.',group:'Organize',icon:'calendar'},
     {id:'class',name:'Class & deadlines',role:'Keep up',desc:'Find classes, attendance and submissions in one place.',group:'Organize',icon:'subjects'},
     {id:'toolkit',name:'Study Toolkit',role:'Use tools',desc:'Open built-in accounting reference tools and study utilities.',group:'More',icon:'book'},
     {id:'ask',name:'Ask tutor',role:'Get help',desc:'Get guided help with accounting questions and difficult concepts.',group:'More',icon:'ask'},
@@ -3591,7 +3597,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const sections=[
       ['Study & reading',[['lectures','Lectures','lecture'],['ask','AI Tutor','ask'],['vault','Flashcards','cards'],['rules','Reference rules','book'],['workspace','Workspace','book']]],
       ['Advanced practice',[['accounting-lab','Accounting Lab','pset'],['accounting-cycle','Accounting Cycle','pset'],['mcq','Multiple-choice library','cards'],['psets','Problem Sets','pset'],['mistakes','Mistake Log','mistakes']]],
-      ['Planning, progress & extras',[['insights','Learning Progress','grade'],['week','Weekly Planner','calendar'],['calendar','Calendar','calendar'],['grades','Grades','grade'],['class','Classes and deadlines','subjects'],['knowledge','Knowledge Map','roadmap'],['life','Study Room','look'],['toolkit','Toolkit','book'],['safety','Data Safety','data']]]
+      ['Planning, progress & extras',[['insights','Learning Progress','grade'],['calendar','Study Schedule','calendar'],['grades','Grades','grade'],['class','Classes and deadlines','subjects'],['knowledge','Knowledge Map','roadmap'],['life','Study Room','look'],['toolkit','Toolkit','book'],['safety','Data Safety','data']]]
     ];
     return h(Modal,{title:'More tools',onClose},
       h('div',{className:'bsa3-more-intro'},h('p',null,'Your everyday work is in Today, Study, Practice and Library. Open a group below only when you need a specialized tool.'),
@@ -3673,7 +3679,8 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       }
       s.reps = (s.reps || 0) + 1;
     }
-    n = Math.min(180, opt && opt.preview ? n : fuzzIvl(n));
+    // Allow long-lived concepts to reach annual review without changing existing due dates.
+    n = Math.min(365, opt && opt.preview ? n : fuzzIvl(n));
     let due = addDays(now, n);
     // Make sure a card you know still gets one look the day before the exam that covers it.
     if (examDue && grade !== "again" && n >= 3 && due > examDue && daysUntil(examDue) >= 2) due = addDays(examDue, -1);
@@ -5124,7 +5131,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const last=items.length?items[items.length-1]:null;
     const at=last?Number(last.at)||Date.parse(last.date||'')||0:0;
     // A guess is a correct score, but not evidence of durable recall.
-    const span=!last?0:last.result==='correct'&&!last.guessed&&!last.assisted?[1,3,7,14,30][Math.min(streak-1,4)]||30:1;
+    const span=!last?0:last.result==='correct'&&!last.guessed&&!last.assisted?[1,3,7,14,30,60,120,240,365][Math.min(streak-1,8)]||365:1;
     return {key,seen:items.length,streak,wrong,at,due:!!last&&at>0&&now>=at+span*BSA197_DAY,
       weak:!!last&&(wrong>0||!!last.guessed||!!last.assisted)&&streak<3,mastered:streak>=3,
       recent:!!last&&at>0&&now-at<2*BSA197_DAY};
@@ -5290,6 +5297,8 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         h('div',{className:'bsa197-question-meta'},h('span',{className:'bsa-quiz-source'},current.src||'Your MCQ library'),
           h('span',{className:'bsa197-question-tag'},!current._recall?.seen?'New':current._recall?.due?'Due review':current._recall?.weak?'Weak spot':'Practice')),
         h('div',{className:'mcq-question'},h('div',{dangerouslySetInnerHTML:{__html:psMdHtml(current.q)}})),
+        h('div',{className:'bsa4-mcq-help'},h('button',{type:'button',className:'btn ghost',onClick:()=>go('ask',{focus:{kind:'mcq',id:current.id,title:current.src||'MCQ',setTitle:current.src||'Question collection',question:psPlain(current.q),options:current.choices.map(psPlain)}})},'✦ Ask Tutor about this MCQ'),
+        h('small',{className:'muted'},'Opening Tutor saves this quiz draft. The correct answer is not attached.')),
         h('div',{className:'mcq-options',role:'group','aria-label':'Choose one answer'},current.choices.map((choice,i)=>{
           const key=mxChoiceKey(choice,i),selected=answers[current.id]===key,visible=!!revealed[current.id];
           return h('button',{key:i,type:'button',disabled:visible,'aria-pressed':selected,
@@ -5407,33 +5416,104 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         h(MCQBankExplorer,{subject,update,onPractice:setQuizSet})));
   }
 
+  /* V3.9: one answer workspace for the existing Problem Sets library.
+     Inputs are device-local drafts, not answer keys or grades. */
+  const BSA39_MODES=[['written','Written answer'],['journal','Journal entry'],['calculation','Calculation'],['ledger','T-accounts'],['statement','Financial statement']];
+  function bsa39Mode(p){
+    if(BSA39_MODES.some(x=>x[0]===p.answerFormat))return p.answerFormat;
+    if(Array.isArray(p.labEntry)&&p.labEntry.length)return 'journal';
+    const req=(p.req||[]).join(' ').toLowerCase(), title=String(p.title||'').toLowerCase(), all=req+' '+title;
+    if(/journal entr|adjusting entr|closing entr|journaliz/.test(all))return 'journal';
+    if(/t.accounts?|post to (the )?ledger|ledger account/.test(all))return 'ledger';
+    if(/statement of financial|income statement|trial balance|statement of cash/.test(all))return 'statement';
+    if(/compute|calculate|determine the amount|how much|find the (cost|balance|amount)/.test(req))return 'calculation';
+    return 'written';
+  }
+  function bsa39DraftKey(subjectId,setId,problemId){return 'bsa39-draft:'+encodeURIComponent(subjectId)+':'+encodeURIComponent(setId)+':'+encodeURIComponent(problemId)}
+  function bsa39Load(subjectId,setId,problemId){try{const v=JSON.parse(localStorage.getItem(bsa39DraftKey(subjectId,setId,problemId))||'null');return v&&typeof v==='object'&&!Array.isArray(v)?v:{}}catch(_){return {}}}
+  function bsa39Save(subjectId,setId,problemId,value){try{const text=JSON.stringify(value);if(text.length<60000){localStorage.setItem(bsa39DraftKey(subjectId,setId,problemId),text);return true}}catch(_){}return false}
+  function bsa39Number(raw){const n=String(raw??'').replace(/[₱,\s]/g,'');if(!n)return 0;const v=Number(n);return Number.isFinite(v)&&v>=0?v:NaN}
+  function bsa39Rows(work){return Array.isArray(work.rows)?work.rows:[]}
+  function bsa39RowSummary(work){let d=0,c=0;for(const r of bsa39Rows(work)){const debit=bsa39Number(r.debit),credit=bsa39Number(r.credit);if(!Number.isFinite(debit)||!Number.isFinite(credit))return {invalid:true,d,c};d+=debit;c+=credit;}return {invalid:false,d,c,balanced:d>0&&Math.abs(d-c)<.005}}
+  function bsa39KeyCheck(p,work){
+    if(work.mode==='journal'&&bsa198StoredKeyValid(p)){
+      const items=bsa39Rows(work).filter(r=>String(r.account||'').trim()&&((bsa39Number(r.debit)||0)>0||(bsa39Number(r.credit)||0)>0));
+      const normAccount=a=>String(a||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+      const normRow=(a,d,c)=>normAccount(a)+'|'+Math.round(Number(d)*100)+'|'+Math.round(Number(c)*100);
+      const expected=p.labEntry.map(r=>normRow(r[0],r[1],r[2])).sort();
+      const got=items.map(r=>normRow(r.account,bsa39Number(r.debit),bsa39Number(r.credit))).sort();
+      const equal=got.length===expected.length&&got.every((x,i)=>x===expected[i]);
+      const balance=bsa39RowSummary(work);
+      return {type:'journal',correct:equal,message:equal?'Your journal entry matches the stored structured answer key.':balance.invalid?'Check that each amount is a valid non-negative number.':!balance.balanced?'Your journal does not balance yet.': 'Your entry balances, but the stored key differs in an account, side, or amount. Equivalent account names may need manual review.'};
+    }
+    if(work.mode==='calculation'){
+      const expected=psPlain(p.answer||'').trim(), supplied=String(work.final||'').trim();
+      const number=/^(?:₱|PHP\s*)?\s*[-(]?\s*[\d,]+(?:\.\d+)?\s*\)?\s*$/i;
+      if(number.test(expected)&&number.test(supplied)){
+        const parse=x=>{const v=x.replace(/PHP|₱|,/gi,'').trim();return v.startsWith('(')&&v.endsWith(')')?-Number(v.slice(1,-1)):Number(v)};
+        const yes=Math.abs(parse(supplied)-parse(expected))<=.005;
+        return {type:'numeric',correct:yes,message:yes?'Your final amount matches the stored key. Check your reasoning as well.':'Your final amount differs from the stored key. Compare the working and assumptions.'};
+      }
+    }
+    return {type:'manual',correct:null,message:'Compare your working with the model answer. There is no verified machine-readable key for automatic marking.'};
+  }
+  function bsa39Text(work){
+    const mode=work.mode||'written';
+    if(mode==='journal')return [bsa39Rows(work).map(r=>[r.account,r.debit?'Dr '+r.debit:'',r.credit?'Cr '+r.credit:''].filter(Boolean).join(' · ')).filter(Boolean).join('\n'),work.explanation||'',work.other||''].filter(Boolean).join('\n');
+    if(mode==='calculation')return [work.steps||'',work.final?'Final amount: '+work.final:''].filter(Boolean).join('\n');
+    if(mode==='ledger'||mode==='statement')return [bsa39Rows(work).filter(r=>r.account||r.debit||r.credit).map(r=>[r.account,r.debit||'',r.credit||''].join(' | ')).join('\n'),work.explanation||'',work.other||''].filter(Boolean).join('\n');
+    return (work.parts&&Object.values(work.parts).some(Boolean)?Object.entries(work.parts).map(([i,x])=>'Part '+(Number(i)+1)+': '+x).join('\n'):work.text||'');
+  }
+  function BSA39AnswerEditor({p,work,onChange}){
+    const mode=work.mode||bsa39Mode(p),parts=p.req||[];
+    const change=(key,value)=>onChange({...work,mode,[key]:value});
+    const rows=bsa39Rows(work).length?bsa39Rows(work):[{account:'',debit:'',credit:''},{account:'',debit:'',credit:''}];
+    const setRow=(i,key,value)=>{const updated=rows.map((r,j)=>j===i?{...r,[key]:value}:r);change('rows',updated)};
+    return h('div',{className:'bsa39-workspace'},
+      h('div',{className:'bsa39-work-head'},h('div',null,h('strong',null,'Your answer workspace'),h('p',{className:'muted small'},'Choose the format you need. Your draft stays on this device.')),
+        h('label',null,'Answer format',h('select',{value:mode,'aria-label':'Answer format',onChange:e=>onChange({...work,mode:e.target.value})},BSA39_MODES.map(([id,label])=>h('option',{key:id,value:id},label))))),
+      mode==='written'&&(parts.length>1?h('div',{className:'bsa39-parts'},parts.map((part,i)=>h('label',{key:i},h('strong',null,'Part '+String.fromCharCode(65+i)+' · '+part),h('textarea',{rows:3,value:work.parts?.[i]||'',onChange:e=>change('parts',{...(work.parts||{}),[i]:e.target.value}),placeholder:'Explain or solve this requirement…'})))):
+        h('label',null,'Written response',h('textarea',{rows:6,value:work.text||'',onChange:e=>change('text',e.target.value),placeholder:'Write your explanation or solution…'}))),
+      mode==='calculation'&&h('div',{className:'bsa39-calc'},h('label',null,'Working / computation',h('textarea',{rows:5,value:work.steps||'',onChange:e=>change('steps',e.target.value),placeholder:'Show your formula, values and steps…'})),h('label',null,'Final amount',h('input',{inputMode:'decimal',value:work.final||'',onChange:e=>change('final',e.target.value),placeholder:'₱ 0.00'}))),
+      ['journal','ledger','statement'].includes(mode)&&h('div',null,
+        h('div',{className:'bsa39-table-wrap'},h('table',{className:'bsa39-table'},h('thead',null,h('tr',null,h('th',null,mode==='statement'?'Particular / Account':mode==='ledger'?'Ledger account':'Account'),h('th',null,mode==='statement'?'Amount / Debit':'Debit (₱)'),h('th',null,mode==='statement'?'Other / Credit':'Credit (₱)'),h('th',null,' '))),h('tbody',null,rows.map((r,i)=>h('tr',{key:i},h('td',null,h('input',{'aria-label':'Account or description row '+(i+1),value:r.account||'',onChange:e=>setRow(i,'account',e.target.value),placeholder:'Account / description'})),h('td',null,h('input',{inputMode:'decimal','aria-label':'Debit or amount row '+(i+1),value:r.debit||'',onChange:e=>setRow(i,'debit',e.target.value),placeholder:'0.00'})),h('td',null,h('input',{inputMode:'decimal','aria-label':'Credit or other amount row '+(i+1),value:r.credit||'',onChange:e=>setRow(i,'credit',e.target.value),placeholder:'0.00'})),h('td',null,h('button',{type:'button',className:'btn ghost',disabled:rows.length<=2,'aria-label':'Remove row '+(i+1),onClick:()=>change('rows',rows.filter((_,j)=>j!==i))},'×'))))))),
+        h('button',{type:'button',className:'btn',onClick:()=>change('rows',[...rows,{account:'',debit:'',credit:''}])},'+ Add row'),
+        mode==='journal'&&(()=>{const totals=bsa39RowSummary({...work,rows});return h('p',{className:'bsa39-balance '+(totals.balanced?'balanced':'')},totals.invalid?'Use valid non-negative numbers.':'Debits ₱'+totals.d.toLocaleString()+' · Credits ₱'+totals.c.toLocaleString()+(totals.balanced?' · Balanced':' · Not balanced'))})(),
+        h('label',null,'Supporting explanation (optional)',h('textarea',{rows:2,value:work.explanation||'',onChange:e=>change('explanation',e.target.value)}))),
+      parts.length>1&&mode!=='written'&&h('label',{className:'bsa39-part-note'},'Other requirements / reasoning',h('textarea',{rows:3,value:work.other||'',onChange:e=>change('other',e.target.value),placeholder:'Answer any additional parts of this question…'})),
+      h('p',{className:'muted small'},'Answer keys are revealed only after you choose Compare. Balanced entries are not necessarily correct entries.')
+    );
+  }
   /* A written-answer drill is checked against the source solution. Only a
      single numeric answer is auto-compared; descriptive answers and entries
      require the student to evaluate their own work against the worked key. */
   /* v157: self-assessed written problem drill. Keeps answers and IDs local,
      reuses the existing Mistake Log, and never claims to auto-grade essays. */
-  function PsWrittenDrill({set,subject,update,onMark,onExit}){
+  function PsWrittenDrill({set,subject,update,onMark,onExit,go}){
     const base=(set.problems||[]).slice().sort((a,b)=>(a.no||0)-(b.no||0));
     const randomOrder=arr=>{const copy=arr.slice();for(let i=copy.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[copy[i],copy[j]]=[copy[j],copy[i]];}return copy;};
     const [randomized,setRandomized]=useState(false);
     const [problems,setProblems]=useState(()=>base);
     const [pos,setPos]=useState(0);
-    const [drafts,setDrafts]=useState({});
+    const [drafts,setDrafts]=useState(()=>Object.fromEntries(base.map(p=>[p.id,bsa39Load(subject.id,set.id,p.id)])));
     const [revealed,setRevealed]=useState({});
     const [marked,setMarked]=useState({});
     const [editingNote,setEditingNote]=useState(null);
     const [notes,setNotes]=useState({});
+    const [hintLevel,setHintLevel]=useState({});
     const [checks,setChecks]=useState({});
     const p=problems[pos];
     const labelFor=p=>`${set.title}, problem ${p.no}: ${p.title}`;
     const existingFor=p=>(subject.mistakes||[]).find(m=>bsaMistakeMatch(m,{question:labelFor(p),topicId:set.topicId||null,sourceProblemId:p.id}));
     if(!p)return h("div",{className:"panel ps-written-drill"},"This set has no problems yet.",h("button",{className:"btn",onClick:onExit},"Back to set"));
-    const answer=drafts[p.id]||"";
+    const work={mode:bsa39Mode(p),...(drafts[p.id]||{})};
+    const answer=bsa39Text(work);
     const checked=!!revealed[p.id];
     const expected=psPlain(p.answer||"").trim();
     const single=/^(?:₱|PHP\s*)?\s*[-(]?\s*[\d,]+(?:\.\d+)?\s*\)?\s*$/i;
     const num=t=>{const v=t.replace(/PHP|₱|,/gi,"").trim();return v.startsWith("(")&&v.endsWith(")")?-Number(v.slice(1,-1)):Number(v);};
     const numeric=single.test(answer.trim())&&single.test(expected);
+    const keyCheck=bsa39KeyCheck(p,work);
     const matches=numeric&&Math.abs(num(answer)-num(expected))<=0.005;
     const next=()=>{setEditingNote(null);if(pos<problems.length-1)setPos(v=>v+1);else onExit();};
     const toggleRandom=()=>{
@@ -5460,11 +5540,22 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       setEditingNote(null);
     };
     const markMiss=()=>{
-      if(!marked[p.id])onMark(p.id,"miss");
+      // One mutually exclusive judgment per attempt. Notes may be reopened,
+      // but no second outcome can be recorded until the learner chooses Change rating.
+      if(marked[p.id])return;
+      onMark(p.id,"miss",true);
       setMarked(v=>({...v,[p.id]:"miss"}));
       startMistakeEditor();
     };
-    const markGot=()=>{if(!marked[p.id])onMark(p.id,"got");setMarked(v=>({...v,[p.id]:"got"}));};
+    const markGot=()=>{
+      if(marked[p.id])return;
+      onMark(p.id,"got",true);
+      setMarked(v=>({...v,[p.id]:"got"}));
+    };
+    const changeRating=()=>{
+      setMarked(v=>{const next={...v};delete next[p.id];return next});
+      setEditingNote(null);
+    };
     const note=notes[p.id]||{};
     const checklist=checks[p.id]||{};
     return h("div",{className:"ps-written-drill panel bsa-v157-drill"},
@@ -5482,16 +5573,18 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         (p.req||[]).length>0&&h("div",{className:"ps-req"},h("strong",null,"Required"),h("ol",null,p.req.map((r,i)=>h("li",{key:i},psInline(r)))))),
       !checked&&h("section",{className:"bsa-v157-draft"},
         h("div",{className:"bsa-v157-step"},"02 · YOUR ATTEMPT"),
-        h("label",{className:"ps-written-label",htmlFor:"ps-written-entry"},"Type your answer, computation, or journal entry"),
-        h("textarea",{id:"ps-written-entry",rows:7,value:answer,onChange:e=>setDrafts(v=>({...v,[p.id]:e.target.value})),placeholder:"Work it out first. Show your computations or journal entries here…"}),
+        h(BSA39AnswerEditor,{p,work,onChange:value=>{setDrafts(v=>({...v,[p.id]:value}));bsa39Save(subject.id,set.id,p.id,value);}}),
+        h('div',{className:'bsa39-hints'},h('button',{type:'button',className:'btn ghost',onClick:()=>setHintLevel(v=>({...v,[p.id]:Math.min(2,(v[p.id]||0)+1)}))},(hintLevel[p.id]||0)===0?'Need a hint?':(hintLevel[p.id]||0)===1?'Show method hint':'Hints shown'),
+          (hintLevel[p.id]||0)>0&&h('p',null,'First identify the accounting concept and the exact requirements before calculating.'),
+          (hintLevel[p.id]||0)>1&&h('p',null,p.approach||p.labHint||'Break the question into smaller steps, check the accounts or assumptions, and confirm every required part.'))),
         h("div",{className:"bsa-v157-actions"},
           h("span",{className:"muted small"},"Your answer stays on this device while the drill is open."),
           h("button",{className:"btn primary",disabled:!answer.trim(),onClick:()=>setRevealed(v=>({...v,[p.id]:true}))},"Compare with solution →"))),
       checked&&h("section",{className:"bsa-v157-results"},
         h("div",{className:"bsa-v157-step"},"02 · COMPARE THE ANSWERS"),
         h("div",{className:`bsa-v157-result-status ${numeric?(matches?"is-match":"is-different"):"is-manual"}`},
-          h("strong",null,numeric?(matches?"✓ Your numerical answer matches":"↗ Your numerical answer differs"):"Compare each part of your solution"),
-          h("span",null,numeric?"Check classifications, reasoning, and supporting calculations too.":"Multi-part answers and journal entries require self-checking; the dashboard does not pretend to grade them automatically.")),
+          h("strong",null,keyCheck.correct===true?'✓ Matched the structured key':keyCheck.correct===false?'Review your result':'Compare your work and reasoning'),
+          h("span",null,keyCheck.message)),
         h("div",{className:"bsa-v157-compare"},
           h("div",{className:"bsa-v157-compare-panel"},
             h("div",{className:"bsa-v157-compare-label"},"YOUR WORK"),
@@ -5506,11 +5599,16 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         h("div",{className:"bsa-v157-selfcheck"},h("strong",null,"My comparison checklist"),
           [ ["amount","Amounts and calculations"],["classification","Classification / accounting treatment"],["reasoning","Reasoning and required parts"] ].map(([key,title])=>
             h("label",{key},h("input",{type:"checkbox",checked:!!checklist[key],onChange:e=>setChecks(v=>({...v,[p.id]:{...(v[p.id]||{}),[key]:e.target.checked}}))}),title))),
-        h("div",{className:"bsa-v157-mark-row"},
-          h("button",{className:"btn bsa-v157-miss",onClick:markMiss},marked[p.id]==="miss"?"✎ Edit my mistake notes":"Missed it · add notes"),
-          h("button",{className:"btn primary",disabled:!!marked[p.id],onClick:markGot},marked[p.id]==="got"?"✓ Marked as got it":"✓ Got it"),
-          h("button",{className:"btn",onClick:next},pos===problems.length-1?"Finish drill":"Next problem →")),
-        marked[p.id]&&h("p",{className:"bsa-v157-saved-state"},marked[p.id]==="miss"?"Marked for review. Add or edit your Mistake Log notes below.":"Marked as understood. You can continue to the next problem."),
+        h("div",{className:"bsa-v157-mark-row",role:"group","aria-label":"Choose one self-assessment outcome"},
+          h("button",{type:"button",className:"btn bsa-v157-miss",disabled:!!marked[p.id],"aria-pressed":marked[p.id]==="miss",onClick:markMiss},"↻ I need to review this"),
+          h("button",{type:"button",className:"btn primary",disabled:!!marked[p.id],"aria-pressed":marked[p.id]==="got",onClick:markGot},"✓ I understood it"),
+          h("button",{type:"button",className:"btn",onClick:next},pos===problems.length-1?"Finish drill":"Next problem →")),
+        marked[p.id]&&h("div",{className:"bsa-v157-saved-state bsa39-rating-state",role:"status"},
+          h("strong",null,marked[p.id]==="miss"?"Needs review · saved":"Understood · saved"),
+          h("span",null,marked[p.id]==="miss"?"This problem was placed into review. You can edit its mistake notes below.":"This is a self-assessed result, not a verified grade."),
+          h("button",{type:"button",className:"btn ghost",onClick:changeRating},"Change rating"),
+          marked[p.id]==="miss"&&editingNote!==p.id&&h("button",{type:"button",className:"btn ghost",onClick:startMistakeEditor},"Edit mistake notes")),
+        !marked[p.id]&&h("p",{className:"muted small"},"Choose one result, or select Next to skip without marking the question mastered."),
         editingNote===p.id&&h("div",{className:"bsa-v157-notes"},
           h("div",{className:"bsa-v157-step"},"03 · LEARN FROM THE MISTAKE"),
           h("h3",null,"Edit this Mistake Log entry"),
@@ -5518,7 +5616,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
           h("label",null,"My answer / what I did",h("textarea",{rows:3,value:note.wrong||"",onChange:e=>setNotes(v=>({...v,[p.id]:{...v[p.id],wrong:e.target.value}}))})),
           h("label",null,"Correct answer / treatment",h("textarea",{rows:3,value:note.correct||"",onChange:e=>setNotes(v=>({...v,[p.id]:{...v[p.id],correct:e.target.value}}))})),
           h("label",null,"Why I missed it / rule to remember",h("textarea",{rows:3,value:note.trap||"",onChange:e=>setNotes(v=>({...v,[p.id]:{...v[p.id],trap:e.target.value}}))})),
-          h("div",{className:"bsa-v157-actions"},h("button",{className:"btn",onClick:()=>setEditingNote(null)},"Close without saving notes"),h("button",{className:"btn primary",onClick:saveMistake},"Save Mistake Log notes")))));
+          h("div",{className:"bsa-v157-actions"},h("button",{className:"btn",onClick:()=>setEditingNote(null)},"Close without saving notes"),h("button",{className:"btn primary",onClick:saveMistake},"Save Mistake Log notes"))));
   }
 
 
@@ -6070,6 +6168,36 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       (textC < 4.5 || accC < 3) && h("p", { className: "error small" }, textC < 4.5 ? "Text may be hard to read on this background. Try a lighter or darker text color." : "The main accent is hard to see on your card color. Try a stronger accent.")
     );
   }
+
+  // Themes change the presentation, never the learning data or Appearance palette.
+  const BSA41_DESIGNS = [
+    {id:"studio",name:"Studio",desc:"Rich cards, layered hero and lively motion",style:"studio"},
+    {id:"notebook",name:"Notebook",desc:"Page-like cards, ruled details and a study journal layout",style:"notebook"},
+    {id:"glass",name:"Glass",desc:"Floating panels, translucency and soft depth",style:"glass"},
+    {id:"editorial",name:"Editorial",desc:"Bold type, strong shapes and an organized grid",style:"editorial"},
+    {id:"focus",name:"Focus",desc:"Quiet precision and a compact study-first layout",style:"focus"}
+  ];
+  function BSA41ThemesModal({settings,setSettings,onClose}) {
+    const chosen=BSA41_DESIGNS.find(x=>x.id===settings.presentationTheme)||BSA41_DESIGNS[0];
+    return h(Modal,{title:"Themes",onClose,wide:true},
+      h('div',{className:'bsa41-themes-intro'},
+        h('h3',null,'Choose how your desk looks'),
+        h('p',{className:'muted'},'Themes change the design and motion. Appearance changes colors and light/dark palettes. Your subjects, progress and navigation stay the same.')),
+      h('div',{className:'bsa41-themes-grid',role:'group','aria-label':'Dashboard design themes'},
+        BSA41_DESIGNS.map(x=>h('button',{key:x.id,type:'button',
+          className:'bsa41-theme-card bsa41-preview-'+x.style+(x.id===chosen.id?' selected':''),
+          onClick:()=>setSettings({...settings,presentationTheme:x.id}),
+          'aria-pressed':x.id===chosen.id},
+          h('span',{className:'bsa41-theme-mini','aria-hidden':'true'},
+            h('i',{className:'bsa41-mini-rail'}),h('i',{className:'bsa41-mini-hero'}),
+            h('i',{className:'bsa41-mini-card one'}),h('i',{className:'bsa41-mini-card two'}),
+            h('i',{className:'bsa41-mini-accent'})),
+          h('span',{className:'bsa41-theme-label'},h('strong',null,x.name),x.id===chosen.id&&h('span',{className:'bsa41-theme-chosen'},'✓ Selected')),
+          h('span',{className:'muted small'},x.desc)))),
+      h('div',{className:'bsa41-theme-foot'},
+        h('span',{className:'muted small'},'Selected: '+chosen.name+' · Changes apply immediately and work with your current Appearance.'),
+        h('button',{className:'btn primary',onClick:onClose},'Done')));
+  }
   function AppearanceModal({ settings, setSettings, onClose }) {
     const set = (k, v) => setSettings({ ...settings, [k]: v });
     const tile = (s) => {
@@ -6087,10 +6215,10 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const groups = [["Dark", SKINS.filter((s) => s.id !== "custom" && relLum(PAL[s.id][0]) < 0.3)], ["Light", SKINS.filter((s) => s.id !== "custom" && relLum(PAL[s.id][0]) >= 0.3)]];
     return h(
       Modal,
-      { title: "Appearance", onClose, wide: true },
+      { title: "Appearance · Colors", onClose, wide: true },
       h("div", { className: "theme-group" },
         h("span", { className: "field-label" }, "Sidebar favorites — choose exactly 7"),
-        h("p", { className: "muted small" }, "Only these seven themes appear in the sidebar. All themes remain available below."),
+        h("p", { className: "muted small" }, "These are favorite color palettes. Select a design in Themes to change the layout."),
         h("div", { className: "theme-grid" }, SKINS.map(s => {
           const favs = Array.isArray(settings.favoriteSkins) ? settings.favoriteSkins : DEFAULT_SETTINGS.favoriteSkins;
           const checked = favs.includes(s.id);
@@ -6100,7 +6228,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
           }}), h("span", null, s.name));
         }))
       ),
-      groups.map(([g, list]) => h("div", { key: g, className: "theme-group" }, h("span", { className: "field-label" }, `${g} themes`), h("div", { className: "theme-grid" }, list.map(tile)))),
+      groups.map(([g, list]) => h("div", { key: g, className: "theme-group" }, h("span", { className: "field-label" }, `${g} color palettes`), h("div", { className: "theme-grid" }, list.map(tile)))),
       h("div", { className: "theme-group" }, h("span", { className: "field-label" }, "Make your own"), h("div", { className: "theme-grid" }, tile(SKINS.find((s) => s.id === "custom")))),
       settings.skin === "custom" && h(CustomThemeEditor, { settings, setSettings }),
       h("hr", null),
@@ -6155,7 +6283,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         h(Field, { label: "Long break" }, h("select", { value: settings.pomoLong || 15, onChange: (e) => set("pomoLong", Number(e.target.value)) }, [10, 15, 20, 30].map((n) => h("option", { key: n, value: n }, `${n} min`))))
       ),
       h("hr", null),
-      h("button", { className: "btn ghost", onClick: () => setSettings({ ...DEFAULT_SETTINGS, custom: settings.custom, newPerDay: settings.newPerDay, remindAt: settings.remindAt }) }, "Reset appearance")
+      h("button", { className: "btn ghost", onClick: () => setSettings({ ...DEFAULT_SETTINGS, presentationTheme: settings.presentationTheme || "studio", custom: settings.custom, newPerDay: settings.newPerDay, remindAt: settings.remindAt }) }, "Reset appearance")
     );
   }
   /* =====================================================================
@@ -9255,6 +9383,7 @@ ${c.kindHint}` }
       solution: psS(psPick(x, ["solution", "howToSolve", "how_to_solve", "steps", "solutionSteps", "working", "workings", "explanation", "computation"])),
       trap: psS(psPick(x, ["trap", "commonMistake", "common_mistake", "pitfall", "watchOut", "tip"])),
       source: psPlain(psPick(x, ["source", "page", "reference"])),
+      answerFormat: BSA39_MODES.some(m=>m[0]===x.answerFormat)?x.answerFormat:'',
       st: ""
     };
   }
@@ -9997,6 +10126,98 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
     const cut=clean.slice(0,max).replace(/\s+\S*$/,'').trim();
     return (cut||clean.slice(0,max))+'… (excerpt; full text is in the complete lecture)';
   }
+
+  const BSA41_HIGHLIGHT_TYPES={key:{label:'Key concept',color:'yellow'},example:{label:'Example',color:'blue'},confusing:{label:'Need to revisit',color:'pink'},rule:{label:'Important rule',color:'green'}};
+  function bsa41LectureHighlights(subjectId,sourceId){return (bsa181Read().highlights||[]).filter(x=>x.subjectId===subjectId&&x.tab==='lectures'&&x.sourceId===sourceId)}
+  function bsa41UpdateHighlight(id,patch){const d=bsa181Read();let edited=false;d.highlights=d.highlights.map(x=>{if(x.id!==id)return x;edited=true;return {...x,...patch,modified:Date.now()}});return edited&&bsa181Write(d)}
+
+  function bsa41ExportNotes(subjectId){
+    const records=(bsa181Read().highlights||[]).filter(x=>x.subjectId===subjectId);
+    const data={format:'bsa-study-highlights-v1',exportedAt:new Date().toISOString(),highlights:records};
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+    a.href=url;a.download='bsa-study-highlights-'+new Date().toISOString().slice(0,10)+'.json';a.click();
+    setTimeout(()=>URL.revokeObjectURL(url),1500);
+    return records.length;
+  }
+  async function bsa41ImportNotes(file,subjectId){
+    if(!file||file.size>2*1024*1024)throw Error('Choose a highlights backup smaller than 2 MB.');
+    const data=JSON.parse(await file.text());
+    if(data.format!=='bsa-study-highlights-v1'||!Array.isArray(data.highlights))throw Error('Not a supported Highlights backup.');
+    const doc=bsa181Read(),existing=new Set((doc.highlights||[]).map(x=>x.id)),seen=new Set();let added=0;
+    for(const x of data.highlights.slice(0,1500)){
+      if(!x||typeof x!=='object'||typeof x.text!=='string'||!x.text.trim()||x.text.length>1800||typeof x.sourceId!=='string'||!x.sourceId||x.subjectId!==subjectId||x.tab!=='lectures')continue;
+      const fingerprint=[x.subjectId,x.sourceId,x.sectionId||'',bsa181Text(x.text)].join('|');
+      if(seen.has(fingerprint)||existing.has(x.id))continue;seen.add(fingerprint);
+      if(doc.highlights.some(old=>old.subjectId===x.subjectId&&old.sourceId===x.sourceId&&old.sectionId===x.sectionId&&old.text===x.text))continue;
+      if(doc.highlights.length>=1500)break;
+      doc.highlights.push({id:typeof x.id==='string'&&x.id.length<90?x.id:uid('highlight'),subjectId,sourceId:x.sourceId,sectionId:typeof x.sectionId==='string'?x.sectionId:'',tab:'lectures',page:'Lecture',text:x.text,
+        note:typeof x.note==='string'?x.note.slice(0,4000):'',kind:BSA41_HIGHLIGHT_TYPES[x.kind]?x.kind:'key',before:typeof x.before==='string'?x.before.slice(-48):'',after:typeof x.after==='string'?x.after.slice(0,48):'',created:Number.isFinite(x.created)?x.created:Date.now()});
+      added++;if(x.id)existing.add(x.id);
+    }
+    if(added&&!bsa181Write(doc))throw Error('Local storage is full. No import was saved.');
+    return added;
+  }
+  function bsa41Locate(text,needle,before='',after=''){
+    let hits=[],at=-1;while((at=text.indexOf(needle,at+1))!==-1){hits.push(at);if(hits.length>40)break}
+    if(hits.length===1)return hits[0];
+    if(!hits.length)return -1;
+    // Without reliable context an ambiguous match is never annotated in the wrong place.
+    if(!before&&!after)return -2;
+    const norm=x=>bsa181Text(x).toLowerCase();
+    const matches=hits.filter(i=>(!before||norm(text.slice(Math.max(0,i-100),i)).endsWith(norm(before)))&&(!after||norm(text.slice(i+needle.length,i+needle.length+100)).startsWith(norm(after))));
+    return matches.length===1?matches[0]:-2;
+  }
+  function bsa41DecorateHtml(html,records){
+    if(!records.length||typeof document==='undefined')return {html,unplaced:[]};
+    const root=document.createElement('div');root.innerHTML=html;
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+    let node,raw='',map=[],prevSpace=false;
+    while((node=walker.nextNode())){
+      const tag=node.parentElement&&node.parentElement.tagName;
+      if(['SCRIPT','STYLE','CODE','PRE'].includes(tag))continue;
+      const value=node.nodeValue||'';
+      for(let i=0;i<value.length;i++){
+        const ch=value[i],space=/\s/.test(ch);
+        if(space){if(!raw.length||prevSpace)continue;raw+=' ';map.push({node,start:i,end:i+1});prevSpace=true}
+        else{raw+=ch;map.push({node,start:i,end:i+1});prevSpace=false}
+      }
+    }
+    const placements=[],unplaced=[];
+    for(const record of [...records].sort((a,b)=>(a.created||0)-(b.created||0))){
+      const needle=bsa181Text(record.text||'');
+      if(!needle){unplaced.push(record.id);continue}
+      const at=bsa41Locate(raw,needle,record.before||'',record.after||'');
+      if(at<0||placements.some(p=>at<p.end&&at+needle.length>p.start)){unplaced.push(record.id);continue}
+      placements.push({start:at,end:at+needle.length,record});
+    }
+    const perNode=new Map();
+    for(const p of placements){for(let i=p.start;i<p.end;i++){
+      const pos=map[i];if(!pos)continue;
+      const pieces=perNode.get(pos.node)||[];
+      const last=pieces[pieces.length-1];
+      if(last&&last.record===p.record&&last.end===pos.start)last.end=pos.end;
+      else pieces.push({start:pos.start,end:pos.end,record:p.record});
+      perNode.set(pos.node,pieces);
+    }}
+    for(const [textNode,pieces] of perNode){const value=textNode.nodeValue||'',frag=document.createDocumentFragment();let cursor=0;
+      for(const piece of pieces.sort((a,b)=>a.start-b.start)){
+        if(piece.start>cursor)frag.appendChild(document.createTextNode(value.slice(cursor,piece.start)));
+        const mark=document.createElement('mark');mark.className='bsa41-mark';mark.dataset.highlightId=piece.record.id;
+        mark.dataset.highlightKind=BSA41_HIGHLIGHT_TYPES[piece.record.kind]?piece.record.kind:'key';
+        mark.setAttribute('role','button');mark.setAttribute('tabindex','0');mark.setAttribute('aria-label','Open highlight note');
+        mark.textContent=value.slice(piece.start,piece.end);frag.appendChild(mark);cursor=piece.end;
+      }
+      if(cursor<value.length)frag.appendChild(document.createTextNode(value.slice(cursor)));
+      textNode.parentNode.replaceChild(frag,textNode);
+    }
+    return {html:root.innerHTML,unplaced};
+  }
+  function BSA41MarkedText({text,highlights,onOpen}){
+    const result=useMemo(()=>bsa41DecorateHtml(psMdHtml(text),highlights),[text,highlights]);
+    const activate=e=>{const el=e.target.closest&&e.target.closest('.bsa41-mark');if(el)onOpen(el.dataset.highlightId)};
+    return h('div',{className:'bsa41-annotated',onClick:activate,onKeyDown:e=>{if(e.key==='Enter'||e.key===' '){if(e.target.matches('.bsa41-mark')){e.preventDefault();activate(e)}}},
+      dangerouslySetInnerHTML:{__html:result.html}});
+  }
   function LxReader({ subject, l, update, toast, go, onBack, onEdit, jumpTo }) {
     const sourceView = useMemo(() => lxSourcePresentation(l), [l]);
     useEffect(()=>{bsa181Recent("lectures",{open:l.id},subject.id,"Lecture · "+l.title)},[l.id,subject.id]);
@@ -10011,6 +10232,30 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
     const [readerMode,setReaderMode]=useState('read');
     const [recallText,setRecallText]=useState({});
     const [pdfStyle,setPdfStyle]=useState('complete');
+    const [highlightRevision,setHighlightRevision]=useState(0);
+    const [highlightVisible,setHighlightVisible]=useState(()=>{try{return localStorage.getItem('bsa41_highlight_visible')!=='false'}catch(_){return true}});
+    const [highlightFilter,setHighlightFilter]=useState('all');
+    const [highlightQuery,setHighlightQuery]=useState('');
+    const [highlightPanel,setHighlightPanel]=useState(false);
+    const [selectedHighlight,setSelectedHighlight]=useState('');
+    const [highlightNote,setHighlightNote]=useState('');
+    useEffect(()=>{const f=()=>setHighlightRevision(v=>v+1);window.addEventListener('bsa181-changed',f);return()=>window.removeEventListener('bsa181-changed',f)},[]);
+    const lectureHighlights=useMemo(()=>bsa41LectureHighlights(subject.id,l.id),[subject.id,l.id,highlightRevision]);
+    const openHighlight=id=>{const item=lectureHighlights.find(x=>x.id===id);if(!item)return;setSelectedHighlight(id);setHighlightNote(item.note||'');setHighlightPanel(true)};
+    const visibleHighlights=lectureHighlights.filter(x=>(highlightFilter==='all'||highlightFilter==='with-notes'&&!!(x.note||'').trim()||highlightFilter===x.kind)&&(!highlightQuery||bsa181Text(x.text+' '+(x.note||'')).toLowerCase().includes(highlightQuery.toLowerCase())));
+    const highlightsBySection=useMemo(()=>{
+      const exact=new Map(),unlocated=[];
+      for(const x of lectureHighlights){if(x.sectionId){const a=exact.get(x.sectionId)||[];a.push(x);exact.set(x.sectionId,a)}else unlocated.push(x)}
+      const out=new Map();sourceView.sections.forEach((sec,i)=>out.set(sec.id||String(i),[...(exact.get(sec.id||String(i))||[]),...unlocated]));return out;
+    },[lectureHighlights,sourceView]);
+    const selectedHighlightItem=lectureHighlights.find(x=>x.id===selectedHighlight);
+    const jumpHighlight=item=>{const sec=document.getElementById(item.sectionId||'');const mark=[...document.querySelectorAll('.bsa41-mark')].find(x=>x.dataset.highlightId===item.id);const el=mark||sec;if(el)el.scrollIntoView({behavior:window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'center'});else toast('The lecture changed. This highlight needs its source location checked.');openHighlight(item.id)};
+    const createHighlightCard=item=>{
+      const q='Explain in your own words: '+bsa181Text(item.text).slice(0,130);
+      if((subject.cards||[]).some(c=>norm(c.q)===norm(q))){toast('A flashcard for this passage already exists.');return}
+      update(s=>{s.cards=s.cards||[];s.cards.push({id:uid('c'),topicId:l.topicId||null,q,a:item.note||item.text,tip:'Lecture highlight · '+l.title,conf:null})});
+      toast('Review flashcard created from this highlight');
+    };
     const connected=bsaTopicConnections(subject,l.topicId);
     const sectionDone=Array.isArray(l.reviewedSections)?l.reviewedSections:[];
     const progress=sourceView.sections.length?Math.round(100*sourceView.sections.filter((v,i)=>sectionDone.includes(v.id||String(i))).length/sourceView.sections.length):0;
@@ -10046,7 +10291,7 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
     const t = l.topicId && subject.topics.find((x) => x.id === l.topicId);
     return h(
       "section",
-      { className: "view lx-reader bsa-lecture-polished" },
+      { className: "view lx-reader bsa-lecture-polished", "data-lecture-id":l.id },
       h("button", { className: "link-btn back-link", onClick: onBack }, "‹ All lectures"),
       h('div',{className:'bsa-pdf-controls'},
         h('label',{className:'field-label',htmlFor:'lecture-pdf-style'},'Print format'),
@@ -10059,6 +10304,39 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
         h('div',{className:'bsa-lecture-progress'},h('strong',null,'Section review'),h('span',{className:'muted small'},sectionDone.length+' / '+sourceView.sections.length+' sections checked'),h('div',{className:'bsa-meter'},h('span',{style:{width:progress+'%'}}))),
         h('div',{className:'bsa-mode-pills'},h('button',{className:'btn'+(readerMode==='read'?' primary':''),onClick:()=>setReaderMode('read')},'Read'),h('button',{className:'btn'+(readerMode==='study'?' primary':''),onClick:()=>setReaderMode('study')},'Study / recall')),
         h('p',{className:'muted small'},'Section checks mean reviewed—not mastered. Quiz and practice evidence remains independent.')),
+      h('section',{className:'bsa41-highlight-toolbar panel','aria-label':'Lecture highlight controls'},
+        h('div',{className:'bsa41-highlight-toolbar-left'},
+          h('label',{className:'bsa41-highlight-switch'},h('input',{type:'checkbox',checked:highlightVisible,onChange:e=>{const yes=e.target.checked;setHighlightVisible(yes);try{localStorage.setItem('bsa41_highlight_visible',String(yes))}catch(_){}}}),h('span',null,'Show highlighted text')),
+          h('span',{className:'muted small'},lectureHighlights.length+' saved · Tap a highlighted passage to read your note')),
+        h('button',{className:'btn',onClick:()=>setHighlightPanel(v=>!v),'aria-expanded':highlightPanel},highlightPanel?'Hide highlights':'Highlights & notes')),
+      highlightPanel&&h('section',{className:'bsa41-highlight-panel panel','aria-label':'Lecture highlights and notes'},
+        h('div',{className:'bsa41-panel-head'},h('div',null,h('h3',null,'Highlights & Notes'),h('p',{className:'muted small'},'Your saved passages from this lecture. Tap one to jump back to its source.')),
+          h('button',{className:'btn ghost',onClick:()=>{setHighlightPanel(false);setSelectedHighlight('')}},'Close')),
+        h('div',{className:'bsa41-highlight-filters'},
+          h('input',{type:'search',value:highlightQuery,onChange:e=>setHighlightQuery(e.target.value),placeholder:'Find highlighted text or notes','aria-label':'Search lecture highlights'}),
+          h('select',{value:highlightFilter,onChange:e=>setHighlightFilter(e.target.value),'aria-label':'Filter highlights'},
+            h('option',{value:'all'},'All highlights'),...Object.entries(BSA41_HIGHLIGHT_TYPES).map(([id,x])=>h('option',{key:id,value:id},x.label)),h('option',{value:'with-notes'},'With notes'))),
+        visibleHighlights.length?h('div',{className:'bsa41-highlight-list'},visibleHighlights.map(item=>h('article',{key:item.id,className:'bsa41-highlight-row'},
+          h('button',{className:'bsa41-highlight-jump',onClick:()=>jumpHighlight(item)},
+            h('span',{className:'bsa41-kind bsa41-kind-'+(item.kind||'key')},(BSA41_HIGHLIGHT_TYPES[item.kind]||BSA41_HIGHLIGHT_TYPES.key).label),
+            h('span',null,item.text),item.note&&h('small',null,'📝 '+item.note.slice(0,120)),h('small',{className:'muted'},'Jump to passage ↗')),
+          h('button',{className:'btn ghost',onClick:()=>openHighlight(item.id),'aria-label':'Open note for highlight'},'Open note')))):
+          h('p',{className:'muted small'},'No highlights match. Select text in a lecture, choose a label, then Save highlight.')),
+      highlightPanel&&h('details',{className:'bsa41-highlights-backup'},
+        h('summary',null,'Back up or restore highlight notes'),
+        h('p',{className:'muted small'},'These notes stay in this browser and are not part of your normal study-data JSON backup. Save this separate file for long-term use.'),
+        h('div',{className:'bsa41-note-actions'},
+          h('button',{className:'btn',onClick:()=>toast('Exported '+bsa41ExportNotes(subject.id)+' highlight notes')},'Export highlights'),
+          h('label',{className:'btn bsa41-import-button'},'Import highlights',h('input',{type:'file',accept:'.json,application/json',onChange:async e=>{const file=e.target.files&&e.target.files[0];if(!file)return;try{toast('Restored '+await bsa41ImportNotes(file,subject.id)+' new highlights')}catch(err){toast(err.message||'Could not import highlights')}e.target.value=''}})))),
+      selectedHighlightItem&&h('div',{className:'bsa41-note-editor',role:'region','aria-label':'Selected highlight note'},
+        h('div',{className:'bsa41-note-head'},h('strong',null,'Your note'),h('button',{className:'btn ghost',onClick:()=>setSelectedHighlight('')},'Close note')),
+        h('blockquote',null,selectedHighlightItem.text),
+        h('label',{className:'field-label',htmlFor:'bsa41-note-input'},'My explanation or reminder'),
+        h('textarea',{id:'bsa41-note-input',rows:4,maxLength:4000,value:highlightNote,onChange:e=>setHighlightNote(e.target.value),placeholder:'Why does this matter? How would I explain it months later?'}),
+        h('div',{className:'bsa41-note-actions'},
+          h('button',{className:'btn primary',onClick:()=>toast(bsa41UpdateHighlight(selectedHighlight,{note:highlightNote})?'Note saved on this device':'Could not save note')},'Save note'),
+          h('button',{className:'btn',onClick:()=>createHighlightCard(selectedHighlightItem)},'Make review card'),
+          h('button',{className:'btn ghost',onClick:()=>{if(bsa181Remove('highlights',selectedHighlight)){setSelectedHighlight('');toast('Highlight removed · available in Undo')}}},'Remove highlight'))),
       l.topicId&&h('section',{className:'bsa-topic-hub panel','aria-label':'Connected topic evidence'},
          h('div',{className:'bsa-topic-hub-head'},h('div',null,h('span',{className:'eyebrow'},'CONNECTED TOPIC'),h('h2',null,'Topic mastery · '+(t?t.title:l.title))),h('span',{className:'muted small'},'Evidence, not an exam prediction')),
          h('div',{className:'bsa-hub-grid'},[
@@ -10071,7 +10349,9 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
         h('div',{className:'bsa-sec-topline'},h("div", { className: "lx-sec-count" }, `SECTION ${String(i+1).padStart(2,"0")} / ${String(sourceView.sections.length).padStart(2,"0")}`),
         h('button',{className:'btn'+(sectionDone.includes(s.id||String(i))?' primary':''),onClick:()=>{const key=s.id||String(i),wasReviewed=sectionDone.includes(key);set(x=>{x.reviewedSections=Array.isArray(x.reviewedSections)?x.reviewedSections:[];x.reviewedSections=x.reviewedSections.includes(key)?x.reviewedSections.filter(z=>z!==key):[...x.reviewedSections,key];});if(!wasReviewed)grantActivityXp('lecture',subject.id+':'+l.id+':'+key,5,40);},'aria-pressed':sectionDone.includes(s.id||String(i))},sectionDone.includes(s.id||String(i))?'✓ Reviewed':'Mark reviewed')),
         s.h && h("h2", null, s.h),
-        readerMode==='read'?h(PsMd, { text: s.body }):h('details',{className:'bsa-study-reveal'},h('summary',null,'Reveal full explanation'),h(PsMd,{text:s.body})),
+        readerMode==='read'?(highlightVisible&&(highlightsBySection.get(s.id||String(i))||[]).length?
+          h(BSA41MarkedText,{text:s.body,highlights:highlightsBySection.get(s.id||String(i)),onOpen:openHighlight}):h(PsMd,{text:s.body})):
+          h('details',{className:'bsa-study-reveal'},h('summary',null,'Reveal full explanation'),h(PsMd,{text:s.body})),
         h("div", { className: "lx-recall-pause bsa-recall-work" },
           h('strong',null,'Pause & recall'),h("p", null, "Explain the main idea in your own words. What is the decision rule, and when does it apply?"),
           readerMode==='study'&&h('textarea',{rows:3,placeholder:'Write your explanation here (not graded or saved)',value:recallText[s.id||String(i)]||'',onChange:e=>setRecallText(v=>({...v,[s.id||String(i)]:e.target.value}))}),
@@ -10216,16 +10496,19 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
     const visibleProblems = set.problems.filter((p) => filter === "all" || (filter === "todo" ? !p.st : p.st === filter));
     const printVisible = (withKey) => psPrint(set, withKey, visibleProblems);
 
-    const mark = (pid, st) => {
-      // A set earns XP once, when every problem has a recorded attempt.
-      // Re-marking and repeating the set cannot farm additional XP.
-      const allMarked=set.problems.length>=2 && set.problems.every(p=>p.id===pid?(p.st===st?false:true):!!p.st);
+    const mark = (pid, st, explicit=false) => {
+      // Structured drills record an explicit single outcome; the older list
+      // retains its original click-to-toggle behavior for existing users.
+      // Neither path grants additional XP for repeatedly marking the same set.
+      const current=set.problems.find(p=>p.id===pid);
+      if(explicit&&current?.st===st)return;
+      const allMarked=set.problems.length>=2 && set.problems.every(p=>p.id===pid?(explicit?(!p.st):p.st!==st):!!p.st);
       if(allMarked)grantActivityXp('problemset',subject.id+':'+set.id,30,90);
       update((s) => {
       const x = (s.psets || []).find((y) => y.id === set.id);
       const p = x && x.problems.find((y) => y.id === pid);
       if (!p) return;
-      const off = p.st === st;
+      const off = !explicit && p.st === st;
       p.st = off ? "" : st;
       p.at = today();
       // Marking a miss schedules it back into tomorrow's review.
@@ -10246,7 +10529,7 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
       toast("Mistake saved (duplicates skipped)");
     };
     const toggleAll = () => { setReveal((v) => { setLocalPref("psRevealAll", !v); return !v; }); };
-    if(writtenDrill)return h("section",{className:"view ps-set"},h(PsWrittenDrill,{set,subject,update,onMark:mark,onExit:()=>setWrittenDrill(false)}));
+    if(writtenDrill)return h("section",{className:"view ps-set"},h(PsWrittenDrill,{set,subject,update,onMark:mark,onExit:()=>setWrittenDrill(false),go}));
     return h(
       "section",
       { className: "view ps-set" },
@@ -10254,16 +10537,16 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
       selectedOnly&&h("div",{className:"bsa3-focused-problem"},h("strong",null,"Showing the problem you selected in Study Library"),h("button",{className:"btn",onClick:()=>setSelectedOnly(false)},"Show all problems in set")),
       h("header", { className: "lx-head" }, h("h1", { className: "page-title" }, set.title), h("p", { className: "muted" }, set.topicId && h("span", { className: "std" }, topicName(subject, set.topicId)), " ", [!set.topicId && set.topicText, set.source].filter(Boolean).join(". "))),
       set.intro && h(PsMd, { text: set.intro, className: "lx-summary" }),
-      h("div", { className: "ps-tools" }, h("div", { className: "seg-filter", role: "group", "aria-label": "Show problems" }, [["all", "All", t.n], ["todo", "Not tried", t.todo], ["miss", "Missed", t.miss], ["got", "Got it", t.got]].map(([k, l, n]) => h("button", { key: k, className: filter === k ? "on" : "", "aria-pressed": filter === k, onClick: () => setFilter(k) }, l, " ", h("span", { className: "n" }, n)))), h("label", { className: "ps-switch" }, h("input", { type: "checkbox", checked: reveal, onChange: toggleAll }), " Show all solutions"), h("span", { className: "spacer" }), h("button",{className:"btn primary",onClick:()=>setWrittenDrill(true)},"Start answer-entry drill"), h("button", { className: "btn", onClick: () => setExportOpen(true) }, "Customize PDF"), h("button", { className: "btn ghost", onClick: () => psPrint(set, false) }, "Print problems"), h("button", { className: "btn ghost", onClick: () => psPrint(set, true) }, "Print with answer key"), h("button", { className: "btn ghost", disabled: !visibleProblems.length, onClick: () => printVisible(false) }, "Print filtered"), h("button", { className: "btn ghost", disabled: !visibleProblems.length, onClick: () => printVisible(true) }, "Filtered answer key"), h("button", { className: "btn ghost", onClick: () => go("ask", { focus: { kind: "pset", id: set.id } }) }, "Ask about my misses"), h("button", { className: "btn ghost", onClick: () => setMeta(true) }, "Set options")),
+      h("div", { className: "ps-tools" }, h("div", { className: "seg-filter", role: "group", "aria-label": "Show problems" }, [["all", "All", t.n], ["todo", "Not tried", t.todo], ["miss", "Missed", t.miss], ["got", "Got it", t.got]].map(([k, l, n]) => h("button", { key: k, className: filter === k ? "on" : "", "aria-pressed": filter === k, onClick: () => setFilter(k) }, l, " ", h("span", { className: "n" }, n)))), h("label", { className: "ps-switch" }, h("input", { type: "checkbox", checked: reveal, onChange: toggleAll }), " Show all solutions"), h("span", { className: "spacer" }), h("button",{className:"btn primary",onClick:()=>setWrittenDrill(true)},"Practice with structured answers"), h("button", { className: "btn", onClick: () => setExportOpen(true) }, "Customize PDF"), h("button", { className: "btn ghost", onClick: () => psPrint(set, false) }, "Print problems"), h("button", { className: "btn ghost", onClick: () => psPrint(set, true) }, "Print with answer key"), h("button", { className: "btn ghost", disabled: !visibleProblems.length, onClick: () => printVisible(false) }, "Print filtered"), h("button", { className: "btn ghost", disabled: !visibleProblems.length, onClick: () => printVisible(true) }, "Filtered answer key"), h("button", { className: "btn ghost", onClick: () => go("ask", { focus: { kind: "pset", id: set.id } }) }, "Ask about my misses"), h("button", { className: "btn ghost", onClick: () => setMeta(true) }, "Set options")),
       allGroups.length > 1 && allGroups.some(([k]) => k) && h("nav", { className: "lx-toc ps-toc", "aria-label": "Subtopics in this set" }, h("span", { className: "muted small" }, "In this set"), h("ul", null, allGroups.map(([k, list]) => h("li", { key: k || "_" }, h("a", { href: "#", onClick: (e) => { e.preventDefault(); setFilter("all"); setTimeout(() => { const el = document.getElementById(`sub-${norm(k) || "other"}`); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }, 30); } }, k || "Other problems"), h("span", { className: "muted small" }, ` ${list.length}`))))),
-      !groups.length ? h("div", { className: "empty" }, h("p", null, "Nothing here."), h("p", { className: "muted" }, "Pick “All” to see every problem.")) : groups.map(([k, list]) => h("div", { key: k || "_", className: "ps-sub", id: `sub-${norm(k) || "other"}` }, k && h("h2", { className: "ps-sub-h" }, k), list.map((p) => h(PsProblem, { key: p.id, p, revealAll: reveal, onMark: (st) => mark(p.id, st), onLog: () => logMistake(p), onEdit: () => setEdit(p) })))),
+      !groups.length ? h("div", { className: "empty" }, h("p", null, "Nothing here."), h("p", { className: "muted" }, "Pick “All” to see every problem.")) : groups.map(([k, list]) => h("div", { key: k || "_", className: "ps-sub", id: `sub-${norm(k) || "other"}` }, k && h("h2", { className: "ps-sub-h" }, k), list.map((p) => h(PsProblem, { key: p.id, p, revealAll: reveal, onMark: (st) => mark(p.id, st), onLog: () => logMistake(p), onEdit: () => setEdit(p), onAsk:()=>go('ask',{focus:{kind:'problem',id:set.id,problemId:p.id}}) })))),
       h("div", { className: "row-end" }, h("button", { className: "btn", onClick: () => setEdit("new") }, h(Icon, { name: "plus", size: 16 }), " Add a problem"), h("button", { className: "btn", onClick: () => go("nlm", { pid: "pset", topicId: set.topicId || "" }) }, "Generate more questions")),
       exportOpen && h(PsExportCustomizer,{set,onClose:()=>setExportOpen(false)}),
       edit && h(PsProblemEditor, { set, item: edit === "new" ? null : edit, update, toast, onClose: () => setEdit(null) }),
       meta && h(PsSetEditor, { subject, set, update, toast, onClose: () => setMeta(false), onDeleted: () => { setMeta(false); onBack(); } })
     );
   }
-  function PsProblem({ p, revealAll, onMark, onLog, onEdit, xref, onXref }) {
+  function PsProblem({ p, revealAll, onMark, onLog, onEdit, xref, onXref, onAsk }) {
     const [open, setOpen] = useState(false);
     const show = open || revealAll;
     const hasSol = p.answer || p.solution || p.approach;
@@ -10275,18 +10558,18 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
       p.req.length > 0 && h("div", { className: "ps-req" }, h("strong", null, "Required"), h("ol", null, p.req.map((r, i) => h("li", { key: i }, psInline(r))))),
       p.choices.length > 0 && h("ul", { className: "ps-choices" }, p.choices.map((c, i) => h("li", { key: i }, psInline(c)))),
       p.source && h("p", { className: "muted small" }, p.source),
-      h("div", { className: "ps-acts" }, hasSol && !revealAll && h("button", { className: `btn${open ? "" : " primary"}`, "aria-expanded": open, onClick: () => setOpen((v) => !v) }, open ? "Hide solution" : "Reveal worked solution"), h("button", { className: `chip${p.st === "got" ? " on ok" : ""}`, "aria-pressed": p.st === "got", onClick: () => onMark("got") }, "Got it"), h("button", { className: `chip${p.st === "miss" ? " on bad" : ""}`, "aria-pressed": p.st === "miss", onClick: () => onMark("miss") }, "Missed it"), p.st === "miss" && h("button", { className: "link-btn", onClick: onLog }, "Log in Mistake log"), h("span", { className: "spacer" }), h("button", { className: "link-btn", onClick: () => psPrint({ title: p.title || `Problem ${p.no}`, problems: [p], topicText: "", source: "" }, false) }, "PDF"), h("button", { className: "link-btn", onClick: () => psPrint({ title: p.title || `Problem ${p.no}`, problems: [p], topicText: "", source: "" }, true) }, "PDF + key"), h("button", { className: "link-btn", onClick: onEdit }, "Edit")),
+      h("div", { className: "ps-acts" }, hasSol && !revealAll && h("button", { className: `btn${open ? "" : " primary"}`, "aria-expanded": open, onClick: () => setOpen((v) => !v) }, open ? "Hide solution" : "Reveal worked solution"), h("button", { className: `chip${p.st === "got" ? " on ok" : ""}`, "aria-pressed": p.st === "got", onClick: () => onMark("got") }, "Got it"), h("button", { className: `chip${p.st === "miss" ? " on bad" : ""}`, "aria-pressed": p.st === "miss", onClick: () => onMark("miss") }, "Missed it"), p.st === "miss" && h("button", { className: "link-btn", onClick: onLog }, "Log in Mistake log"), h("span", { className: "spacer" }), h("button", { className: "link-btn", onClick: () => psPrint({ title: p.title || `Problem ${p.no}`, problems: [p], topicText: "", source: "" }, false) }, "PDF"), h("button", { className: "link-btn", onClick: () => psPrint({ title: p.title || `Problem ${p.no}`, problems: [p], topicText: "", source: "" }, true) }, "PDF + key"), onAsk&&h('button',{className:'btn bsa4-ask-problem',onClick:onAsk},'✦ Ask Tutor about this problem'),h("button", { className: "link-btn", onClick: onEdit }, "Edit")),
       show && hasSol && h("div", { className: "ps-sol study-answer-panel" }, p.answer && h("div", { className: "ps-answer" }, h("span", { className: "ps-label" }, "Answer"), h(PsMd, { text: p.answer })), p.approach && h("div", { className: "ps-approach study-answer-step" }, h("span", { className: "ps-label" }, "How to approach it"), h(PsMd, { text: p.approach })), p.solution && h("div", { className: "ps-steps study-answer-step" }, h("span", { className: "ps-label" }, "Solution"), h(PsMd, { text: p.solution })), p.trap && h("div", { className: "ps-trap study-answer-trap" }, h("span", { className: "ps-label" }, "Watch out"), h(PsMd, { text: p.trap })))
     );
   }
   function PsProblemEditor({ set, item, update, toast, onClose }) {
-    const [f, setF] = useState(() => ({ title: item ? item.title : "", subtopic: item ? item.subtopic : "", difficulty: item ? item.difficulty : "average", problem: item ? item.problem : "", req: item ? item.req.join("\n") : "", choices: item ? item.choices.join("\n") : "", answer: item ? item.answer : "", approach: item ? item.approach : "", solution: item ? item.solution : "", trap: item ? item.trap : "" }));
+    const [f, setF] = useState(() => ({ title: item ? item.title : "", subtopic: item ? item.subtopic : "", difficulty: item ? item.difficulty : "average", problem: item ? item.problem : "", req: item ? item.req.join("\n") : "", choices: item ? item.choices.join("\n") : "", answer: item ? item.answer : "", approach: item ? item.approach : "", solution: item ? item.solution : "", trap: item ? item.trap : "", answerFormat:item?.answerFormat||'' }));
     const [err, setErr] = useState("");
     const setv = (k, v) => setF((x) => ({ ...x, [k]: v }));
     const subs = [...new Set(set.problems.map((p) => p.subtopic).filter(Boolean))];
     const save = () => {
       if (!f.problem.trim()) { setErr("Write the problem first."); return; }
-      const data = { title: f.title.trim() || psPlain(f.problem).slice(0, 70), subtopic: f.subtopic.trim(), difficulty: f.difficulty, problem: f.problem.trim(), req: f.req.split("\n").map((x) => x.trim()).filter(Boolean), choices: f.choices.split("\n").map((x) => x.trim()).filter(Boolean), answer: f.answer.trim(), approach: f.approach.trim(), solution: f.solution.trim(), trap: f.trap.trim() };
+      const data = { title: f.title.trim() || psPlain(f.problem).slice(0, 70), subtopic: f.subtopic.trim(), difficulty: f.difficulty, problem: f.problem.trim(), req: f.req.split("\n").map((x) => x.trim()).filter(Boolean), choices: f.choices.split("\n").map((x) => x.trim()).filter(Boolean), answer: f.answer.trim(), approach: f.approach.trim(), solution: f.solution.trim(), trap: f.trap.trim(), answerFormat:f.answerFormat||'' };
       update((s) => {
         const x = (s.psets || []).find((y) => y.id === set.id);
         if (!x) return;
@@ -10303,7 +10586,7 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
       toast("Problem deleted");
       onClose();
     };
-    return h(Modal, { title: item ? `Edit problem ${item.no}` : "Add a problem", onClose, wide: true, footer: h(React.Fragment, null, item && h("button", { className: "btn danger", onClick: del }, "Delete"), h("span", { className: "spacer" }), h("button", { className: "btn", onClick: onClose }, "Cancel"), h("button", { className: "btn primary", onClick: save }, "Save problem")) }, h("div", { className: "grid-2" }, h(Field, { label: "Title" }, h("input", { value: f.title, onChange: (e) => setv("title", e.target.value) })), h(Field, { label: "Subtopic", hint: subs.length ? `In this set: ${subs.slice(0, 5).join(", ")}` : "What this problem trains" }, h("input", { value: f.subtopic, list: "ps-subs", onChange: (e) => setv("subtopic", e.target.value) }), h("datalist", { id: "ps-subs" }, subs.map((x) => h("option", { key: x, value: x }))))), h(Field, { label: "Difficulty" }, h("select", { value: f.difficulty, onChange: (e) => setv("difficulty", e.target.value) }, h("option", { value: "easy" }, "Easy"), h("option", { value: "average" }, "Average"), h("option", { value: "difficult" }, "Difficult"))), h(Field, { label: "Problem", hint: "Tables: | Item | Amount | on each line" }, h("textarea", { className: "code", rows: 7, value: f.problem, onChange: (e) => setv("problem", e.target.value) })), h("div", { className: "grid-2" }, h(Field, { label: "Requirements", hint: "One per line" }, h("textarea", { rows: 3, value: f.req, onChange: (e) => setv("req", e.target.value) })), h(Field, { label: "Choices", hint: "Optional, one per line" }, h("textarea", { rows: 3, value: f.choices, onChange: (e) => setv("choices", e.target.value) }))), h(Field, { label: "Answer" }, h("textarea", { rows: 2, value: f.answer, onChange: (e) => setv("answer", e.target.value) })), h(Field, { label: "How to approach it" }, h("textarea", { rows: 2, value: f.approach, onChange: (e) => setv("approach", e.target.value) })), h(Field, { label: "Solution", hint: "Steps, tables and T-accounts (| Debit | | Credit | | under a **bold** account name)" }, h("textarea", { className: "code", rows: 8, value: f.solution, onChange: (e) => setv("solution", e.target.value) })), h(Field, { label: "Watch out" }, h("textarea", { rows: 2, value: f.trap, onChange: (e) => setv("trap", e.target.value) })), err && h("p", { className: "error", role: "alert" }, err));
+    return h(Modal, { title: item ? `Edit problem ${item.no}` : "Add a problem", onClose, wide: true, footer: h(React.Fragment, null, item && h("button", { className: "btn danger", onClick: del }, "Delete"), h("span", { className: "spacer" }), h("button", { className: "btn", onClick: onClose }, "Cancel"), h("button", { className: "btn primary", onClick: save }, "Save problem")) }, h("div", { className: "grid-2" }, h(Field, { label: "Title" }, h("input", { value: f.title, onChange: (e) => setv("title", e.target.value) })), h(Field, { label: "Subtopic", hint: subs.length ? `In this set: ${subs.slice(0, 5).join(", ")}` : "What this problem trains" }, h("input", { value: f.subtopic, list: "ps-subs", onChange: (e) => setv("subtopic", e.target.value) }), h("datalist", { id: "ps-subs" }, subs.map((x) => h("option", { key: x, value: x }))))), h(Field,{label:'Suggested answer workspace'},h('select',{value:f.answerFormat||'',onChange:e=>setv('answerFormat',e.target.value)},h('option',{value:''},'Auto-detect from question'),BSA39_MODES.map(([id,label])=>h('option',{key:id,value:id},label)))), h(Field, { label: "Difficulty" }, h("select", { value: f.difficulty, onChange: (e) => setv("difficulty", e.target.value) }, h("option", { value: "easy" }, "Easy"), h("option", { value: "average" }, "Average"), h("option", { value: "difficult" }, "Difficult"))), h(Field, { label: "Problem", hint: "Tables: | Item | Amount | on each line" }, h("textarea", { className: "code", rows: 7, value: f.problem, onChange: (e) => setv("problem", e.target.value) })), h("div", { className: "grid-2" }, h(Field, { label: "Requirements", hint: "One per line" }, h("textarea", { rows: 3, value: f.req, onChange: (e) => setv("req", e.target.value) })), h(Field, { label: "Choices", hint: "Optional, one per line" }, h("textarea", { rows: 3, value: f.choices, onChange: (e) => setv("choices", e.target.value) }))), h(Field, { label: "Answer" }, h("textarea", { rows: 2, value: f.answer, onChange: (e) => setv("answer", e.target.value) })), h(Field, { label: "How to approach it" }, h("textarea", { rows: 2, value: f.approach, onChange: (e) => setv("approach", e.target.value) })), h(Field, { label: "Solution", hint: "Steps, tables and T-accounts (| Debit | | Credit | | under a **bold** account name)" }, h("textarea", { className: "code", rows: 8, value: f.solution, onChange: (e) => setv("solution", e.target.value) })), h(Field, { label: "Watch out" }, h("textarea", { rows: 2, value: f.trap, onChange: (e) => setv("trap", e.target.value) })), err && h("p", { className: "error", role: "alert" }, err));
   }
   function PsSetEditor({ subject, set, update, toast, onClose, onDeleted }) {
     const [f, setF] = useState({ title: set.title, topicId: set.topicId || "", source: set.source || "", intro: set.intro || "" });
@@ -10708,6 +10991,22 @@ ${c.kindHint}` }
     if (focus && focus.kind === "lecture") {
       const l = lectures.find(x => x.id === focus.id);
       if (l) source = "LECTURE: " + l.title + "\n" + lxText(l).slice(0, 22000);
+    } else if (focus && focus.kind === 'exercise') {
+      source='CURRENT EXERCISE (do not invent or reveal an answer key):\n'+String(focus.title||'Practice exercise')+
+        '\nQuestion: '+String(focus.question||'').slice(0,7500)+
+        '\nSource: '+String(focus.setTitle||'Learner-approved reusable template')+
+        '\nNo answer key is attached. Ask the learner for their work before assisting.';
+    } else if (focus && focus.kind === 'mcq') {
+      source='CURRENT MCQ (no answer key attached):\n'+String(focus.title||'Quiz question')+
+        '\nQuestion: '+String(focus.question||'').slice(0,7500)+
+        '\nOptions: '+(focus.options||[]).map((x,i)=>String.fromCharCode(65+i)+'. '+String(x).slice(0,500)).join(' | ')+
+        '\nDo not reveal a selected answer until asked. Help the learner reason independently.';
+    } else if (focus && focus.kind === "problem") {
+      const exact = bsa4ProblemContext(subject,focus.id,focus.problemId);
+      if(exact)source='CURRENT QUESTION (do not reveal key without student requesting it):\n'+
+        'Problem set: '+exact.setTitle+'\nTitle: '+exact.title+'\nTopic: '+exact.topic+
+        '\nQuestion: '+exact.question+'\nRequirements: '+exact.requirements.join(' | ')+
+        '\nThe answer key is deliberately not attached. Do not invent it or claim to have reviewed it.';
     } else if (focus && focus.kind === "pset") {
       const set = sets.find(x => x.id === focus.id);
       if (set) source = "PROBLEM SET: " + set.title + "\n" + (set.problems || []).slice(0, 30).map(p => "Problem " + p.no + ": " + psPlain(p.problem).slice(0, 1300) + "\nAnswer: " + psPlain(p.answer).slice(0, 500) + "\nSolution: " + psPlain(p.solution || "").slice(0, 1200)).join("\n\n");
@@ -10715,7 +11014,7 @@ ${c.kindHint}` }
     if (!source) source = "SAVED DASHBOARD MATERIALS (not a full textbook):\n" +
       lectures.slice(0, 8).map(l => "LECTURE: " + l.title + "\n" + lxText(l).slice(0, 2500)).join("\n\n") +
       "\n" + sets.slice(0, 5).map(set => "SET: " + set.title + "\n" + (set.problems || []).slice(0, 5).map(p => psPlain(p.problem).slice(0, 500) + " Answer: " + psPlain(p.answer).slice(0, 250)).join("\n")).join("\n");
-    return "You are a source-grounded accounting study tutor. For questions ABOUT the saved lectures and problem sets, ground factual claims in SOURCE MATERIAL below and never pretend that a newly generated question is quoted from a source. If sources do not establish a requested source-specific fact, say 'I can't verify that from the selected sources.' However, when a student asks you to CREATE a problem set, quiz, hypothetical transaction, sample computation, or extra practice exercises, you MUST create original practice material based on the accounting concepts present in the sources. Clearly label the problems as 'Original practice questions (AI-generated)', not existing saved questions, and include realistic facts, amounts, and dates where useful. Offer questions first without revealing answers if the student asks to practice; provide a separate answer key or explanations only when requested. Do not claim that the created problems are automatically saved in the dashboard or inserted into its Problem Sets. When the available sources lack enough detail to support a particular topic, offer a general illustrative exercise with a clear disclaimer or ask for the relevant lecture instead of falsely claiming the source prohibits creating exercises. Cite lecture titles for sourced rules when possible. You may calculate using supplied or clearly hypothetical numbers.\n\nSOURCE MATERIAL:\n" + (source.trim() || "No source content is available.");
+    return "You are a careful, source-grounded tutor for the currently selected academic subject, not only accounting. For questions ABOUT the saved lectures and problem sets, ground factual claims in SOURCE MATERIAL below and never pretend that a newly generated question is quoted from a source. If sources do not establish a requested source-specific fact, say 'I can't verify that from the selected sources.' However, when a student asks you to CREATE a problem set, quiz, hypothetical transaction, sample computation, or extra practice exercises, you MUST create original practice material based on the accounting concepts present in the sources. Clearly label the problems as 'Original practice questions (AI-generated)', not existing saved questions, and include realistic facts, amounts, and dates where useful. Offer questions first without revealing answers if the student asks to practice; provide a separate answer key or explanations only when requested. Do not claim that the created problems are automatically saved in the dashboard or inserted into its Problem Sets. When the available sources lack enough detail to support a particular topic, offer a general illustrative exercise with a clear disclaimer or ask for the relevant lecture instead of falsely claiming the source prohibits creating exercises. Cite lecture titles for sourced rules when possible. You may calculate using supplied or clearly hypothetical numbers.\n\nSOURCE MATERIAL:\n" + (source.trim() || "No source content is available.");
   }
   function gemGeneralSystem() {
     return "You are a helpful general-purpose assistant. Answer the user's question directly. You are not restricted to accounting or the study dashboard. Do not claim access to private study records or uploaded sources unless they were explicitly included. Be accurate, acknowledge uncertainty, and use clear explanations.";
@@ -10733,6 +11032,24 @@ Concept Vault: flashcards and saved concepts. Practice: quizzes, review and mock
 Ask: three tutor modes. Focused = saved lectures/problem sets; General = open questions; Dashboard Guide = help using the app. AI chat requires connecting a Gemini API key in Ask settings; it sends the question and dashboard navigation instructions to Gemini. No private study records are included in Dashboard Guide mode.
 Storage: local browser storage. Export study-data backup before deployment or changing devices. No automatic cross-device sync guaranteed.
 Be careful: navigation labels can vary by viewport. Never claim that code passing syntax checks guarantees runtime operation.`;
+  }
+  /* V4: a tiny, versioned study handoff shared by workspaces, not a second copy
+     of academic records. IDs refer to the existing subject / question source. */
+  function bsa4ContextKey(subjectId){return (window.__BSA_SHARED_MODE__?'bsa_shared_':'bsa_')+'v4_context_'+String(subjectId||'none')}
+  function bsa4ReadContext(subjectId){try{const c=JSON.parse(localStorage.getItem(bsa4ContextKey(subjectId))||'null');return c&&typeof c==='object'&&!Array.isArray(c)?c:{}}catch(_){return {}}}
+  function bsa4SaveContext(subjectId,patch){if(!subjectId)return;try{const cur=bsa4ReadContext(subjectId);const next={...cur,...patch,updatedAt:Date.now()};localStorage.setItem(bsa4ContextKey(subjectId),JSON.stringify(next))}catch(_){}}
+  function bsa4ProblemContext(subject,setId,problemId){
+    const set=(subject.psets||[]).find(s=>String(s.id)===String(setId));
+    const p=set&&(set.problems||[]).find(x=>String(x.id)===String(problemId));
+    if(!p)return null;
+    return {kind:'problem',id:set.id,problemId:p.id,title:p.title||'Problem '+p.no,
+      setTitle:set.title||'Problem set',topic:p.subtopic||set.topicText||'',
+      question:psPlain(p.problem||'').slice(0,8500),requirements:(p.req||[]).map(psPlain).slice(0,12)};
+  }
+  function bsa4TutorDraft(focus){
+    if(!focus||!['problem','mcq','exercise'].includes(focus.kind))return '';
+    return 'I am working on '+(focus.setTitle||'a question collection')+' — '+(focus.title||'this problem')+'. '+
+      'Please help me understand THIS EXACT question. Start with a hint, ask me what I have tried, and do not reveal the answer unless I request it.';
   }
   function bsa197TutorQuizBehavior(){
     return '\n\nQUIZ CONTINUITY: When the learner requests a quiz, ask ONE source-supported question and wait for their answer. Keep a mental ledger of concepts asked and whether the learner answered correctly from the conversation provided. Do not repeat the exact question, or restart numbering, unless the learner requests a retry. Use a new application problem after a mistake. When the conversation is truncated, admit you may not know older questions rather than claiming perfect memory. Briefly explain a correct response; offer reasoning for incorrect responses. Avoid repeated setup questions when the subject and coverage are already clear.';
@@ -10753,20 +11070,28 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       setEntry('');toast('Tutor note saved for '+subject.name+'.');
     };
     const remove=id=>update(s=>{s.tutorMemories=(s.tutorMemories||[]).filter(x=>x.id!==id);});
-    return h('details',{className:'bsa197-tutor-memory'},h('summary',null,'Tutor memory · '+notes.length+' saved note'+(notes.length===1?'':'s')),
-      h('div',{className:'bsa197-tutor-inner'},
-        h('p',{className:'muted small'},'Tell your tutor what works for you or what you keep confusing. These notes are saved with the subject and can sync with your existing GitHub study records. Focused and General Tutor send them to Gemini with each request. Do not store secrets.'),
-        notes.length?h('ul',{className:'bsa197-tutor-list'},notes.map(m=>h('li',{key:m.id},h('span',null,m.text),
-          h('button',{className:'btn ghost',type:'button','aria-label':'Forget tutor note',onClick:()=>remove(m.id)},'Remove')))):
-          h('p',{className:'muted small'},'No saved tutor notes yet. Your old chat messages are not automatically converted into memories.'),
-        h('label',{className:'bsa197-tutor-label'},'Add a memory',h('textarea',{value:entry,maxLength:500,rows:2,
-          placeholder:'Example: Quiz me one at a time. Skip concepts I can consistently answer; use new scenarios for my mistakes.',
-          onChange:e=>setEntry(e.target.value)})),
-        h('div',{className:'bsa197-row'},h('small',{className:'muted'},entry.length+' / 500 characters'),
-          h('button',{className:'btn primary',type:'button',disabled:!entry.trim()||notes.length>=12,onClick:add},'Remember this'))));
+    const [opened,setOpened]=useState(false);
+    useEffect(()=>{if(!opened)return;const onKey=e=>{if(e.key==='Escape')setOpened(false);};document.addEventListener('keydown',onKey);return()=>document.removeEventListener('keydown',onKey);},[opened]);
+    return h('div',{className:'bsa344-memory-control'},
+      h('button',{type:'button',className:'btn ghost bsa344-memory-button',onClick:()=>setOpened(true),'aria-haspopup':'dialog','aria-expanded':opened,title:'Open saved tutor notes'},
+        '✦ Tutor Memory',h('span',{className:'bsa344-memory-count'},String(notes.length))),
+      opened&&ReactDOM.createPortal(h('div',{className:'bsa344-modal-backdrop',onMouseDown:e=>{if(e.target===e.currentTarget)setOpened(false);}},
+        h('section',{className:'bsa344-memory-modal',role:'dialog','aria-modal':'true','aria-label':'Tutor memory notes'},
+          h('div',{className:'bsa344-memory-head'},h('div',null,h('span',{className:'v2-eyebrow'},'PERSONALIZE YOUR TUTOR'),h('h2',null,'Tutor Memory'),h('p',{className:'muted small'},notes.length+' of 12 notes saved for this subject')),
+            h('button',{type:'button',className:'btn ghost',onClick:()=>setOpened(false),'aria-label':'Close tutor memory'},'✕ Close')),
+          h('div',{className:'bsa197-tutor-inner'},
+            h('p',{className:'muted small'},'Save how you prefer to learn or what confuses you. Notes can sync with existing subject records and are sent to Gemini in Focused and General Tutor modes. Never store secrets.'),
+            notes.length?h('ul',{className:'bsa197-tutor-list'},notes.map(m=>h('li',{key:m.id},h('span',null,m.text),
+              h('button',{className:'btn ghost',type:'button','aria-label':'Remove tutor note',onClick:()=>remove(m.id)},'Remove')))):
+              h('p',{className:'muted small'},'No saved tutor notes yet. Chat messages are not automatically converted into notes.'),
+            h('label',{className:'bsa197-tutor-label'},'Add a memory',h('textarea',{value:entry,maxLength:500,rows:3,
+              placeholder:'Example: Quiz me one at a time; give me a new example after I make a mistake.',
+              onChange:e=>setEntry(e.target.value)})),
+            h('div',{className:'bsa197-row'},h('small',{className:'muted'},entry.length+' / 500 characters'),
+              h('button',{className:'btn primary',type:'button',disabled:!entry.trim()||notes.length>=12,onClick:add},'Remember this'))))),document.body));
   }
   function AskView({ subject, toast, go, init, settings, update }) {
-    const [mode, setMode] = useState(() => { const m=localPref("askMode"); return ["sources","general","dashboard"].includes(m)?m:"sources"; });
+    const [mode, setMode] = useState(() => { if(['problem','mcq','exercise'].includes(init?.focus?.kind))return 'sources';const m=localPref("askMode"); return ["sources","general","dashboard"].includes(m)?m:"sources"; });
     const CHAT = "bsa_chat_" + subject.id + "_" + mode;
     const [msgs, setMsgs] = useState(() => { try { return JSON.parse(lsGet(CHAT) || "[]") || []; } catch (e) { return []; } });
     const [selectedModel, setSelectedModel] = useState(gemModel);
@@ -10781,7 +11106,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     }, [ready]);
     const changeMode = (next) => { if (busy || next === mode) return; lsSet(CHAT, JSON.stringify(msgs.slice(-60))); const nextChat = "bsa_chat_" + subject.id + "_" + next; try { setMsgs(JSON.parse(lsGet(nextChat) || "[]") || []); } catch(e) { setMsgs([]); } setMode(next); setLocalPref("askMode", next); setCollapsed({}); };
     const changeModel = (id) => { if (!id || busy) return; lsSet(GEM.m, id); setSelectedModel(id); toast("Model switched to " + id); };
-    const [text, setText] = useState("");
+    const [text, setText] = useState(()=>bsa4TutorDraft(init?.focus));
     const [busy, setBusy] = useState(false);
     const [setup, setSetup] = useState(false);
     const [focus, setFocus] = useState(() => (init && init.focus) || null);
@@ -10835,7 +11160,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       stick.current = false;
       toast("Conversation cleared");
     };
-    const focusLabel = focus && focus.kind === "lecture" ? (lectures.find((x) => x.id === focus.id) || {}).title : focus && focus.kind === "pset" ? (psets.find((x) => x.id === focus.id) || {}).title : "";
+    const focusLabel = focus && focus.kind === "lecture" ? (lectures.find((x) => x.id === focus.id) || {}).title : focus && focus.kind === "pset" ? (psets.find((x) => x.id === focus.id) || {}).title : focus?.kind==='problem' ? (bsa4ProblemContext(subject,focus.id,focus.problemId)?.title||'Selected problem') : focus?.kind==='mcq' ? 'Selected MCQ' : focus?.kind==='exercise' ? 'Current practice exercise' : "";
     return h(
       "section",
       { className: "view ai-wrap", ref: topRef },
@@ -10847,6 +11172,15 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
           msgs.length > 0 && h("button", { className: "btn ghost ask-clear-button", disabled: busy, onClick: clear, title: "Clear this conversation" }, "Clear")
         )
       ),
+      (['problem','mcq','exercise'].includes(focus?.kind))&&h('div',{className:'bsa4-context-card',role:'status'},
+        h('span',{className:'v2-eyebrow'},'QUESTION ATTACHED · '+subject.name),
+        h('strong',null,focusLabel),
+        h('p',null,(['mcq','exercise'].includes(focus.kind)?focus.question:(bsa4ProblemContext(subject,focus.id,focus.problemId)?.question||'This question was not found in the current subject.')).slice(0,480)),
+        h('div',{className:'bsa4-context-actions'},
+          [['Hint','Give me one answer-neutral hint for this exact problem. Wait for my reply.'],
+           ['Guide me','Guide me through this exact problem one step at a time. Ask a question first.'],
+           ['Check reasoning','Please check my reasoning about the attached question. Ask me to share my attempt before giving the solution.']].map(([label,prompt])=>h('button',{type:'button',key:label,className:'btn ghost',onClick:()=>setText(prompt)},label))),
+        h('small',{className:'muted'},'Review the prepared message, then press Send. The answer key is not attached.')),
       h(BSA197TutorMemory,{subject,update,toast}),
       ready && h("details", { className: "ask-context-details" },
         h("summary", { title: "Change model, tutor mode, and source" },
@@ -10861,7 +11195,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
             !availableModels.some(m => m.id === selectedModel) && h("option", { value: selectedModel }, selectedModel || "Select model"),
             GEM_CHAT_CHOICES.filter(([id]) => availableModels.some(m => m.id === id)).map(([id,label]) => h("option", { key:id, value:id }, label)),
             availableModels.filter(m => !GEM_CHAT_CHOICES.some(([id]) => id === m.id) && /flash/i.test(m.id) && !/preview|exp|image|tts|live|audio/i.test(m.id)).map(m => h("option", { key:m.id, value:m.id }, m.name || m.id)))),
-          mode === "sources" && (lectures.length > 0 || psets.length > 0) && h("label", null, "Use source", h("select", { value:focus ? focus.kind+":"+focus.id : "", onChange:e => { const v=e.target.value;setFocus(v?{kind:v.split(":")[0],id:v.split(":").slice(1).join(":")}:null); } },
+          mode === "sources" && (lectures.length > 0 || psets.length > 0) && h("label", null, "Use source", h("select", { value:['problem','mcq','exercise'].includes(focus?.kind)?'':focus ? focus.kind+":"+focus.id : "", onChange:e => { const v=e.target.value;setFocus(v?{kind:v.split(":")[0],id:v.split(":").slice(1).join(":")}:null); } },
             h("option", {value:""}, "All saved lectures & problem sets"),
             lectures.length>0 && h("optgroup", {label:"Lectures"}, lectures.map(l=>h("option", {key:l.id,value:"lecture:"+l.id},drShort(l.title,46)))),
             psets.length>0 && h("optgroup", {label:"Problem sets"}, psets.map(x=>h("option", {key:x.id,value:"pset:"+x.id},drShort(x.title,46))))))
@@ -11264,6 +11598,28 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     useEffect(()=>{try{localStorage.setItem('bsa_shared_permissions_v67',JSON.stringify(permissions))}catch(e){}},[permissions]);
     const setPermission=(key,value)=>setPermissions(p=>({...p,[key]:value}));
     const [githubToken,setGithubToken]=useState('');
+    const [vaultTokens,setVaultTokens]=useState([]);
+    const [selectedVault,setSelectedVault]=useState('');
+    const [vaultStatus,setVaultStatus]=useState('');
+    const loadTokens=async()=>{try{
+      const blob=localStorage.getItem(BSA_DEVICE_VAULT_KEY);
+      const list=blob?await bsaDeviceVaultDecrypt(blob):[];
+      const filtered=list.filter(x=>x.kind==='GitHub token'&&x.value);
+      setVaultTokens(filtered);setVaultStatus(filtered.length?filtered.length+' saved GitHub token(s) available on this device.':'No saved GitHub tokens. You can save one securely below.');
+    }catch(e){setVaultStatus('Could not open private vault: '+(e.message||e));}};
+    const saveToken=async()=>{if(!githubToken.trim()){setVaultStatus('Enter the token first.');return}
+      if(!window.isSecureContext||!crypto.subtle){setVaultStatus('Secure HTTPS and Web Crypto are required to save a token.');return}
+      try{
+        const blob=localStorage.getItem(BSA_DEVICE_VAULT_KEY),list=blob?await bsaDeviceVaultDecrypt(blob):[];
+        if(list.some(x=>x.kind==='GitHub token'&&x.value===githubToken.trim())){setVaultStatus('That token is already in your private vault.');return}
+        const next=[...list,{id:'v39-'+Date.now(),name:'Shared Dashboard publisher',kind:'GitHub token',value:githubToken.trim()}];
+        const encrypted=await bsaDeviceVaultEncrypt(next);
+        localStorage.setItem(BSA_DEVICE_VAULT_KEY,encrypted);
+        const verify=await bsaDeviceVaultDecrypt(localStorage.getItem(BSA_DEVICE_VAULT_KEY));
+        if(verify.length!==next.length)throw Error('Could not verify saved entry');
+        setVaultTokens(verify.filter(x=>x.kind==='GitHub token'&&x.value));setVaultStatus('Token encrypted in this device’s private vault. Do not clear browser site data.');
+      }catch(e){setVaultStatus('Token was not saved: '+(e.message||e))}
+    };
     const [publishBusy,setPublishBusy]=useState(false);
     const [publishStatus,setPublishStatus]=useState('');
     const [lastPublish,setLastPublish]=useState('');
@@ -11319,13 +11675,13 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
           source:l.source,summary:l.summary,sections:clone(l.sections||[]),terms:clone(l.terms||[]),checks:clone(l.checks||[]),done:false}));
         clean.psets=(x.psets||[]).map(set=>({id:set.id,topicId:set.topicId,topicText:set.topicText,title:set.title,
           source:set.source,intro:set.intro,problems:(set.problems||[]).map(p=>({id:p.id,no:p.no,title:p.title,
-          subtopic:p.subtopic,difficulty:p.difficulty,problem:p.problem,req:clone(p.req||[]),choices:clone(p.choices||[]),
-          answer:p.answer,approach:p.approach,solution:p.solution,trap:p.trap,source:p.source,st:''}))}));
+          subtopic:p.subtopic,topicId:p.topicId,difficulty:p.difficulty,answerFormat:p.answerFormat||'',problem:p.problem,req:clone(p.req||[]),choices:clone(p.choices||[]),
+          answer:p.answer,approach:p.approach,solution:p.solution,trap:p.trap,source:p.source,labEntry:clone(p.labEntry||[]),labTopic:p.labTopic,labLevel:p.labLevel,labHint:p.labHint,labExplanation:p.labExplanation,labVerification:p.labVerification,st:''}))}));
         clean.rules=(x.rules||[]).map(r=>({id:r.id,code:r.code,title:r.title,topic:r.topic,category:r.category,collection:r.collection||"",decisionRule:r.decisionRule,treatment:r.treatment,conditions:r.conditions,exceptions:r.exceptions,example:r.example,examTrap:r.examTrap,sourceTitle:r.sourceTitle,sourceLocator:r.sourceLocator,sourceUrl:r.sourceUrl,status:r.status,notes:''}));
         clean.mcqSets=(x.mcqSets||[]).map(set=>({id:set.id,topicId:set.topicId,topicText:set.topicText,title:set.title,
           source:set.source,intro:set.intro,problems:(set.problems||[]).map(p=>({id:p.id,no:p.no,title:p.title,
-          subtopic:p.subtopic,difficulty:p.difficulty,problem:p.problem,req:clone(p.req||[]),choices:clone(p.choices||[]),
-          answer:p.answer,approach:p.approach,solution:p.solution,trap:p.trap,source:p.source,st:''}))}));
+          subtopic:p.subtopic,topicId:p.topicId,difficulty:p.difficulty,answerFormat:p.answerFormat||'',problem:p.problem,req:clone(p.req||[]),choices:clone(p.choices||[]),
+          answer:p.answer,approach:p.approach,solution:p.solution,trap:p.trap,source:p.source,labEntry:clone(p.labEntry||[]),labTopic:p.labTopic,labLevel:p.labLevel,labHint:p.labHint,labExplanation:p.labExplanation,labVerification:p.labVerification,st:''}))}));
         clean.drills=(x.drills||[]).map(d=>({id:d.id,topicId:d.topicId,topicText:d.topicText,name:d.name,q:d.q,vars:clone(d.vars||[]),given:clone(d.given||[]),ans:d.ans,fmt:d.fmt,dp:d.dp,unit:d.unit,cur:d.cur,steps:clone(d.steps||[]),req:clone(d.req||[]),tol:d.tol}));
         clean.quizzes=[];
         clean.mistakes=[];clean.sessions=[];clean.grades=[];
@@ -11366,7 +11722,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       replaceOnce('    const shortcutItems = [["home","Today","⌂"],["study","Learn & plan","✦"],["practice","Practice","✓"],["library","Library","▤"],["insights","Insights","◈"],["subjects","Switch subject","∑"]];',
         '    const shortcutItems = window.__BSA_SHARED_MODE__ ? [["home","Today","⌂"],["study","Learn","✦"],["practice","Practice","✓"],["library","Library","▤"],["insights","Progress","◈"]] : [["home","Today","⌂"],["study","Learn & plan","✦"],["practice","Practice","✓"],["library","Library","▤"],["insights","Insights","◈"],["subjects","Switch subject","∑"]];',
         'Shared shortcuts');
-      replaceOnce('    const navGroups = [','    const navGroups = window.__BSA_SHARED_MODE__ ? [\n      {name:"Your study flow",items:["home","study","practice","library","insights"]},\n      {name:"Study materials",items:["lectures","rules","vault","psets","mcq"]},\n      {name:"Practice & review",items:["accounting-lab","mistakes","toolkit"]}\n    ] : [','Shared navigation groups');
+      replaceOnce('    const navGroups = [','    const navGroups = window.__BSA_SHARED_MODE__ ? [\n      {name:"Your study flow",items:["home","study","practice","library"]},\n      {name:"Study materials",items:["lectures","rules","vault"]},\n      {name:"Practice & questions",items:["mcq","psets","accounting-lab"]},\n      {name:"Review & progress",items:["mistakes","insights"]},\n      {name:"More tools",items:["toolkit"]}\n    ] : [','Shared navigation groups');
       replaceOnce('const [tool,setTool]=useState(initialTool||"notes");','const [tool,setTool]=useState(window.__BSA_SHARED_MODE__ ? "foundation" : (initialTool||"notes"));','Student toolkit default');
       // Only show the published subjects. Never permit editing the source list.
       // Keep student progress local and isolated from the owner document.
@@ -11389,10 +11745,10 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
         return await res.text();
       }));
       const styles=sheetText.map(css=>'<style>'+css+'</style>').join('\n');
-      return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0d1320"><title>BSA Study Desk · Shared</title>'+styles+"<style id=\"bsa-shared-student-ui\">\n/* Same component design tokens as the owner's app; limited navigation and no author tools. */\n.rail-footer,.sync-badge,.sync-bar,.save-note,.rail-search,.study-life-card,.life-home-widget,\n.dashboard-settings,.share-panel,.bottom-nav,.fab,.focus-bar,.study-path,.study-life,.bsa-v141-update-control,\n[data-personal-only],[data-shared-authoring]{display:none!important}\n/* Keep the existing Appearance modal and theme controls available to students. */\n.rail-tools{display:flex!important;flex-direction:column!important}\n.rail-tools>button:first-child,.rail-subject>.link-btn{display:none!important} /* Import/export is owner-only */\n.workspace-actions,.workspace-topbar .btn{display:none!important}\n.mobilebar>button.icon-btn:not([aria-label=\"Appearance\"]){display:none!important}\n.mobilebar>button.icon-btn[aria-label=\"Appearance\"]{display:inline-flex!important}\n.rail-nav{min-height:0;flex:1;overflow-y:auto}\n.shell>.content{padding-bottom:max(24px,env(safe-area-inset-bottom,0px))!important}\n.shared-ribbon{padding:8px 16px;background:var(--surface,#e8f2ed);border-bottom:1px solid var(--line,#bed1c6);color:var(--muted,#34463f);font-size:12px}\n@media(max-width:700px){.bottom-nav{display:none!important}.shell>.content{padding-bottom:24px!important}.mobilebar{display:flex!important}}\n</style>"+'</head><body><div id="root"></div>'+
+      return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0d1320"><title>BSA Study Desk · Shared</title>'+styles+"<style id=\"bsa-shared-student-ui\">\n/* Same component design tokens as the owner's app; limited navigation and no author tools. */\n.rail-footer,.sync-badge,.sync-bar,.save-note,.rail-search,.study-life-card,.life-home-widget,\n.dashboard-settings,.share-panel,.fab,.focus-bar,.study-path,.study-life,.bsa-v141-update-control,\n[data-personal-only],[data-shared-authoring]{display:none!important}\n/* Keep the existing Appearance modal and theme controls available to students. */\n.rail-tools{display:flex!important;flex-direction:column!important}\n.rail-tools>button:first-child,.rail-subject>.link-btn{display:none!important} /* Import/export is owner-only */\n.workspace-actions,.workspace-topbar .btn{display:none!important}\n.mobilebar>button.icon-btn:not([aria-label=\"Appearance\"]):not([aria-label=\"Themes\"]){display:none!important}\n.mobilebar>button.icon-btn[aria-label=\"Appearance\"],.mobilebar>button.icon-btn[aria-label=\"Themes\"]{display:inline-flex!important}\n.rail-nav{min-height:0;flex:1;overflow-y:auto}\n.shell>.content{padding-bottom:max(24px,env(safe-area-inset-bottom,0px))!important}\n.shared-ribbon{padding:8px 16px;background:var(--surface,#e8f2ed);border-bottom:1px solid var(--line,#bed1c6);color:var(--muted,#34463f);font-size:12px}\n@media(max-width:899px){.bottom-nav{display:grid!important}.shell>.content{padding-bottom:max(94px,calc(78px + env(safe-area-inset-bottom,0px)))!important}.mobilebar{display:flex!important}}\n</style>"+'</head><body><div id="root"></div>'+
        '<script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"><'+'/script>'+
        '<script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"><'+'/script>'+
-       '<script>'+boot+'<'+'/script><script>'+app+'<'+'/script>'+"<script id=\"shared-readonly-controls\">(function(){\nconst deny=/^(?:add|new|edit|delete|remove|import|export|publish|sync|restore|quick add|clear all|reset all|change topic|manage subjects|classmate sharing)(?:\\b|\\s|$)/i;\nfunction mask(){const root=document.getElementById('root');if(!root)return;root.querySelectorAll('button').forEach(b=>{\nconst text=(b.textContent||'').trim();const label=(b.getAttribute('aria-label')||'').trim();\nif(/^(?:edit mistake|make a flashcard from this mistake|delete score)$/i.test(label))return;if(deny.test(text)||deny.test(label)){b.hidden=true;b.disabled=true;b.setAttribute('data-shared-authoring','');}\n});}\nconst root=document.getElementById('root');if(root){const observer=new MutationObserver(mask);observer.observe(root,{subtree:true,childList:true});mask();}\n})();<\/script>"+'</body></html>';
+       '<script>'+boot+'<'+'/script><script>'+app+'<'+'/script>'+"<script id=\"shared-readonly-controls\">(function(){\nconst deny=/^(?:add|new|edit|delete|remove|import|export|publish|sync|restore|quick add|clear all|reset all|change topic|manage subjects|classmate sharing)(?:\\b|\\s|$)/i;\nfunction mask(){const root=document.getElementById('root');if(!root)return;root.querySelectorAll('button').forEach(b=>{\nconst text=(b.textContent||'').trim();const label=(b.getAttribute('aria-label')||'').trim();\nif(/^(?:edit mistake|make a flashcard from this mistake|delete score)$/i.test(label)||/^(?:Export highlights|Remove highlight)$/i.test(text))return;if(deny.test(text)||deny.test(label)){b.hidden=true;b.disabled=true;b.setAttribute('data-shared-authoring','');}\n});}\nconst root=document.getElementById('root');if(root){const observer=new MutationObserver(mask);observer.observe(root,{subtree:true,childList:true});mask();}\n})();<\/script>"+'</body></html>';
     };
     const safeSharedHtml=()=>{
       const selected=data.subjects.filter(sub=>allowed.includes(sub.id));
@@ -11430,8 +11786,14 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       h('p',{className:'muted small'},'Published site: same study interfaces, five sections only. Separate storage keeps classmate progress isolated from your main dashboard, even when opened on the same browser.'),
       h('div',{className:'toolkit-actions'},h('a',{className:'btn',href:sharedUrl,target:'_blank',rel:'noopener noreferrer'},'Open Shared Dashboard website ↗')),
       h('p',{className:'muted small'},'Create the bsa-study-desk-shared GitHub repository and enable GitHub Pages from the main branch/root to activate the link.'),      h('h3',null,'Publish updates directly to GitHub'),
-      h('p',{className:'muted small'},'Use a fine-grained token restricted to the shared repository with Contents: Read and write. The token is not saved or included in published files.'),
-      h('label',null,'GitHub token (not saved)',h('input',{type:'password',value:githubToken,autoComplete:'off',spellCheck:false,placeholder:'github_pat_…',onChange:e=>setGithubToken(e.target.value),style:{display:'block',width:'100%',maxWidth:'540px',padding:'10px',margin:'8px 0'}})),
+      h('p',{className:'muted small'},'Use a fine-grained token restricted to the shared repository with Contents: Read and write. You can optionally store it in the existing encrypted device vault; it is never embedded in published files.'),
+      h('label',null,'GitHub token (kept only in memory unless you explicitly save it)',h('input',{type:'password',value:githubToken,autoComplete:'off',spellCheck:false,placeholder:'github_pat_…',onChange:e=>setGithubToken(e.target.value),style:{display:'block',width:'100%',maxWidth:'540px',padding:'10px',margin:'8px 0'}})),
+      h('div',{className:'bsa39-vault-panel'},
+        h('p',{className:'muted small'},'Optional: use your existing encrypted Quick-access Keys vault. Only on this approved HTTPS device. Anyone controlling this browser or its scripts may still access saved credentials.'),
+        h('div',{className:'toolkit-actions'},h('button',{type:'button',className:'btn',onClick:loadTokens},'Find saved GitHub tokens'),
+          h('button',{type:'button',className:'btn',onClick:saveToken,disabled:!githubToken.trim()},'Save entered token privately')),
+        vaultTokens.length>0&&h('label',null,'Choose a saved token',h('select',{value:selectedVault,onChange:e=>{const id=e.target.value;setSelectedVault(id);const item=vaultTokens.find(x=>x.id===id);if(item){setGithubToken(item.value);setVaultStatus('Token loaded for this publishing session.')}}},h('option',{value:''},'Select a token…'),vaultTokens.map(x=>h('option',{key:x.id,value:x.id},x.name)))),
+        vaultStatus&&h('p',{className:'muted small',role:'status'},vaultStatus)),
       h('div',{className:'toolkit-actions'},h('span',{className:'muted small'},'Use Publish shared dashboard above to send the latest materials.'),h('button',{className:'btn',onClick:()=>setGithubToken('')},'Clear token'),h('a',{className:'btn',href:'https://github.com/settings/personal-access-tokens/new',target:'_blank',rel:'noopener noreferrer'},'Create limited token ↗')),
       publishStatus&&h('p',{role:'status',className:'muted small'},publishStatus),
       h('p',{className:'muted small'},'Updates are published when you press Publish. The shared website changes after GitHub Pages redeploys; no HTML download needed. Create the shared repository and enable GitHub Pages from the main branch/root first.'),
@@ -12638,7 +13000,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
   function bsa181Read(){try{const a=JSON.parse(localStorage.getItem(BSA181_KEY)||'null');return a&&typeof a==='object'?{...bsa181Empty(),...a}:bsa181Empty()}catch(_){return bsa181Empty()}}
   function bsa181Write(next){try{localStorage.setItem(BSA181_KEY,JSON.stringify(next));window.dispatchEvent(new Event('bsa181-changed'));return true}catch(_){return false}}
   function bsa181Text(x){return String(x==null?'':x).replace(/\s+/g,' ').trim()}
-  function bsa181Add(kind,entry){const d=bsa181Read();if(!Array.isArray(d[kind]))return false;const id='w181-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);const n={...entry,id,created:Date.now()};if(kind==='highlights'&&d.highlights.some(x=>x.subjectId===n.subjectId&&x.text===n.text&&x.sourceId===n.sourceId))return 'duplicate';d[kind].unshift(n);d[kind]=d[kind].slice(0,1500);return bsa181Write(d)?id:false}
+  function bsa181Add(kind,entry){const d=bsa181Read();if(!Array.isArray(d[kind]))return false;const id='w181-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);const n={...entry,id,created:Date.now()};if(kind==='highlights'&&d.highlights.some(x=>x.subjectId===n.subjectId&&x.text===n.text&&x.sourceId===n.sourceId&&(!x.sectionId||!n.sectionId||x.sectionId===n.sectionId)))return 'duplicate';d[kind].unshift(n);d[kind]=d[kind].slice(0,1500);return bsa181Write(d)?id:false}
   function bsa181Remove(kind,id){const d=bsa181Read();if(!Array.isArray(d[kind]))return false;const item=d[kind].find(x=>x.id===id);if(!item)return false;d[kind]=d[kind].filter(x=>x.id!==id);d.undo=[{kind,item,at:Date.now()},...(d.undo||[])].slice(0,20);return bsa181Write(d)}
   function bsa181Restore(){const d=bsa181Read();const u=(d.undo||[])[0];if(!u||!Array.isArray(d[u.kind]))return false;if(!d[u.kind].some(x=>x.id===u.item.id))d[u.kind].unshift(u.item);d.undo.shift();return bsa181Write(d)}
   function bsa181Recent(tab,opts,subjectId,label){if(!tab||!subjectId||tab==='workspace')return;const d=bsa181Read();const prior=(d.recent||[]).filter(x=>!(x.tab===tab&&x.subjectId===subjectId&&x.open===(opts&&opts.open||'')));d.recent=[{tab,open:opts&&opts.open||'',subjectId,label:label||tab,at:Date.now()},...prior].slice(0,20);bsa181Write(d)}
@@ -12686,9 +13048,19 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
   }
   function BSA181HighlightTool({subject,tab,go,toast}){
     const [selection,setSelection]=useState(null);
-    useEffect(()=>{const onSelect=()=>{const sel=window.getSelection();const text=bsa181Text(sel&&sel.toString()).slice(0,1800);const node=sel&&sel.anchorNode;const elt=node&&(node.nodeType===1?node:node.parentElement);if(!text||text.length<8||!elt||elt.closest('input,textarea,[contenteditable="true"],.bsa181-spotlight,.bsa181')){setSelection(null);return}const target=elt.closest('.lx-reader,.bsa-rule-library,.bsa-rules,.view');if(!target||!['lectures','rules'].includes(tab)){setSelection(null);return}setSelection({text,page:tab==='lectures'?'Lecture':'Rules Library',tab,sourceId:tab==='lectures'?(bsa181Read().recent||[]).find(x=>x.tab==='lectures'&&x.subjectId===subject.id)?.open||'':''})};document.addEventListener('mouseup',onSelect);document.addEventListener('touchend',onSelect);return()=>{document.removeEventListener('mouseup',onSelect);document.removeEventListener('touchend',onSelect)}},[subject.id,tab]);
+    const [kind,setKind]=useState('key');
+    useEffect(()=>{const onSelect=()=>{const sel=window.getSelection();const text=bsa181Text(sel&&sel.toString()).slice(0,1800);const node=sel&&sel.anchorNode;const elt=node&&(node.nodeType===1?node:node.parentElement);if(!text||text.length<8||!elt||elt.closest('input,textarea,[contenteditable="true"],.bsa181-spotlight,.bsa181')){setSelection(null);return}const target=elt.closest('.lx-reader,.bsa-rule-library,.bsa-rules,.view');if(!target||!['lectures','rules'].includes(tab)||tab==='lectures'&&!elt.closest('.lx-sec.bsa-section')){setSelection(null);return}const reader=elt.closest('.lx-reader'),section=elt.closest('.lx-sec');
+      const record={text,page:tab==='lectures'?'Lecture':'Rules Library',tab,
+        sourceId:tab==='lectures'?(reader&&reader.dataset.lectureId||''):'',sectionId:section&&section.id||''};
+      if(tab==='lectures'&&section&&sel.rangeCount){try{const range=sel.getRangeAt(0);
+        if(section.contains(range.startContainer)&&section.contains(range.endContainer)){
+          const prior=range.cloneRange();prior.selectNodeContents(section);prior.setEnd(range.startContainer,range.startOffset);
+          const after=range.cloneRange();after.selectNodeContents(section);after.setStart(range.endContainer,range.endOffset);
+          record.before=bsa181Text(prior.toString()).slice(-48);record.after=bsa181Text(after.toString()).slice(0,48);
+        }}catch(_){}}
+      setSelection(record)};document.addEventListener('mouseup',onSelect);document.addEventListener('touchend',onSelect);return()=>{document.removeEventListener('mouseup',onSelect);document.removeEventListener('touchend',onSelect)}},[subject.id,tab]);
     if(!selection)return null;
-    return h('div',{className:'bsa181-selection',role:'status'},h('span',null,'Selected '+selection.text.length+' characters'),h('button',{className:'btn primary',onClick:()=>{const out=bsa181Add('highlights',{...selection,subjectId:subject.id});toast(out==='duplicate'?'This passage was already highlighted':out?'Highlight saved to Study Workspace':'Unable to save highlight');setSelection(null);try{window.getSelection()?.removeAllRanges()}catch(_){}}},'Save highlight'),h('button',{className:'btn ghost',onClick:()=>setSelection(null)},'×'));
+    return h('div',{className:'bsa181-selection',role:'status'},h('span',null,'Selected '+selection.text.length+' characters'),h('label',{className:'bsa41-pick-label'},'Label',h('select',{value:kind,onChange:e=>setKind(e.target.value),'aria-label':'Highlight label'},Object.entries(BSA41_HIGHLIGHT_TYPES).map(([id,x])=>h('option',{key:id,value:id},x.label)))),h('button',{className:'btn primary',onClick:()=>{const out=bsa181Add('highlights',{...selection,kind,subjectId:subject.id});toast(out==='duplicate'?'This passage was already highlighted':out?'Highlight saved to Study Workspace':'Unable to save highlight');setSelection(null);try{window.getSelection()?.removeAllRanges()}catch(_){}}},'Save highlight'),h('button',{className:'btn ghost',onClick:()=>setSelection(null)},'×'));
   }
 
   class ScreenBoundary extends React.Component {
@@ -12973,7 +13345,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
   }
   const bsa198AttemptKey=a=>a&&a.problemId?'ps:'+a.problemId:'builtin:'+Number(a?.exercise);
   function BSA187AccountingLab({subject,update,toast,go,init}){
-    const [tab,setTab]=useState('journal'),[selected,setSelected]=useState(''),[filter,setFilter]=useState('all'),[search,setSearch]=useState(init?.search||''),[level,setLevel]=useState('All');
+    const [tab,setTab]=useState('journal'),[selected,setSelected]=useState(init?.problemId?'ps:'+init.problemId:''),[filter,setFilter]=useState('all'),[search,setSearch]=useState(init?.search||''),[level,setLevel]=useState('All');
     const [rows,setRows]=useState(bsa187Blank),[feedback,setFeedback]=useState(null),[reveal,setReveal]=useState(false);
     const [queueLimit,setQueueLimit]=useState(50);
     const [importText,setImportText]=useState(''),[preview,setPreview]=useState(null),[importError,setImportError]=useState('');
@@ -12995,7 +13367,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const current=filtered.find(x=>x.key===selected)||filtered[0]||null;
     const reset=()=>{setRows(bsa187Blank());setFeedback(null);setReveal(false)};
     const choose=key=>{setSelected(key);reset()};
-    useEffect(()=>{setSelected('');setTab('journal');setSearch('');setLevel('All');setFilter('all');setQueueLimit(50);setSearch(init?.search||'');reset();setPreview(null)},[subject.id]);
+    useEffect(()=>{setSelected(init?.problemId?'ps:'+init.problemId:'');setTab('journal');setSearch('');setLevel('All');setFilter('all');setQueueLimit(50);setSearch(init?.search||'');reset();setPreview(null)},[subject.id,init?.problemId]);
     const change=(i,field,value)=>{setRows(old=>old.map((r,j)=>i===j?{...r,[field]:value}:r));setFeedback(null)};
     const verify=()=>{
       if(!current||!Array.isArray(current.solution))return;
@@ -13236,6 +13608,22 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       h('p',{className:'muted small bsa191-footnote'},'Drag an unfinished session to another day on desktop, or use Move to on iPad/Android. Completed sessions cannot be moved from this planner.'));
   }
 
+  /* V3.4.4: One schedule workspace, two perspectives on the same subject data.
+     No data migration, duplicate plans, or separate copy of calendar events. */
+  function BSA344Schedule({subject,update,go,openEditor,toast,init,initialMode}){
+    const [mode,setMode]=useState(initialMode==='week'?'week':'month');
+    return h('div',{className:'bsa344-schedule'},
+      h('div',{className:'bsa344-schedule-bar'},
+        h('div',null,h('span',{className:'v2-eyebrow'},'ONE CONNECTED SCHEDULE'),h('strong',null,'Your study calendar'),
+          h('p',{className:'muted small'},'Week and Month use the same sessions, topic deadlines, exams and class tasks. Changes are reflected in both views.')),
+        h('div',{className:'bsa344-view-switch',role:'group','aria-label':'Schedule view'},
+          h('button',{type:'button',className:'btn'+(mode==='week'?' primary':''),'aria-pressed':mode==='week',onClick:()=>setMode('week')},'7-day view'),
+          h('button',{type:'button',className:'btn'+(mode==='month'?' primary':''),'aria-pressed':mode==='month',onClick:()=>setMode('month')},'Month view'))),
+      mode==='week'?h(BSA191WeeklyPlanner,{subject,update,go,openEditor,toast}):
+        h(CalendarView,{subject,update,go,openEditor,toast,init:init||{}}),
+      !window.__BSA_SHARED_MODE__&&h(BSA38ExamCatchup,{subject,update,toast}));
+  }
+
   /* v192: topic-to-material map. Edges are created ONLY from real matching
      topicId fields, not from guessed similarity between topic titles. */
   function BSA192KnowledgeMap({subject,go}){
@@ -13331,7 +13719,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
             h('span',{className:'v2-recent-arrow','aria-hidden':true},'↗')))):
             h('div',{className:'v2-empty-recent'},'Your recent lectures and study tools will appear here as you open them.'))),
       layoutVisible('tools')&&h('div',{className:'v2-tools-section',style:{order:layoutOrder('tools')}},h('div',{className:'v2-section-header'},h('div',null,h('span',{className:'v2-eyebrow'},'EXPLORE'),h('h2',null,'Choose your study mode')),h('span',{className:'v2-muted'},`${mcqCount} MCQs · ${problemCount} written problems · ${cards.length} cards`)),
-      h('div',{className:'v2-tool-grid'},[...tools,['accounting-lab','Accounting Lab','Journal entries & T-accounts','pset'],['week','Weekly Planner','Plan your study blocks','calendar'],['knowledge','Knowledge Map','Connect saved materials','roadmap']].map(([tab,title,description,ic])=>h('button',{type:'button',key:tab,className:'v2-tool-tile',onClick:()=>go(tab)},
+      h('div',{className:'v2-tool-grid'},[...tools,['accounting-lab','Accounting Lab','Journal entries & T-accounts','pset'],['calendar','Study Schedule','Weekly and monthly plans','calendar'],['knowledge','Knowledge Map','Connect saved materials','roadmap']].map(([tab,title,description,ic])=>h('button',{type:'button',key:tab,className:'v2-tool-tile',onClick:()=>go(tab)},
         h('span',{className:'v2-tool-icon'},h(Icon,{name:ic,size:22})),h('strong',null,title),h('span',{className:'v2-tool-description'},description),h('span',{className:'v2-tool-arrow','aria-hidden':true},'↗'))))),
       layoutVisible('buddy')&&h('div',{className:'bsa189-wrap',style:{order:layoutOrder('buddy')}},h(BSA189Companion,{go})),
       h('div',{className:'v2-more-wrap',style:{order:99}},h('button',{type:'button',className:'v2-details-toggle',onClick:()=>setDetails(v=>!v),'aria-expanded':details},
@@ -13400,7 +13788,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
   function bsa205LibraryItems(s){const rows=[];
     const push=(x,kind)=>rows.push({...x,topic:bsa3TopicLabel(s,x.topicId,x.topicText),kind});
     for(const x of s.lectures||[])push({key:'lecture:'+x.id,id:x.id,type:'Lecture',title:x.title||'Untitled lecture',text:x.title+' '+(x.summary||''),source:x.source||'',route:'lectures',opts:{open:x.id},topicId:x.topicId||'',topicText:x.topicText||''},'lecture');
-    for(const x of s.psets||[])for(const p of x.problems||[])push({key:'problem:'+p.id,id:p.id,setId:x.id,type:bsa198StoredKeyValid(p)?'Journal problem':'Written problem',title:p.title||x.title||'Written problem',text:p.problem||'',source:p.source||x.source||'',route:bsa198StoredKeyValid(p)?'accounting-lab':'psets',opts:bsa198StoredKeyValid(p)?{}:{open:x.id,problemId:p.id},verified:p.labVerification==='Source checked',topicId:p.topicId||(p.subtopic?'':x.topicId)||'',topicText:p.subtopic||x.topicText||x.topic||'',setTitle:x.title||''},'problem');
+    for(const x of s.psets||[])for(const p of x.problems||[])push({key:'problem:'+p.id,id:p.id,setId:x.id,type:bsa198StoredKeyValid(p)?'Journal problem':'Written problem',title:p.title||x.title||'Written problem',text:p.problem||'',source:p.source||x.source||'',route:bsa198StoredKeyValid(p)?'accounting-lab':'psets',opts:bsa198StoredKeyValid(p)?{problemId:p.id}:{open:x.id,problemId:p.id},collectionId:x.id,collectionTitle:x.title||'Untitled Problem Set',verified:p.labVerification==='Source checked',topicId:p.topicId||(p.subtopic?'':x.topicId)||'',topicText:p.subtopic||x.topicText||x.topic||'',setTitle:x.title||''},'problem');
     for(const x of s.mcqSets||[])for(const p of x.problems||[])push({key:'mcq:'+p.id,id:p.id,type:'MCQ',title:x.title||'Multiple choice',text:p.problem||'',source:p.source||x.source||'',route:'mcq',topicId:p.topicId||x.topicId||'',topicText:p.subtopic||x.topicText||x.topic||''},'mcq');
     for(const x of s.cards||[])push({key:'card:'+x.id,id:x.id,type:'Flashcard',title:x.q||x.front||'Flashcard',text:x.q||x.front||'',route:'vault',topicId:x.topicId||'',topicText:x.topicText||''},'card');
     for(const x of s.rules||[])push({key:'rule:'+x.id,id:x.id,type:'Reference rule',title:x.title||'Rule',text:x.decisionRule||'',source:x.sourceTitle||'',verified:x.status==='Source checked',route:'rules',topicId:x.topicId||'',topicText:x.topicText||''},'rule');
@@ -13409,6 +13797,16 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
   // Grouping helper is deliberately pure so large libraries can be unit-tested.
   function bsa3GroupRows(rows){const map=new Map();for(const item of rows){const label=item.topic||'Uncategorized';if(!map.has(label))map.set(label,[]);map.get(label).push(item);}
     return [...map].sort(([a],[b])=>a==='Uncategorized'?1:b==='Uncategorized'?-1:a.localeCompare(b,undefined,{numeric:true}));}
+  // V3.8: preserve original Problem Set identity while optionally browsing across topics.
+  // This is a view-only grouping and never alters/imports/copies any problems.
+  function bsa38GroupOriginalSets(rows,subject){
+    const sets=subject.psets||[],titles=new Map(),counts=new Map();
+    for(const set of sets)counts.set((set.title||'Untitled Problem Set').trim(),(counts.get((set.title||'Untitled Problem Set').trim())||0)+1);
+    for(const set of sets){const title=(set.title||'Untitled Problem Set').trim();titles.set(set.id,counts.get(title)>1?title+' · '+String(set.id).slice(-6):title)}
+    const grouped=new Map();for(const set of sets)grouped.set(set.id,[]);
+    for(const row of rows)if(row.kind==='problem'&&row.collectionId){if(!grouped.has(row.collectionId))grouped.set(row.collectionId,[]);grouped.get(row.collectionId).push(row)}
+    return [...grouped].filter(([,items])=>items.length).map(([id,items])=>[id,titles.get(id)||items[0].collectionTitle||'Untitled Problem Set',items]);
+  }
   function bsa205Duplicates(rows){const exact=new Map(),families=new Map(),duplicates=[],variants=[];
     for(const item of rows){if(!['Journal problem','Written problem','MCQ'].includes(item.type))continue;
       const key=bsa198Fingerprint(item.text);if(key.length>16){if(exact.has(key))duplicates.push([exact.get(key),item]);else exact.set(key,item)}
@@ -13490,10 +13888,13 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
         h('p',{className:'muted small'},'PDF page text and AI proposals are not added automatically. Existing questions are reused when possible. For general calculation problems or MCQs, use your original Problem Sets and MCQ import formats.')));
   }
   function BSA205Library({subject,update,toast,go,init}){
-    const [tab,setTab]=useState(['all','inbox','sources','import','health'].includes(init?.tab)?init.tab:'all');
+    const [tab,setTab]=useState(window.__BSA_SHARED_MODE__?'all':(['all','inbox','sources','import','health'].includes(init?.tab)?init.tab:'all'));
     const [query,setQuery]=useState(''),[type,setType]=useState(()=>(subject.psets||[]).some(set=>(set.problems||[]).some(p=>!bsa198StoredKeyValid(p)))?'Written problem':'All'),[topicFilter,setTopicFilter]=useState(init?.topicLabel||'All topics'),[activeGroup,setActiveGroup]=useState(init?.topicLabel||''),[visibleCount,setVisibleCount]=useState(20),[showHidden,setShowHidden]=useState(false),[handoff,setHandoff]=useState('');
     const [selectedProblems,setSelectedProblems]=useState([]),[bulkTopic,setBulkTopic]=useState('');
     const [capture,setCapture]=useState(''),[captureSource,setCaptureSource]=useState(''),[warning,setWarning]=useState('');
+    const [browseAllFolders,setBrowseAllFolders]=useState(false);
+    const [groupMode,setGroupMode]=useState('sets'),[setSubtopic,setSetSubtopic]=useState('All');
+    const sharedLibrary=!!window.__BSA_SHARED_MODE__;
     const rows=useMemo(()=>bsa205LibraryItems(subject),[subject]);
     const flags=subject.libraryFlags||[];
     const hidden=new Set(flags.filter(f=>f.archived).map(f=>f.target));
@@ -13506,9 +13907,12 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const categoryCounts=bsa3GroupRows(rows.filter(x=>(showHidden||!hidden.has(x.key))&&(type==='All'||x.type===type)));
     const topics=['All topics',...categoryCounts.map(([k])=>k)];
     const display=rows.filter(x=>(showHidden||!hidden.has(x.key))&&(type==='All'||x.type===type)&&(topicFilter==='All topics'||x.topic===topicFilter)&&(!query||bsa198Fingerprint(x.title+' '+x.text+' '+x.source+' '+x.setTitle+' '+x.topic).includes(bsa198Fingerprint(query))));
-    const grouped=bsa3GroupRows(display);
-    const shownGroup=activeGroup&&grouped.some(([name])=>name===activeGroup)?activeGroup:(topicFilter!=='All topics'?topicFilter:'');
-    const chosenRows=shownGroup?(grouped.find(([name])=>name===shownGroup)||['',[]])[1]:[];
+    const byOriginalSet=groupMode==='sets'&&['Written problem','Journal problem'].includes(type);
+    const groups=byOriginalSet?bsa38GroupOriginalSets(display,subject):bsa3GroupRows(display).map(([label,items])=>[label,label,items]);
+    const shownGroup=activeGroup&&groups.some(([id])=>id===activeGroup)?activeGroup:(!byOriginalSet&&topicFilter!=='All topics'?topicFilter:'');
+    const currentGroup=groups.find(([id])=>id===shownGroup),chosenRowsRaw=currentGroup?currentGroup[2]:[];
+    const chosenRows=byOriginalSet&&setSubtopic!=='All'?chosenRowsRaw.filter(x=>x.topic===setSubtopic):chosenRowsRaw;
+    const shownGroupTitle=currentGroup?currentGroup[1]:(shownGroup||'');
     const needsTopic=rows.filter(x=>x.kind==='problem'&&x.topic==='Uncategorized'&&!hidden.has(x.key)).length;
     const updateProblemTopic=(item,newValue)=>{const label=newValue==='custom'?window.prompt('Type a chapter/topic label for this problem. It will not change the problem or answer.',item.topic==='Uncategorized'?'':item.topic):null;
       if(newValue==='custom'&&(!label||!label.trim()))return false;
@@ -13538,24 +13942,33 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const updateInbox=(id,status)=>update(s=>{const r=(s.studyInbox||[]).find(x=>x.id===id);if(r)r.status=status});
     const startImport=x=>{setHandoff(x.text);setTab('import')};
     return h('section',{className:'view bsa205-page'},
-      h('div',{className:'bsa205-page-head'},h('div',null,h('span',{className:'bsa205-overline'},'YOUR MATERIALS · ONE PLACE'),h('h1',null,'Study Library'),h('p',null,'Choose a subject topic first, then open a problem. No endless scrolling.')),
-        h('button',{className:'bsa205-head-action',onClick:()=>setTab('import')},'＋ Import material')),
-      h('p',{className:'bsa3-library-summary'},rows.filter(r=>r.type==='Written problem').length+' written problems · '+categoryCounts.length+' topic folders · '+inbox.filter(x=>x.status==='new').length+' inbox items'),
-      h('div',{className:'bsa205-pagetabs bsa3-library-main-tabs',role:'group','aria-label':'Library areas'},[['all','Written problems'],['inbox','Inbox'],['sources','Source links']].map(([key,label])=>h('button',{key,type:'button',className:tab===key?'selected':'','aria-pressed':tab===key,onClick:()=>setTab(key)},label))),
-      h('details',{className:'bsa3-library-extra'},h('summary',null,'Other library tools'),h('div',null,h('button',{className:'btn',onClick:()=>setTab('import')},'Import exercises'),h('button',{className:'btn',onClick:()=>setTab('health')},'Duplicate & library cleanup'))),
+      h('div',{className:'bsa205-page-head'},h('div',null,h('span',{className:'bsa205-overline'},'YOUR MATERIALS · ONE PLACE'),h('h1',null,'Study Library'),h('p',null,'Choose a topic to see its questions immediately. Your answers and progress stay saved.')),
+        !sharedLibrary&&h('button',{className:'bsa205-head-action',onClick:()=>setTab('import')},'＋ Import material')),
+      h('p',{className:'bsa3-library-summary'},rows.filter(r=>r.type==='Written problem').length+' written problems · '+(subject.psets||[]).length+' original sets · '+categoryCounts.length+' topics · '+inbox.filter(x=>x.status==='new').length+' inbox items'),
+      !sharedLibrary&&h('div',{className:'bsa205-pagetabs bsa3-library-main-tabs',role:'group','aria-label':'Library areas'},[['all','Written problems'],['inbox','Inbox'],['sources','Source links']].map(([key,label])=>h('button',{key,type:'button',className:tab===key?'selected':'','aria-pressed':tab===key,onClick:()=>setTab(key)},label))),
+      h('details',{className:'bsa38-bookmarks'},h('summary',null,'My bookmarked problems ('+bsa38Work(subject,'bookmark:').length+')'),h('div',{className:'bsa38-bookmark-list'},bsa38Work(subject,'bookmark:').length?bsa38Work(subject,'bookmark:').slice(0,60).map(r=>h('button',{className:'btn',key:r.key,onClick:()=>go(r.route||'library',r.opts||{})},r.title||'Saved material')):h('p',null,'Bookmark a problem from a topic folder to find it quickly next time.'))),
+      !sharedLibrary&&h('details',{className:'bsa3-library-extra'},h('summary',null,'Other library tools'),h('div',null,h('button',{className:'btn',onClick:()=>setTab('import')},'Import exercises'),h('button',{className:'btn',onClick:()=>setTab('health')},'Duplicate & library cleanup'),h(BSA38LibraryTriage,{subject,update,toast}))),
       tab==='all'&&h('div',{className:'bsa205-card bsa3-library-browser'},
-        h('div',{className:'bsa205-card-head'},h('div',null,h('h2',null,'Browse by topic'),h('p',{className:'muted small'},'Open a topic folder, or organize unclassified problems. Saved solutions and attempts remain intact.')),
-          h('div',{className:'bsa34-library-tools'},needsTopic>0&&h('button',{className:'btn bsa34-sort-cta',onClick:()=>{setType('Written problem');setTopicFilter('Uncategorized');setActiveGroup('Uncategorized');setVisibleCount(20)}},'Organize '+needsTopic+' unclassified'),h('button',{className:'btn ghost',onClick:()=>setShowHidden(v=>!v)},showHidden?'Hide archived':'Show archived'))),
+        h('div',{className:'bsa205-card-head'},h('div',null,h('h2',null,'Find your problems'),h('p',{className:'muted small'},'Browse the original imported sets or study across topics. No questions are moved or duplicated.')),
+          !sharedLibrary&&h('div',{className:'bsa34-library-tools'},needsTopic>0&&h('button',{className:'btn bsa34-sort-cta',onClick:()=>{setType('Written problem');setTopicFilter('Uncategorized');setActiveGroup('Uncategorized');setVisibleCount(20)}},'Organize '+needsTopic+' unclassified'),h('button',{className:'btn ghost',onClick:()=>setShowHidden(v=>!v)},showHidden?'Hide archived':'Show archived'))),
+        ['Written problem','Journal problem'].includes(type)&&h('div',{className:'bsa38-library-mode',role:'group','aria-label':'How to organize problems'},
+          h('button',{type:'button',className:groupMode==='sets'?'is-active':'','aria-pressed':groupMode==='sets',onClick:()=>{setGroupMode('sets');setSetSubtopic('All');setActiveGroup('');setTopicFilter('All topics');setBrowseAllFolders(false);setSelectedProblems([]);setVisibleCount(20)}},'By Problem Set'),
+          h('button',{type:'button',className:groupMode==='topics'?'is-active':'','aria-pressed':groupMode==='topics',onClick:()=>{setGroupMode('topics');setSetSubtopic('All');setActiveGroup('');setTopicFilter('All topics');setBrowseAllFolders(false);setSelectedProblems([]);setVisibleCount(20)}},'By Topic')),
         h('div',{className:'bsa3-library-controls'},
           h('label',null,'Material',h('select',{value:type,onChange:e=>{setType(e.target.value);setTopicFilter('All topics');setActiveGroup('');setSelectedProblems([]);setVisibleCount(20)},'aria-label':'Filter material type'},allTypes.map(x=>h('option',{key:x,value:x},x==='All'?'All material types':x+'s')))),
           h('label',null,'Topic',h('select',{value:topics.includes(topicFilter)?topicFilter:'All topics',onChange:e=>{setTopicFilter(e.target.value);setActiveGroup(e.target.value==='All topics'?'':e.target.value);setSelectedProblems([]);setVisibleCount(20)},'aria-label':'Filter by topic'},topics.map(x=>h('option',{key:x,value:x},x)))),
           h('label',null,'Search',h('input',{type:'search',value:query,onChange:e=>{setQuery(e.target.value);setVisibleCount(20)},placeholder:'Find a chapter, amount or question…','aria-label':'Search questions and source'}))),
-        h('div',{className:'bsa3-library-hint'},h('strong',null,display.length+' matching items'),h('span',null,chosenRows.length?(Math.min(visibleCount,chosenRows.length)+' of '+chosenRows.length+' in this folder'):'Choose a topic to see its questions')),
-        h('div',{className:'bsa3-topic-folders',role:'group','aria-label':'Topic folders'},grouped.map(([label,list])=>h('button',{key:label,type:'button',className:'bsa3-topic-folder'+(shownGroup===label?' selected':''),onClick:()=>{setActiveGroup(shownGroup===label?'':label);setSelectedProblems([]);setVisibleCount(20)},'aria-expanded':shownGroup===label},h('span',{className:'bsa3-topic-folder-name'},label),h('span',{className:'bsa3-topic-count'},list.length),h('span',{'aria-hidden':true},shownGroup===label?'−':'+')))),
-        !grouped.length&&h('p',{className:'muted'},'No matching materials. Try a different topic or clear your search.'),
+        h('div',{className:'bsa3-library-hint'},h('strong',null,display.length+' matching items'),h('span',null,chosenRows.length?(Math.min(visibleCount,chosenRows.length)+' of '+chosenRows.length+' in '+(byOriginalSet?'this set':'this topic')):'Choose '+(byOriginalSet?'a Problem Set':'a topic')+' to see its questions')),
+        h('div',{className:'bsa35-folder-browser'},
+          shownGroup&&h('div',{className:'bsa35-folder-switch'},
+            h('span',null,'Viewing: ',h('strong',null,shownGroupTitle)),
+            h('button',{type:'button',className:'btn ghost',onClick:()=>setBrowseAllFolders(v=>!v),'aria-expanded':browseAllFolders},browseAllFolders?'Hide folders':'Change '+(byOriginalSet?'set':'topic')+' ('+groups.length+')')),
+          (!shownGroup||browseAllFolders)&&h('div',{className:'bsa3-topic-folders',role:'group','aria-label':byOriginalSet?'Original Problem Sets':'Topic folders'},groups.map(([id,label,list])=>h('button',{key:id,type:'button',className:'bsa3-topic-folder'+(shownGroup===id?' selected':''),onClick:()=>{setActiveGroup(id);setSetSubtopic('All');setBrowseAllFolders(false);setSelectedProblems([]);setVisibleCount(20)},'aria-expanded':shownGroup===id},h('span',{className:'bsa3-topic-folder-name'},label),h('span',{className:'bsa3-topic-count'},list.length),h('span',{'aria-hidden':true},shownGroup===id?'✓':'+')))),
+          !grouped.length&&h('p',{className:'muted'},'No matching materials. Try a different topic or clear your search.')),
         shownGroup&&h('section',{className:'bsa3-question-pane','aria-label':'Questions in selected topic'},
-          h('div',{className:'bsa34-topic-header'},h('h3',null,shownGroup),h('button',{className:'btn bsa34-topic-session',onClick:()=>{const f=bsa34FocusChoices(subject).find(o=>o.label===shownGroup);go('study',{focusId:f?.id||'label:'+shownGroup})}},'Plan this topic ↗')),
-          chosenRows.some(x=>x.kind==='problem')&&h('div',{className:'bsa3-bulk-bar'},
+          h('div',{className:'bsa34-topic-header'},h('h3',null,(byOriginalSet?'Original set · ':'Questions · ')+shownGroupTitle),!byOriginalSet&&h('button',{className:'btn bsa34-topic-session',onClick:()=>{const f=bsa34FocusChoices(subject).find(o=>o.label===shownGroup);go('study',{focusId:f?.id||'label:'+shownGroup})}},'Plan this topic ↗')),
+          byOriginalSet&&h('div',{className:'bsa38-set-topics',role:'group','aria-label':'Topics within this Problem Set'},[['All',chosenRowsRaw],...bsa3GroupRows(chosenRowsRaw)].map(([label,items])=>h('button',{key:label,type:'button',className:setSubtopic===label?'is-active':'','aria-pressed':setSubtopic===label,onClick:()=>{setSetSubtopic(label);setVisibleCount(20);setSelectedProblems([])}},label==='All'?'All topics':label,h('span',null,items.length)))),
+          !sharedLibrary&&chosenRows.some(x=>x.kind==='problem')&&h('div',{className:'bsa3-bulk-bar'},
             h('span',null,selectedProblems.length+' selected'),
             h('button',{className:'btn',onClick:()=>setSelectedProblems(chosenRows.slice(0,visibleCount).filter(x=>x.kind==='problem').map(x=>x.key))},'Select visible'),
             h('button',{className:'btn ghost',onClick:()=>setSelectedProblems([])},'Clear'),
@@ -13563,25 +13976,26 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
               h('option',{value:''},'Move to topic…'),h('option',{value:'inherit'},'Use original set topic'),(subject.topics||[]).map(t=>h('option',{key:t.id,value:t.id},[t.code,t.title].filter(Boolean).join(' · '))),h('option',{value:'custom'},'Custom topic…')),
             h('button',{className:'btn primary',disabled:!selectedProblems.length||!bulkTopic,onClick:bulkMove},'Apply topic')),
           h('div',{className:'bsa3-question-list'},chosenRows.slice(0,visibleCount).map(x=>h('article',{key:x.key,className:'bsa3-question-row'},
-            x.kind==='problem'&&h('label',{className:'bsa3-choose-row'},h('input',{type:'checkbox',checked:selectedProblems.includes(x.key),onChange:e=>setSelectedProblems(prev=>e.target.checked?[...new Set([...prev,x.key])]:prev.filter(k=>k!==x.key)),'aria-label':'Select problem '+bsa205Short(x.title,70)})),
+            !sharedLibrary&&x.kind==='problem'&&h('label',{className:'bsa3-choose-row'},h('input',{type:'checkbox',checked:selectedProblems.includes(x.key),onChange:e=>setSelectedProblems(prev=>e.target.checked?[...new Set([...prev,x.key])]:prev.filter(k=>k!==x.key)),'aria-label':'Select problem '+bsa205Short(x.title,70)})),
             h('div',{className:'bsa3-question-copy'},h('span',{className:'bsa205-tag'},x.type),h('strong',null,bsa205Short(x.title,120)),x.setTitle&&h('small',null,'Set: '+x.setTitle),h('p',null,bsa205Short(x.text,170)),x.source&&h('small',null,'Source: '+bsa205Short(x.source,100))),
             h('div',{className:'bsa3-question-actions'},
               h('button',{className:'btn primary',onClick:()=>go(x.route,x.opts||{})},x.kind==='problem'?'Open original problem':'Open source'),
-              x.kind==='problem'&&h('label',{className:'bsa3-topic-change'},'Move topic',h('select',{value:'',onChange:e=>{const value=e.target.value;if(!value||!updateProblemTopic(x,value))return;setActiveGroup('');setTopicFilter('All topics');setVisibleCount(20)},'aria-label':'Assign topic for '+bsa205Short(x.title,60)},
+              !sharedLibrary&&x.kind==='problem'&&h('label',{className:'bsa3-topic-change'},'Move topic',h('select',{value:'',onChange:e=>{const value=e.target.value;if(!value||!updateProblemTopic(x,value))return;setActiveGroup('');setTopicFilter('All topics');setVisibleCount(20)},'aria-label':'Assign topic for '+bsa205Short(x.title,60)},
                 h('option',{value:''},'Choose topic…'),h('option',{value:'inherit'},'Use set topic'),(subject.topics||[]).map(t=>h('option',{key:t.id,value:t.id},[t.code,t.title].filter(Boolean).join(' · '))),h('option',{value:'custom'},'Custom topic…')))),
-              h('button',{className:'btn ghost',onClick:()=>toggleHide(x.key)},hidden.has(x.key)?'Restore':'Hide from Library')))),
+              h('button',{className:'btn ghost',onClick:()=>{const key='bookmark:'+x.key;update(s=>{s.problemWork=s.problemWork||[];const old=s.problemWork.find(r=>r.key===key);if(old)s.problemWork=s.problemWork.filter(r=>r.key!==key);else s.problemWork.push({id:uid('work'),key,title:x.title,route:x.route,opts:x.opts||{},savedAt:Date.now()});});}},(subject.problemWork||[]).some(r=>r.key==='bookmark:'+x.key)?'★ Bookmarked':'☆ Bookmark'),
+              !sharedLibrary&&h('button',{className:'btn ghost',onClick:()=>toggleHide(x.key)},hidden.has(x.key)?'Restore':'Hide from Library')))),
           chosenRows.length>visibleCount&&h('button',{className:'btn bsa3-more-questions',onClick:()=>setVisibleCount(n=>n+20)},'Show 20 more ('+(chosenRows.length-visibleCount)+' remaining)'),
-          h('p',{className:'muted small'},'Topic changes only update the original problem label; they do not reset its answer, attempt status, or score.')),
+          !sharedLibrary&&h('p',{className:'muted small'},'Topic changes only update the original problem label; they do not reset its answer, attempt status, or score.')),
         h('details',{className:'bsa3-library-help'},h('summary',null,'Where are my other tools?'),h('p',null,'Use Study to read, Practice for quizzes and Accounting Lab, and Inbox for unsorted notes. Search covers all materials when “All material types” is selected.'))),
-      tab==='inbox'&&h('div',{className:'bsa205-inbox-grid'},
+      !sharedLibrary&&tab==='inbox'&&h('div',{className:'bsa205-inbox-grid'},
         h('div',{className:'bsa205-card'},h('h2',null,'Quick capture'),h('p',{className:'muted small'},'Collect problems or ideas now. Organize them when you have time.'),h('textarea',{rows:6,value:capture,onChange:e=>setCapture(e.target.value),placeholder:'Paste a question, a formula, or a note…','aria-label':'New inbox note'}),
           h('input',{value:captureSource,onChange:e=>setCaptureSource(e.target.value),placeholder:'Source / chapter (optional)','aria-label':'Inbox source'}),h('button',{className:'btn primary',disabled:!capture.trim(),onClick:addNote},'Save to Inbox'),warning&&h('p',{className:'bsa205-message'},warning)),
         h('div',{className:'bsa205-card'},h('div',{className:'bsa205-card-head'},h('h2',null,'To organize'),h('span',{className:'bsa205-tag'},inbox.filter(x=>x.status==='new').length+' new')),
           inbox.length?h('div',{className:'bsa205-inbox-list'},inbox.slice(0,100).map(x=>h('article',{className:'bsa205-inbox-item',key:x.id},h('div',null,h('span',{className:'bsa205-tag'},x.status==='new'?'Needs sorting':x.status==='reviewed'?'Reviewed':'Filed'),h('small',null,' '+bsa205Date(x.createdAt))),h('p',null,bsa205Short(x.text,480)),x.source&&h('small',null,x.source+(x.locator?' · '+x.locator:'')),
             h('div',{className:'bsa205-action-row'},h('button',{className:'btn',onClick:()=>startImport(x)},'Draft journal problems'),h('button',{className:'btn ghost',onClick:()=>updateInbox(x.id,x.status==='reviewed'?'new':'reviewed')},x.status==='reviewed'?'Mark new':'Mark reviewed'),h('button',{className:'btn ghost',onClick:()=>updateInbox(x.id,'filed')},'File away'))))):h('p',{className:'muted'},'Your Inbox is clear. Files in original Problem Sets and MCQs stay where they belong.'))),
-      tab==='sources'&&h(BSA205Sources,{subject,update,toast,go}),
-      tab==='import'&&h(BSA205Importer,{key:handoff?.slice(0,36)||subject.id,subject,update,toast,go,initialText:handoff}),
-      tab==='health'&&h('div',{className:'bsa205-health-grid'},
+      !sharedLibrary&&tab==='sources'&&h(BSA205Sources,{subject,update,toast,go}),
+      !sharedLibrary&&tab==='import'&&h(BSA205Importer,{key:handoff?.slice(0,36)||subject.id,subject,update,toast,go,initialText:handoff}),
+      !sharedLibrary&&tab==='health'&&h('div',{className:'bsa205-health-grid'},
         h('div',{className:'bsa205-card'},h('span',{className:'bsa205-overline'},'NOTHING WAS DELETED'),h('h2',null,'Library health'),
           [['Exact duplicate candidates',totals.duplicates.length,'Matching question statements across existing collections.'],['Numerical variants',totals.variants.length,'Similar wording with different numbers: useful variations, not automatic duplicates.'],['Journal keys needing a source check',unverified,'Balanced debits/credits do not guarantee the accounting treatment.'],['Problems without source labels',hasSource,'Add textbook and page references when available.'],['Unsorted Inbox items',inbox.filter(x=>x.status==='new').length,'Review and file away drafts so the Inbox stays clean.']].map(([title,n,detail])=>h('div',{className:'bsa205-health-row',key:title},h('span',{className:'bsa205-health-number'},n),h('div',null,h('strong',null,title),h('p',{className:'muted small'},detail))))),
         h('div',{className:'bsa205-card'},h('h2',null,'Review exact duplicates'),h('p',{className:'muted small'},'You can hide a repeat from this hub without deleting a grade, attempt or original question.'),
@@ -13904,6 +14318,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
           h('div',{className:'bsa34-week-bars'},recall.weeks.map(w=>h('div',{key:w.label,className:'bsa34-week'},h('div',{className:'bsa34-week-track'},h('span',{style:{height:(w.count?Math.max(6,Math.round(w.independent/Math.max(...recall.weeks.map(x=>x.count),1)*100)):0)+'%'}})),h('strong',null,w.independent+' / '+w.count),h('small',null,w.label))))),
         h('p',{className:'bsa34-memory-note'},'No study-hour or XP data is used to estimate recall. Topics without tagged attempts remain unclassified.')),
       h('div',{className:'bsa205-snapshot'},[['Recall attempts',total],['Independent correct',confidence],['Events in 7 days',recent],['Journal checks',lab.length]].map(([title,count])=>h('div',{className:'bsa205-snapshot-item',key:title},h('strong',null,count),h('span',null,title)))),
+      h(BSA38ProgressCompare,{subject,go}),
       h('div',{className:'bsa205-master-grid'},
         h('div',{className:'bsa205-card'},h('h2',null,'Your topic evidence'),h('p',{className:'muted small'},'Only linked questions are attributed to topics. Unlinked records stay explicitly unlinked; this is evidence, not a predicted exam score.'),
           groups.length?groups.map(x=>{const pct=x.reviewed?Math.round(x.correct/x.reviewed*100):0;return h('div',{className:'bsa205-master-row',key:x.id},h('div',null,h('strong',null,x.title),h('small',null,x.correct+' independent correct · '+x.wrong+' missed · '+x.assisted+' guessed/assisted · '+x.mistakes+' open mistakes')),
@@ -13914,6 +14329,180 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
           h('div',{className:'bsa205-action-row'},h('button',{className:'btn primary',onClick:()=>go('study')},'Build a focused session'),h('button',{className:'btn',onClick:()=>go('mistakes')},'Review mistakes')),
           h('p',{className:'muted small'},'Self-rated completion, calendar plans, and XP are deliberately excluded from answer accuracy. Guessed and assisted answers are not counted as confident independent recall.'))));
   }
+  /* V3.5–V3.8: extra study workflows use the existing syncable `problemWork`
+     collection. They never alter gradebook records, XP or imported originals. */
+  const BSA38_FORMAT='bsa-variation-v1';
+  const BSA38_EXAMPLE={format:BSA38_FORMAT,templates:[{title:'Straight-line depreciation',topic:'Depreciation',source:'Self-authored practice template · check against your course',difficulty:'Beginner',variables:{cost:{min:80000,max:220000,step:10000},residual:{min:5000,max:15000,step:5000},life:{min:4,max:10,step:1}},promptVariants:['An equipment costs ₱{cost}, has a residual value of ₱{residual}, and a useful life of {life} years. Determine its annual straight-line depreciation.','A company bought equipment for ₱{cost}. Estimated salvage value is ₱{residual}, and the useful life is {life} years. Compute depreciation per year under the straight-line method.'],answer:{expression:'(cost-residual)/life',unit:'₱',decimals:2},explanation:'Annual straight-line depreciation = (asset cost − residual value) ÷ useful life.'}]};
+  const BSA38_PROMPT='Create a bsa-variation-v1 JSON template for a numerical accounting problem I provide. Output valid JSON only, with format and templates arrays. Each template needs title, topic, source, variables (each with integer min/max/step), 2 to 4 equivalent promptVariants using {variable} placeholders, answer: {expression,unit,decimals}, and explanation. Expressions may use only variables, numbers, +, -, *, / and parentheses. Vary only numerical details that preserve the accounting rule and have exactly one valid answer. Never invent source citations. Do not include an answer key you have not independently checked. I will verify the template before importing. Problem: ';
+  function bsa38Calc(expression,variables){
+    const input=String(expression||'');if(input.length>500)throw Error('Expression too long.');
+    const tokens=input.match(/(?:\d+(?:\.\d+)?|[a-z][a-z0-9_]*|[()+*/-])/gi)||[];
+    if(tokens.join('')!==input.replace(/\s+/g,''))throw Error('Expression contains unsupported characters.');
+    let i=0;const consume=x=>tokens[i]===x?(i++,true):false;
+    const primary=()=>{if(consume('(')){const n=add();if(!consume(')'))throw Error('Missing closing parenthesis.');return n;}
+      if(consume('-'))return -primary();if(consume('+'))return primary();
+      const s=tokens[i++];if(!s)throw Error('Incomplete expression.');if(/^\d/.test(s))return Number(s);
+      if(!/^[a-z][a-z0-9_]*$/i.test(s)||!Object.prototype.hasOwnProperty.call(variables,s))throw Error('Unknown answer variable: '+s);
+      return Number(variables[s]);};
+    const mult=()=>{let n=primary();while(tokens[i]==='*'||tokens[i]==='/'){const op=tokens[i++],b=primary();if(op==='/'&&b===0)throw Error('Division by zero.');n=op==='*'?n*b:n/b;}return n;};
+    const add=()=>{let n=mult();while(tokens[i]==='+'||tokens[i]==='-'){const op=tokens[i++],b=mult();n=op==='+'?n+b:n-b;}return n;};
+    const n=add();if(i!==tokens.length||!Number.isFinite(n)||Math.abs(n)>1e12)throw Error('Invalid calculated result.');return n;
+  }
+  function bsa38ValidateTemplate(raw){
+    if(!raw||typeof raw!=='object'||Array.isArray(raw))throw Error('A template must be an object.');
+    const title=String(raw.title||'').trim().slice(0,140),topic=String(raw.topic||'').trim().slice(0,120);
+    if(title.length<4||!topic)throw Error('Every template needs a title and topic.');
+    const vars=raw.variables||{},keys=Object.keys(vars);
+    if(!keys.length||keys.length>12||keys.some(k=>!/^[a-z][a-z0-9_]*$/.test(k)))throw Error('Use 1–12 named variables (letters, digits, underscore).');
+    const variables={};for(const k of keys){const v=vars[k];if(!v||![v.min,v.max,v.step].every(Number.isFinite)||v.step<=0||v.max<v.min||v.max-v.min>1e9||(v.max-v.min)/v.step>100000)throw Error('Invalid numerical range for '+k);
+      variables[k]={min:v.min,max:v.max,step:v.step};}
+    const variants=raw.promptVariants;if(!Array.isArray(variants)||variants.length<1||variants.length>8||variants.some(s=>typeof s!=='string'||s.length<35||s.length>1800))throw Error('Provide 1–8 complete problem statements.');
+    for(const p of variants){for(const m of p.matchAll(/\{([^}]+)\}/g))if(!keys.includes(m[1]))throw Error('Unknown placeholder {'+m[1]+'}.');}
+    const answer=raw.answer||{};if(!answer.expression||typeof answer.expression!=='string')throw Error('Add an answer.expression.');
+    const decimals=Number.isInteger(answer.decimals)&&answer.decimals>=0&&answer.decimals<=5?answer.decimals:2;
+    const sample=Object.fromEntries(keys.map(k=>[k,variables[k].min]));bsa38Calc(answer.expression,sample);
+    for(const k of keys){const second={...sample,[k]:variables[k].max};bsa38Calc(answer.expression,second);}
+    return {id:raw.id&&/^[a-zA-Z0-9_-]{4,80}$/.test(raw.id)?raw.id:uid('variant'),title,topic,source:String(raw.source||'Self-authored template').slice(0,180),difficulty:String(raw.difficulty||'Mixed').slice(0,40),variables,promptVariants:variants.map(s=>s.trim()),answer:{expression:answer.expression,unit:String(answer.unit||'').slice(0,16),decimals},explanation:String(raw.explanation||'Check the supplied formula with your source.').slice(0,1200)};
+  }
+  function bsa38ParseImport(text){const json=JSON.parse(String(text||''));if(!json||json.format!==BSA38_FORMAT||!Array.isArray(json.templates)||!json.templates.length||json.templates.length>100)throw Error('Expected bsa-variation-v1 JSON with 1–100 templates.');return json.templates.map(bsa38ValidateTemplate);}
+  function bsa38Generate(template){const t=bsa38ValidateTemplate(template),values={};
+    for(const [key,v] of Object.entries(t.variables)){const count=Math.floor((v.max-v.min)/v.step+1e-8)+1;let random=Math.floor(Math.random()*count);if(typeof crypto!=='undefined'&&crypto.getRandomValues){const array=new Uint32Array(1);crypto.getRandomValues(array);random=array[0]%count;}values[key]=Number((v.min+random*v.step).toFixed(7));}
+    const answer=bsa38Calc(t.answer.expression,values),text=t.promptVariants[Math.floor(Math.random()*t.promptVariants.length)].replace(/\{([a-z][a-z0-9_]*)\}/gi,(m,k)=>Object.prototype.hasOwnProperty.call(values,k)?values[k].toLocaleString('en-PH',{maximumFractionDigits:7}):m);
+    return {templateId:t.id,values,text,answer:Number(answer.toFixed(t.answer.decimals)),unit:t.answer.unit,decimals:t.answer.decimals,explanation:t.explanation};
+  }
+  function bsa38Work(subject,key){return (subject.problemWork||[]).filter(x=>x&&typeof x.key==='string'&&x.key.startsWith(key));}
+  function bsa38SaveWork(update,key,field,value){update(s=>{s.problemWork=s.problemWork||[];let row=s.problemWork.find(x=>x.key===key);if(!row){row={id:uid('work'),key};s.problemWork.push(row);}row[field]=value;row.savedAt=Date.now();});}
+  function bsa38Day(x){const d=new Date(x);return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');}
+  function bsa38AddDays(iso,days){const d=new Date(iso+'T12:00:00');d.setDate(d.getDate()+days);return bsa38Day(d);}
+  function BSA38Variations({subject,update,toast,go}){
+    const [raw,setRaw]=useState(''),[parsed,setParsed]=useState(null),[error,setError]=useState(''),[current,setCurrent]=useState(''),[caseData,setCaseData]=useState(null),[answer,setAnswer]=useState(''),[feedback,setFeedback]=useState(null);
+    const templates=bsa38Work(subject,'variation:').map(x=>x.template).filter(Boolean);
+    const attempts=bsa38Work(subject,'variation-attempt:').filter(x=>x.result);
+    const select=(id)=>{const t=templates.find(x=>x.id===id);if(!t)return;
+      const old=new Set(attempts.filter(x=>x.result.templateId===id).slice(-30).map(x=>JSON.stringify(x.result.values)));
+      if(caseData&&caseData.templateId===id)old.add(JSON.stringify(caseData.values));
+      let item=bsa38Generate(t);for(let tries=0;tries<18&&old.has(JSON.stringify(item.values));tries++)item=bsa38Generate(t);
+      setCurrent(id);setCaseData(item);setAnswer('');setFeedback(null);};
+    const preview=()=>{try{const entries=bsa38ParseImport(raw);const existing=new Set(templates.map(t=>(t.title+'|'+t.topic).toLowerCase()));setParsed(entries.map(x=>({...x,duplicate:existing.has((x.title+'|'+x.topic).toLowerCase())})));setError('');}catch(e){setError(e.message);setParsed(null);}};
+    const save=()=>{if(!parsed)return;const added=parsed.filter(t=>!t.duplicate);if(!added.length)return;update(s=>{s.problemWork=s.problemWork||[];for(const t of added)s.problemWork.push({id:uid('work'),key:'variation:'+t.id,template:t,savedAt:Date.now()})});toast(added.length+' checked-template record(s) saved.');setRaw('');setParsed(null);};
+    const check=()=>{if(!caseData)return;const n=Number(String(answer).replace(/[₱,\s]/g,''));if(!answer.trim()||!Number.isFinite(n)){setFeedback({ok:false,text:'Enter a numeric answer.'});return;}
+      const tolerance=0.5*Math.pow(10,-caseData.decimals)+1e-7,ok=Math.abs(n-caseData.answer)<=tolerance;setFeedback({ok,text:(ok?'Your calculation matches the formula key. ':'Not yet. ')+caseData.explanation+' · Key: '+caseData.unit+caseData.answer.toLocaleString('en-PH')});
+      bsa38SaveWork(update,'variation-attempt:'+uid('att'),'result',{templateId:caseData.templateId,at:Date.now(),correct:ok,values:caseData.values,entered:n,answer:caseData.answer});};
+    const next=()=>select(current);
+    return h('div',{className:'bsa38-inner'},
+      h('p',{className:'muted small'},'One JSON formula template can produce many practice versions. The arithmetic key is recalculated each time; wording alternates between verified equivalent prompts. No AI is needed during practice.'),
+      h('div',{className:'bsa38-stat-strip'},h('span',null,templates.length+' templates'),h('span',null,attempts.length+' saved attempts'),h('span',null,'Original problems untouched')),
+      templates.length?h('label',{className:'field'},h('span',{className:'field-label'},'Choose your calculation template'),h('select',{value:current,onChange:e=>select(e.target.value)},h('option',{value:''},'Choose a template…'),templates.map(t=>h('option',{key:t.id,value:t.id},t.title+' · '+t.topic)))):h('p',null,'Import your first template below. You can use the example immediately.'),
+      current&&caseData&&h('article',{className:'bsa38-question-card'},h('div',{className:'bsa38-card-head'},h('strong',null,templates.find(t=>t.id===current)?.title||'Problem variation'),h('button',{className:'btn ghost',onClick:next},'New numbers & wording ↻')),
+        h('p',null,caseData.text),
+        h('button',{type:'button',className:'btn ghost',onClick:()=>go('ask',{focus:{kind:'exercise',title:templates.find(t=>t.id===current)?.title||'Dynamic problem',setTitle:'Dynamic practice',question:caseData.text}})},'✦ Ask Tutor about this variation'),h('label',{className:'field'},h('span',{className:'field-label'},'Your numerical answer'),h('input',{type:'text',inputMode:'decimal',placeholder:'Enter your answer before checking',value:answer,onChange:e=>setAnswer(e.target.value)})),
+        h('button',{className:'btn primary',onClick:check,disabled:!!feedback},'Check my calculation'),feedback&&h('div',{className:'bsa38-feedback '+(feedback.ok?'is-correct':''),role:'status'},feedback.text),h('small',{className:'muted'},'Check the original textbook rule. Formula validation does not prove the supplied accounting treatment is correct.')),
+      h('details',{className:'bsa38-import'},h('summary',null,'Import a reusable problem JSON / get the prompt'),
+        h('p',{className:'muted small'},'Copy the prompt into your AI tool, then inspect its JSON and answer formula before saving. Unsupported text or formulas are rejected.'),
+        h('button',{className:'btn',onClick:()=>{navigator.clipboard?.writeText(BSA38_PROMPT).then(()=>toast('Template-generation prompt copied')).catch(()=>toast('Clipboard unavailable'));}},'Copy JSON generation prompt'),
+        h('button',{className:'btn',onClick:()=>{setRaw(JSON.stringify(BSA38_EXAMPLE,null,2));setParsed(null);}},'Load illustrative example'),
+        h('textarea',{rows:8,spellCheck:false,value:raw,onChange:e=>{setRaw(e.target.value);setParsed(null);},placeholder:'Paste your bsa-variation-v1 JSON here…','aria-label':'Variation template JSON'}),
+        h('button',{className:'btn primary',disabled:!raw.trim(),onClick:preview},'Validate and preview'),error&&h('p',{className:'error',role:'alert'},error),
+        parsed&&h('div',{className:'bsa38-preview'},h('strong',null,parsed.length+' templates validated'),parsed.slice(0,20).map(t=>h('p',{key:t.id},t.title+' · '+t.topic+(t.duplicate?' · Already imported':''))),h('label',{className:'muted small'},'Only import after verifying the formula and wording against your course material.'),h('button',{className:'btn primary',disabled:parsed.every(t=>t.duplicate),onClick:save},'Save non-duplicate templates'))));
+  }
+  function BSA38Oral({subject,update,toast,checkpoint=false}){
+    const items=(subject.cards||[]).filter(c=>c.q&&c.a).slice(0,1000);
+    const [index,setIndex]=useState(0),[text,setText]=useState(''),[reveal,setReveal]=useState(false),[listening,setListening]=useState(false);
+    const item=items[index%Math.max(1,items.length)];const reviews=bsa38Work(subject,'oral-recall:');const finished=checkpoint&&index>=Math.min(3,items.length);
+    const rate=(rating)=>{if(!item)return;      bsa38SaveWork(update,'oral-recall:'+uid('oral'),'result',{sourceId:item.id,topicId:item.topicId||'',at:Date.now(),rating,checkpoint,typed:text.trim().slice(0,1200)});setText('');setReveal(false);setIndex(i=>i+1);toast('Self-rating saved separately from scored quizzes.');};
+    const speak=()=>{const Rec=window.SpeechRecognition||window.webkitSpeechRecognition;if(!Rec){toast('Speech-to-text not supported here. Type your answer instead.');return}const r=new Rec();r.lang='en-PH';r.interimResults=false;r.onresult=e=>setText(e.results[0][0].transcript);r.onerror=()=>{setListening(false);toast('Voice unavailable; typing still works.');};r.onend=()=>setListening(false);setListening(true);r.start();};
+    return h('div',{className:'bsa38-inner'},h('p',{className:'muted small'},'Practice speaking or typing an explanation before seeing the answer. Compare with the original saved flashcard; rate yourself rather than trusting AI to grade an oral answer.'),
+      h('div',{className:'bsa38-stat-strip'},h('span',null,items.length+' available prompts'),h('span',null,reviews.length+' oral reviews saved')),
+      !item?h('p',null,'Add question-and-answer flashcards to enable oral recitation.'):finished?h('div',{className:'bsa38-question-card'},h('h3',null,'Checkpoint complete'),h('p',null,'You explained '+Math.min(3,items.length)+' saved concepts. Review the self-ratings in Learning Insights; independent quizzes remain the strongest evidence.'),h('button',{className:'btn primary',onClick:()=>{setIndex(0);setText('');setReveal(false);}},'Try another checkpoint')):
+      h('article',{className:'bsa38-question-card'},h('small',{className:'muted'},'Prompt '+(index%items.length+1)+' of '+items.length),h('h3',null,item.q),
+        h('textarea',{rows:4,value:text,onChange:e=>setText(e.target.value),placeholder:'Explain this in your own words before revealing the answer…'}),
+        h('div',{className:'bsa38-row'},h('button',{className:'btn',onClick:speak,disabled:listening},listening?'Listening…':'🎤 Speak answer'),h('button',{className:'btn primary',onClick:()=>setReveal(true)},'Reveal source answer')),
+        reveal&&h('div',{className:'bsa38-feedback'},h('strong',null,'Saved answer for comparison'),h('p',null,item.a),h('p',{className:'muted small'},'Do not rate fluency alone—check the actual concept.'),h('div',{className:'bsa38-row'},h('button',{className:'btn',onClick:()=>rate('again')},'Need another try'),h('button',{className:'btn',onClick:()=>rate('partial')},'Partly correct'),h('button',{className:'btn primary',onClick:()=>rate('confident')},'Explained independently')))));
+  }
+  function BSA38MasteryCheckpoint({subject,update,go}){
+    const items=(subject.cards||[]).filter(c=>c.q&&c.a),history=bsa38Work(subject,'oral-recall:').map(x=>x.result).filter(Boolean);
+    const solved=history.filter(x=>x.rating==='confident').length;
+    return h('div',{className:'bsa38-inner'},h('h3',null,'Concept checkpoint'),h('p',null,'Test three saved concepts without viewing answers, then use your oral recitation self-ratings. These are reflections, not a certified mastery score.'),
+      h('div',{className:'bsa38-stat-strip'},h('span',null,items.length+' possible concepts'),h('span',null,history.length+' recorded explanations'),h('span',null,solved+' self-rated independent')),
+      h(BSA38Oral,{subject,update,toast:()=>{},checkpoint:true}),h('button',{className:'btn',onClick:()=>go('mcq')},'Verify with an objectively scored MCQ'),h('p',{className:'muted small'},'Self-rated checkpoints do not change quiz scores or certify mastery.'));
+  }
+  function BSA38PracticeStudio({subject,update,toast,go}){
+    const [mode,setMode]=useState('variations');return h('section',{className:'bsa38-studio','aria-label':'Additional practice formats'},
+      h('div',{className:'bsa38-head'},h('div',null,h('span',{className:'bsa205-overline'},'MORE WAYS TO LEARN'),h('h2',null,'Fresh practice, familiar workflow'),h('p',null,'These are modes within Practice—not more dashboard pages.'))),
+      h('div',{className:'bsa38-switch',role:'group','aria-label':'Practice mode'},[['variations','Dynamic problems'],['oral','Oral recitation'],['checkpoint','Mastery check']].map(([k,label])=>h('button',{key:k,type:'button',className:mode===k?'is-active':'','aria-pressed':mode===k,onClick:()=>setMode(k)},label))),
+      mode==='variations'?h(BSA38Variations,{subject,update,toast,go}):mode==='oral'?h(BSA38Oral,{subject,update,toast}):h(BSA38MasteryCheckpoint,{subject,update,go}));
+  }
+  function BSA38ExamCatchup({subject,update,toast}){
+    const exams=(subject.topics||[]).filter(t=>t.kind==='exam'&&t.due&&t.due>=today()).sort((a,b)=>a.due.localeCompare(b.due));
+    const [examId,setExamId]=useState(''),[minutes,setMinutes]=useState(35),[maxDays,setMaxDays]=useState(5);
+    const exam=exams.find(t=>t.id===examId)||exams[0],days=exam?Math.max(0,daysUntil(exam.due)):0;
+    const priorities=exam?bsaV164ExamPriority(subject,exam,{}).filter(x=>x.topic&&x.topic.kind!=='exam'):[];
+    const missed=(subject.sessions||[]).filter(x=>!x.done&&x.date&&x.date<today()&&x.topicId&&priorities.some(p=>p.topic.id===x.topicId));
+    const seenMissed=new Set(),ranked=[];
+    for(const old of missed){if(seenMissed.has(old.topicId))continue;seenMissed.add(old.topicId);ranked.push(priorities.find(p=>p.topic.id===old.topicId));}
+    for(const p of priorities)if(!seenMissed.has(p.topic.id))ranked.push(p);
+    const upcoming=(subject.sessions||[]).filter(s=>!s.done&&s.date>=today()&&s.date<=(exam?.due||today()));
+    const planned=new Set(upcoming.map(s=>s.date+'|'+s.topicId));const occupiedDays=new Set(upcoming.map(s=>s.date));
+    const options=[];const capacity=Math.min(Math.max(1,days),Math.min(21,Math.max(1,Number(maxDays)||5)));
+    for(const p of ranked){if(options.length>=capacity)break;for(let offset=0;offset<days;offset++){
+      const date=bsa38AddDays(today(),offset),topic=p.topic;if(date>=exam.due)break;if(occupiedDays.has(date)||planned.has(date+'|'+topic.id)||options.some(x=>x.date===date))continue;
+      options.push({date,topic,why:(p.mistakes||0)+' open mistakes · '+(p.dueCards||0)+' due cards'});break;}}
+    const save=()=>{if(!options.length)return;update(s=>{s.sessions=s.sessions||[];for(const p of options){if(s.sessions.some(x=>x.date===p.date&&x.topicId===p.topic.id&&!x.done))continue;s.sessions.push({id:uid('ss'),date:p.date,time:'',mins:Number(minutes),topicId:p.topic.id,note:'Exam preparation: '+exam.title+' · active recall and practice',done:false});}});toast(options.length+' study sessions added to your existing Schedule.');};
+    return h('details',{className:'bsa38-exam bsa38-extra'},h('summary',null,'Exam preparation & missed-session catch-up'),
+      h('div',{className:'bsa38-inner'},h('p',{className:'muted small'},'Schedule realistic topic-focused review blocks using your exam date and existing weak-topic evidence. Previously planned unfinished sessions are never deleted or moved automatically. Missed past sessions can be considered first for a new open date; review before adding.'),
+      !exam?h('p',null,'Add an upcoming exam and date in Roadmap first.'):
+      h('div',null,h('label',{className:'field'},h('span',{className:'field-label'},'Exam'),h('select',{value:exam.id,onChange:e=>setExamId(e.target.value)},exams.map(x=>h('option',{value:x.id,key:x.id},x.title+' · '+x.due)))),
+      h('div',{className:'bsa38-row'},h('label',null,'Minutes per day',h('select',{value:minutes,onChange:e=>setMinutes(Number(e.target.value))},[20,35,50,60,90].map(n=>h('option',{key:n,value:n},n+' minutes')))),h('label',null,'Max review days',h('select',{value:maxDays,onChange:e=>setMaxDays(Number(e.target.value))},[3,5,7,10,14].map(n=>h('option',{key:n,value:n},n+' days'))))),
+      h('strong',null,days+' days to exam · '+missed.length+' missed sessions · '+options.length+' new sessions suggested'),
+      options.length?h('div',{className:'bsa38-exam-list'},options.map(x=>h('div',{key:x.date+'|'+x.topic.id},h('strong',null,x.date+' · '+x.topic.title),h('small',null,x.why))),h('button',{className:'btn primary',onClick:save},'Add these sessions to Schedule')):h('p',{className:'muted small'},'No open date/topic slots found. Review your existing schedule; you can move an unfinished session there.'))));
+  }
+  function bsa38SuggestTopic(subject,row){
+    const text=(String(row.title||'')+' '+String(row.text||'')+' '+String(row.source||'')).toLowerCase();
+    const stop=new Set(['the','and','with','from','this','that','total','company','statement','question','during','which','their','would','after','before','amount','year','given','following','accounting','financial','what']);
+    const tokens=s=>new Set(String(s||'').toLowerCase().split(/[^a-z0-9]+/).filter(w=>w.length>3&&!stop.has(w)));
+    const words=tokens(text),ranked=(subject.topics||[]).filter(t=>t.kind!=='exam').map(t=>{const terms=tokens(t.title);let score=0;for(const w of terms)if(words.has(w))score++;return {topic:t,score};}).sort((a,b)=>b.score-a.score);
+    return ranked[0]&&ranked[0].score>=2&&(!ranked[1]||ranked[0].score>ranked[1].score)?ranked[0]:null;
+  }
+  function BSA38LibraryTriage({subject,update,toast}){
+    const rows=bsa205LibraryItems(subject).filter(x=>x.kind==='problem'&&(x.topic==='Uncategorized'||!x.topicId)).slice(0,500);
+    const [selected,setSelected]=useState({}),[aiRaw,setAiRaw]=useState(''),[aiParsed,setAiParsed]=useState(null),[aiError,setAiError]=useState('');
+    const proposals=rows.map(r=>({row:r,match:bsa38SuggestTopic(subject,r)})).filter(x=>x.match);
+    const apply=()=>{const active=proposals.filter(x=>selected[x.row.key]);if(!active.length)return;update(s=>{for(const x of active){const set=(s.psets||[]).find(y=>y.id===x.row.setId),p=(set?.problems||[]).find(y=>y.id===x.row.id);if(p&&!p.topicId&&!p.subtopic)p.topicId=x.match.topic.id;}});setSelected({});toast(active.length+' original problem(s) categorized. Answers were preserved.');};
+    const copyPrompt=()=>{const topics=(subject.topics||[]).filter(t=>t.kind!=='exam').map(t=>({id:t.id,title:t.title}));const cases=rows.slice(0,25).map(r=>({problemId:r.id,text:(r.title+' '+r.text).slice(0,650)}));
+      const prompt='Classify these accounting problems into EXISTING topics only. Do not invent topic IDs. If uncertain, omit the problem. Return JSON ONLY in the form {"assignments":[{"problemId":"...","topicId":"..."}]}. No explanations. Topics: '+JSON.stringify(topics)+' Problems: '+JSON.stringify(cases);
+      navigator.clipboard?.writeText(prompt).then(()=>toast('Classification prompt copied. It contains question text; paste only into an AI service you trust.')).catch(()=>toast('Copy unavailable here.'));};
+    const previewAI=()=>{try{const obj=JSON.parse(aiRaw);if(!obj||!Array.isArray(obj.assignments)||obj.assignments.length>100)throw Error('Expected {"assignments":[{"problemId":"...","topicId":"..."}]} with at most 100 rows.');
+      const topics=new Set((subject.topics||[]).map(t=>t.id)),used=new Set(),matched=[];
+      for(const a of obj.assignments){const r=rows.find(x=>x.id===a.problemId);if(!r||!topics.has(a.topicId)||used.has(a.problemId))throw Error('Unknown/duplicate problem or topic ID in proposed assignments.');used.add(a.problemId);matched.push({row:r,topicId:a.topicId});}
+      setAiParsed(matched);setAiError('');}catch(e){setAiParsed(null);setAiError(e.message);}};
+    const applyAI=()=>{if(!aiParsed?.length)return;if(!window.confirm('Apply '+aiParsed.length+' reviewed topic suggestion(s) to the original problems?'))return;
+      update(s=>{for(const x of aiParsed){const set=(s.psets||[]).find(y=>y.id===x.row.setId),p=(set?.problems||[]).find(y=>y.id===x.row.id);if(p&&!p.topicId&&!p.subtopic)p.topicId=x.topicId;}});setAiRaw('');setAiParsed(null);toast('Reviewed AI suggestions applied. Original answers were preserved.');};
+    return h('div',{className:'bsa38-triage'},h('strong',null,'Suggested topic filing'),h('p',{className:'muted small'},'Conservative local keyword suggestions, not AI certainty. Nothing changes until you approve it.'),
+      h('p',null,rows.length+' unclassified or unlinked problems · '+proposals.length+' local suggestions'),
+      proposals.slice(0,30).map(x=>h('label',{key:x.row.key,className:'bsa38-triage-item'},h('input',{type:'checkbox',checked:!!selected[x.row.key],onChange:e=>setSelected(p=>({...p,[x.row.key]:e.target.checked}))}),h('span',null,h('strong',null,bsa205Short(x.row.title,100)),h('small',null,'Suggested: '+x.match.topic.title+' · matched words: '+x.match.score)))),
+      h('button',{className:'btn primary',disabled:!Object.values(selected).some(Boolean),onClick:apply},'Apply selected local labels'),
+      h('details',{className:'bsa38-import'},h('summary',null,'Optional AI-assisted filing (review before saving)'),
+        h('p',{className:'muted small'},'Explicitly copy a batch of up to 25 question excerpts and your existing topic IDs into your chosen AI service. Nothing is sent automatically. Paste its JSON suggestions here; only IDs already in this subject are accepted.'),
+        h('button',{className:'btn',onClick:copyPrompt},'Copy classification prompt'),
+        h('textarea',{value:aiRaw,rows:5,onChange:e=>{setAiRaw(e.target.value);setAiParsed(null)},placeholder:'Paste {"assignments":[...]} here…'}),
+        h('button',{className:'btn',onClick:previewAI,disabled:!aiRaw.trim()},'Preview proposed assignments'),
+        aiError&&h('p',{className:'error',role:'alert'},aiError),
+        aiParsed&&h('div',null,h('strong',null,aiParsed.length+' suggestions'),aiParsed.slice(0,30).map(x=>h('p',{key:x.row.id},bsa205Short(x.row.title,65)+' → '+(subject.topics||[]).find(t=>t.id===x.topicId)?.title)),
+          h('button',{className:'btn primary',onClick:applyAI,disabled:!aiParsed.length},'Confirm these assignments'))));
+  }
+  function BSA38ProgressCompare({subject,go}){
+    const events=(subject.learningEvents||[]).filter(e=>e.kind==='mcq'&&['correct','incorrect'].includes(e.result)&&Number(e.at));
+    const now=Date.now(),recent=events.filter(x=>now-x.at<14*864e5),previous=events.filter(x=>now-x.at>=14*864e5&&now-x.at<28*864e5);
+    const stat=a=>{const independent=a.filter(e=>!e.assisted&&!e.guessed),right=independent.filter(e=>e.result==='correct').length;return {n:independent.length,pct:independent.length?Math.round(right/independent.length*100):null};};
+    const a=stat(recent),b=stat(previous),variation=bsa38Work(subject,'variation-attempt:').map(x=>x.result).filter(Boolean),oral=bsa38Work(subject,'oral-recall:').map(x=>x.result).filter(Boolean);
+    return h('section',{className:'bsa38-progress'},h('span',{className:'bsa205-overline'},'LAST 28 DAYS'),h('h2',null,'Is your practice improving?'),h('p',{className:'muted small'},'Compares independently answered MCQs, not time spent, XP, or self-rated oral answers. Small samples are descriptive, not statistical proof of progress.'),
+      h('div',{className:'bsa38-stat-strip'},h('span',null,'Last 14 days: '+(a.pct===null?'No attempts':a.pct+'% · '+a.n+' answers')),h('span',null,'Previous 14: '+(b.pct===null?'No attempts':b.pct+'% · '+b.n+' answers')),
+      h('span',null,'Generated problems checked: '+variation.length),h('span',null,'Oral self-reviews: '+oral.length)),
+      (a.n<5||b.n<5)?h('p',null,'More independent attempts across multiple days are needed for a meaningful comparison.'):
+      h('p',null,'Change: '+(a.pct-b.pct>0?'+':'')+(a.pct-b.pct)+' percentage points. Different question difficulties may also affect the result.'),
+      h('button',{className:'btn',onClick:()=>go('practice')},'Practice again ↗'));
+  }
+
   /* V3.0: one landing page, focused workspaces. All existing work areas remain reachable. */
   /* V3.1: Restore the richer V2 visual language while connecting the task flow. */
   /* V3.3: a single journey is shared by Today, Learn, Practice and Review.
@@ -14058,7 +14647,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
           ].map(([n,label])=>h('div',{key:label},h('strong',null,n),h('span',null,label)))),
           h('p',null,'These are counts, not extra places to start. Use the three study steps above.'))),
       h('details',{className:'bsa31-home-extras'},h('summary',null,'Looking for an advanced feature?'),h('div',{className:'bsa205-action-row'},[
-        ['Library & materials','library'],['Accounting Cycle Studio','accounting-cycle'],['Weekly study plan','week'],['Learning insights','insights'],['Data safety','safety']
+        ['Library & materials','library'],['Accounting Cycle Studio','accounting-cycle'],['Study Schedule','calendar'],['Learning insights','insights'],['Data safety','safety']
       ].map(([label,route])=>h('button',{className:'btn',key:route,onClick:()=>go(route)},label)))),
       h('p',{className:'bsa31-data-note'},'Study plans link to your existing materials. Completing a task requires your confirmation; it never adds XP automatically.'));
   }
@@ -14091,6 +14680,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       h('div',{className:'bsa31-after-practice bsa33-after-practice'},
         h('div',null,h('strong',null,'Finished a practice session?'),h('p',null,'Review incorrect answers so they become tomorrow’s stronger topics.')),
         h('button',{className:'btn primary',onClick:()=>go('mistakes')},'Open mistake review  ↗')),
+      h('details',{className:'bsa38-entry'},h('summary',null,'Dynamic problems · Oral recitation · Mastery checks'),h(BSA38PracticeStudio,{subject,update,toast,go})),
       h('details',{className:'bsa3-practice-more bsa33-practice-more'},h('summary',null,'More practice tools (optional)'),h('div',{className:'bsa3-practice-more-links'},[
         ['accounting-cycle','Full Accounting Cycle'],['psets','Original Problem Sets'],['practice','Advanced review options']
       ].map(([tab,label])=>h('button',{className:'btn',key:label,onClick:()=>go(tab,tab==='practice'?{mode:'advanced'}:{})},label)))));
@@ -14153,6 +14743,67 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
         showClassic&&h('div',{className:'bsa205-legacy'},h(DashboardV2Home,{subject,go,settings,openEditor,update,toast}))));
   }
 
+  /* V4 Study Dock — one lightweight, accessible panel. The focus timer remains
+     the *existing* FocusBar; never run a duplicate clock here. */
+  function BSA4StudyDock({subject,data,onSwitch,go,navTab,settings,setSettings}){
+    const [open,setOpen]=useState(false),[pane,setPane]=useState('session');
+    const [reveal,setReveal]=useState(false),[pick,setPick]=useState(0);
+    const context=bsa4ReadContext(subject.id);
+    const topic=(subject.topics||[]).find(t=>t.id===context.topicId);
+    const now=today();
+    const dueCards=(subject.cards||[]).filter(c=>cardIsDue(c,now));
+    const recall=(topic?dueCards.filter(c=>c.topicId===topic.id):dueCards);
+    const card=recall[pick%Math.max(1,recall.length)];
+    const mistakes=(subject.mistakes||[]).filter(m=>m.status!=='Cleared');
+    const subjectName=subject.code||subject.name;
+    const otherSubjects=(data.subjects||[]).filter(s=>s.id!==subject.id&&(s.cards?.length||s.mcqSets?.length||s.psets?.length))
+      .map(s=>{const events=s.learningEvents||[];const latest=events.reduce((n,e)=>Math.max(n,Number(e.at)||0),0);
+        const due=(s.cards||[]).filter(c=>cardIsDue(c,now)).length;
+        return {id:s.id,name:s.code||s.name,latest,due};})
+      .sort((a,b)=>(a.latest||0)-(b.latest||0)).slice(0,6);
+    useEffect(()=>{setPick(0);setReveal(false);},[subject.id,context.topicId]);
+    useEffect(()=>{if(!open)return;const fn=e=>{if(e.key==='Escape')setOpen(false)};document.addEventListener('keydown',fn);return()=>document.removeEventListener('keydown',fn)},[open]);
+    return h('aside',{className:'bsa4-dock'+(open?' expanded':''),'aria-label':'Study Dock'},
+      h('button',{type:'button',className:'bsa4-dock-trigger',onClick:()=>setOpen(v=>!v),'aria-expanded':open,'aria-controls':'bsa4-study-dock-panel'},h('span',{'aria-hidden':'true'},'✦'),open?'Close Study Dock':'Study Dock'),
+      open&&h('div',{id:'bsa4-study-dock-panel',className:'bsa4-dock-panel'},
+        h('div',{className:'bsa4-dock-header'},h('strong',null,'Your study tools'),h('span',{className:'muted small'},subjectName)),
+        h('details',{className:'bsa4-appearance'},
+          h('summary',null,'Appearance · Quick colors'),
+          h('p',{className:'muted small'},'These controls change colors only. Use Themes for a different UI presentation.'),
+          h('div',{className:'bsa4-theme-options'},
+            [['slate','Neon night','#3fe0ff'],['matcha','Matcha','#6d8e39'],['lavender','Soft lavender','#8658d0'],['sunset','Sunset','#ffa24c'],['oled','OLED black','#8fa8ff']]
+              .map(([id,label,color])=>h('button',{key:id,type:'button',className:'bsa4-theme-option'+(settings.skin===id?' selected':''),
+                  'aria-pressed':settings.skin===id,onClick:()=>setSettings({...settings,skin:id})},
+                h('i',{style:{background:color},'aria-hidden':true}),label))),
+          h('label',{className:'bsa4-motion-toggle'},
+            h('input',{type:'checkbox',checked:!!settings.calm,onChange:e=>setSettings({...settings,calm:e.target.checked})}),
+            'Quiet visuals (less decoration)')),
+        h('div',{className:'bsa4-dock-tabs',role:'group','aria-label':'Study tools'},
+          [['session','Session'],['recall','Recall'],['tutor','Tutor'],['timer','Timer']].map(([id,label])=>h('button',{type:'button',key:id,className:'btn '+(pane===id?'primary':'ghost'),'aria-pressed':pane===id,onClick:()=>setPane(id)},label))),
+        pane==='session'&&h('div',{className:'bsa4-dock-body'},
+          h('span',{className:'v2-eyebrow'},'ACTIVE SUBJECT'),h('strong',null,subjectName),
+          h('p',{className:'muted small'},topic?'Focused topic: '+(topic.title||topic.code):'Choose any topic in Learn to make suggestions more specific.'),
+          h('button',{className:'btn primary',onClick:()=>{setOpen(false);go('study')}},'Continue Learn → Practice → Review'),
+          h('button',{className:'btn ghost',onClick:()=>{setOpen(false);go('insights')}},'Review progress'),
+          otherSubjects.length>0&&h('details',{className:'bsa4-old-subjects'},h('summary',null,'Revisit an older subject ('+otherSubjects.length+')'),
+            h('p',{className:'muted small'},'Choose an older course for retrieval practice. Dates are based on recorded MCQ attempts only; an unknown date is not proof of forgetting.'),
+            otherSubjects.map(s=>h('button',{key:s.id,type:'button',className:'btn ghost',onClick:()=>{setOpen(false);onSwitch(s.id,'insights')}},
+              s.name+(s.due?' · '+s.due+' cards due':''))))),
+        pane==='recall'&&h('div',{className:'bsa4-dock-body'},
+          h('strong',null,recall.length+' flashcards due'+(topic?' for this topic':'')),
+          !card?h('p',{className:'muted small'},'No flashcards due here. You can review another topic in Flashcards.'):h(React.Fragment,null,
+            h('p',{className:'bsa4-recall-question'},psPlain(card.q||card.question||card.front||'Open flashcards to practice this card.').slice(0,600)),
+            reveal&&h('div',{className:'bsa4-recall-answer'},psPlain(card.a||card.answer||card.back||'No answer saved.')),
+            h('div',{className:'bsa4-context-actions'},h('button',{className:'btn primary',onClick:()=>setReveal(v=>!v)},reveal?'Hide answer':'Reveal answer'),
+              h('button',{className:'btn ghost',onClick:()=>{setPick(v=>v+1);setReveal(false)}},'Next due card')),
+            h('p',{className:'muted small'},'Preview only: card ratings and review history are recorded in Flashcards, not in this dock.')),
+          h('button',{className:'btn',onClick:()=>{setOpen(false);go('vault')}},'Open flashcard review')),
+        pane==='tutor'&&h('div',{className:'bsa4-dock-body'},h('p',null,'Get help about your current topic, or open the selected problem directly from its question card.'),
+          h('button',{className:'btn primary',onClick:()=>{setOpen(false);go('ask',context.setId&&context.problemId?{focus:{kind:'problem',id:context.setId,problemId:context.problemId}}:{})}},'Open contextual Tutor')),
+        pane==='timer'&&h('div',{className:'bsa4-dock-body'},h('p',null,'Use the existing focus timer. Its floating controls remain visible while navigating.'),
+          h('button',{className:'btn primary',onClick:()=>{setOpen(false);go('toolkit',{tool:'focus'})}},'Open focus timer'),
+          h('small',{className:'muted'},'No second timer is started.'))));
+  }
   function App() {
     const [data, setData] = useState(() => loadLocal() || buildDefault());
     const [nav, setNav] = useState({ tab: "home", opts: {}, key: 0 });
@@ -14166,7 +14817,8 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const swipeTabs=['home','study','practice','library'];
     const touchNavStart=e=>{const x=e.touches?.[0];if(x)bottomSwipe.current={x:x.clientX,y:x.clientY,tab:nav.tab}};
     const touchNavEnd=e=>{const start=bottomSwipe.current;bottomSwipe.current=null;const end=e.changedTouches?.[0];if(!start||!end)return;const dx=end.clientX-start.x,dy=end.clientY-start.y;if(Math.abs(dx)<65||Math.abs(dy)>35)return;const ix=swipeTabs.indexOf(start.tab);if(ix<0)return;const target=swipeTabs[ix+(dx<0?1:-1)];if(target)go(target)};
-    const [collapsedNav, setCollapsedNav] = useState({"Learning tools":true,"Accounting tools":true,"Plan & progress":true,"More tools":true});
+    // v3.8.1: organize by learner intent, not the subject that originally created a tool.
+    const [collapsedNav, setCollapsedNav] = useState({"Study materials":true,"Practice & questions":true,"Review & progress":true,"Schedule & school":true,"More tools":true});
     const [editor, setEditor] = useState(null);
     const [msg, setMsg] = useState("");
     const [downloads, setDownloads] = useState(null);
@@ -14247,6 +14899,8 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
         setModal({ nlm: opts });
         return;
       }
+      if(opts?.focus?.kind==='problem')bsa4SaveContext(dataRef.current.activeId,{setId:opts.focus.id,problemId:opts.focus.problemId});
+      if(opts?.topicId)bsa4SaveContext(dataRef.current.activeId,{topicId:opts.topicId});
       bsa181Recent(tab,opts,dataRef.current.activeId,(dataRef.current.subjects.find(x=>x.id===dataRef.current.activeId)||{}).name+" · "+tab);
       setNav((n) => ({ tab, opts, key: n.key + 1 }));
       if (!opts.open) { const workspace=document.querySelector(".shell > .content"); if (workspace) workspace.scrollTop=0; else window.scrollTo({top:0}); }
@@ -14347,6 +15001,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     useEffect(() => {
       const r = document.documentElement, s = data.settings;
       r.dataset.skin = s.skin;
+      r.dataset.deskTheme = ["studio","notebook","glass","editorial","focus"].includes(s.presentationTheme) ? s.presentationTheme : "studio";
       r.dataset.contrast = s.contrast ? "high" : "";
       r.dataset.comfort = s.comfort ? "on" : "";
       r.dataset.calm = s.calm ? "on" : "";
@@ -14385,7 +15040,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       ["workspace", "Study Workspace", "book"],
       
       ["accounting-lab", "Accounting Lab", "pset"],
-      ["week", "Weekly Planner", "calendar"],
+      ["calendar", "Study Schedule", "calendar"],
       ["knowledge", "Knowledge Map", "roadmap"],
       ["safety", "Device & Data Safety", "data"],
       ["guide", "Start here · walkthrough", "book"],
@@ -14395,7 +15050,6 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       ["curriculum", "Curriculum", "book"],
       ["practice", "Practice questions", "bolt", reviewCount],
       ["roadmap", "Roadmap", "roadmap"],
-      ["calendar", "Calendar", "calendar"],
       ["vault", "Concept vault", "cards", subject.cards.length],
       ["mistakes", "Mistake log", "mistakes", activeMistakes],
       ["grades", "Grades", "grade"],
@@ -14408,17 +15062,27 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       ["toolkit", "Study Toolkit", "book"],
       ["life", "Study Room", "look"], ["personalize", "Personalization Corner", "look"], ["howto", "How-To Corner", "book"]
     ];
-    // v205: Five useful destinations first; advanced tools stay one tap away.
+    // v3.8.1: one destination per tool, grouped by task. In particular,
+    // Problem Sets and MCQs are *not* accounting-only tools.
     const navGroups = [
-      {name:"Your workflow",items:["home","study","practice","library","insights"]},
-      {name:"Learning tools",items:["lectures","rules","vault","ask","workspace"]},
-      {name:"Accounting tools",items:["accounting-lab","accounting-cycle","mcq","psets","mistakes"]},
-      {name:"Plan & progress",items:["week","calendar","grades","stats-clean","class","roadmap","knowledge","achievements"]},
-      {name:"More tools",items:["guide","curriculum","toolkit","safety","howto","life","break","personalize"]}
+      {name:"Your study flow",items:["home","study","practice","library"]},
+      {name:"Study materials",items:["lectures","rules","vault","workspace","ask"]},
+      {name:"Practice & questions",items:["mcq","psets","accounting-lab","accounting-cycle"]},
+      {name:"Review & progress",items:["mistakes","insights","knowledge","stats-clean","achievements"]},
+      {name:"Schedule & school",items:["calendar","class","grades","roadmap","curriculum"]},
+      {name:"More tools",items:["guide","toolkit","safety","howto","life","break","personalize"]}
     ];
+    // When a shortcut or deep link opens a tool, reveal its sidebar group.
+    // Users can still collapse that group themselves afterward.
+    useEffect(()=>{
+      const group=navGroups.find(g=>g.items.includes(nav.tab));
+      if(group)setCollapsedNav(prev=>prev[group.name]?{...prev,[group.name]:false}:prev);
+    },[nav.tab]);
+    const navAliases={psets:"written problems problem sets worksheets",mcq:"quiz questions multiple choice mcq",vault:"flashcards recall",ask:"tutor gemini ai",calendar:"weekly planner month exam schedule",mistakes:"wrong answers review queue",insights:"analytics progress",library:"find browse organize library",study:"learn session plan",practice:"solve test exercises",workspace:"notes notebook"};
+    const navNeedle=navSearch.trim().toLocaleLowerCase();
     const filteredNavGroups = navGroups.map(group=>({
       ...group,
-      tabs:tabs.filter(t=>group.items.includes(t[0]) && (t[1].toLowerCase().includes(navSearch.toLowerCase()) || group.name.toLowerCase().includes(navSearch.toLowerCase())))
+      tabs:tabs.filter(t=>group.items.includes(t[0]) && (!navNeedle || [t[1],group.name,navAliases[t[0]]||"",(DESK_FEATURE_GUIDE.find(f=>f.id===t[0])||{}).desc||""].join(" ").toLocaleLowerCase().includes(navNeedle)))
     })).filter(group=>group.tabs.length);
     const jumpLinks = [
       ["home","StudyFlow","home"], ["howto","How-To","book"], ["practice","Practice","bolt"],
@@ -14440,18 +15104,18 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     };
     const viewProps = { key: `${subject.id}-${nav.key}`, subject, update, toast, go, openEditor, init: nav.opts, settings: data.settings, setSettings };
     const subjectPicker = (id) => /* @__PURE__ */ React.createElement("select", { id, className: "subject-select", value: data.activeId, onChange: (e) => switchSubject(e.target.value), "aria-label": "Active subject" }, (() => {const groups=new Map();data.subjects.forEach(s=>{const matched=PROSPECTUS.flatMap(t=>t.courses.map(c=>({...c,term:t.term}))).find(c=>String(c.code).trim().toLowerCase()===String(s.code||"").trim().toLowerCase());const label=s.curriculumTerm||(matched&&matched.term)||"Other / custom subjects";if(!groups.has(label))groups.set(label,[]);groups.get(label).push(s);});return [...groups].sort((a,b)=>a[0].localeCompare(b[0],undefined,{numeric:true})).map(([term,subjects])=>React.createElement("optgroup",{key:term,label:term},subjects.map(s=>React.createElement("option",{key:s.id,value:s.id},s.code?`${s.code} · ${s.name}`:s.name))));})());
-    return /* @__PURE__ */ React.createElement("div", { className: "shell" }, /* @__PURE__ */ React.createElement("aside", { className: "rail", "aria-label": "Main" }, /* @__PURE__ */ h("div",{className:"bsa-shortcut-anchor"},React.createElement("button", { className: "brand brand-home-button", type: "button", onClick: () => setShortcutsOpen(v=>!v), title: "Open quick shortcuts", "aria-label": "Open quick shortcuts", "aria-expanded":shortcutsOpen,"aria-haspopup":"menu" }, /* @__PURE__ */ React.createElement("span", { className: "brand-mark", "aria-hidden": "true" }, "Σ"), /* @__PURE__ */ React.createElement("span", null, "BSA Study Desk")),shortcutMenu()), /* @__PURE__ */ React.createElement("div", { className: "rail-subject" }, /* @__PURE__ */ React.createElement("span", { className: "rail-label" }, "You are studying"), subjectPicker("subj"), /* @__PURE__ */ React.createElement("button", { className: "link-btn", onClick: () => setModal("subjects") }, "+ Add new subject")), h("div",{className:"rail-nav-wrap"},h("label",{className:"nav-search-label",htmlFor:"desk-nav-search"},"Need another tool?"),h("input",{id:"desk-nav-search",className:"nav-search",type:"search",placeholder:"Search tools…",value:navSearch,onChange:e=>setNavSearch(e.target.value),"aria-label":"Search dashboard tools"}),h("nav",{className:"rail-nav","aria-label":"Study Desk sections"},filteredNavGroups.map(group=>h("section",{className:"nav-group",key:group.name},h("button",{className:"nav-group-heading",type:"button","aria-expanded":navSearch?true:!collapsedNav[group.name],onClick:()=>setCollapsedNav(prev=>({...prev,[group.name]:!prev[group.name]}))},h("span",null,group.name),h("span",{className:"nav-chevron","aria-hidden":"true"},navSearch||!collapsedNav[group.name]?"⌄":"›")),(navSearch||!collapsedNav[group.name])?h("div",{className:"nav-group-links"},group.tabs.map(([k,l,ic,n])=>h("button",{key:k,className:nav.tab===k?"on":"","aria-current":nav.tab===k?"page":undefined,title:(DESK_FEATURE_GUIDE.find(f=>f.id===k)||{}).desc||l,onClick:()=>go(k)},h(Icon,{name:ic}),h("span",null,l),n?h("span",{className:"n"},n):null))):null)))), /* @__PURE__ */ React.createElement("div", { className: "rail-tools" }, /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("data") }, /* @__PURE__ */ React.createElement(Icon, { name: "data", size: 18 }), " Import & export"), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("look") }, /* @__PURE__ */ React.createElement(Icon, { name: "look", size: 18 }), " Appearance"), /* @__PURE__ */ React.createElement(ThemeDots, { settings: data.settings, setSettings })), React.createElement(SyncBadge, { onOpen: openSync })), /* @__PURE__ */ React.createElement("header", { className: "mobilebar" }, /* @__PURE__ */ h("div",{className:"bsa-shortcut-anchor mobile"},React.createElement("button", { className: "brand-mark mobile-home-button", type: "button", onClick: () => setShortcutsOpen(v=>!v), title: "Open quick shortcuts", "aria-label": "Open quick shortcuts", "aria-expanded":shortcutsOpen,"aria-haspopup":"menu" }, "Σ"),shortcutMenu()), subjectPicker("subj-m"), h("button",{className:"icon-btn",onClick:()=>setSpotlightOpen(true),"aria-label":"Search dashboard"},"⌕"), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal(syncAlert ? "sync" : "data"), "aria-label": syncAlert ? "Import, export and sync (needs attention)" : "Import and export", "data-sync": syncAlert }, /* @__PURE__ */ React.createElement(Icon, { name: "data" })), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal("look"), "aria-label": "Appearance" }, /* @__PURE__ */ React.createElement(Icon, { name: "look" }))), /* @__PURE__ */ React.createElement("main", { className: "content bsa33-content", "data-desk-page": nav.tab },
+    return /* @__PURE__ */ React.createElement("div", { className: "shell" }, /* @__PURE__ */ React.createElement("aside", { className: "rail", "aria-label": "Main" }, /* @__PURE__ */ h("div",{className:"bsa-shortcut-anchor"},React.createElement("button", { className: "brand brand-home-button", type: "button", onClick: () => setShortcutsOpen(v=>!v), title: "Open quick shortcuts", "aria-label": "Open quick shortcuts", "aria-expanded":shortcutsOpen,"aria-haspopup":"menu" }, /* @__PURE__ */ React.createElement("span", { className: "brand-mark", "aria-hidden": "true" }, "Σ"), /* @__PURE__ */ React.createElement("span", null, "BSA Study Desk")),shortcutMenu()), /* @__PURE__ */ React.createElement("div", { className: "rail-subject" }, /* @__PURE__ */ React.createElement("span", { className: "rail-label" }, "You are studying"), subjectPicker("subj"), /* @__PURE__ */ React.createElement("button", { className: "link-btn", onClick: () => setModal("subjects") }, "+ Add new subject")), h("div",{className:"rail-nav-wrap"},h("label",{className:"nav-search-label",htmlFor:"desk-nav-search"},"Need another tool?"),h("input",{id:"desk-nav-search",className:"nav-search",type:"search",placeholder:"Search tools…",value:navSearch,onChange:e=>setNavSearch(e.target.value),"aria-label":"Search dashboard tools"}),h("nav",{className:"rail-nav","aria-label":"Study Desk sections"},filteredNavGroups.map(group=>h("section",{className:"nav-group",key:group.name},h("button",{className:"nav-group-heading",type:"button","aria-expanded":Boolean(navSearch||!collapsedNav[group.name]),onClick:()=>setCollapsedNav(prev=>({...prev,[group.name]:!prev[group.name]}))},h("span",null,group.name),h("span",{className:"nav-chevron","aria-hidden":"true"},navSearch||!collapsedNav[group.name]?"⌄":"›")),(navSearch||!collapsedNav[group.name])?h("div",{className:"nav-group-links"},group.tabs.map(([k,l,ic,n])=>h("button",{key:k,className:nav.tab===k?"on":"","aria-current":nav.tab===k?"page":undefined,title:(DESK_FEATURE_GUIDE.find(f=>f.id===k)||{}).desc||l,onClick:()=>go(k)},h(Icon,{name:ic}),h("span",null,l),n?h("span",{className:"n"},n):null))):null)))), /* @__PURE__ */ React.createElement("div", { className: "rail-tools" }, /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("data") }, /* @__PURE__ */ React.createElement(Icon, { name: "data", size: 18 }), " Import & export"), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("themes") }, "◇ Themes"), React.createElement("button", { onClick: () => setModal("look") }, /* @__PURE__ */ React.createElement(Icon, { name: "look", size: 18 }), " Appearance"), /* @__PURE__ */ React.createElement(ThemeDots, { settings: data.settings, setSettings })), React.createElement(SyncBadge, { onOpen: openSync })), /* @__PURE__ */ React.createElement("header", { className: "mobilebar" }, /* @__PURE__ */ h("div",{className:"bsa-shortcut-anchor mobile"},React.createElement("button", { className: "brand-mark mobile-home-button", type: "button", onClick: () => setShortcutsOpen(v=>!v), title: "Open quick shortcuts", "aria-label": "Open quick shortcuts", "aria-expanded":shortcutsOpen,"aria-haspopup":"menu" }, "Σ"),shortcutMenu()), subjectPicker("subj-m"), h("button",{className:"icon-btn",onClick:()=>setSpotlightOpen(true),"aria-label":"Search dashboard"},"⌕"), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal(syncAlert ? "sync" : "data"), "aria-label": syncAlert ? "Import, export and sync (needs attention)" : "Import and export", "data-sync": syncAlert }, /* @__PURE__ */ React.createElement(Icon, { name: "data" })), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal("themes"), "aria-label": "Themes", title: "Themes" }, "◇"), React.createElement("button", { className: "icon-btn", onClick: () => setModal("look"), "aria-label": "Appearance" }, /* @__PURE__ */ React.createElement(Icon, { name: "look" }))), /* @__PURE__ */ React.createElement("main", { className: "content bsa33-content", "data-desk-page": nav.tab },
       h("div",{className:"workspace-topbar v2-topbar"},
         h("div",{className:"workspace-context"},h("span",{className:"workspace-eyebrow"},"STUDY SPACE  /"),h("strong",null,(tabs.find(t=>t[0]===nav.tab)||[null,"Today"])[1]),h("span",{className:"workspace-subject"},subject.code||subject.name)),
         h("div",{className:"workspace-actions v2-top-actions"},h("button",{className:"v2-top-search",onClick:()=>setSpotlightOpen(true),title:"Search · Ctrl/⌘ + K","aria-label":"Search all study materials"},"⌕  Search",h("kbd",null,"⌘ K")))),
       h(ScreenBoundary,{key:nav.tab,route:nav.tab,onHome:()=>go("home")},h(React.Fragment,null,
       h(BSA31StudyPath,{tab:nav.tab,opts:nav.opts,go,subject}),
-      nav.tab === "guide" && h(BSA3StartGuide,{go}), nav.tab === "break" && h(BreakCorner), nav.tab === "joy" && h(JoyHub,{go}), nav.tab === "life" && h(StudyLife,{go}), nav.tab === "achievements" && h(AcademicProgress,{go}), nav.tab === "stats-clean" && h(StudyReport,{data,update,toast,go}), nav.tab === "private-vault" && !window.__BSA_SHARED_MODE__ && h(PrivateVault,{toast}), nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data,initialTool:nav.opts?.tool})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), nav.tab === "home" && h(BSA3Today, { ...viewProps }), nav.tab === "study" && h(BSA205Study,{...viewProps}), nav.tab === "library" && h(BSA205Library,{...viewProps}), nav.tab === "insights" && h(BSA205Mastery,{...viewProps}), nav.tab === "accounting-cycle" && h(BSA205Cycle,{...viewProps}), nav.tab === "accounting-lab" && h(BSA187AccountingLab,{subject,update,toast,go}), nav.tab === "week" && h(BSA191WeeklyPlanner,{subject,update,go,openEditor,toast}), nav.tab === "knowledge" && h(BSA192KnowledgeMap,{subject,go}), nav.tab === "safety" && h(BSA193DeviceSafety,{data,go,toast}), nav.tab === "practice" && h(BSA3Practice, { ...viewProps, data }), nav.tab === "mcq" && h(MCQPage,{...viewProps}), nav.tab === "rules" && h(RulesLibrary,{...viewProps}), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(CalendarView, { ...viewProps }), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "workspace" && h(BSA181Workspace, { ...viewProps, initialTab:nav.opts?.tab, undoAvailable:!!undo, onGlobalUndo:doUndo }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(PsView, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps, key:subject.id }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })))),
+      nav.tab === "guide" && h(BSA3StartGuide,{go}), nav.tab === "break" && h(BreakCorner), nav.tab === "joy" && h(JoyHub,{go}), nav.tab === "life" && h(StudyLife,{go}), nav.tab === "achievements" && h(AcademicProgress,{go}), nav.tab === "stats-clean" && h(StudyReport,{data,update,toast,go}), nav.tab === "private-vault" && !window.__BSA_SHARED_MODE__ && h(PrivateVault,{toast}), nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data,initialTool:nav.opts?.tool})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), nav.tab === "home" && h(BSA3Today, { ...viewProps }), nav.tab === "study" && h(BSA205Study,{...viewProps}), nav.tab === "library" && h(BSA205Library,{...viewProps}), nav.tab === "insights" && h(BSA205Mastery,{...viewProps}), nav.tab === "accounting-cycle" && h(BSA205Cycle,{...viewProps}), nav.tab === "accounting-lab" && h(BSA187AccountingLab,{subject,update,toast,go,init:nav.opts}), nav.tab === "week" && h(BSA344Schedule,{subject,update,go,openEditor,toast,init:nav.opts,initialMode:"week"}), nav.tab === "knowledge" && h(BSA192KnowledgeMap,{subject,go}), nav.tab === "safety" && h(BSA193DeviceSafety,{data,go,toast}), nav.tab === "practice" && h(BSA3Practice, { ...viewProps, data }), nav.tab === "mcq" && h(MCQPage,{...viewProps}), nav.tab === "rules" && h(RulesLibrary,{...viewProps}), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(BSA344Schedule,{subject,update,go,openEditor,toast,init:nav.opts,initialMode:"month"}), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "workspace" && h(BSA181Workspace, { ...viewProps, initialTab:nav.opts?.tab, undoAvailable:!!undo, onGlobalUndo:doUndo }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(PsView, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps, key:subject.id }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })))),
       h(BSA181HighlightTool,{subject,tab:nav.tab,go,toast}),
       spotlightOpen && h(BSA181Spotlight,{data,go,onSwitch:(id,tab,opts)=>{setData(d=>({...d,activeId:id}));go(tab,opts)},onClose:()=>setSpotlightOpen(false)}),
       /* @__PURE__ */ h("nav",{className:"bottom-nav v2-bottom-nav","aria-label":"Mobile navigation",onTouchStart:touchNavStart,onTouchEnd:touchNavEnd},
         [["home","Today","home"],["study","Learn","lecture"],["practice","Practice","bolt"],["library","Library","book"]].map(([k,l,ic])=>h("button",{type:"button",key:k,className:nav.tab===k?"on":"","aria-current":nav.tab===k?"page":undefined,onClick:()=>go(k)},h(Icon,{name:ic}),h("span",null,l))),
-        h("button",{type:"button",onClick:()=>setModal("more"),className:"v2-more-mobile"+(!["home","study","practice","library"].includes(nav.tab)?" on":""),"aria-label":"More tools"},h(Icon,{name:"more"}),h("span",null,"More"))), /* @__PURE__ */ React.createElement("div", { className: `toast${msg ? " show" : ""}`, role: "status", "aria-live": "polite" }, msg), h(FocusBar, { data, update, toast }), modal === "quick" && /* @__PURE__ */ React.createElement(QuickAdd, { onClose: () => setModal(null), onPick: (k) => {
+        h("button",{type:"button",onClick:()=>setModal("more"),className:"v2-more-mobile"+(!["home","study","practice","library"].includes(nav.tab)?" on":""),"aria-label":"More tools"},h(Icon,{name:"more"}),h("span",null,"More"))), /* @__PURE__ */ React.createElement("div", { className: `toast${msg ? " show" : ""}`, role: "status", "aria-live": "polite" }, msg), h(FocusBar, { data, update, toast }), h(BSA4StudyDock,{key:subject.id,subject,data,settings:data.settings,setSettings,onSwitch:(id,tab)=>{setData(d=>({...d,activeId:id}));go(tab||'insights')},go,navTab:nav.tab}), modal === "quick" && /* @__PURE__ */ React.createElement(QuickAdd, { onClose: () => setModal(null), onPick: (k) => {
       if (k === "grade") {
         setModal(null);
         go("grades", { gtab: "scores" });
@@ -14459,7 +15123,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     } }), modal === "more" && /* @__PURE__ */ React.createElement(MoreSheet, { onClose: () => setModal(null), onPick: (k) => setModal(k), settings: data.settings, setSettings, go: (t) => {
       setModal(null);
       go(t);
-    } }), modal && modal.nlm && h(Modal, { key: "bsa-direct-prompt-" + (modal.nlm.pid || "all") + "-" + subject.id, title: "AI Prompt Studio", wide: true, className: "bsa-prompt-modal", onClose: () => setModal(null) }, h(NotebookLMPrompts, { key: "bsa-prompt-" + (modal.nlm.pid || "all") + "-" + subject.id, subject, toast, initPid: modal.nlm.pid, initTopic: modal.nlm.topicId, onImport: () => setModal({ data: "import" }) })), modal === "look" && /* @__PURE__ */ React.createElement(AppearanceModal, { settings: data.settings, setSettings, onClose: () => setModal(null) }), modal === "subjects" && /* @__PURE__ */ React.createElement(SubjectModal, { data, update, onClose: () => setModal(null), toast }), (modal === "data" || modal === "sync" || modal && modal.data) && /* @__PURE__ */ React.createElement(DataModal, { data, update, replaceAll, onClose: () => setModal(null), toast, downloads, initTab: modal && modal.data ? modal.data : modal === "sync" ? "github" : "import", prefill: modal && modal.prefill }), (editor == null ? void 0 : editor.type) === "card" && /* @__PURE__ */ React.createElement(
+    } }), modal && modal.nlm && h(Modal, { key: "bsa-direct-prompt-" + (modal.nlm.pid || "all") + "-" + subject.id, title: "AI Prompt Studio", wide: true, className: "bsa-prompt-modal", onClose: () => setModal(null) }, h(NotebookLMPrompts, { key: "bsa-prompt-" + (modal.nlm.pid || "all") + "-" + subject.id, subject, toast, initPid: modal.nlm.pid, initTopic: modal.nlm.topicId, onImport: () => setModal({ data: "import" }) })), modal === "themes" && h(BSA41ThemesModal,{settings:data.settings,setSettings,onClose:()=>setModal(null)}), modal === "look" && /* @__PURE__ */ React.createElement(AppearanceModal, { settings: data.settings, setSettings, onClose: () => setModal(null) }), modal === "subjects" && /* @__PURE__ */ React.createElement(SubjectModal, { data, update, onClose: () => setModal(null), toast }), (modal === "data" || modal === "sync" || modal && modal.data) && /* @__PURE__ */ React.createElement(DataModal, { data, update, replaceAll, onClose: () => setModal(null), toast, downloads, initTab: modal && modal.data ? modal.data : modal === "sync" ? "github" : "import", prefill: modal && modal.prefill }), (editor == null ? void 0 : editor.type) === "card" && /* @__PURE__ */ React.createElement(
       CardEditor,
       {
         subject,
