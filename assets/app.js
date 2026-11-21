@@ -1,6 +1,6 @@
 (() => {
   // User-facing release label only. Do not use for storage schemas or caches.
-  const BSA_RELEASE_LABEL = "V2.12";
+  const BSA_RELEASE_LABEL = "V2.13";
   const S = (t, p = null, s = false) => ({ t, p, s });
   const CFAS_TOPICS = [
     {
@@ -5522,7 +5522,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
   function MultipleChoiceQuiz({ subject, update, toast, go, onExit, onBackToBank, onRunningChange, resumeInHeader = false, initialSetId = 'all', initialTopicId = 'all', initialMode = 'smart', initialCount = 10, autoResume = false }) {
     const all=useMemo(()=>mcqDedicatedPool(subject),[subject]);
     const [topic,setTopic]=useState(initialTopicId),[collection,setCollection]=useState(initialSetId);
-    const [count,setCount]=useState([5,10,15,20,30,50].includes(Number(initialCount))?Number(initialCount):10),[mode,setMode]=useState(initialMode);
+    const [count,setCount]=useState([1,2,3,4,5,10,15,20,30,50].includes(Number(initialCount))?Number(initialCount):10),[mode,setMode]=useState(initialMode);
     const [phase,setPhase]=useState('setup'),[paper,setPaper]=useState([]),[pos,setPos]=useState(0);
     const [answers,setAnswers]=useState({}),[revealed,setRevealed]=useState({}),[guessed,setGuessed]=useState({});
     const [draft,setDraft]=useState(()=>bsa197LoadDraft(subject.id));
@@ -5699,7 +5699,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         h('div',{className:'grid-2 tight bsa-v156-quiz-grid'},
           h(Field,{label:'📚 Topic'},h('select',{value:topic,onChange:e=>{setTopic(e.target.value);setCollection('all');}},
             h('option',{value:'all'},'All topics'),topics.map(t=>h('option',{key:t.id,value:t.id},`${t.code?t.code+' · ':''}${t.title}`)))),
-          h(Field,{label:'Questions'},h('select',{value:count,onChange:e=>setCount(Number(e.target.value))},[5,10,15,20,30,50].map(n=>h('option',{key:n,value:n},n))))),
+          h(Field,{label:'Questions'},h('select',{value:count,onChange:e=>setCount(Number(e.target.value))},[1,2,3,4,5,10,15,20,30,50].map(n=>h('option',{key:n,value:n},n))))),
         h(Field,{label:'Collection'},h('select',{value:collection,onChange:e=>setCollection(e.target.value)},
           h('option',{value:'all'},'All collections'),
           (subject.mcqSets||[]).filter(x=>all.some(q=>q.setId===x.id&&(topic==='all'||q.topicId===topic))).map(x=>h('option',{key:x.id,value:x.id},x.title)))),
@@ -6222,7 +6222,14 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       const pos=session.pos+1;
       store({...session,pos});setEntry(session.answers[session.items[pos].id]?.typed||'');
     };
-    const resume=()=>{if(!saved)return;setSession(saved);setEntry(saved.answers[saved.items[saved.pos].id]?.typed||'');setFinished(null);};
+    const resume=()=>{if(!saved)return;
+      const items=saved.items.filter(q=>bsa213ClozeQuality(q.q,q.a));
+      if(!items.length){toast('This older recall draft contains no complete, self-contained questions. Your saved source cards are untouched; choose Discard draft to start a clean session.');return;}
+      const previouslyDone=new Set(saved.items.slice(0,saved.pos).map(x=>x.id));
+      const pos=Math.min(items.length-1,items.findIndex(x=>!previouslyDone.has(x.id))<0?items.length-1:items.findIndex(x=>!previouslyDone.has(x.id)));
+      const safe={...saved,items,pos};setSaved(safe);setEntry(safe.answers[items[pos].id]?.typed||'');setFinished(null);store(safe);
+      if(items.length<saved.items.length)toast((saved.items.length-items.length)+' incomplete question(s) skipped from your older draft; saved lecture cards were not deleted.');
+    };
     const reviewUncertain=()=>{const items=(finished?.items||[]).filter(q=>!finished.answers[q.id]?.exact);
       if(!items.length){toast('No unmatched answers to retry.');return;}
       setFinished(null);setEntry('');store({version:1,created:Date.now(),pos:0,items,answers:{}});
@@ -6255,12 +6262,12 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       h('button',{className:'btn ghost',onClick:()=>{if(session)bsa29SaveDraft(subject.id,session);onExit();}},'← Back to Practice · save & leave'),
       !session&&!finished&&h('div',{className:'panel bsa29-setup'},
         h('h2',null,'Choose your source'),
-        h('p',{className:'muted small'},'Questions come from defined terms, source-emphasized rules, and approved cloze cards. Lectures with only unmarked prose may need key terms or AI-generated questions first.'),
-        saved&&h('div',{className:'bsa29-resume'},h('div',null,h('strong',null,'Unfinished recall session'),h('p',{className:'muted small'},'Question '+(saved.pos+1)+' of '+saved.items.length+' · device-local draft')),h('div',{className:'row-center'},h('button',{className:'btn primary',onClick:resume},'Resume'),h('button',{className:'btn ghost',onClick:()=>{if(window.confirm('Discard this Fill-in-the-Blanks draft? Your saved flashcards and MCQ quizzes will be untouched.')){setSaved(null);bsa29SaveDraft(subject.id,null);}}},'Discard draft'))),
+        h('p',{className:'muted small'},'Only complete, standalone theory questions are included. The question itself must provide enough context; orphaned numbers and fragments from worked examples are excluded. Lectures with few clear definitions may need carefully reviewed AI-generated questions.'),
+        saved&&h('div',{className:'bsa29-resume'},h('div',null,h('strong',null,'Unfinished recall session'),h('p',{className:'muted small'},'Question '+(saved.pos+1)+' of '+saved.items.length+' · '+saved.items.filter(q=>!bsa213ClozeQuality(q.q,q.a)).length+' legacy fragments will be skipped on resume')),h('div',{className:'row-center'},h('button',{className:'btn primary',onClick:resume},'Resume'),h('button',{className:'btn ghost',onClick:()=>{if(window.confirm('Discard this Fill-in-the-Blanks draft? Your saved flashcards and MCQ quizzes will be untouched.')){setSaved(null);bsa29SaveDraft(subject.id,null);}}},'Discard draft'))),
         h('div',{className:'grid-2'},
           h('label',null,'Lecture',h('select',{value:filter,onChange:e=>setFilter(e.target.value)},h('option',{value:'all'},'All saved lectures'),lectures.map(l=>h('option',{key:l.id,value:l.id},l.title)))),
           h('label',null,'Questions',h('select',{value:count,onChange:e=>setCount(Number(e.target.value))},[5,10,15,20].map(n=>h('option',{key:n,value:n},n+' questions'))))),
-        h('p',{className:'muted small'},eligible.length+' high-value recall prompts available for this selection. No AI request needed to practise.'),
+        h('p',{className:'muted small'},eligible.length+' context-complete recall prompts available for this selection. No AI request needed to practise.'),
         h('div',{className:'row-center'},h('button',{className:'btn primary',disabled:!eligible.length,onClick:start},'Start recall'),h('button',{className:'btn',onClick:()=>go('lectures')},'Open lectures')), 
         !eligible.length&&h('p',{className:'muted',role:'status'},'No suitable source-based blanks found. Add key terms to a lecture or use its Generate practice tool to create and review important blanks with Gemini.')),
       session&&current&&h('div',{className:'panel bsa29-question'},
@@ -10611,14 +10618,41 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
     const q=' '+norm(clue)+' ',a=norm(answer);
     return !!a&&q.includes(' '+a+' ');
   }
+  /* V2.13: No orphaned calculations, fragments, or source-dependent blanks.
+     A card must stand alone; passing the gate proves only that its wording is
+     usable, not that an AI-generated answer key is factually correct. */
+  function bsa213ClozeQuality(question,answer){
+    const q=bsa29Clean(question).replace(/_{4,}/g,'_____').replace(/\*\*/g,'').trim();
+    const a=bsa29Clean(answer).trim();
+    if(!bsa29Meaningful(a)||q.length<48||q.length>470||(q.match(/_____/g)||[]).length!==1||bsa29HasAnswer(q,a))return false;
+    if(!/[a-zA-Z]{3}/.test(a)||/^[\s$₱€£+-]*\d[\d.,%\s$₱€£+-]*$/.test(a))return false;
+    if(/^[\d.,%$₱€£+\-\s]+$/.test(a)||/\b(?:and|or|but|then|also|however|instead)\b/i.test(a) && a.split(/\s+/).length===1)return false;
+    // Numeric computations belong in a complete written problem, not a lone blank.
+    if(/(?:\bprice\b|\bshare\b|\bcontract\b|\bprofit\b|\bloss\b).*\b(?:increases?|decreases?|changes?|moves?|rises?|falls?)\b/i.test(q))return false;
+    if(/\b(?:instead|above|below|previous|following|former|latter|as shown|in the table|in this example|in that example|see figure)\b/i.test(q))return false;
+    if(/[,:;\-–—]\s*$/.test(q)||/^(?:if|suppose|assume|given|consider)\b/i.test(q))return false;
+    if(!/[.?!]$/.test(q))return false;
+    const context=q.replace('_____','the missing term').replace(/[^\p{L}\p{N}\s]/gu,' ').trim().split(/\s+/).filter(Boolean);
+    if(context.length<9||context.filter(w=>w.length>=4).length<4)return false;
+    // The source may be theology, history, economics or accounting. Require a
+    // concept/explanatory statement rather than a domain-specific vocabulary.
+    if(!/\b(?:means?|refers?|defined?|describes?|recogniz(?:e|ed|es)|measur(?:e|ed|es)|classified?|reported?|recorded?|represents?|requires?|included?|excluded?|treated?|applies?|used|arises?|occurs?|consists?|includes?|indicates?|cause[ds]?|explains?|involves?|serves?|functions?|purpose|role|principle|process|response|result|effect|financial|historical|accounting|religious|market|government|church|contract|cash|income|expense|asset|interest|risk|investment|economic|political|law|standard)\b/i.test(q))return false;
+    return true;
+  }
+  function bsa213DefinitionQuestion(def){
+    const d=bsa29Clean(def).replace(/^[\s:;—–-]+|[\s:;—–-]+$/g,'').replace(/[.!?]+$/,'').trim();
+    if(d.length<34||d.length>320||/\b(?:above|below|following|former|latter|instead|in this example)\b/i.test(d))return '';
+    // A full definition provides the necessary facts; a heading never does.
+    return 'The term _____ refers to '+d.charAt(0).toLowerCase()+d.slice(1)+'.';
+  }
   function bsa29Candidates(lecture){
     if(!lecture)return [];
     const out=[],seen=new Set();
     const push=(question,answer,section,sectionId,rank,kind)=>{
       const a=bsa29Clean(answer).replace(/[:;—–-]+$/,'').trim();
       const q=bsa29Clean(question).replace(/_{4,}/g,'_____');
-      if(!bsa29Meaningful(a)||q.length<28||q.length>345||(q.match(/_____/g)||[]).length!==1||bsa29HasAnswer(q,a))return;
-      const key=norm(q),dupe=norm(a)+'|'+key;
+      if(!bsa213ClozeQuality(q,a))return;
+      const key=norm(q),dupe=norm(a); // one high-quality blank per key term per lecture
       if(seen.has(dupe))return;seen.add(dupe);
       out.push({id:String(lecture.id||'lecture')+'|'+key,q,a,section:String(section||''),sectionId:String(sectionId||''),lectureId:String(lecture.id||''),lectureTitle:String(lecture.title||'Lecture'),topicId:lecture.topicId||null,rank,kind,source:'Saved lecture'});
     };
@@ -10626,7 +10660,7 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
       const def=bsa29Clean(t.d);
       // Glossary definitions are reliable clues only if the missing key is not
       // simply repeated in the definition or a trivial connector word.
-      if(def.length>=22&&def.length<=290)push('Name the key term: _____ — '+def,t.t,'Key terms','',100,'definition');
+      if(def.length>=34&&def.length<=320)push(bsa213DefinitionQuestion(def),t.t,'Key terms','',100,'definition');
     }
     (lecture.sections||[]).forEach((sec,i)=>{
       const section=sec.h||'Section '+(i+1);
@@ -10642,11 +10676,15 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
         const explicit=marks.find(m=>/^\s*[:—–-]/.test(text.slice(m.index+m[0].length)));
         const cand=explicit||marks.find(m=>bsa29Meaningful(m[1]) && !/^\s*(?:note|example|important|remember|tip|warning)\b/i.test(m[1]));
         if(!cand||!bsa29Meaningful(cand[1]))continue;
-        const remainder=text.replace(cand[0],'_____').replace(/\*\*/g,'');
+        const remainder=text.replace(cand[0],'_____').replace(/\*\*/g,'').trim();
         const isDefinition=!!explicit;
-        if(!isDefinition && !/\b(?:means?|refers? to|recognized?|measured?|classified?|reported?|recorded?|defined?|included?|excluded?|requires?|presented?|payable|receivable|cash|income|expense|asset|liabilit|debit|credit|fair value|cost|maturity|interest|calculated?|used|applies?|used when|subject to|permitted|except|unless)\b/i.test(remainder))continue;
+        // A label followed by a definition is more reliable than bold emphasis
+        // in a calculation, a table fragment, or a dangling conditional.
+        const definition=isDefinition?text.slice(cand.index+cand[0].length).replace(/^\s*[:—–-]\s*/, '').replace(/\*\*/g,'').trim():'';
+        const question=isDefinition?bsa213DefinitionQuestion(definition):remainder;
+        if(!isDefinition && (!/^[A-Z(]/.test(remainder)|| !/\b(?:means?|refers?|is|are|recognized?|measured?|classified?|reported?|recorded?|defined?|included?|excluded?|requires?|presented?|arises?|occurs?|payable|receivable|cash|income|expense|asset|liabilit|interest|used|applies?|permitted|except|unless)\b/i.test(remainder)))continue;
         const before=out.length;
-        push(remainder,cand[1],section,sec.id||String(i),isDefinition?90:70,isDefinition?'definition':'rule');
+        push(question,cand[1],section,sec.id||String(i),isDefinition?90:70,isDefinition?'definition':'rule');
         if(out.length>before)used++;
       }
     });
@@ -10663,7 +10701,7 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
       const match=String(c.q||'').match(/^Fill in the blank:\s*([\s\S]+)$/i);
       if(!match||!bsa29Meaningful(c.a))return;
       const q=bsa29Clean(match[1]).replace(/_{4,}/g,'_____');
-      if((q.match(/_____/g)||[]).length!==1||bsa29HasAnswer(q,c.a))return;
+      if(!bsa213ClozeQuality(q,c.a))return;
       const source=(subject.lectures||[]).find(l=>l.id===c.sourceLectureId||!!l.title&&!!c.tip&&String(c.tip).includes(l.title));
       add({id:'vault|'+c.id,q,a:bsa29Clean(c.a),section:'Saved cloze card',sectionId:'',lectureId:source?.id||'',lectureTitle:source?.title||'Concept Vault',topicId:c.topicId||null,rank:110,kind:'saved-card',source:'Saved flashcard'});
     });
@@ -10752,7 +10790,7 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
       let raw="";
       const difficulty=level==="adaptive"?(smartTopicStats(subject).find(r=>r.topic.id===lecture.topicId)?.accuracy??null):null;
       const system=clozeMode?
-        "Create high-value fill-in-the-blank recall from the supplied lecture ONLY. First identify exam-important concepts: definitions, accounting decisions, recognition or measurement conditions, exceptions, formulas, thresholds and classifications supported by this lecture. Never blank random grammar words, linkers, dates unrelated to the rule, or ordinary verbs such as and, the, is. Each question must be a complete, unambiguous sentence with exactly one literal _____ blank and enough clue remaining. The answer must be a short term or exact key phrase that APPEARS VERBATIM in the supplied lecture. Do not repeat that key anywhere else in the question. Use source-preserving wording, never invent a key or a citation. Output ONLY valid JSON: {\"problems\":[{\"title\":\"...\",\"problem\":\"..._____...\",\"answer\":\"...\",\"solution\":\"short explanation grounded in a specific source line\"}]}. If insufficient, return {\"problems\":[]}. Subject: "+subject.name+"; lecture: "+lecture.title+".":
+        "Create high-value, SELF-CONTAINED fill-in-the-blank recall from the supplied lecture ONLY. Focus on exam-important theory: meaningful definitions, rules, recognition/measurement criteria, essential distinctions, exceptions, and classification. Each question MUST explain its subject and enough facts that a student can answer it without opening the lecture or seeing the prior paragraph. Use exactly one literal _____ blank. Do not produce sentence fragments, dangling conditionals, prices removed from a worked example, unexplained numbers, fill-in-the-blank arithmetic, grammar/linker words such as and/the/is, or questions dependent on a table, graph, or earlier question. Prefer a fully contextualized conceptual definition with a short missing technical term. Answers must be short key phrases VERBATIM in the supplied lecture, not repeated elsewhere in the question. Never invent key facts or citations. If a valid self-contained question cannot be written, return an empty array. Output ONLY valid JSON: {\"problems\":[{\"title\":\"...\",\"problem\":\"..._____...\",\"answer\":\"...\",\"solution\":\"short explanation grounded in a specific source line\"}]}. If insufficient, return {\"problems\":[]}. Subject: "+subject.name+"; lecture: "+lecture.title+".":
         "You create study exercises exclusively from the supplied lecture. Do not introduce facts, examples requiring external facts, or citations not in the source. If source is insufficient, return an empty problems array. Output ONLY valid JSON with a problems array. Each item must contain problem (question text), answer (correct answer), solution (brief source-grounded explanation), title, and optionally choices (array of strings), requirements (array of strings), difficulty. Keep questions unambiguous. Avoid duplicate questions. Subject: "+subject.name+". Lecture: "+lecture.title+".";
       const instruction=clozeMode?
         "Make up to "+count+" important source-backed one-blank questions. Difficulty "+level+". Use varied concepts, no repeated facts, no misleading hints, and no unsupported numbers. Avoid trivia about the wording of the lecture. Source material follows:\n\n"+source.slice(0,26000):
@@ -10765,8 +10803,7 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
         const obj=JSON.parse(match[0]);
         if(!Array.isArray(obj.problems))throw new Error("The response has no problems array.");
         const problems=obj.problems.slice(0,count).map((p,i)=>psNormProblem(p,i,lecture.title)).filter(p=>p&&p.answer.trim()&&p.solution.trim()).filter(p=>!clozeMode||(
-          (p.problem.match(/_{4,}/g)||[]).length===1&&p.problem.length>=28&&p.problem.length<=340&&bsa29Meaningful(p.answer)&&
-          !bsa29HasAnswer(p.problem,p.answer)&&norm(source).includes(norm(p.answer))
+          bsa213ClozeQuality(p.problem,p.answer)&&norm(source).includes(norm(p.answer))
         ));
         if(!problems.length)throw new Error("The lecture did not provide enough information for verified questions. Nothing was saved.");
         setPreview(problems);
@@ -17007,7 +17044,176 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     for(let i=whole.length-1;rest<0&&i>=0;i--){const take=Math.min(whole[i]-1,-rest);whole[i]-=take;rest+=take;}
     return blocks.map((b,i)=>{const {weight,...other}=b;return {...other,mins:whole[i],done:false}});
   }
+  /* V2.13 realistic workload estimator. All timings are CONSERVATIVE
+     assumptions, not measurements of reading speed or proof of learning.
+     Do not convert session time, section marks or question counts to mastery. */
+  function bsa213Words(text){
+    const clean=String(text||'').replace(/```[\s\S]*?```/g,' ').replace(/\|/g,' ')
+      .replace(/[#*_`>\[\]()]/g,' ').replace(/\s+/g,' ').trim();
+    return clean?clean.split(' ').filter(w=>/[\p{L}\p{N}]/u.test(w)).length:0;
+  }
+  function bsa213ReadScope(lecture,minutes){
+    if(!lecture)return null;
+    const secs=lxSourcePresentation(lecture).sections||[];
+    if(!secs.length)return null;
+    const reviewed=new Set(Array.isArray(lecture.reviewedSections)?lecture.reviewedSections:[]);
+    const unread=secs.map((sec,index)=>({sec,index})).filter(({sec,index})=>!reviewed.has(sec.id||String(index)));
+    const targets=unread.length?unread:secs.map((sec,index)=>({sec,index}));
+    const pace=130; // words/minute for careful comprehension, NOT skim reading
+    const usable=Math.max(2,Math.floor(minutes)-2); // time for recall/explanation
+    let taken=[],cost=0,words=0;
+    for(const target of targets){
+      const count=bsa213Words(target.sec.body);
+      // Reading with interpretation, plus at least a minute to summarize a section.
+      const min=Math.max(2,Math.ceil(count/pace)+1);
+      if(!taken.length&&min>usable){
+        const partialWords=Math.max(70,Math.floor(Math.max(1,usable-1)*pace));
+        return {lectureId:lecture.id,sectionId:target.sec.id||String(target.index),
+          sectionName:String(target.sec.h||'Section '+(target.index+1)),first:target.index+1,
+          total:secs.length,count:0,partial:true,partialWords:Math.min(count,partialWords),
+          sourceWords:count,needed:min+2,words:Math.min(count,partialWords),
+          estimate:Math.min(minutes,Math.ceil(Math.min(count,partialWords)/pace)+2),
+          unread:unread.length>0};
+      }
+      if(cost+min>usable)break;
+      taken.push(target);cost+=min;words+=count;
+      if(taken.length>=5)break;
+    }
+    if(!taken.length)return null;
+    return {lectureId:lecture.id,sectionId:taken[0].sec.id||String(taken[0].index),
+      sectionName:String(taken[0].sec.h||'Section '+(taken[0].index+1)),
+      first:taken[0].index+1,total:secs.length,count:taken.length,partial:false,
+      words,estimate:Math.min(minutes,cost+2),unread:unread.length>0};
+  }
+  function bsa213McqEstimate(q){
+    const stem=String(q?.q||q?.problem||'');
+    const words=bsa213Words(stem);
+    const numerical=/\b(?:calculate|compute|determine|formula|yield|price|present value|adjusting entry|depreciation|interest|ratio|journalize)\b/i.test(stem)&&/\d/.test(stem);
+    return Math.min(8,Math.max(3,(numerical?5:3)+Math.floor(words/100)));
+  }
+  function bsa213McqScope(pool,minutes){
+    const q=Array.isArray(pool)?pool:[];
+    if(!q.length)return null;
+    const avg=q.slice(0,8).reduce((sum,x)=>sum+bsa213McqEstimate(x),0)/Math.min(q.length,8);
+    const usable=Math.max(1,minutes-1); // leave time to check explanations
+    const count=Math.max(1,Math.min(q.length,50,Math.floor(usable/avg)));
+    return {count,available:q.length,perQuestion:Math.ceil(avg),estimated:Math.min(minutes,Math.ceil(count*avg+1))};
+  }
+  function bsa213WrittenMinutes(problem){
+    const question=String(problem?.problem||problem?.question||'');
+    const words=bsa213Words(question)+(Array.isArray(problem?.req)?bsa213Words(problem.req.join(' ')):bsa213Words(problem?.req||''));
+    const kind=bsa39Mode(problem);
+    return Math.min(60,Math.max(6,(kind==='calculation'?11:kind==='journal'?14:kind==='ledger'||kind==='statement'?22:8)+Math.ceil(words/100)*2));
+  }
+  function bsa213ScopeExplanation(scope,mins){
+    if(!scope)return '';
+    const label='§'+scope.first+' / '+scope.total+' · '+scope.sectionName;
+    return scope.partial
+      ?label+' — read approximately the first '+scope.partialWords+' words, then explain the main idea. This is only part of the section ('+scope.sourceWords+' words); save the rest for later.'
+      :label+' — read '+scope.count+' '+(scope.count===1?'section':'sections')+' (about '+scope.words+' words), then explain what you understood.';
+  }
+  function bsa213ScopeLongBlock(subject,block,focus){
+    if(!block)return block;
+    const minutes=Math.max(1,Number(block.mins)||1);
+    if(block.key==='lesson'&&block.route==='lectures'){
+      const lecture=(subject.lectures||[]).find(x=>x.id===block.ref)||
+        (subject.lectures||[]).find(x=>bsa34TopicMatch(x,focus,subject)&&!x.done);
+      const scope=bsa213ReadScope(lecture,minutes);
+      if(scope)return {...block,opts:{...(block.opts||{}),open:lecture.id,sec:scope.sectionId},
+        detail:bsa213ScopeExplanation(scope,minutes),scope};
+    }
+    if(block.key==='mcq'&&block.route==='mcq'){
+      const pool=mcqDedicatedPool(subject).filter(q=>bsa34TopicMatch(q,focus,subject)&&(block.opts?.setId?block.opts.setId===q.setId:true));
+      const measure=bsa213McqScope(pool,minutes);
+      if(measure)return {...block,opts:{...(block.opts||{}),count:measure.count},
+        detail:'Aim for up to '+measure.count+' MCQ'+(measure.count===1?'':'s')+' (allow about '+measure.perQuestion+' min each including reasoning). Stop and save if you need longer.',scope:measure};
+    }
+    if(block.key==='apply'){
+      if(block.route==='psets'){
+        const set=(subject.psets||[]).find(x=>x.id===block.opts?.open);
+        const p=set?.problems?.find(x=>x.id===block.ref||x.id===block.opts?.problemId);
+        if(p){const needed=bsa213WrittenMinutes(p);
+          return {...block,detail:needed>minutes?'Start the written problem; it may take about '+needed+' min, so focus on its first requirement and save the draft.':
+            'Work through one written problem (approximately '+needed+' min) and check the solution.',estimatedMinutes:needed};}
+      }
+      // Do not pretend there is an assigned written problem when there is none.
+      const lecture=(subject.lectures||[]).find(l=>bsa34TopicMatch(l,focus,subject));
+      if(lecture){const scope=bsa213ReadScope(lecture,minutes);
+        return {...block,title:'Apply a concept from your lecture',
+          route:'lectures',opts:{open:lecture.id,...(scope?{sec:scope.sectionId}:{})},
+          detail:'No linked written problem exists. Use one lecture concept to construct your own realistic example, then check the treatment against your source. This is not an automatically graded problem.',
+          ref:lecture.id};}
+      return {...block,title:'Find an application problem',route:'library',opts:{tab:'all'},
+        detail:'No written problem or lecture is linked to this topic. Add a source first, or use the time for independent review; no problem completion is assumed.'};
+    }
+    return block;
+  }
+  /* V2.13: For 5–25-minute sessions, choose ONE realistically finishable
+     activity using the user's saved topic evidence. No percentage guesswork,
+     no invented topics, and no six tiny pseudo-phases. */
+  function bsa213QuickPlan(subject,budget,focus='all',mode='balanced',now=Date.now()){
+    const minutes=Math.max(5,Math.min(25,Math.round(Number(budget)||18)));
+    const mcqs=bsa197Pool(mcqDedicatedPool(subject).filter(q=>bsa34TopicMatch(q,focus,subject)),subject.learningEvents||[],now);
+    const due=mcqs.filter(q=>q._recall.due),weakDue=due.filter(q=>q._recall.weak);
+    const unseen=mcqs.filter(q=>!q._recall.seen),weak=mcqs.filter(q=>q._recall.weak);
+    const lectures=(subject.lectures||[]).filter(l=>bsa34TopicMatch(l,focus,subject));
+    const unread=lectures.find(l=>lxSourcePresentation(l).sections.some((sec,i)=>!(l.reviewedSections||[]).includes(sec.id||String(i))))||lectures.find(l=>!l.done);
+    const mistakes=(subject.mistakes||[]).filter(m=>m.status!=='Cleared'&&bsa34TopicMatch(m,focus,subject));
+    const sets=(subject.psets||[]);
+    let written=null;
+    for(const set of sets){
+      const p=psSafeProblems(set).find(q=>bsa34TopicMatch(q,focus,subject,set)&&!bsa198StoredKeyValid(q));
+      if(p){written={set,p};break;}
+    }
+    const cards=(subject.cards||[]).filter(c=>bsa34TopicMatch(c,focus,subject));
+    const studied=(subject.learningEvents||[]).some(e=>['correct','incorrect','partial'].includes(e.result)&&bsa34TopicMatch(e,focus,subject));
+    const choose=(key,title,detail,route,opts,stage,reason,ref='')=>{
+      let recommended={key,title,detail,route,opts:opts||{},stage,ref,mins:minutes,done:false,reason,focusQuick:true};
+      if(key==='lesson'){
+        const lecture=lectures.find(l=>l.id===ref)||unread||lectures[0];
+        const scope=bsa213ReadScope(lecture,minutes);
+        if(scope){recommended={...recommended,opts:{...recommended.opts,open:lecture.id,sec:scope.sectionId},
+          detail:bsa213ScopeExplanation(scope,minutes),scope,
+          reason:reason+' Estimated from '+scope.words+' words at about 130 words/minute, plus time to explain.'};}
+        else recommended={...recommended,detail:'Read one short explanation and teach it back. If no section is available, find the original source.',
+          reason:reason+' There is no measurable lecture section; time is only a flexible ceiling.'};
+      }else if(key==='mcq'){
+        const source=opts?.mode==='due'?due:opts?.mode==='fresh'?unseen:opts?.mode==='weak'?weak:mcqs;
+        const specific=source.filter(q=>!opts?.setId||q.setId===opts.setId);
+        const scope=bsa213McqScope(specific,minutes);
+        if(scope)recommended={...recommended,opts:{...recommended.opts,count:scope.count},scope,
+          detail:'Attempt up to '+scope.count+' question'+(scope.count===1?'':'s')+' at roughly '+scope.perQuestion+' minutes each, including checking and explaining. Stop when time runs out.'+
+            (scope.estimated<minutes-4?' Fewer eligible questions than available minutes: use the remainder to explain a mistake or end early.':''),
+          reason:reason+' Estimated scope: '+scope.count+' of '+scope.available+' eligible questions—not the entire bank.'};
+      }else if(key==='apply'){
+        const p=written?.p;const needed=p?bsa213WrittenMinutes(p):0;
+        if(needed>minutes)recommended={...recommended,detail:'Begin the first requirement only; this problem may take about '+needed+' minutes. Save your working when the session ends.',estimatedMinutes:needed,
+          reason:reason+' This is a partial attempt, not a promise to complete the problem.'};
+        else if(needed)recommended={...recommended,detail:'Solve one written problem (estimated '+needed+' minutes), then check the solution.',estimatedMinutes:needed};
+      }else if(key==='cards'){
+        const count=Math.min(cards.length,Math.max(1,Math.floor((minutes-1)/2)));
+        recommended={...recommended,detail:'Recall and explain up to '+count+' key cards, allowing about two minutes per card.'};
+      }
+      return [recommended];
+    };
+    const linkTopic=focus==='all'?'all':focus.startsWith('label:')?'all':focus;
+    if(mode==='learn'&&unread)return choose('lesson','Understand one key concept','Read one section, explain the rule and identify when it applies.','lectures',{open:unread.id},'learn','An unfinished lecture is available for this topic.',unread.id);
+    if((mode==='recall'||mode==='balanced'||mode==='exam')&&weakDue.length)return choose('mcq','Revisit due weak MCQs','Try due questions independently, then correct the reasoning behind each mistake.','mcq',{mode:'due',topicId:weakDue[0].topicId||linkTopic,setId:weakDue[0].setId},'review',weakDue.length+' weak question(s) are due for another attempt.',weakDue[0].id);
+    if(due.length)return choose('mcq','Review due MCQs','Use spaced retrieval before the material fades; explain each answer after checking.','mcq',{mode:'due',topicId:due[0].topicId||linkTopic,setId:due[0].setId},'review',due.length+' question(s) are due based on earlier attempts.',due[0].id);
+    if(!studied&&unread&&mode!=='exam'&&mode!=='recall')return choose('lesson','Understand one key concept','Read one focused section, then explain the underlying principle without notes.','lectures',{open:unread.id},'learn','You have an unfinished lesson and no clearly linked checked practice for this topic.',unread.id);
+    if(mode==='exam'&&written&&(!unseen.length&&!due.length||bsa213WrittenMinutes(written.p)<=minutes))return choose('apply','Solve one independent problem','Work through a complete scenario before checking the source solution.','psets',{open:written.set.id,problemId:written.p.id},'practice','A written problem is available for exam-style application.',written.p.id);
+    if(unseen.length)return choose('mcq','Try unseen MCQs','Answer a small set without hints, then explain why each correct treatment applies.','mcq',{mode:'fresh',topicId:unseen[0].topicId||linkTopic,setId:unseen[0].setId},'practice',unseen.length+' unseen question(s) remain in the selected topic.',unseen[0].id);
+    if(mode==='learn'&&lectures.length)return choose('lesson','Explain a core concept','Revisit one lecture section and teach it back without looking at notes.','lectures',{open:lectures[0].id},'learn','No new questions are due; revisit a saved explanation for deeper understanding.',lectures[0].id);
+    if(written)return choose('apply','Apply a concept independently','Solve one written problem and compare your reasoning with the source solution.','psets',{open:written.set.id,problemId:written.p.id},'practice','MCQs are already tried or not due; application gives different evidence.',written.p.id);
+    if(cards.length&&mode!=='exam')return choose('cards','Retrieve key concepts','Use saved flashcards, then explain an answer and a counterexample.','vault',{},'review','There are saved flashcards, while no relevant MCQ is currently due.',cards[0].id);
+    if(mistakes.length)return choose('mistakes','Revisit a past mistake','Try one saved mistake and explain the corrected reasoning without notes.','mistakes',{},'review','You still have a saved unresolved mistake.',mistakes[0].id);
+    if(unread)return choose('lesson','Understand one key concept','Read one section and explain why its rule applies.','lectures',{open:unread.id},'learn','An unfinished lecture is available.',unread.id);
+    if(lectures.length)return choose('lesson','Teach back one important rule','Choose an important concept and explain its rationale and exception.','lectures',{open:lectures[0].id},'learn','No due/unseen linked MCQs or written problem; use your saved lecture.',lectures[0].id);
+    if(mcqs.length)return choose('mcq','Practice a transfer question','Try a familiar concept with a new explanation; do not mistake repetition for mastery.','mcq',{mode:'smart',topicId:mcqs[0].topicId||linkTopic,setId:mcqs[0].setId},'practice','Only previously seen MCQs are available. Smart Mix can refresh your reasoning.',mcqs[0].id);
+    return choose('prepare','Prepare one meaningful concept','No reliably linked source is available. Find one original lecture or practice item before studying.','library',{tab:'all'},'learn','There are no linked study materials for the selected topic. This is not a mastery judgement.');
+  }
   function bsa212ModePlan(subject,budget,settings,focus='all',mode='balanced'){
+    if(Number(budget)<=25)return bsa213QuickPlan(subject,budget,focus,mode);
     const base=bsa34PlanBlocks(subject,Math.min(90,Math.max(20,Number(budget)||40)),settings,focus);
     const find=(keys)=>base.find(b=>keys.includes(b.key));
     const make=(key,title,detail,route,opts,weight,stage,ref='')=>({key,title,detail,route,opts:opts||{},weight,stage,ref,done:false});
@@ -17035,7 +17241,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       else if(mode==='exam')list=[{...quiz,weight:5},{...apply,weight:5},review];
       else list=[warm,{...lesson,weight:4},{...quiz,weight:5},teach];
     }
-    return bsa212Allocate(list,budget);
+    return bsa212Allocate(list,budget).map(block=>bsa213ScopeLongBlock(subject,block,focus));
   }
   function bsa212ModeName(mode){return BSA212_MODES.find(m=>m.id===mode)?.title||'Learn + Practice'}
   function bsa212Guided(s){return !!(s&&!s.archived&&s.focusMode&&Array.isArray(s.blocks)&&s.blocks.length)}
@@ -17086,6 +17292,101 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     }else return false;
     s.lastAt=now;return true;
   }
+  /* V2.13 continuity: archive a dated, SUBJECT-LOCAL evidence snapshot. Never
+     convert time, a checkbox, or an unfinished task into academic mastery.
+     No new top-level storage or question bank; old practiceSessions still work. */
+  function bsa214RecentClosed(subject,focus,now=Date.now()){
+    const closed=(subject?.practiceSessions||[]).filter(x=>x&&x.archived&&String(x.focusId||'all')===String(focus||'all')&&Array.isArray(x.blocks));
+    closed.sort((a,b)=>(Number(b.focusClosedAt||b.lastAt||b.createdAt)||0)-(Number(a.focusClosedAt||a.lastAt||a.createdAt)||0));
+    const last=closed[0]||null;
+    if(!last)return null;
+    const ended=Number(last.focusClosedAt||last.lastAt||last.createdAt)||0;
+    return {session:last,endedAt:ended,recent:ended>0&&now-ended<=14*86400000,
+      sameDay:ended>0&&new Date(ended).toDateString()===new Date(now).toDateString(),
+      summary:last.focusEndSummary||null};
+  }
+  function bsa214Archive(subject,session,now=Date.now(),lastTool=null){
+    if(!session||session.archived)return false;
+    const index=bsa212PhaseIndex(session),blocks=session.blocks||[];
+    const observed=blocks.map(b=>({key:String(b.key||''),ref:String(b.ref||''),title:String(b.title||''),
+      checked:!!b.done,evidence:!!bsa34BlockEvidence(subject,session,b),route:String(b.route||'study')}));
+    const elapsed=bsa211ElapsedMs(session,now);
+    const phaseElapsed=bsa212Guided(session)?bsa212PhaseElapsed(session,now):0;
+    const isGuided=bsa212Guided(session);
+    if(isGuided)bsa212Action(session,'finish',now);
+    else{if(Number(session.timerStartedAt)>0)session.timerElapsedMs=elapsed;
+      session.timerStartedAt=null;session.timerPaused=true;session.archived=true;session.lastAt=now;}
+    // Preserve separately from the dashboard's own live MCQ/flashcard evidence.
+    let pendingIndex=observed.findIndex((b,i)=>i>=index&&!b.checked&&!b.evidence);
+    if(pendingIndex<0)pendingIndex=observed.findIndex(b=>!b.checked&&!b.evidence);
+    const pending=pendingIndex>=0?blocks[pendingIndex]:null;
+    const wasInProgress=!!pending&&pendingIndex===index&&phaseElapsed>0;
+    const topic=String(session.focusId||'all');
+    const questionIds=new Set(mcqDedicatedPool(subject).filter(q=>bsa34TopicMatch(q,topic,subject)).map(q=>q.id));
+    const counts={mcq:0,problem:0,flashcard:0};
+    for(const e of subject.learningEvents||[]){
+      if((Number(e.at)||0)<Number(session.createdAt||0)||(Number(e.at)||0)>now)continue;
+      if(!['correct','incorrect','partial'].includes(e.result))continue;
+      if(e.kind==='mcq'&&questionIds.has(e.sourceId))counts.mcq++;
+      else if((e.kind==='problem'||e.kind==='flashcard')&&bsa34TopicMatch(e,topic,subject))counts[e.kind]++;
+    }
+    session.focusClosedAt=now;
+    session.focusEndSummary={endedAt:now,elapsedMs:elapsed,phaseIndex:index,phaseElapsedMs:phaseElapsed,
+      completed:observed.filter(b=>b.checked||b.evidence).map(b=>({key:b.key,ref:b.ref,checked:b.checked,evidence:b.evidence})),
+      checked:observed.filter(b=>b.checked).length,verifiedAttempts:observed.filter(b=>b.evidence).length,
+      eventCounts:counts,pendingIndex,partial:wasInProgress,
+      pending:pending?{key:pending.key,title:pending.title,ref:pending.ref,route:pending.route,opts:pending.opts||{},detail:pending.detail||''}:null};
+    if(lastTool&&typeof lastTool==='object'){
+      const allow=['study','lectures','mcq','psets','practice','vault','mistakes','accounting-lab','accounting-cycle','library','workspace','ask','rules'];
+      if(allow.includes(lastTool.tab))session.focusLastTool={tab:lastTool.tab,opts:JSON.stringify(lastTool.opts||{}).length<=3000?lastTool.opts||{}:{}};
+    }
+    return true;
+  }
+  function bsa214HistoryLabel(prior){
+    if(!prior)return '';
+    const s=prior.session,sum=prior.summary;
+    if(!sum)return 'An earlier study plan was filed for this topic. Its checklist is saved; older sessions have no detailed end snapshot.';
+    const done=sum.completed?.length||0,total=(s.blocks||[]).length;
+    const pieces=[done+' of '+total+' activities marked or attempted'];
+    if(sum.eventCounts){const attempts=(sum.eventCounts.mcq||0)+(sum.eventCounts.problem||0)+(sum.eventCounts.flashcard||0);
+      pieces.push(attempts+' linked practice record'+(attempts===1?'':'s'));}
+    pieces.push('about '+Math.floor(Math.max(0,sum.elapsedMs||0)/60000)+' min recorded');
+    if(sum.pending)pieces.push((sum.partial?'Partway through: ':'Next unfinished: ')+sum.pending.title);
+    else pieces.push('No unfinished plan step');
+    return pieces.join(' · ');
+  }
+  function bsa214AdaptProposal(subject,original,focus,mode,budget,prior,usePrior){
+    if(!usePrior||!prior||!prior.recent||!prior.summary||prior.session.focusMode!==mode||!Array.isArray(original)||!original.length)return original;
+    const old=prior.session;
+    const completed=new Set((prior.summary.completed||[]).map(x=>String(x.key)));
+    if(!completed.size)return original;
+    const pendingKey=prior.summary.pending?.key;
+    if(budget<=25){
+      // One focus block only. Let due/unseen/unreviewed source evidence choose
+      // the activity; only clarify how prior work relates to the recommendation.
+      return original.map(x=>({...x,reason:(x.reason||'')+' Previous session on this exact topic: '+bsa214HistoryLabel(prior)}));
+    }
+    // Recently checked work may be postponed within the SAME study goal;
+    // keep unfinished work and any newly due retrieval or unread source.
+    const active=original.filter(b=>{
+      if(!completed.has(b.key)||b.key===pendingKey)return true;
+      if(b.key==='warmup'||b.key==='teachback')return !prior.sameDay;
+      if(b.key==='lesson'){
+        const lecture=(subject.lectures||[]).find(l=>l.id===b.ref);
+        if(lecture){const secs=lxSourcePresentation(lecture).sections||[];
+          if(secs.some((sec,i)=>!(lecture.reviewedSections||[]).includes(sec.id||String(i))))return true;}
+      }
+      if(b.key==='mcq'){
+        const pool=bsa197Pool(mcqDedicatedPool(subject).filter(q=>bsa34TopicMatch(q,focus,subject)),subject.learningEvents||[],Date.now());
+        if(pool.some(q=>!q._recall.seen||q._recall.due))return true;
+      }
+      return false;
+    });
+    if(!active.length)return original; // everything completed: permit a fresh cycle
+    if(active.length===original.length)return original;
+    const next=bsa212Allocate(active.map(b=>({...b,weight:Math.max(1,b.mins||1)})),budget).map(b=>bsa213ScopeLongBlock(subject,b,focus));
+    return next.map(b=>({...b,historyAdjusted:true}));
+  }
   function bsa205SessionBlocks(subject,budget,settings,focus='all'){return bsa34PlanBlocks(subject,budget,settings,focus)}
   /* Actual attempt evidence is computed from existing events, not a new grading
      system. A wrong answer still counts as an attempt, never as mastery. */
@@ -17106,19 +17407,22 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     return false;
   }
   function BSA205Study({subject,update,settings,go,toast,init}){
-    const [budget,setBudget]=useState(40),[reflection,setReflection]=useState(''),[focusMode,setFocusMode]=useState('balanced');
+    const [budget,setBudget]=useState(40),[customEnabled,setCustomEnabled]=useState(false),[customMinutes,setCustomMinutes]=useState('18'),[reflection,setReflection]=useState(''),[focusMode,setFocusMode]=useState('balanced');
+    const sessionMinutes=customEnabled?Math.max(5,Math.min(180,Math.round(Number(customMinutes)||18))):budget;
     const [focusId,setFocusId]=useState(init?.focusId||'all');
+    const [continuePrevious,setContinuePrevious]=useState(true);
     const focusChoices=useMemo(()=>bsa34FocusChoices(subject),[subject]);
     useEffect(()=>{if(init?.focusId&&focusChoices.some(x=>x.id===init.focusId))setFocusId(init.focusId)},[init?.focusId,subject.id]);
     const sessions=(subject.practiceSessions||[]).slice().sort((a,b)=>(Number(b.lastAt||b.createdAt)||0)-(Number(a.lastAt||a.createdAt)||0));
     const journey=bsa33Journey(subject);
     const active=journey.session;
-    const proposal=useMemo(()=>bsa212ModePlan(subject,budget,settings,focusId,focusMode),[subject,budget,settings,focusId,focusMode]);
+    const prior=bsa214RecentClosed(subject,focusId);
+    const proposal=useMemo(()=>bsa214AdaptProposal(subject,bsa212ModePlan(subject,sessionMinutes,settings,focusId,focusMode),focusId,focusMode,sessionMinutes,bsa214RecentClosed(subject,focusId),continuePrevious),[subject,sessionMinutes,settings,focusId,focusMode,continuePrevious]);
     const create=()=>{
       if(active){toast('Finish or file your existing plan before creating a new one.');return}
       if(!proposal.length){toast('Add some lessons or questions first, then build a plan.');return}
       if(timerState?.running){toast('Pause or finish your separate Pomodoro timer first to avoid running two study clocks.');return}
-      const createdAt=Date.now();const newSession={id:uid('session205'),createdAt,lastAt:createdAt,budget,focusId,focusLabel:bsa34TopicTitle(subject,focusId),blocks:proposal.map(b=>({...b,done:false})),archived:false,focusMode,focusPhaseIndex:0,focusPhaseElapsedMs:0,focusPhaseStartedAt:createdAt,focusWaiting:false,focusSaved:false,focusEnded:false,timerStartedAt:createdAt,timerElapsedMs:0,timerPaused:false};
+      const createdAt=Date.now();const newSession={id:uid('session205'),createdAt,lastAt:createdAt,budget:sessionMinutes,focusId,focusLabel:bsa34TopicTitle(subject,focusId),blocks:proposal.map(b=>({...b,done:false})),archived:false,focusMode,focusPhaseIndex:0,focusPhaseElapsedMs:0,focusPhaseStartedAt:createdAt,focusWaiting:false,focusSaved:false,focusEnded:false,timerStartedAt:createdAt,timerElapsedMs:0,timerPaused:false};
       update(s=>{s.practiceSessions=[...(s.practiceSessions||[]),newSession]});
       setReflection('');toast('Guided focus started. Your floating phase timer follows you; drag its grip to reposition.');
     };
@@ -17147,7 +17451,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       }
       x.lastAt=now;
     });
-    const archive=id=>{update(s=>{const x=(s.practiceSessions||[]).find(r=>r.id===id);if(x){const now=Date.now();if(bsa212Guided(x))bsa212Action(x,'finish',now);else{if(Number(x.timerStartedAt)>0){x.timerElapsedMs=bsa211ElapsedMs(x,now);x.timerStartedAt=null;x.timerPaused=true;}x.archived=true;x.lastAt=now}}});toast('Session filed. Your saved answers, scores and notes are unchanged.');};
+    const archive=id=>{update(s=>{const x=(s.practiceSessions||[]).find(r=>r.id===id);if(x)bsa214Archive(s,x,Date.now(),{tab:'study',opts:{}})});toast('Session ended and saved by topic. Start another session anytime; previous progress stays available.');};
     const start=bsa212Guided(active)?journey.blocks[bsa212PhaseIndex(active)]:journey.next;
     const completed=active?journey.done:0;
     const [clockNow,setClockNow]=useState(()=>Date.now());
@@ -17177,8 +17481,9 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
           h('div',{className:'bsa211-task-rate'},h('strong',{className:'bsa33-session-percent'},journey.percent+'%'),h('small',null,'Tasks completed'))),
         h('div',{className:'bsa33-session-meter',role:'progressbar','aria-valuenow':journey.percent,'aria-valuemin':0,'aria-valuemax':100,'aria-label':'Activities marked complete, not evidence of mastery'},h('span',{style:{width:journey.percent+'%'}})),
         bsa212Guided(active)&&h('section',{className:'bsa212-current-block'},
-          h('div',null,h('span',{className:'bsa33-eyebrow'},'CURRENT GUIDED PHASE · '+bsa212ModeName(active.focusMode)),h('h3',null,active.blocks[bsa212PhaseIndex(active)]?.title||'Study phase'),
+          h('div',null,h('span',{className:'bsa33-eyebrow'},(active.blocks.length===1?'SMART QUICK FOCUS':'CURRENT GUIDED PHASE')+' · '+bsa212ModeName(active.focusMode)),h('h3',null,active.blocks[bsa212PhaseIndex(active)]?.title||'Study phase'),
             h('small',null,(bsa212PhaseIndex(active)+1)+' of '+active.blocks.length+' · '+bsa211Clock(Math.max(0,bsa212PhaseGoal(active)-bsa212PhaseElapsed(active,clockNow)))+' remaining in this step')),
+          active.blocks.length===1&&active.blocks[0]?.reason&&h('p',null,'Why this activity: '+active.blocks[0].reason),
           h('p',null,active.focusWaiting?'Time is up for this step. Open the floating timer for your options.':active.focusSaved?'Session saved. Resume with the floating timer when ready.':'The mini timer follows you into lectures and practice. Use its handle to move it on iPad or desktop.'),
           h('button',{className:'btn',onClick:()=>go(active.blocks[bsa212PhaseIndex(active)].route,active.blocks[bsa212PhaseIndex(active)].opts||{})},'Open current activity ↗')),
         !bsa212Guided(active)&&h('div',{className:'bsa212-legacy-upgrade'},h('div',null,h('strong',null,'Want the floating focus timer?'),h('small',null,'Keep your existing tasks and elapsed time. Guided phases start tracking from this point forward.')),
@@ -17203,7 +17508,8 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
           h('button',{className:'bsa33-task-open',type:'button',onClick:()=>go(block.route,block.opts||{})},'Open '+(block.stage==='learn'?'lesson':block.stage==='review'?'review':'problem'),h('span',{'aria-hidden':'true'},'↗')),
           h('label',{className:'bsa33-task-done'},h('input',{type:'checkbox',checked:!!block.effectiveDone,disabled:!!block.evidence,onChange:()=>toggle(active.id,block.key),'aria-label':'Mark '+block.title+' complete after doing it'}),h('span',null,block.evidence?'Attempt recorded':block.done?'Done':'Mark done'))))),
         h('div',{className:'bsa33-session-footer'},h('span',null,'Answered practice is recognized automatically. Checked tasks are self-reported; neither implies mastery.'),
-          h('button',{className:'bsa33-text-button',onClick:()=>archive(active.id)},journey.percent===100?'Finish and file plan':'File this plan')),
+          h('button',{className:'bsa33-text-button bsa214-end-button',onClick:()=>{if(window.confirm('End this study session and save its progress? Your session history will remain available, and you can start a different topic. Save any unfinished quiz using its own Save & Leave first.'))archive(active.id)}},'End & Save session')),
+        h('p',{className:'bsa214-end-note'},'End & Save closes this plan and frees the timer for another topic. Save & Leave on the floating timer only pauses this same session for later.'),
         (journey.percent===100||bsa212Guided(active)&&(active.focusEnded||active.blocks[bsa212PhaseIndex(active)]?.key==='teachback'||active.blocks[bsa212PhaseIndex(active)]?.key==='warmup'))&&h('section',{className:'bsa33-reflect', 'aria-label':'End of session reflection'},
           h('span',{className:'bsa33-eyebrow'},'STEP 03 · REFLECT & REVISIT'),
           h('h3',null,'What can you remember without your notes?'),
@@ -17212,12 +17518,28 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
           h('div',{className:'bsa33-actions'},h('button',{className:'bsa33-button bsa33-button-primary',onClick:saveReflection},'Save reflection'),
           h('button',{className:'bsa33-button bsa33-button-outline',onClick:()=>go('practice',{start:'review'})},'Practice spaced reviews ↗')),
           h('small',null,'Retention comes from repeated retrieval over time—not from marking a checklist complete.'))):
-        h('div',{className:'bsa33-create-board'},
+        h('div',{className:'bsa33-create-board',id:'bsa214-study-builder'},
           h('div',{className:'bsa33-create-copy'},h('span',{className:'bsa33-eyebrow'},'LET’S PLAN YOUR STUDY TIME'),h('h2',null,'Build a focused session'),h('p',null,'Choose a topic. The plan links to matching materials where available and will never quietly pick a different topic.')),
           h('label',{className:'bsa34-focus-field'},'Focus on one topic',h('select',{value:focusChoices.some(x=>x.id===focusId)?focusId:'all',onChange:e=>setFocusId(e.target.value),'aria-label':'Choose a topic for this study plan'},focusChoices.map(x=>h('option',{key:x.id,value:x.id},x.label)))),
+          prior&&h('div',{className:'bsa214-prior-session'},
+            h('div',{className:'bsa214-prior-title'},h('strong',null,'Previous session · '+(prior.session.focusLabel||'Selected topic')),h('small',null,prior.recent?'Recent context':'Older history · re-review may be useful')),
+            h('p',null,bsa214HistoryLabel(prior)),
+            prior.summary?.pending&&h('small',null,'Last unfinished activity: '+prior.summary.pending.title+'. This is a study bookmark, not a verified mastery score.'),
+            h('label',{className:'bsa214-carry-toggle'},h('input',{type:'checkbox',checked:continuePrevious,onChange:e=>setContinuePrevious(e.target.checked)}),h('span',null,'Use recent session history to avoid unnecessary repeats'))),
           h('div',{className:'bsa212-mode-picker'},h('span',{className:'bsa33-eyebrow'},'CHOOSE YOUR SESSION GOAL'),
             h('div',{className:'bsa212-mode-options'},BSA212_MODES.map(m=>h('button',{key:m.id,type:'button','aria-pressed':focusMode===m.id,className:'bsa212-mode'+(focusMode===m.id?' selected':''),onClick:()=>setFocusMode(m.id)},h('strong',null,m.title),h('small',null,m.desc))))),
-          h('label',{className:'bsa33-time-field'},'Study time goal',h('select',{value:budget,onChange:e=>setBudget(Number(e.target.value))},[20,30,40,60,90,120].map(m=>h('option',{key:m,value:m},m+' minutes'))),h('small',null,'Time is distributed across the steps. A small, movable focus timer tracks the active step. You can pause, add time, skip ahead, or save for later.')),
+          h('div',{className:'bsa33-time-field bsa213-time-field'},
+            h('label',{htmlFor:'bsa213-budget-preset'},'Study time available'),
+            h('select',{id:'bsa213-budget-preset',value:customEnabled?'custom':String(budget),onChange:e=>{const value=e.target.value;if(value==='custom'){setCustomEnabled(true)}else{setCustomEnabled(false);setBudget(Number(value))}}},
+              [20,30,40,60,90,120].map(m=>h('option',{key:m,value:String(m)},m+' minutes')),h('option',{value:'custom'},'Custom minutes…')),
+            customEnabled&&h('label',{className:'bsa213-custom-minutes'},'My available time (5–180 minutes)',
+              h('input',{type:'number',min:5,max:180,step:1,inputMode:'numeric',value:customMinutes,'aria-label':'Custom session minutes',onChange:e=>setCustomMinutes(e.target.value),onBlur:()=>setCustomMinutes(String(sessionMinutes))})),
+            h('p',{className:'bsa213-budget-caption'},sessionMinutes<=25?'Quick Smart Focus · '+sessionMinutes+' minutes on ONE recommended activity, using your saved progress. No unnecessary micro-steps.':'Guided focus · '+sessionMinutes+' minutes across the learning phases. You can pause, extend or save.')),
+          proposal.length===1&&proposal[0].focusQuick&&h('div',{className:'bsa213-quick-explainer',role:'status'},
+            h('strong',null,'Recommended now · '+proposal[0].title),
+            h('span',null,proposal[0].reason),
+            h('small',null,'Evidence-based suggestion, not a grade or proof of mastery.')),
+          prior&&continuePrevious&&prior.recent&&sessionMinutes>25&&proposal.some(x=>x.historyAdjusted)&&h('p',{className:'bsa214-adapt-note'},'This plan moves past recently completed steps when appropriate. Due retrieval, unreviewed lecture sections and unfinished work remain eligible.'),
           h('div',{className:'bsa33-proposal-list'},proposal.length?proposal.map((block,i)=>h('div',{key:block.key||i},h('span',null,String(i+1).padStart(2,'0')),h('div',null,h('strong',null,block.title),h('small',null,block.mins+' minutes · '+block.detail)))):
             h('p',null,'No suitable study material is saved for this subject yet. Add a lesson or question in Library first.')),
           h('button',{className:'bsa33-button bsa33-button-primary',disabled:!proposal.length,onClick:create},'Create my session',h('span',{'aria-hidden':'true'},'↗'))),
@@ -17227,7 +17549,13 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
         h('div',{className:'bsa33-utility-panel'},h('h3',null,'Need a specific tool?'),h('p',null,'These are shortcuts, not extra study dashboards.'),h('div',{className:'bsa33-tool-links'},
           [['Find a lecture','lectures'],['Search written problems','library'],['Open AI Tutor','ask'],['Open scratchpad','workspace']].map(([label,tab])=>h('button',{key:tab,onClick:()=>go(tab,tab==='workspace'?{tab:'scratch'}:{})},label,' ↗'))))),
       h('details',{className:'bsa33-history'},h('summary',null,'Previous study plans ('+sessions.length+')'),
-        sessions.length?h('div',{className:'bsa33-history-list'},sessions.slice(0,12).map(s=>h('div',{key:s.id},h('strong',null,bsa205Date(s.createdAt)),h('span',null,(s.blocks||[]).filter(b=>b.done).length+' / '+(s.blocks||[]).length+' checked · '+(bsa211HasTimer(s)?bsa211Clock(bsa211ElapsedMs(s,clockNow)):'time untracked')),h('small',null,s.archived?'Filed':'Current')))):h('p',null,'Your study session history will appear here.')));
+        sessions.length?h('div',{className:'bsa33-history-list'},sessions.slice(0,15).map(s=>h('div',{key:s.id,className:'bsa214-history-item'},
+          h('strong',null,s.focusLabel||'Mixed topics',' · ',bsa205Date(s.createdAt)),
+          h('span',null,(s.focusEndSummary?.completed?.length??(s.blocks||[]).filter(b=>b.done).length)+' / '+(s.blocks||[]).length+' completed/attempted · '+(bsa211HasTimer(s)?bsa211Clock(bsa211ElapsedMs(s,clockNow)):'time untracked')),
+          h('small',null,s.archived?'Ended & saved':'Current'),
+          s.focusEndSummary?.pending&&h('small',null,'Unfinished: '+s.focusEndSummary.pending.title),
+          s.reflection&&h('small',null,'Your reflection: '+String(s.reflection).slice(0,160)),
+          s.archived&&h('button',{type:'button',className:'bsa214-history-replan',onClick:()=>{setFocusId(s.focusId||'all');setFocusMode(s.focusMode||'balanced');setContinuePrevious(true);document.getElementById('bsa214-study-builder')?.scrollIntoView({behavior:'smooth',block:'start'})}},'Plan again for this topic ↗')))):h('p',null,'Your study session history will appear here.')));
   }
   function BSA212FloatingFocus({subject,update,go,toast,nav}){
     const active=bsa33Journey(subject).session;
@@ -17241,9 +17569,9 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       if(bsa212PhaseElapsed(session,now)<bsa212PhaseGoal(session))return;
       const id=session.id;update(s=>{const x=(s.practiceSessions||[]).find(t=>t.id===id);if(x)bsa212Action(x,'expire',Date.now());});
     },[session?.id,session?.focusPhaseStartedAt,session?.focusPhaseElapsedMs,session?.focusPhaseIndex,session?.focusWaiting,now]);
-    const action=(what,arg=0)=>{if(!session)return;const id=session.id;update(s=>{const x=(s.practiceSessions||[]).find(r=>r.id===id);if(x){bsa212Action(x,what,Date.now(),arg);if(what==='save'){const tab=String(nav?.tab||'study');const allow=['study','lectures','mcq','psets','practice','vault','mistakes','accounting-lab','accounting-cycle','library','workspace','ask','rules'];const opts=nav?.opts||{};x.focusLastTool={tab:allow.includes(tab)?tab:'study',opts:JSON.stringify(opts).length<3000?opts:{}}}else if(what==='next')delete x.focusLastTool;}});
+    const action=(what,arg=0)=>{if(!session)return;const id=session.id;update(s=>{const x=(s.practiceSessions||[]).find(r=>r.id===id);if(x){if(what==='end'||what==='finish'){bsa214Archive(s,x,Date.now(),nav?{tab:nav.tab,opts:nav.opts||{}}:null)}else bsa212Action(x,what,Date.now(),arg);if(what==='save'){const tab=String(nav?.tab||'study');const allow=['study','lectures','mcq','psets','practice','vault','mistakes','accounting-lab','accounting-cycle','library','workspace','ask','rules'];const opts=nav?.opts||{};x.focusLastTool={tab:allow.includes(tab)?tab:'study',opts:JSON.stringify(opts).length<3000?opts:{}}}else if(what==='next')delete x.focusLastTool;}});
       if(what==='save'){setExpanded(false);if(['mcq','psets','practice'].includes(nav?.tab)){toast('Focus session saved. Use the practice screen’s own Save & leave before exiting an unfinished question.');}else{toast('Study session saved. Resume whenever you are ready.');go('study');}}
-      if(what==='finish'){setExpanded(false);toast('Study session filed. Your learning scores remain unchanged.');}
+      if(what==='end'||what==='finish'){setExpanded(false);toast('Session ended and saved under this topic. You can plan a different session now.');go('study');}
     };
     const constrain=(x,y,w,h)=>({x:Math.max(8,Math.min(Math.max(8,window.innerWidth-(w||Math.min(320,window.innerWidth-16))-8),x)),y:Math.max(8,Math.min(Math.max(8,window.innerHeight-(h||(expanded?285:60))-8),y))});
     const begin=e=>{if(e.pointerType==='mouse'&&e.button!==0)return;const node=e.currentTarget.closest('.bsa212-float');const rect=node.getBoundingClientRect();drag.current={id:e.pointerId,px:e.clientX,py:e.clientY,x:rect.left,y:rect.top};e.currentTarget.setPointerCapture?.(e.pointerId);e.preventDefault()};
@@ -17259,7 +17587,11 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     const remaining=Math.max(0,bsa212PhaseGoal(session)-bsa212PhaseElapsed(session,now));
     const running=Number(session.focusPhaseStartedAt)>0;
     const totalLeft=Math.max(0,(Number(session.budget)||40)*60000-bsa211ElapsedMs(session,now));
-    return h('aside',{className:'bsa212-float'+(expanded?' expanded':'')+(waiting?' is-due':'')+(session.focusSaved?' is-saved':''),'data-dragged':pos?'yes':'no',style:pos?{left:pos.x+'px',top:pos.y+'px',right:'auto',bottom:'auto'}:undefined,role:'region','aria-label':'Floating guided study timer',
+    // Fixed UI lives in a single body-level layer, not a scrolling/transformed
+    // dashboard panel; avoids repeated compositor paints during scrolling.
+    let layer=document.getElementById('bsa213-focus-layer');
+    if(!layer){layer=document.createElement('div');layer.id='bsa213-focus-layer';document.body.appendChild(layer);}
+    return ReactDOM.createPortal(h('aside',{className:'bsa212-float'+(expanded?' expanded':'')+(waiting?' is-due':'')+(session.focusSaved?' is-saved':''),'data-dragged':pos?'yes':'no',style:pos?{left:pos.x+'px',top:pos.y+'px',right:'auto',bottom:'auto'}:undefined,role:'region','aria-label':'Floating guided study timer',
       onPointerMove:move,onPointerUp:end,onPointerCancel:end},
       h('div',{className:'bsa212-float-top'},
         h('button',{className:'bsa212-float-grip',type:'button',title:'Drag to move the floating timer on iPad or desktop',onPointerDown:begin,onKeyDown:keyboard,'aria-label':'Move timer: drag with touch or mouse, arrow keys to move, Home to reset position'},'⠿'),
@@ -17271,20 +17603,22 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
         h('strong',{className:'bsa212-float-phase'},block.title||'Study activity'),
         h('p',null,block.detail||'Continue your study step.'),
         h('div',{className:'bsa212-float-meter',role:'progressbar','aria-valuemin':0,'aria-valuemax':100,'aria-valuenow':Math.min(100,Math.round(100*bsa212PhaseElapsed(session,now)/bsa212PhaseGoal(session)))},h('span',{style:{width:Math.min(100,100*bsa212PhaseElapsed(session,now)/bsa212PhaseGoal(session))+'%'}})),
-        h('div',{className:'bsa212-float-meta'},h('span',null,'Step '+(index+1)+' of '+session.blocks.length),h('span',null,'Session left: '+bsa211Clock(totalLeft))),
+        h('div',{className:'bsa212-float-meta'},h('span',null,session.blocks.length===1?'One focused activity':'Step '+(index+1)+' of '+session.blocks.length),h('span',null,'Session left: '+bsa211Clock(totalLeft))),
         waiting&&h('div',{className:'bsa212-float-notice',role:'status'},'Step time reached. Add time, move on, or save for later. Your answer is not automatically submitted.'),
-        ended&&h('div',{className:'bsa212-float-notice'},'All phases visited. Your checked answers and mastery remain separate.'),
+        ended&&h('div',{className:'bsa212-float-notice'},'Your planned focus time is complete. Checked answers and mastery remain separate.'),
         !ended&&h('div',{className:'bsa212-float-actions'},
           !waiting&&h('button',{type:'button',onClick:()=>action(running?'pause':'start')},running?'Pause':'Resume'),
           h('button',{type:'button',onClick:()=>go(session.focusSaved&&session.focusLastTool?.tab||block.route||'study',session.focusSaved&&session.focusLastTool?.opts||block.opts||{})},session.focusSaved?'Return to saved tool ↗':'Open step ↗'),
-          h('button',{type:'button',onClick:()=>action('next')},index===session.blocks.length-1?'End phases':'Next step →')),
+          h('button',{type:'button',onClick:()=>action('next')},index===session.blocks.length-1?'Finish block':'Next step →')),
         (waiting||!ended)&&h('div',{className:'bsa212-float-actions'},
           h('button',{type:'button',onClick:()=>action('extend',5)},'+5 min'),
           h('button',{type:'button',onClick:()=>action('extend',10)},'+10 min'),
           h('button',{type:'button',onClick:()=>action('save')},'Save & leave')),
+        !ended&&h('div',{className:'bsa214-floating-end'},
+          h('button',{type:'button',onClick:()=>{if(window.confirm('End & Save this study session? You can immediately start another topic. Save an unfinished quiz draft separately first.'))action('end')}},'End & Save · start something else')),
         ended&&h('div',{className:'bsa212-float-actions'},h('button',{type:'button',onClick:()=>action('finish')},'Finish & file'),h('button',{type:'button',onClick:()=>go('study')},'Review plan')),
         h('p',{className:'bsa212-float-footnote'},'Elapsed wall time is not a grade. No answers are auto-submitted.'),
-        h('button',{className:'bsa212-float-reset',type:'button',onClick:()=>{setPos(null);try{localStorage.removeItem('bsa212-floating-pos')}catch(_){}}},'Reset position')));
+        h('button',{className:'bsa212-float-reset',type:'button',onClick:()=>{setPos(null);try{localStorage.removeItem('bsa212-floating-pos')}catch(_){}}},'Reset position'))),layer);
   }
   function bsa34LearningSnapshot(subject,now=Date.now()){
     const pool=bsa197Pool(mcqDedicatedPool(subject),subject.learningEvents||[],now);
@@ -17646,7 +17980,8 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
           h('div',{className:'bsa31-hero-next bsa33-hero-brief'},h('span',null,journey.session?'YOUR ACTIVE JOURNEY':'RECOMMENDED FOR YOU'),h('strong',null,next.title),h('small',null,next.description),journey.next&&h('span',{className:'bsa33-inline-progress','aria-label':journey.percent+' percent of planned tasks finished'},h('i',{style:{width:journey.percent+'%'}}))),
           h('div',{className:'bsa205-hero-actions'},
             h('button',{className:'bsa205-primary-action',onClick:()=>go(next.route,next.opts||{})},next.label,'  ↗'),
-            h('button',{className:'bsa205-hero-secondary',onClick:()=>go('guide')},'How the study flow works'))),
+            h('button',{className:'bsa205-hero-secondary',onClick:()=>go(next.route==='study'?'practice':'study')},next.route==='study'?'Study without a plan':'Plan a focus session · optional')),
+          h('p',{className:'bsa214-home-planner-note'},'Focus sessions are optional. End & Save lets you switch topics without losing your study history.')),
         h('div',{className:'bsa205-hero-orb bsa31-hero-orb','aria-hidden':'true'},h('span',null,'Σ'),h('small',null,subject.code||'BSA'))),
       h('div',{className:'bsa31-overview bsa33-overview'},
         h('div',{className:'bsa31-overview-title'},h('div',null,h('span',{className:'bsa205-overline'},'ONE CONNECTED WORKFLOW'),h('h2',null,'Learn → Practice → Review'),h('p',null,'Use the steps in order, or jump to the part you need.')),h('span',{className:'bsa31-journey-mark'},'01  →  02  →  03')),
@@ -18293,6 +18628,8 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       return next;
     });
     const [sidebarEdit,setSidebarEdit]=useState(false);
+    const [utilityOpen,setUtilityOpen]=useState(()=>{try{return localStorage.getItem('bsa213-rail-tools-open')==='1'}catch(_){return false}});
+    const toggleUtilities=()=>setUtilityOpen(v=>{const next=!v;try{localStorage.setItem('bsa213-rail-tools-open',next?'1':'0')}catch(_){}return next});
     const saveSidebar=fn=>setSidebarPrefs(old=>{const next=fn(old);try{localStorage.setItem('bsa45-sidebar-prefs',JSON.stringify(next))}catch(_){}return next});
     const toggleSidebarPin=id=>saveSidebar(v=>({...v,pinned:v.pinned.includes(id)?v.pinned.filter(x=>x!==id):v.pinned.length>=6?v.pinned:[...v.pinned,id]}));
     const toggleSidebarHide=id=>saveSidebar(v=>({...v,hidden:v.hidden.includes(id)?v.hidden.filter(x=>x!==id):[...v.hidden,id]}));
@@ -18647,12 +18984,15 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
           pinnedVisible.length?pinnedVisible.map(id=>{const found=tabs.find(t=>t[0]===id);return h('button',{key:id,type:'button',className:'bsa45-pin-link'+(nav.tab===id?' on':''),'aria-label':found[1],title:found[1],onClick:()=>go(id)},h(Icon,{name:found[2]}),h('span',null,id==='home'?'Today':id==='study'?'Learn & plan':id==='practice'?'Practice':id==='library'?'Study Library':id==='ask'?'AI Tutor':found[1]));}):h('button',{className:'bsa47-restore-shortcuts',type:'button',onClick:restoreCoreShortcuts},'No shortcuts visible · Restore essentials')),
         filteredNavGroups.map(group=>h('section',{className:'nav-group',key:group.name},h('button',{className:'nav-group-heading',type:'button','aria-expanded':Boolean(navSearch||!collapsedNav[group.name]),onClick:()=>setCollapsedNav(prev=>({...prev,[group.name]:!prev[group.name]}))},h('span',null,group.name),h('span',{className:'nav-chevron','aria-hidden':'true'},navSearch||!collapsedNav[group.name]?'⌄':'›')),(navSearch||!collapsedNav[group.name])?h('div',{className:'nav-group-links'},group.tabs.map(([k,l,ic,n])=>h('button',{key:k,className:nav.tab===k?'on':'','aria-current':nav.tab===k?'page':undefined,title:(DESK_FEATURE_GUIDE.find(f=>f.id===k)||{}).desc||l,onClick:()=>go(k)},h(Icon,{name:ic}),h('span',null,l),n?h('span',{className:'n'},n):null,navNeedle&&!bsa46ToolVisible(subject,k)?h('small',{className:'bsa46-search-note'},'optional'):null))):null)))),
       h('div',{className:'bsa47-utility-rail'},
-        h('div',{className:'bsa47-utility-actions'},
-          h('button',{className:'bsa47-utility-button',type:'button',onClick:()=>setSidebarEdit(true),title:'Customize your workspace','aria-label':'Workspace settings'},h(Icon,{name:'settings',size:17}),h('span',null,'Settings')),
-          h('button',{className:'bsa47-utility-button bsa47-import-button',type:'button',onClick:()=>go('library',{tab:'topics'}),title:'Find missing topic material'},h(Icon,{name:'data',size:16}),h('span',null,'Import'))),
-        h('div',{className:'bsa47-palettes'},
-          h('div',{className:'bsa47-palette-heading'},h('strong',null,'Quick colors'),h('button',{type:'button',onClick:()=>setModal('look')},'All colors')),
-          h(ThemeDots,{settings:data.settings,setSettings})),
+        h('button',{className:'bsa213-utility-toggle',type:'button',onClick:toggleUtilities,'aria-expanded':utilityOpen,'aria-controls':'bsa213-utility-details',title:utilityOpen?'Hide Settings, Import and appearance':'Show Settings, Import and appearance'},
+          h(Icon,{name:'settings',size:15}),h('span',null,'Tools & appearance'),h('small',null,utilityOpen?'Hide':'Show'),h('span',{'aria-hidden':'true'},utilityOpen?'⌃':'⌄')),
+        utilityOpen&&h('div',{id:'bsa213-utility-details',className:'bsa213-utility-details'},
+          h('div',{className:'bsa47-utility-actions'},
+            h('button',{className:'bsa47-utility-button',type:'button',onClick:()=>setSidebarEdit(true),title:'Customize your workspace','aria-label':'Workspace settings'},h(Icon,{name:'settings',size:17}),h('span',null,'Settings')),
+            h('button',{className:'bsa47-utility-button bsa47-import-button',type:'button',onClick:()=>go('library',{tab:'topics'}),title:'Find missing topic material'},h(Icon,{name:'data',size:16}),h('span',null,'Import'))),
+          h('div',{className:'bsa47-palettes'},
+            h('div',{className:'bsa47-palette-heading'},h('strong',null,'Quick colors'),h('button',{type:'button',onClick:()=>setModal('look')},'All colors')),
+            h(ThemeDots,{settings:data.settings,setSettings}))),
         h(SyncBadge,{onOpen:openSync}),h('small',{className:'bsa47-build-tag',title:'Installed dashboard build'},BSA_RELEASE_LABEL))), /* @__PURE__ */ React.createElement("header", { className: "mobilebar" }, /* @__PURE__ */ h("div",{className:"bsa-shortcut-anchor mobile"},React.createElement("button", { className: "brand-mark mobile-home-button", type: "button", onClick: () => setShortcutsOpen(v=>!v), title: "Open quick shortcuts", "aria-label": "Open quick shortcuts", "aria-expanded":shortcutsOpen,"aria-haspopup":"menu" }, "Σ"),shortcutMenu()), subjectsButton("subj-m",true), h("button",{className:"icon-btn",onClick:()=>setSpotlightOpen(true),"aria-label":"Search dashboard"},h(Icon,{name:"search",size:19})), !window.__BSA_SHARED_MODE__&&h('button',{type:'button',className:'icon-btn bsa48-mobile-ai',onClick:()=>go('nlm',{}),'aria-label':'Open AI Prompt Builder',title:'AI Prompt Builder'},h(Icon,{name:'sparkles',size:19})), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal(syncAlert ? "sync" : "data"), "aria-label": syncAlert ? "Import, export and sync (needs attention)" : "Import and export", "data-sync": syncAlert }, /* @__PURE__ */ React.createElement(Icon, { name: "data" })), /* @__PURE__ */ h('button',{className:'icon-btn',onClick:()=>go('guide'),'aria-label':'Guided walkthrough',title:'Guided walkthrough'},'?'),h('button',{className:'icon-btn bsa46-mobile-settings',onClick:()=>setSidebarEdit(true),'aria-label':'Subject profile and workspace settings',title:'Workspace settings'},h(Icon,{name:'settings',size:19}))), /* @__PURE__ */ React.createElement("main", { className: "content bsa33-content", "data-desk-page": nav.tab },
       storeFull&&h('div',{className:'bsa48-save-failure',role:'alert'},h('strong',null,'Changes are not saving on this device.'),h('span',null,'The browser refused a local write. Export a full backup and review storage before further editing.'),h('button',{type:'button',className:'btn',onClick:()=>setModal({data:'export'})},'Open backup')),
       h("div",{className:"workspace-topbar v2-topbar"},
@@ -18803,7 +19143,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       React.createElement('button',{className:'btn',onClick:()=>bsaDownloadSafeDiagnostics(this.state.error)},'Download safe error report'),
       React.createElement('details',null,React.createElement('summary',null,'Technical details'),React.createElement('pre',null,String(this.state.error&&this.state.error.message||'Unknown render error'))));}
   }
-  if(window.__BSA_TEST__)window.__BSA18_TEST_HOOKS__={bsa197QuizKey,bsa197History,bsa197Recall,bsa197Pool,bsa197Pick,smartTopicStats,bsaAdaptiveSignals,bsaReadinessReport,bsa34LearningSnapshot,bsaUpsertMistake,learningEvidence,learningCapture,AcademicCommandCenter,bsa197LoadDraft,bsa197SaveDraft,bsa197DeleteDraft,bsa18SaveWritten,bsa18LoadWritten,bsa18DeleteWritten,bsa18LatestPractice,bsa18ReadTutorChat,bsa25PracticeHealth,bsa26TutorName,bsa26TopicMatch,bsa26SafeAction,bsa26TutorCapabilityContext,bsa26LocalStudyPlan,BSA26_COPILOT_FEATURES,bsa26SafeReturn,bsa26ReturnFor,bsa26FsDraft,bsa4TutorDraft,bsa27SelectionFocus,bsa27DefaultTutorQuestion,gemSourceSystem,bsa212ModePlan,bsa212Allocate,bsa212PhaseElapsed,bsa212PhaseGoal,bsa212Action,bsa28SourceHistory,bsa28NewTopicRequest,bsa210TutorCore,bsa28ReadReflections,bsa28WriteReflections,bsa29Meaningful,bsa29Candidates,bsa29Pool,bsa29Exact,bsa29ReadDraft,bsa29SaveDraft,bsa210DuplicateSignal,bsa210MaterialPair,bsa210AnswerMeaning,bsa44Prepare,BSA29ClozePractice,psMathSegments,psMathHtml,psS,psInlineHtml,MultipleChoiceQuiz,MCQPage,PsWrittenDrill,MockExam,AskView,App};
+  if(window.__BSA_TEST__)window.__BSA18_TEST_HOOKS__={bsa197QuizKey,bsa197History,bsa197Recall,bsa197Pool,bsa197Pick,smartTopicStats,bsaAdaptiveSignals,bsaReadinessReport,bsa34LearningSnapshot,bsaUpsertMistake,learningEvidence,learningCapture,AcademicCommandCenter,bsa197LoadDraft,bsa197SaveDraft,bsa197DeleteDraft,bsa18SaveWritten,bsa18LoadWritten,bsa18DeleteWritten,bsa18LatestPractice,bsa18ReadTutorChat,bsa25PracticeHealth,bsa26TutorName,bsa26TopicMatch,bsa26SafeAction,bsa26TutorCapabilityContext,bsa26LocalStudyPlan,BSA26_COPILOT_FEATURES,bsa26SafeReturn,bsa26ReturnFor,bsa26FsDraft,bsa4TutorDraft,bsa27SelectionFocus,bsa27DefaultTutorQuestion,gemSourceSystem,bsa212ModePlan,bsa213QuickPlan,bsa213ReadScope,bsa213Words,bsa213McqScope,bsa213WrittenMinutes,bsa214Archive,bsa214RecentClosed,bsa214HistoryLabel,bsa214AdaptProposal,bsa212Allocate,bsa212PhaseElapsed,bsa212PhaseGoal,bsa212Action,bsa28SourceHistory,bsa28NewTopicRequest,bsa210TutorCore,bsa28ReadReflections,bsa28WriteReflections,bsa29Meaningful,bsa213ClozeQuality,bsa29Candidates,bsa29Pool,bsa29Exact,bsa29ReadDraft,bsa29SaveDraft,bsa210DuplicateSignal,bsa210MaterialPair,bsa210AnswerMeaning,bsa44Prepare,BSA29ClozePractice,psMathSegments,psMathHtml,psS,psInlineHtml,MultipleChoiceQuiz,MCQPage,PsWrittenDrill,MockExam,AskView,App};
   // v167: Owner app mounts only after this browser has been approved.
   // Shared student dashboards mount normally; the owner authorization script is never exported.
   let bsaOwnerMounted=false;
