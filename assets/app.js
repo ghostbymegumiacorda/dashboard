@@ -1,4 +1,6 @@
 (() => {
+  // User-facing release label only. Do not use for storage schemas or caches.
+  const BSA_RELEASE_LABEL = "V1.0";
   const S = (t, p = null, s = false) => ({ t, p, s });
   const CFAS_TOPICS = [
     {
@@ -400,27 +402,12 @@
   function stdTokens(text) {
     return [...norm(text).matchAll(STD_RE)].map((m) => `${m[1]} ${m[2]}`);
   }
-  function matchTopic(subject, text) {
-    if (!text) return null;
-    const n = norm(text);
-    if (!n) return null;
-    for (const t of subject.topics) if (norm(t.id) === n || t.code && norm(t.code) === n) return t.id;
-    const want = stdTokens(text);
-    if (want.length) {
-      for (const t of subject.topics) {
-        const have = stdTokens(t.standard);
-        if (want.some((w) => have.includes(w))) return t.id;
-      }
-    }
-    for (const t of subject.topics) {
-      const tt = norm(t.title), ts = norm(t.standard);
-      if (tt && (tt.includes(n) || n.includes(tt)) || ts && ts === n) return t.id;
-    }
-    const wk = n.match(/^(?:week|wk|w)\s*(\d+)$/);
-    if (wk) {
-      const hit = subject.topics.find((t) => t.kind !== "exam" && weekNum(t) === Number(wk[1]));
-      if (hit) return hit.id;
-    }
+  function matchTopic(subject,text){
+    const id=bsa49ResolveTopic(subject,text);
+    if(id)return id;
+    // Legacy Week labels are still valid, but only when they identify ONE topic.
+    const wk=String(text||'').trim().match(/^(?:week|wk|w)\s*(\d+)$/i);
+    if(wk){const hits=(subject.topics||[]).filter(t=>t.kind!=='exam'&&weekNum(t)===Number(wk[1]));if(hits.length===1)return hits[0].id;}
     return null;
   }
   const pick = (o, keys) => {
@@ -914,7 +901,8 @@
     const s = subject;
     let addedTopics = 0, addedCards = 0, skipped = 0;
     for (const t of p.topics) {
-      const dupe = s.topics.find((x) => norm(x.title) === norm(t.title));
+      const dupeId=bsa49ResolveTopic(s,t.title,t.code);
+      const dupe=s.topics.find(x=>x.id===dupeId);
       if (dupe) {
         if (t.due && !dupe.due) dupe.due = t.due;
         for (const sub of t.sub) if (!dupe.sub.some((y) => norm(y.t) === norm(sub.t))) dupe.sub.push(sub);
@@ -1062,7 +1050,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         }
       };
       document.addEventListener("keydown", onKey);
-      // V4.6.8: dialog marker only. Fixed backdrop blocks background taps;
+      // V4.6.9: dialog marker only. Fixed backdrop blocks background taps;
       // DO NOT lock html/body scrolling (caused iPad/Android one-finger freezes).
       // Count mounted dialogs so nested dialogs cannot leave a stale marker.
       document.body.dataset.bsaModalCount = String((Number(document.body.dataset.bsaModalCount) || 0) + 1);
@@ -2225,8 +2213,8 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
 
   // v4.6.1: canonical downloadable reference documents, embedded for offline use.
   const BSA_RESOURCE_FILES = [
-    {id:"source-rules",name:"AI Source & Output Instructions",filename:"BSA_AI_SOURCE_RULES.md",type:"text/markdown;charset=utf-8",summary:"Updated source-first requirements for Topic Packs, individual JSON imports, rulebooks, and financial statements.",body:"# BSA Study Desk — Source-First AI and JSON Import Contract\n\nVersion: V4.6.1 (2026-11-21). Works with the subject-adaptive dashboard (including CFAS, Financial Markets, mathematics, history, theology, and custom subjects). Attach this document alongside the **actual course sources** when asking another AI to create importable study material.\n\n**Important:** These are instructions only. They do not contain textbook facts, standards, verified questions, or answers. A subject profile is not a source document.\n\n## A. Universal evidence rules\n\n1. Identify **subject**, **topic**, source title/edition, the pages/chapters available, and the requested output format.\n2. Use the attached textbook, lecture, syllabus, exercises, or official standard as the primary source. Preserve scope, figures, conditions, and terminology; do not claim to have read missing pages.\n3. Use external sources only if the AI can actually access and verify them. Label external facts as supplemental, check jurisdiction and effective dates, and cite real URLs or source sections. Do not fabricate sources, pages, standards, editions, or answer keys.\n4. Omit unsupported information rather than fill gaps with plausible-sounding facts. An original practice scenario is allowed only when clearly labeled **illustrative**, internally solvable, and independently checked.\n5. Verify numerical solutions and MCQ answer keys. For a rule, distinguish the applicability trigger, treatment, exceptions, conditions, and actual evidence locator.\n6. Before generating a large pack, compare its content internally: remove exact duplicates, near-identical paraphrases, repeated lecture sections, duplicated rule codes, and materially identical questions. Never silently replace an existing learner's corrections or progress.\n7. **Do not confuse subject coverage with mastery.** Material present means the topic has resources, not that the learner understands it.\n\n## B. Choose exactly one output contract\n\nFor any import request, return **one valid JSON object only**, with no markdown fence, preface, comments, trailing commas, unescaped newlines, `NaN`, or placeholder items. Use the format matching the selected dashboard import screen.\n\n| Format | Required content | Purpose |\n|---|---|---|\n| `bsa-topic-pack-v1` | `subject`, `topic`, and some of `topics`, `lectures`, `problemSets`, `mcqSets`, `flashcards`, `rules` | **Mixed-format** topic pack. Include multiple arrays together. Empty arrays are allowed; at least one array must contain content. |\n| `bsa-lecture-v1` | `subject`, nonempty `lectures` array | Only lectures with real `sections`. |\n| `bsa-problemset-v1` | `subject`, nonempty `problemSets` array | Only written practice sets with complete `problems`. |\n| `bsa-mcq-v1` | `subject`, nonempty `mcqSets` array | Only MCQ sets. Each problem needs exactly four `choices` and an answer beginning `A`, `B`, `C`, or `D`. |\n| `bsa-flashcards-v1` | `subject`, nonempty `flashcards` array | Only flashcards. Each needs a question/front and answer/back. |\n| `bsa-rulebook-v1` | `subject`, **one nonempty `rules` array** | **Rules-only**; do not add lectures, problems, MCQs, flashcards or other material arrays. An optional `coverage` object may document batches. |\n| `bsa-financial-statements-v1` | `company`, `periodEnd`, `currency`, `unit`, `source`, `statements`, `notes`, `standards` | Financial Statements Lab. Not a Topic Pack, not a rulebook. |\n\nTyped single-material imports must not contain another material's nonempty array. A Topic Pack is the explicit exception. For typed rules, the rulebook importer accepts up to **100 rules per import**; generate complete source coverage in numbered batches rather than cutting off a standard after five or inventing five rules.\n\n## C. Required structures and quality\n\n### Topic Pack (`bsa-topic-pack-v1`)\n\nUse a consistent subject and actual chapter/topic name. Within `lectures`, each item needs a title, topic, source, and `sections` containing `heading`/`body` (the importer also understands lecture-section `h`/`body` in typed lecture imports). Written and MCQ items must preserve the **full original question**, data, requirements, verified answer, and worked solution. Flashcards should each test a distinct retrieval target. Rules must include title, decisionRule, topic, and supported citations. Set unused arrays to `[]`; do not pad with fabricated material. The dashboard checks repeats and conflicts again before saving.\n\n### Rulebook (`bsa-rulebook-v1`)\n\nUse exactly one `rules` array. Each record requires `title` and `decisionRule`. Recommended fields: `collection`, unique `code`, `topic`, `category`, `conditions`, `treatment`, `exceptions`, `example`, `examTrap`, `sourceTitle`, `sourceLocator`, `sourceUrl`, `status`, `notes`. Use the SAME `collection` for all rules belonging to one standard (e.g., PAS 10), and unique codes within it (e.g., `PAS 10-01`, `PAS 10-02`). For another course use a named grouping such as `Corporate Bonds` or `Modular Arithmetic`; do not force accounting labels.\n\nAllowed `status`: `Source checked`, `Needs verification`, `Personal note`. Only say `Source checked` if the actual cited passage was inspected and its title plus specific section/page or real HTTPS URL are known. The app can check the presence of a citation field but **cannot verify the claim** itself. If content is not verifiable, omit it or mark `Needs verification` without fabricated citations.\n\nFor complete standards coverage, organize by meaningful source sections, include treatments and exceptions, then continue in **numbered batches** (usually up to 20 substantial cards per response for robust JSON). This is a response-size suggestion, **not a cap on the number of rules**. Stable rule IDs/codes must not repeat between batches. Optional `coverage` object may contain `collection`, `batch`, `coveredSections`, `remainingSections`, and `hasMore`.\n\n### Financial Statements (`bsa-financial-statements-v1`)\n\nPreserve the *reported* structure and ordering: Statement of Financial Position (assets, liabilities and equity with current/noncurrent groupings where printed); Statement of Profit or Loss and OCI if provided; Statement of Cash Flows (operating/investing/financing, including cash reconciliation); Statement of Changes in Equity; and relevant disclosures. Use each statement's `type`, `title`, `page`, and `lines` where each line includes `kind` (`section`, `item`, `subtotal`, `total`), `label`, numeric `amount`, numeric `comparative` where printed, `note`, and `indent` where appropriate. Use `null` for illegible or missing figures (not zero). Preserve negative figures, dates, unit scale, currency, exact subtotal identities and note references. Do **not** fabricate a statement or infer amounts/standards that are absent from the source.\n\nDo not interpret a displayed reconciliation check as an audit or a statement that the financial report complies with a standard. The source PDF remains authoritative.\n\n## D. Student-focused output\n\nFor ordinary chat, use concise, friendly teaching—not machine JSON. Explain simply before introducing formal vocabulary. In practice mode, ask one question at a time and let the learner attempt it before showing the full answer unless they request it. Provide corrective feedback and a short teach-back/check when useful. Avoid imposing accounting tools or journal entries on Finance, History, Math, or other subjects where they are irrelevant.\n\n## E. Import workflow and safety\n\n1. Choose the **correct subject** in the dashboard.\n2. Attach the actual source material and this MD file to the AI; choose one relevant prompt from **Study Library → Import Center**.\n3. Generate valid JSON; locally check the JSON syntax and compare figures and wording against the original source.\n4. For study materials, go to **Study Library → Bulk import / Topic Packs**; for published financial statements go to **Financial Statements → Reports & import**.\n5. Review the dashboard's duplicate/conflict preview and manually inspect ambiguous variants. Save only when satisfied. Preserve backups before major imports.\n\nSee `BSA_AI_PROMPT.md` for the separate interactive tutoring behavior and `EXAMPLE-universal-rulebook.json` for the illustrative rulebook schema. **Do not import the example as academic content without replacing and verifying it.**\n"},
-    {id:"tutor-prompt",name:"Adaptive AI Tutor Prompt",filename:"BSA_AI_PROMPT.md",type:"text/markdown;charset=utf-8",summary:"Subject-adaptive coaching, one-at-a-time retrieval, compact responses, and source fidelity.",body:"# BSA Study Desk — Adaptive AI Tutor Prompt\n\nVersion: V4.6.1 (2026-11-21)\nPurpose: Reusable tutoring instructions for **any subject** in the dashboard. This is an instruction prompt, not a source of course facts or an automatically installed Gemini system prompt.\n\n## Role and scope\n\nYou are an accurate, patient learning coach in BSA Study Desk. Teach the **currently selected course and topic**. Never assume the course is CFAS, that every learner is solving journal entries, or that every topic requires accounting standards. The student's selected subject profile guides tool suggestions but can be overridden by the student's actual request, source, and syllabus.\n\nUse the materials the learner actually provides as the primary basis. Identify the textbook or document, covered section, exact problem, and applicable edition when visible. Do not pretend the dashboard has supplied files that are not actually in this AI conversation. Treat the student's question, saved notes, and attached problem as separate context; never assume an attached question is the current request if the learner has detached or replaced it.\n\n## Learning behavior\n\n1. **Explain simply first**, then give precise subject vocabulary and clearly defined technical terms. Prefer clear conversational English; use natural Taglish or simple Bislish only when helpful or requested. Avoid deep/formal Bisaya, unnecessary flourish, and patronizing language.\n2. **Guide before revealing** when the learner wants practice. Ask one question at a time; give the student a genuine chance to answer, then explain corrections. If the student explicitly asks for the full answer, provide it directly.\n3. **Show reasoning at an appropriate level**: formulas, units, intermediate steps, source-backed rules, or a short example. Verify arithmetic and the exact requirements; do not guess missing conditions.\n4. **Make mistakes useful**: identify the misconception, the relevant condition, why a tempting answer is wrong, and one short retry or comparison question.\n5. **Build durable recall**: retrieval practice, spaced review suggestions for weak concepts, and short teach-back opportunities. Do not equate checkbox completion with demonstrated mastery.\n6. **Keep replies readable in a small chat window**: give the direct answer first, use short paragraphs, and expand only when requested or when necessary to establish correctness. Avoid huge answer dumps, repeated headings, and unrelated actions.\n\n## Subject-adaptive defaults\n\n- **Accounting theory / CFAS:** recognition, measurement, presentation, disclosure, scope, conditions, exceptions, and cited standards only when relevant and verifiable.\n- **Financial accounting / accounting cycle:** journal entries, T-accounts, adjusted balances, trial balances, and financial statements only for questions that need them.\n- **Financial markets / finance:** instruments, yields, valuation, duration, risks, formula interpretation, and applications. Do not inject journal entries.\n- **Economics / mathematics / statistics:** decision logic, formulas, data interpretation, assumptions, and worked computations.\n- **History / theology / humanities:** source interpretation, timeline/causation, distinctions, oral recitation, and writing from the actual readings.\n- **Other subjects:** infer suitable practice from the syllabus, source, and learner's explicit goal. Do not force a predefined category.\n\n## Evidence and uncertainty\n\n- Distinguish **stated by provided source**, **independently verified supplementary information**, and **illustrative example**.\n- Never invent citations, book pages, figures, financial-statement amounts, standard text, rule effective dates, or answer keys.\n- When a source is incomplete or not accessible, say exactly what's missing. Do not claim an answer is source-verified without checking it.\n- For accounting or legal/regulatory standards, confirm jurisdiction, reporting period, adoption/effective date, and source when evidence is available; otherwise mark **Needs verification**.\n- A JSON import preview, AI answer, or a matching accounting equation is **not** proof that the underlying academic content is correct.\n\n## Mode selection\n\n- **Chat/teach/practice:** ordinary readable dialogue; no JSON unless requested.\n- **Import materials:** follow `BSA_AI_SOURCE_RULES.md` and the selected exact format. `bsa-topic-pack-v1` explicitly allows *multiple* study-material arrays. `bsa-rulebook-v1` is **rules-only** and must not include lecture, problem-set, MCQ, or flashcard arrays.\n- **Financial statement import:** follow `bsa-financial-statements-v1`, keep the original Statement of Financial Position, Profit or Loss/OCI, Cash Flows, Changes in Equity, and notes in their proper reported order and line-item hierarchy. Never substitute an unstructured list.\n\n## Default interaction\n\nStart with the learner's immediate question. If teaching is requested, teach one useful concept and ask one short retention question. If practice is requested, present one question without the answer, wait for the attempt, and then give corrective feedback. If an import is requested, produce only a valid object for the selected schema without unsupported filler.\n"},
+    {id:"source-rules",name:"AI Source & Output Instructions",filename:"BSA_AI_SOURCE_RULES.md",type:"text/markdown;charset=utf-8",summary:"Updated source-first requirements for Topic Packs, individual JSON imports, rulebooks, and financial statements.",body:"# BSA Study Desk — Source-First AI and JSON Import Contract\n\nDashboard public release: V1.0 (2026-11-21). Works with the subject-adaptive dashboard (including CFAS, Financial Markets, mathematics, history, theology, and custom subjects). Attach this document alongside the **actual course sources** when asking another AI to create importable study material.\n\n**Important:** These are instructions only. They do not contain textbook facts, standards, verified questions, or answers. A subject profile is not a source document.\n\n## A. Universal evidence rules\n\n1. Identify **subject**, **topic**, source title/edition, the pages/chapters available, and the requested output format.\n2. Use the attached textbook, lecture, syllabus, exercises, or official standard as the primary source. Preserve scope, figures, conditions, and terminology; do not claim to have read missing pages.\n3. Use external sources only if the AI can actually access and verify them. Label external facts as supplemental, check jurisdiction and effective dates, and cite real URLs or source sections. Do not fabricate sources, pages, standards, editions, or answer keys.\n4. Omit unsupported information rather than fill gaps with plausible-sounding facts. An original practice scenario is allowed only when clearly labeled **illustrative**, internally solvable, and independently checked.\n5. Verify numerical solutions and MCQ answer keys. For a rule, distinguish the applicability trigger, treatment, exceptions, conditions, and actual evidence locator.\n6. Before generating a large pack, compare its content internally: remove exact duplicates, near-identical paraphrases, repeated lecture sections, duplicated rule codes, and materially identical questions. Never silently replace an existing learner's corrections or progress.\n7. **Do not confuse subject coverage with mastery.** Material present means the topic has resources, not that the learner understands it.\n\n## B. Choose exactly one output contract\n\nFor any import request, return **one valid JSON object only**, with no markdown fence, preface, comments, trailing commas, unescaped newlines, `NaN`, or placeholder items. Use the format matching the selected dashboard import screen.\n\n| Format | Required content | Purpose |\n|---|---|---|\n| `bsa-topic-pack-v1` | `subject`, `topic`, and some of `topics`, `lectures`, `problemSets`, `mcqSets`, `flashcards`, `rules` | **Mixed-format** topic pack. Include multiple arrays together. Empty arrays are allowed; at least one array must contain content. |\n| `bsa-lecture-v1` | `subject`, nonempty `lectures` array | Only lectures with real `sections`. |\n| `bsa-problemset-v1` | `subject`, nonempty `problemSets` array | Only written practice sets with complete `problems`. |\n| `bsa-mcq-v1` | `subject`, nonempty `mcqSets` array | Only MCQ sets. Each problem needs exactly four `choices` and an answer beginning `A`, `B`, `C`, or `D`. |\n| `bsa-flashcards-v1` | `subject`, nonempty `flashcards` array | Only flashcards. Each needs a question/front and answer/back. |\n| `bsa-rulebook-v1` | `subject`, **one nonempty `rules` array** | **Rules-only**; do not add lectures, problems, MCQs, flashcards or other material arrays. An optional `coverage` object may document batches. |\n| `bsa-financial-statements-v1` | `company`, `periodEnd`, `currency`, `unit`, `source`, `statements`, `notes`, `standards` | Financial Statements Lab. Not a Topic Pack, not a rulebook. |\n\nTyped single-material imports must not contain another material's nonempty array. A Topic Pack is the explicit exception. For typed rules, the rulebook importer accepts up to **100 rules per import**; generate complete source coverage in numbered batches rather than cutting off a standard after five or inventing five rules.\n\n## C. Required structures and quality\n\n### Topic Pack (`bsa-topic-pack-v1`)\n\nUse a consistent subject and actual chapter/topic name. Within `lectures`, each item needs a title, topic, source, and `sections` containing `heading`/`body` (the importer also understands lecture-section `h`/`body` in typed lecture imports). Written and MCQ items must preserve the **full original question**, data, requirements, verified answer, and worked solution. Flashcards should each test a distinct retrieval target. Rules must include title, decisionRule, topic, and supported citations. Set unused arrays to `[]`; do not pad with fabricated material. The dashboard checks repeats and conflicts again before saving.\n\n### Rulebook (`bsa-rulebook-v1`)\n\nUse exactly one `rules` array. Each record requires `title` and `decisionRule`. Recommended fields: `collection`, unique `code`, `topic`, `category`, `conditions`, `treatment`, `exceptions`, `example`, `examTrap`, `sourceTitle`, `sourceLocator`, `sourceUrl`, `status`, `notes`. Use the SAME `collection` for all rules belonging to one standard (e.g., PAS 10), and unique codes within it (e.g., `PAS 10-01`, `PAS 10-02`). For another course use a named grouping such as `Corporate Bonds` or `Modular Arithmetic`; do not force accounting labels.\n\nAllowed `status`: `Source checked`, `Needs verification`, `Personal note`. Only say `Source checked` if the actual cited passage was inspected and its title plus specific section/page or real HTTPS URL are known. The app can check the presence of a citation field but **cannot verify the claim** itself. If content is not verifiable, omit it or mark `Needs verification` without fabricated citations.\n\nFor complete standards coverage, organize by meaningful source sections, include treatments and exceptions, then continue in **numbered batches** (usually up to 20 substantial cards per response for robust JSON). This is a response-size suggestion, **not a cap on the number of rules**. Stable rule IDs/codes must not repeat between batches. Optional `coverage` object may contain `collection`, `batch`, `coveredSections`, `remainingSections`, and `hasMore`.\n\n### Financial Statements (`bsa-financial-statements-v1`)\n\nPreserve the *reported* structure and ordering: Statement of Financial Position (assets, liabilities and equity with current/noncurrent groupings where printed); Statement of Profit or Loss and OCI if provided; Statement of Cash Flows (operating/investing/financing, including cash reconciliation); Statement of Changes in Equity; and relevant disclosures. Use each statement's `type`, `title`, `page`, and `lines` where each line includes `kind` (`section`, `item`, `subtotal`, `total`), `label`, numeric `amount`, numeric `comparative` where printed, `note`, and `indent` where appropriate. Use `null` for illegible or missing figures (not zero). Preserve negative figures, dates, unit scale, currency, exact subtotal identities and note references. Do **not** fabricate a statement or infer amounts/standards that are absent from the source.\n\nDo not interpret a displayed reconciliation check as an audit or a statement that the financial report complies with a standard. The source PDF remains authoritative.\n\n## D. Student-focused output\n\nFor ordinary chat, use concise, friendly teaching—not machine JSON. Explain simply before introducing formal vocabulary. In practice mode, ask one question at a time and let the learner attempt it before showing the full answer unless they request it. Provide corrective feedback and a short teach-back/check when useful. Avoid imposing accounting tools or journal entries on Finance, History, Math, or other subjects where they are irrelevant.\n\n## E. Import workflow and safety\n\n1. Choose the **correct subject** in the dashboard.\n2. Attach the actual source material and this MD file to the AI; choose one relevant prompt from **Study Library → Import Center**.\n3. Generate valid JSON; locally check the JSON syntax and compare figures and wording against the original source.\n4. For study materials, go to **Study Library → Bulk import / Topic Packs**; for published financial statements go to **Financial Statements → Reports & import**.\n5. Review the dashboard's duplicate/conflict preview and manually inspect ambiguous variants. Save only when satisfied. Preserve backups before major imports.\n\nSee `BSA_AI_PROMPT.md` for the separate interactive tutoring behavior and `EXAMPLE-universal-rulebook.json` for the illustrative rulebook schema. **Do not import the example as academic content without replacing and verifying it.**\n"},
+    {id:"tutor-prompt",name:"Adaptive AI Tutor Prompt",filename:"BSA_AI_PROMPT.md",type:"text/markdown;charset=utf-8",summary:"Subject-adaptive coaching, one-at-a-time retrieval, compact responses, and source fidelity.",body:"# BSA Study Desk — Adaptive AI Tutor Prompt\n\nDashboard public release: V1.0 (2026-11-21)\nPurpose: Reusable tutoring instructions for **any subject** in the dashboard. This is an instruction prompt, not a source of course facts or an automatically installed Gemini system prompt.\n\n## Role and scope\n\nYou are an accurate, patient learning coach in BSA Study Desk. Teach the **currently selected course and topic**. Never assume the course is CFAS, that every learner is solving journal entries, or that every topic requires accounting standards. The student's selected subject profile guides tool suggestions but can be overridden by the student's actual request, source, and syllabus.\n\nUse the materials the learner actually provides as the primary basis. Identify the textbook or document, covered section, exact problem, and applicable edition when visible. Do not pretend the dashboard has supplied files that are not actually in this AI conversation. Treat the student's question, saved notes, and attached problem as separate context; never assume an attached question is the current request if the learner has detached or replaced it.\n\n## Learning behavior\n\n1. **Explain simply first**, then give precise subject vocabulary and clearly defined technical terms. Prefer clear conversational English; use natural Taglish or simple Bislish only when helpful or requested. Avoid deep/formal Bisaya, unnecessary flourish, and patronizing language.\n2. **Guide before revealing** when the learner wants practice. Ask one question at a time; give the student a genuine chance to answer, then explain corrections. If the student explicitly asks for the full answer, provide it directly.\n3. **Show reasoning at an appropriate level**: formulas, units, intermediate steps, source-backed rules, or a short example. Verify arithmetic and the exact requirements; do not guess missing conditions.\n4. **Make mistakes useful**: identify the misconception, the relevant condition, why a tempting answer is wrong, and one short retry or comparison question.\n5. **Build durable recall**: retrieval practice, spaced review suggestions for weak concepts, and short teach-back opportunities. Do not equate checkbox completion with demonstrated mastery.\n6. **Keep replies readable in a small chat window**: give the direct answer first, use short paragraphs, and expand only when requested or when necessary to establish correctness. Avoid huge answer dumps, repeated headings, and unrelated actions.\n\n## Subject-adaptive defaults\n\n- **Accounting theory / CFAS:** recognition, measurement, presentation, disclosure, scope, conditions, exceptions, and cited standards only when relevant and verifiable.\n- **Financial accounting / accounting cycle:** journal entries, T-accounts, adjusted balances, trial balances, and financial statements only for questions that need them.\n- **Financial markets / finance:** instruments, yields, valuation, duration, risks, formula interpretation, and applications. Do not inject journal entries.\n- **Economics / mathematics / statistics:** decision logic, formulas, data interpretation, assumptions, and worked computations.\n- **History / theology / humanities:** source interpretation, timeline/causation, distinctions, oral recitation, and writing from the actual readings.\n- **Other subjects:** infer suitable practice from the syllabus, source, and learner's explicit goal. Do not force a predefined category.\n\n## Evidence and uncertainty\n\n- Distinguish **stated by provided source**, **independently verified supplementary information**, and **illustrative example**.\n- Never invent citations, book pages, figures, financial-statement amounts, standard text, rule effective dates, or answer keys.\n- When a source is incomplete or not accessible, say exactly what's missing. Do not claim an answer is source-verified without checking it.\n- For accounting or legal/regulatory standards, confirm jurisdiction, reporting period, adoption/effective date, and source when evidence is available; otherwise mark **Needs verification**.\n- A JSON import preview, AI answer, or a matching accounting equation is **not** proof that the underlying academic content is correct.\n\n## Mode selection\n\n- **Chat/teach/practice:** ordinary readable dialogue; no JSON unless requested.\n- **Import materials:** follow `BSA_AI_SOURCE_RULES.md` and the selected exact format. `bsa-topic-pack-v1` explicitly allows *multiple* study-material arrays. `bsa-rulebook-v1` is **rules-only** and must not include lecture, problem-set, MCQ, or flashcard arrays.\n- **Financial statement import:** follow `bsa-financial-statements-v1`, keep the original Statement of Financial Position, Profit or Loss/OCI, Cash Flows, Changes in Equity, and notes in their proper reported order and line-item hierarchy. Never substitute an unstructured list.\n\n## Default interaction\n\nStart with the learner's immediate question. If teaching is requested, teach one useful concept and ask one short retention question. If practice is requested, present one question without the answer, wait for the attempt, and then give corrective feedback. If an import is requested, produce only a valid object for the selected schema without unsupported filler.\n"},
     {id:"rulebook-example",name:"Universal Rulebook JSON Template",filename:"EXAMPLE-universal-rulebook.json",type:"application/json;charset=utf-8",summary:"Rules-only bsa-rulebook-v1 schema. Illustrative template\u2014replace and verify before import.",body:"{\n  \"format\": \"bsa-rulebook-v1\",\n  \"subject\": \"Example Subject — REPLACE BEFORE IMPORT\",\n  \"rules\": [\n    {\n      \"collection\": \"Example Collection — REPLACE\",\n      \"code\": \"EXAMPLE-01\",\n      \"title\": \"Illustrative rule schema — not a verified academic rule\",\n      \"topic\": \"Replace with the exact topic\",\n      \"category\": \"Reference rule\",\n      \"decisionRule\": \"Replace with the precise source-supported decision trigger.\",\n      \"conditions\": \"Replace with the conditions for applying the rule.\",\n      \"treatment\": \"Replace with the actual source-supported treatment.\",\n      \"exceptions\": \"Replace with real, verified exceptions, if any.\",\n      \"example\": \"Replace with a clearly labeled worked application and verify its answer.\",\n      \"examTrap\": \"Replace with a genuine misconception grounded in the lesson.\",\n      \"sourceTitle\": \"\",\n      \"sourceLocator\": \"\",\n      \"sourceUrl\": \"\",\n      \"status\": \"Needs verification\",\n      \"notes\": \"TEMPLATE ONLY. Do not import as learning content until every placeholder is replaced and checked against a real source.\"\n    }\n  ]\n}\n"}
   ];
   function bsaResourceDownload(file){
@@ -3368,6 +3356,9 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const [showBook, setShowBook] = useState(false);
     const [bkEdit, setBkEdit] = useState(false);
     const [filter, setFilter] = useState("all");
+    // View-only organization. Subtopic IDs, source text, and study completion are never rewritten.
+    const [subListExpanded,setSubListExpanded]=useState({});
+    const [subListQuery,setSubListQuery]=useState({});
     const topics = studyTopics(subject);
     const counts = TOPIC_STATUS.map((s) => topics.filter((t) => t.status === s).length);
     useEffect(() => {
@@ -3403,6 +3394,10 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       const done = t.sub.filter((x) => x.done).length;
       const nCards = subject.cards.filter((c) => c.topicId === t.id).length;
       const nMist = subject.mistakes.filter((m) => m.topicId === t.id && m.status !== "Cleared").length;
+      const subSearch=subListQuery[t.id]||'';
+      const subMatches=subSearch.trim()?t.sub.filter(s=>norm(s.t).includes(norm(subSearch))):t.sub;
+      const showEverySub=!!subListExpanded[t.id]||!!subSearch.trim();
+      const visibleSubs=showEverySub?subMatches:subMatches.slice(0,6);
       return /* @__PURE__ */ React.createElement("article", { key: t.id, id: `row-${t.id}`, className: `topic-card${isOpen ? " open" : ""}`, "data-status": t.status }, /* @__PURE__ */ React.createElement("div", { className: "topic-row" }, /* @__PURE__ */ React.createElement("div", { className: "wk-col" }, /* @__PURE__ */ React.createElement("span", { className: "wk-small" }, "Week"), /* @__PURE__ */ React.createElement("span", { className: "wk-num" }, t.week || "–")), /* @__PURE__ */ React.createElement("button", { className: "topic-main", onClick: () => toggle(t.id), "aria-expanded": isOpen }, /* @__PURE__ */ React.createElement("span", { className: "topic-title" }, t.code && /* @__PURE__ */ React.createElement("span", { className: "code" }, t.code), t.title), /* @__PURE__ */ React.createElement("span", { className: "topic-meta" }, t.standard && /* @__PURE__ */ React.createElement("span", { className: "std" }, t.standard), t.scope && /* @__PURE__ */ React.createElement("span", { className: "muted" }, t.scope), t.due && h(DueChip, { t })), t.sub.length > 0 && /* @__PURE__ */ React.createElement("span", { className: "sub-progress" }, /* @__PURE__ */ React.createElement("span", { className: "bar" }, /* @__PURE__ */ React.createElement("span", { style: { width: `${done / t.sub.length * 100}%` } })), /* @__PURE__ */ React.createElement("span", { className: "muted" }, done, "/", t.sub.length, " read"))), /* @__PURE__ */ React.createElement("div", { className: "seg", role: "radiogroup", "aria-label": `Status of ${t.title}` }, TOPIC_STATUS.map((s) => /* @__PURE__ */ React.createElement(
         "button",
         {
@@ -3416,11 +3411,18 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
           })
         },
         shortStatus[s]
-      ))), /* @__PURE__ */ React.createElement("button", { className: "icon-btn chev", onClick: () => toggle(t.id), "aria-label": isOpen ? "Hide details" : "Show details", "aria-expanded": isOpen }, /* @__PURE__ */ React.createElement(Icon, { name: "chevron", size: 18 }))), isOpen && /* @__PURE__ */ React.createElement("div", { className: "detail" }, t.flag === "pfrs18" && /* @__PURE__ */ React.createElement("p", { className: "callout" }, "Your textbook teaches this through PAS 1 (pp. 110–141). PFRS 18 replaces PAS 1 for periods beginning 1 January 2027. Items marked “PFRS 18 supplement” aren’t in the book, so get them from your instructor’s handouts."), t.sub.length > 0 ? /* @__PURE__ */ React.createElement("ul", { className: "subs" }, t.sub.map((s) => /* @__PURE__ */ React.createElement("li", { key: s.id, className: s.done ? "done" : "" }, /* @__PURE__ */ React.createElement("label", { className: "check" }, /* @__PURE__ */ React.createElement("input", { type: "checkbox", checked: s.done, onChange: (e) => setTopic(t.id, (x) => {
+      ))), /* @__PURE__ */ React.createElement("button", { className: "icon-btn chev", onClick: () => toggle(t.id), "aria-label": isOpen ? "Hide details" : "Show details", "aria-expanded": isOpen }, /* @__PURE__ */ React.createElement(Icon, { name: "chevron", size: 18 }))), isOpen && /* @__PURE__ */ React.createElement("div", { className: "detail" }, t.flag === "pfrs18" && /* @__PURE__ */ React.createElement("p", { className: "callout" }, "Your textbook teaches this through PAS 1 (pp. 110–141). PFRS 18 replaces PAS 1 for periods beginning 1 January 2027. Items marked “PFRS 18 supplement” aren’t in the book, so get them from your instructor’s handouts."), t.sub.length > 0 ? h('div',{className:'bsa-v1-subtopic-wrapper'},
+        t.sub.length>8&&h('div',{className:'bsa-v1-subtopic-tools'},h('div',null,h('strong',null,'Learning outline'),h('span',{className:'muted small'},done+' of '+t.sub.length+' marked read · all original items retained')),
+          h('input',{type:'search',value:subSearch,onChange:e=>setSubListQuery(prev=>({...prev,[t.id]:e.target.value})),placeholder:'Find a specific subtopic…','aria-label':'Search subtopics for '+t.title})),
+        /* @__PURE__ */ React.createElement("ul", { className: "subs bsa-v1-subtopic-list" }, visibleSubs.map((s) => /* @__PURE__ */ React.createElement("li", { key: s.id, className: s.done ? "done" : "" }, /* @__PURE__ */ React.createElement("label", { className: "check" }, /* @__PURE__ */ React.createElement("input", { type: "checkbox", checked: s.done, onChange: (e) => setTopic(t.id, (x) => {
         const y = x.sub.find((z) => z.id === s.id);
         y.done = e.target.checked;
         if (e.target.checked && x.status === "Not started") x.status = "In progress";
-      }) }), /* @__PURE__ */ React.createElement("span", null, s.t)), /* @__PURE__ */ React.createElement("span", { className: `page${s.s ? " supp" : ""}` }, s.p ? `p. ${s.p}` : s.s ? "PFRS 18 supplement" : "")))) : /* @__PURE__ */ React.createElement("p", { className: "muted" }, "No subtopics yet. Edit the topic to add them."), h("div", { className: "due-field" }, h(Field, { label: "Due date" }, h("input", { type: "date", value: t.due || "", onChange: (e) => setTopic(t.id, (x) => {
+      }) }), /* @__PURE__ */ React.createElement("span", null, s.t)), /* @__PURE__ */ React.createElement("span", { className: `page${s.s ? " supp" : ""}` }, s.p ? `p. ${s.p}` : s.s ? "PFRS 18 supplement" : "")))),
+        subSearch.trim()&&!subMatches.length&&h('p',{className:'muted small'},'No subtopics match that search.'),
+        t.sub.length>6&&!subSearch.trim()&&h('button',{type:'button',className:'btn ghost bsa-v1-subtopic-toggle',onClick:()=>setSubListExpanded(prev=>({...prev,[t.id]:!prev[t.id]})),'aria-expanded':showEverySub},showEverySub?'Show shorter outline':'Show all '+t.sub.length+' subtopics'),
+        t.sub.length>10&&h('p',{className:'muted small bsa-v1-subtopic-tip'},'Many detailed subtopics? Keep them for now. Future AI imports should use fewer broad headings without losing the underlying learning material.')
+        ) : /* @__PURE__ */ React.createElement("p", { className: "muted" }, "No subtopics yet. Edit the topic to add them."), h("div", { className: "due-field" }, h(Field, { label: "Due date" }, h("input", { type: "date", value: t.due || "", onChange: (e) => setTopic(t.id, (x) => {
         x.due = e.target.value;
       }) })), t.due && h("button", { className: "btn ghost", onClick: () => setTopic(t.id, (x) => {
         x.due = "";
@@ -3472,7 +3474,8 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
   }
   function VaultView({ subject, update, openEditor, init, toast, settings }) {
     var _a, _b;
-    const [topic, setTopic] = useState((_a = init.topic) != null ? _a : "all");
+    const [topic, setTopic] = useState((_a = init?.topic ?? init?.topicId) != null ? _a : "all");
+    useEffect(()=>{if(init?.topic||init?.topicId)setTopic(init.topic||init.topicId)},[init?.topic,init?.topicId,subject.id]);
     const [conf, setConf] = useState((_b = init.conf) != null ? _b : "all");
     const [query, setQuery] = useState("");
     const [drill, setDrill] = useState(!!init.drill);
@@ -3512,7 +3515,8 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       toast(`Deleted ${ids.size} flashcard${ids.size === 1 ? "" : "s"}`);
       leaveSelection();
     };
-    const match = (c) => (topic === "all" || (topic === "" ? !c.topicId : c.topicId === topic)) && (conf === "all" || (conf === "new" ? !c.conf : c.conf === conf)) && (!query || norm(`${c.q} ${c.a} ${c.tip}`).includes(norm(query)));
+    const linkedId=c=>c.topicId||matchTopic(subject,c.topicText);
+    const match = (c) => (topic === "all" || (topic === "" ? !linkedId(c) : linkedId(c) === topic)) && (conf === "all" || (conf === "new" ? !c.conf : c.conf === conf)) && (!query || norm(`${c.q} ${c.a} ${c.tip}`).includes(norm(query)));
     const list = subject.cards.filter((c) => match(c) && (!duplicatesOnly || duplicateIds.has(c.id)));
     const rate = (id, v) => update((s) => {
       if (v) gradeCardIn(s, id, v === "known" ? "good" : "again");
@@ -3524,8 +3528,8 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const known = subject.cards.filter((c) => c.conf === "known").length;
     const again = subject.cards.filter((c) => c.conf === "again").length;
     const fresh = subject.cards.length - known - again;
-    const topicCounts = studyTopics(subject).map((t) => ({ t, n: subject.cards.filter((c) => c.topicId === t.id).length })).filter((x) => x.n);
-    const unsorted = subject.cards.filter((c) => !c.topicId).length;
+    const topicCounts = studyTopics(subject).map((t) => ({ t, n: subject.cards.filter((c) => linkedId(c) === t.id).length })).filter((x) => x.n);
+    const unsorted = subject.cards.filter((c) => !linkedId(c)).length;
     if (drill && list.length) return /* @__PURE__ */ React.createElement("section", { className: "view" }, h(StudySession, { subject, update, toast, settings, items: shuffle(list).map((c) => ({ kind: "card", id: c.id })), title: "Flashcard drill", onExit: () => setDrill(false) }));
     return /* @__PURE__ */ React.createElement("section", { className: "view" }, /* @__PURE__ */ React.createElement("div", { className: "page-head" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h1", { className: "page-title" }, "Concept vault"), /* @__PURE__ */ React.createElement("p", { className: "muted" }, "Tap a card to flip it. Drill runs through the cards you’ve filtered, one at a time.")), /* @__PURE__ */ React.createElement("div", { className: "head-actions" }, /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: () => openEditor("card", null, { topicId: topic !== "all" && topic !== "" ? topic : null }) }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 16 }), " Add card"), /* @__PURE__ */ React.createElement("button", { className: "btn primary", disabled: !list.length, onClick: () => setDrill(true) }, "Review ", list.length, " card", list.length === 1 ? "" : "s"), /* @__PURE__ */ React.createElement("button", { className: "btn", disabled: !list.length, onClick: () => printVaultCards(false) }, "Print questions / PDF"), /* @__PURE__ */ React.createElement("button", { className: "btn", disabled: !list.length, onClick: () => printVaultCards(true) }, "Print with answers / PDF"))), /* @__PURE__ */ React.createElement("div", { className: "seg-filter", role: "group", "aria-label": "Filter by confidence" }, [["all", "All", subject.cards.length], ["again", "Review again", again], ["new", "New", fresh], ["known", "Known", known]].map(([k, l, n]) => /* @__PURE__ */ React.createElement("button", { key: k, className: conf === k ? "on" : "", "aria-pressed": conf === k, "data-conf": k, onClick: () => setConf(k) }, l, " ", /* @__PURE__ */ React.createElement("span", { className: "n" }, n)))), /* @__PURE__ */ React.createElement("div", { className: "chip-scroll", role: "group", "aria-label": "Filter by topic" }, /* @__PURE__ */ React.createElement("button", { className: `chip${topic === "all" ? " on" : ""}`, onClick: () => setTopic("all") }, "All topics"), topicCounts.map(({ t, n }) => /* @__PURE__ */ React.createElement("button", { key: t.id, className: `chip${topic === t.id ? " on" : ""}`, onClick: () => setTopic(t.id), title: t.title }, t.code || t.title.slice(0, 18), " ", /* @__PURE__ */ React.createElement("span", { className: "n" }, n))), unsorted > 0 && /* @__PURE__ */ React.createElement("button", { className: `chip${topic === "" ? " on" : ""}`, onClick: () => setTopic("") }, "Unsorted ", /* @__PURE__ */ React.createElement("span", { className: "n" }, unsorted))), /* @__PURE__ */ React.createElement("input", { className: "search", type: "search", placeholder: "Search questions and answers", value: query, onChange: (e) => setQuery(e.target.value), "aria-label": "Search flashcards" }), /* @__PURE__ */ React.createElement("div", { className: "vault-search-row" },
       /* @__PURE__ */ React.createElement("button", { className: "btn vault-manage-toggle", type: "button", "aria-expanded": showVaultManage || selectMode, onClick: () => setShowVaultManage(v => !v) }, showVaultManage ? "Hide management" : "Manage cards", " · ", duplicateIds.size, " duplicates")),
@@ -3553,7 +3557,8 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
   function MistakesView({ subject, update, toast, openEditor, init }) {
     var _a, _b;
     const [status, setStatus] = useState("open");
-    const [topic, setTopic] = useState((_a = init.topic) != null ? _a : "all");
+    const [topic, setTopic] = useState((_a = init?.topic ?? init?.topicId) != null ? _a : "all");
+    useEffect(()=>{if(init?.topic||init?.topicId)setTopic(init.topic||init.topicId)},[init?.topic,init?.topicId,subject.id]);
     const [query, setQuery] = useState("");
     const qz = subject.quizzes;
     const sumS = qz.reduce((a, q) => a + q.score, 0), sumI = qz.reduce((a, q) => a + q.items, 0);
@@ -3627,7 +3632,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     ];
     return h(Modal,{title:'More tools',onClose},
       h('div',{className:'bsa3-more-intro'},h('p',null,'Your everyday work is in Today, Study, Practice and Library. Open a group below only when you need a specialized tool.'),
-        h('small',{className:'bsa47-mobile-build'},'Dashboard build V4.6.8'),
+        h('small',{className:'bsa47-mobile-build'},'Dashboard build ' + BSA_RELEASE_LABEL),
         h('button',{className:'btn primary',onClick:()=>go('guide')},'Show me where to start')),
       h('div',{className:'bsa3-more-settings'},
         [['subjects','Switch subjects','subjects'],['data','Back up or restore','data'],['look','Change appearance','look']].map(([route,title,icon])=>h('button',{className:'btn',key:route,onClick:()=>onPick(route)},h(Icon,{name:icon,size:17}),title))),
@@ -6889,7 +6894,7 @@ ${NLM_JSON}
   ]
 }
 
-Strict requirements: ${c.topicRule} Output exactly 20 distinct problems; each has four choices beginning A., B., C., D. and an answer beginning with the matching letter followed by a period. Check that the answer appears in its corresponding option. Every option is independently assessed, there is only one defensible answer, and the solution explains all distractors. Group by subtopic when the sources contain multiple subtopics. Do not create source-unsupported scenarios or fabricate numbers. Return only valid JSON; escape line breaks inside strings. ${c.kindHint}` },
+Strict requirements: ${c.topicRule} Use stable, short subtopic group names (usually 3–7 distinct categories, not one per question), while covering every relevant skill in the 20 questions. Output exactly 20 distinct problems; each has four choices beginning A., B., C., D. and an answer beginning with the matching letter followed by a period. Check that the answer appears in its corresponding option. Every option is independently assessed, there is only one defensible answer, and the solution explains all distractors. Group by subtopic when the sources contain multiple subtopics. Do not create source-unsupported scenarios or fabricate numbers. Return only valid JSON; escape line breaks inside strings. ${c.kindHint}` },
 
     { id: "roadmap", group: "setup", json: true, title: "Syllabus → roadmap", desc: "Turns a syllabus or course outline into weekly topics, subtopics and exams.", make: (c) => `Read the syllabus or course outline for ${c.subject} in my sources and turn it into a study roadmap.
 ${NLM_JSON}
@@ -6903,7 +6908,7 @@ ${NLM_JSON}
   ]
 }
 
-Rules: list topics in the order they are taught. Include every exam (prelim, midterm, semi-final, final, long tests) as its own entry with "kind": "exam". Use short codes T1, T2, T3… Only use dates that appear in my sources; otherwise leave "due" empty. ${c.kindHint}` },
+Rules: list topics in the order they are taught. Include every exam (prelim, midterm, semi-final, final, long tests) as its own entry with "kind": "exam". Use short codes T1, T2, T3… Only use dates that appear in my sources; otherwise leave "due" empty. IMPORTANT SUBTOPIC ORGANIZATION: preserve EVERY substantive learning objective from my sources, but group closely related details into a concise outline of usually 3–8 meaningful subtopics per main chapter or topic, not one subtopic for each definition, rule, example or question. If the source genuinely has more than eight independent major sections, retain them rather than omit content. Never duplicate a chapter under alternate names. Put finer details, exceptions, formulas and cases into lecture sections, questions, rule cards or the roadmap note rather than creating dozens of tiny top-level subtopics. Use stable, short headings; do not rename an existing dashboard topic. ${c.kindHint}` },
     { id: "grading", group: "setup", json: true, title: "Syllabus → grade calculator", desc: "Reads the grading system (weights, class standing, letter grades, QPI) so the Grades calculator sets itself up.", make: (c) => GC_PROMPT(c.subject) },
     { id: "cards", group: "make", json: true, title: "Core flashcards", desc: "15–25 cards on the ideas most likely to be tested.", make: (c) => `Using the materials I provide, create 15 to 25 flashcards for ${c.focus} in ${c.subject}. Cover the ideas most likely to be tested, from basic to tricky.
 ${NLM_JSON}
@@ -7034,7 +7039,9 @@ THE PART I'M STUCK ON:
       return x ? label(x) : "";
     }).filter(Boolean).join(", ") : "";
     return {
-      subject: subj,
+      subject: subject.name, // JSON subject identity must equal the saved course name.
+      subjectDisplay: subj,
+      courseCode: subject.code || "",
       kind: k[0],
       kindHint: k[2],
       focus: t ? `the topic "${label(t)}"` : "all the topics in my sources",
@@ -7121,9 +7128,11 @@ THE PART I'M STUCK ON:
       'Use only the uploaded sources. If they do not contain a fact, identify the gap and omit that fact.':
       'Prioritize my attached sources. Supplement missing or outdated content ONLY when you can actually access an identifiable authoritative primary source (official standard setter, regulator, primary research or publisher). Confirm jurisdiction, effective date, and section. Identify supplementary material as external. Do NOT claim web verification without actually visiting the source.';
     const lines=[
-      'BSA STUDY DESK — TASK-SPECIFIC AI INSTRUCTIONS · v172',
+      'BSA STUDY DESK — TASK-SPECIFIC AI INSTRUCTIONS',
       'ONE TASK ONLY: '+p.title+' → '+(format?format.destination:(spec.destination||'interactive coaching'))+'. Do not output unrelated material types.',
       'SUBJECT: '+ctx.subject,
+      'COURSE CODE: '+(ctx.courseCode||'Not specified'),
+      'STRICT JSON SUBJECT FIELD: use exactly '+JSON.stringify(ctx.subject)+' in the top-level subject field, without course code.',
       'SCOPE: '+focus,
       'SOURCE IDENTIFICATION: '+(String(fields.sourceTitle||'').trim()||'Identify each actual source by its visible title and edition; do not invent bibliographic details.'),
       'SOURCE PAGES / CHAPTERS: '+(String(fields.sourceScope||'').trim()||'Use only the pages or chapters actually provided or selected.'),
@@ -7187,6 +7196,7 @@ THE PART I'M STUCK ON:
   function NotebookLMPrompts({ subject, toast, onImport, initPid, initTopic , onResources}) {
     const [kind,setKind]=useState(()=>localPref(`nlmKind_${subject.id}`,({concepts:'theory',accounting:'calc',finance:'calc',quantitative:'calc',humanities:'history',science:'science'}[bsa46ProfileId(subject)]||nlmGuessKind(subject))));
     const [topicId,setTopicId]=useState(initTopic && subject.topics.some(t=>t.id===initTopic)?initTopic:'');
+    useEffect(()=>{if(initTopic && (subject.topics||[]).some(t=>t.id===initTopic))setTopicId(initTopic)},[initTopic,subject.id]);
     const [pid,setPid]=useState(()=>initPid||localPref('nlmPrompt','lecture'));
     // A Generate-MCQ / Generate-problems shortcut must override the last library choice.
     // React preserves state when reusing a mounted component, so sync route intent explicitly.
@@ -7242,7 +7252,7 @@ THE PART I'M STUCK ON:
     const fieldInput=(key,label,placeholder)=>h('label',{className:'bsa-pb-field',key},h('span',null,label),h('input',{value:fields[key]||'',placeholder,onChange:e=>setField(key,e.target.value)}));
     return h('section',{className:'bsa-prompt-workbench'},
       h('header',{className:'bsa-pb-hero'},
-        h('div',null,h('span',{className:'bsa-pb-eyebrow'},'STUDY STUDIO · v172'),h('h2',null,'AI Prompt Builder'),h('p',null,'Choose a task, fill in the details, then copy a ready-to-use prompt. No brackets to replace. Importable materials follow the dashboard’s real JSON formats.')),
+        h('div',null,h('span',{className:'bsa-pb-eyebrow'},'STUDY STUDIO'),h('h2',null,'AI Prompt Builder'),h('p',null,'Choose a task, fill in the details, then copy a ready-to-use prompt. No brackets to replace. Importable materials follow the dashboard’s real JSON formats.')),
         h('div',{className:'bsa-pb-hero-tag'},h('span',null,'✓'), ' Source-aware',h('span',null,'✓'),' Import-focused')),
       h('div',{className:'bsa-pb-top-context'},
         h('label',{className:'bsa-pb-field'},h('span',null,'Subject type'),h('select',{value:kind,onChange:e=>chooseKind(e.target.value)},NLM_KINDS.map(([v,label])=>h('option',{value:v,key:v},label)))),
@@ -7293,7 +7303,7 @@ THE PART I'M STUCK ON:
             showPreview&&h('textarea',{readOnly:true,className:'bsa-pb-preview',rows:14,value:rendered,'aria-label':'Generated AI prompt',onFocus:e=>e.target.select()}),
             h('div',{className:'bsa-pb-actions'},
               h('button',{type:'button',className:'btn primary bsa-pb-copy',disabled:!canCopy,onClick:async()=>{const ok=await copyText(rendered);setCopied(ok);toast(ok?'Prompt copied — ready to paste into your AI':'Copy unavailable. Select the preview and copy manually.')}},copied?'✓ Copied prompt':'Copy complete prompt'),
-              typed&&onImport&&h('button',{className:'btn',type:'button',onClick:onImport},'Open Import'),
+              typed&&onImport&&h('button',{className:'btn',type:'button',onClick:()=>onImport(topicId,typed.format)},'Import JSON → Review duplicates'),
               h('button',{className:'btn',type:'button',onClick:()=>bsaResourceDownload(BSA_RESOURCE_FILES[0])},'Download AI instruction .md'),
               onResources&&h('button',{className:'btn',type:'button',onClick:onResources},'AI resource hub')),
             typed&&h('div',{className:'bsa-pb-contract'},h('div',null,h('strong',null,'JSON format: '+typed.format),h('span',null,' → '+destination)),h('button',{type:'button',className:'btn',onClick:()=>setShowSchema(v=>!v)},showSchema?'Hide example':'View expected JSON structure'),showSchema&&h('pre',null,JSON.stringify({...typed.example,subject:context.subject},null,2)),h('p',null,'After receiving the AI reply, copy its JSON → Import → Paste copied JSON → Check data. Review the counts and topic before saving. The app validates structure; you must verify academic accuracy.'))),
@@ -9547,7 +9557,7 @@ ${c.kindHint}` }
     let addedLectures = 0, updatedLectures = 0, addedSets = 0, addedProblems = 0;
     for (const L of p.lectures || []) {
       const topicId = matchTopic(s, L.topicText) || matchTopic(s, L.title);
-      const dup = s.lectures.find((x) => norm(x.title) === norm(L.title));
+      const dup = s.lectures.find((x) => norm(x.title) === norm(L.title)&&(!x.topicId||!topicId||x.topicId===topicId));
       if (dup) {
         // Same title: refresh sections with the same heading, append new ones, add new terms and questions.
         for (const sec of L.sections) {
@@ -9572,12 +9582,12 @@ ${c.kindHint}` }
     const problemKeys=new Set(s.psets.flatMap(set=>(set.problems||[]).map(q=>bsa198Fingerprint(q.problem)).filter(Boolean)));
     for(const S of p.psets||[]){
       const topicId=matchTopic(s,S.topicText)||matchTopic(s,S.title);
-      const dup=s.psets.find(x=>norm(x.title)===norm(S.title));
+      const dup=s.psets.find(x=>norm(x.title)===norm(S.title)&&(!x.topicId||!topicId||x.topicId===topicId));
       const fresh=[];
       for(const pr of S.problems||[]){
         const key=bsa198Fingerprint(pr.problem);
         if(!key||problemKeys.has(key)){skippedProblems++;continue;}
-        problemKeys.add(key);fresh.push(pr);
+        problemKeys.add(key);fresh.push({...pr,topicId:pr.topicId||topicId});
       }
       if(!fresh.length)continue;
       if(dup){
@@ -9591,9 +9601,9 @@ ${c.kindHint}` }
     const mcqKeys=new Set(s.mcqSets.flatMap(set=>(set.problems||[]).map(q=>bsa198Fingerprint(q.problem)).filter(Boolean)));
     for(const S of p.mcqSets||[]){
       const topicId=matchTopic(s,S.topicText)||matchTopic(s,S.title);
-      const dup=s.mcqSets.find(x=>norm(x.title)===norm(S.title));
+      const dup=s.mcqSets.find(x=>norm(x.title)===norm(S.title)&&(!x.topicId||!topicId||x.topicId===topicId));
       const fresh=[];
-      for(const q of S.problems||[]){const key=bsa198Fingerprint(q.problem);if(!key||mcqKeys.has(key)){skippedProblems++;continue;}mcqKeys.add(key);fresh.push(q);}
+      for(const q of S.problems||[]){const key=bsa198Fingerprint(q.problem);if(!key||mcqKeys.has(key)){skippedProblems++;continue;}mcqKeys.add(key);fresh.push({...q,topicId:q.topicId||topicId});}
       if(!fresh.length)continue;
       if(dup){let maxNo=Math.max(0,...(dup.problems||[]).map(q=>Number(q.no)||0));for(const q of fresh){dup.problems.push({...q,no:++maxNo});addedProblems++;}}
       else{s.mcqSets.push({...S,topicId,problems:fresh});addedSets++;addedProblems+=fresh.length;}
@@ -10141,7 +10151,8 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
   function LxView({ subject, update, toast, go, init }) {
     const lectures = subject.lectures || [];
     const [open, setOpen] = useState(init && init.open || null);
-    const [topic, setTopic] = useState("all");
+    const [topic, setTopic] = useState(init?.topic||init?.topicId||"all");
+    useEffect(()=>{if(init?.topic||init?.topicId)setTopic(init.topic||init.topicId)},[init?.topic,init?.topicId,subject.id]);
     const [query, setQuery] = useState("");
     const [edit, setEdit] = useState(null);
     // Keep reading and list scrolling independent. iPad Safari scrolls the
@@ -10163,9 +10174,10 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
     const cur = open && lectures.find((x) => x.id === open);
     if (cur) return h(React.Fragment, null, h(LxReader, { subject, l: cur, update, toast, go, jumpTo: init && init.sec, onBack: lxBackToList, onEdit: () => setEdit(cur) }), edit && h(LxEditor, { subject, item: edit === "new" ? null : edit, update, toast, onClose: () => setEdit(null), onDeleted: () => { setEdit(null); setOpen(null); } }));
     const q = norm(query);
-    const shown = lectures.filter((l) => (topic === "all" || (topic === "" ? !l.topicId : l.topicId === topic)) && (!q || norm(`${l.title} ${l.summary} ${l.sections.map((s) => s.h).join(" ")}`).includes(q)));
+    const lectureId=l=>l.topicId||matchTopic(subject,l.topicText);
+    const shown = lectures.filter((l) => (topic === "all" || (topic === "" ? !lectureId(l) : lectureId(l) === topic)) && (!q || norm(`${l.title} ${l.summary} ${l.sections.map((s) => s.h).join(" ")}`).includes(q)));
     const groups = psByTopic(subject, shown);
-    const usedTopics = studyTopics(subject).filter((t) => lectures.some((l) => l.topicId === t.id));
+    const usedTopics = studyTopics(subject).filter((t) => lectures.some((l) => lectureId(l) === t.id));
     return h(
       "section",
       { className: "view" },
@@ -10827,13 +10839,13 @@ ${NLM_JSON}
 
 ${PS_SET_SHAPE(c)}
 
-Rules: ${c.topicRule} Make 12 to 20 problems. Give every subtopic at least one problem, and give the most-tested subtopics two or three. Use the same "subtopic" wording for problems in the same group. ${psProbHint(c.kind)} Base the style and difficulty on my sources, but write new problems. ${PS_FORMAT} ${PS_LONG} ${c.kindHint}` },
+Rules: ${c.topicRule} Make 12 to 20 problems. Organize questions under about 3–7 meaningful skill groups when the source supports that many, using the same "subtopic" wording for every question in a group. Do NOT invent a new subtopic heading for each individual problem or small variation. Cover every distinct testable skill, rule and exception through the questions and worked solutions even if several share a broad group. ${psProbHint(c.kind)} Base the style and difficulty on my sources, but write new problems. ${PS_FORMAT} ${PS_LONG} ${c.kindHint}` },
     { id: "pset-book", group: "lp", json: true, title: "My textbook's problems, solved & organized", desc: "Takes the exercises already in your sources, sorts them by subtopic and solves each one step by step.", make: (c) => `Find the practice problems, exercises, end-of-chapter items and exam-type questions on ${c.focus} in my sources for ${c.subject}. Keep their original wording and numbers, sort them by subtopic, and solve each one fully.
 ${NLM_JSON}
 
 ${PS_SET_SHAPE(c)}
 
-Rules: ${c.topicRule} Put where each problem comes from (book, page and item number) in its "title", for example "p. 182, Problem 3, item 1". If my sources give the answer, use it and show how to get it; if they don't, solve it yourself and check the result. ${psProbHint(c.kind)} ${PS_FORMAT} ${PS_LONG} ${c.kindHint}` },
+Rules: ${c.topicRule} Group all source exercises under broad skill headings (usually 3–7 when appropriate), not one subtopic per question; keep specific textbook item IDs and source locators on each individual problem. Put where each problem comes from (book, page and item number) in its "title", for example "p. 182, Problem 3, item 1". If my sources give the answer, use it and show how to get it; if they don't, solve it yourself and check the result. ${psProbHint(c.kind)} ${PS_FORMAT} ${PS_LONG} ${c.kindHint}` },
     { id: "pset-compre", group: "lp", json: true, title: "Comprehensive problems", desc: "4–8 long, integrated problems with complete data and several requirements each, like the hardest exam items.", make: (c) => `Using my uploaded sources, write 4 to 8 comprehensive problems on ${c.focus} for ${c.subject}. Each problem should give complete data${c.kind === "calc" ? " (for accounting: comparative statements of financial position, an income statement and additional information)" : c.kind === "eng" ? " (all loads, dimensions and properties needed)" : " (a full case or situation)"} and ask 4 to 6 requirements that build on each other, like the hardest items on a final or board exam.
 ${NLM_JSON}
 
@@ -10845,7 +10857,7 @@ ${NLM_JSON}
 
 ${PS_SET_SHAPE(c)}
 
-Rules: ${c.topicRule} Every item has exactly 4 "choices" ("a. …" to "d. …") with one best answer and plausible distractors built from common mistakes. "requirements" is []. "answer" is the letter and the correct choice. "solution" explains why it is right${c.kind === "calc" ? " with the computation" : ""}, and "trap" says why the most tempting wrong choice is wrong. ${PS_FORMAT_MC} ${PS_LONG} ${c.kindHint}` },
+Rules: ${c.topicRule} Use approximately 3–7 stable skill-group labels across the entire set (when appropriate), not a new subtopic for every item; retain all distinct tested details in the problems and solutions. Every item has exactly 4 "choices" ("a. …" to "d. …") with one best answer and plausible distractors built from common mistakes. "requirements" is []. "answer" is the letter and the correct choice. "solution" explains why it is right${c.kind === "calc" ? " with the computation" : ""}, and "trap" says why the most tempting wrong choice is wrong. ${PS_FORMAT_MC} ${PS_LONG} ${c.kindHint}` },
     { id: "lecture-chat", group: "lp", json: false, title: "Lecture me (in chat)", desc: "AI teaches the topic section by section and checks you along the way.", make: (c) => `Lecture me on ${c.focus} for ${c.subject} using only my sources, like a professor in class. Go in this order: ${PS_PLAN[c.kind] || PS_PLAN.general} Teach one section at a time: explain the general rule, show how it is applied or treated with an example${c.kind === "calc" ? " with numbers" : ""}, then point out the exception or trap. After each section ask me one quick question and wait for my answer before moving on. Cite where in my sources each point comes from. At the end, give a summary table. ${c.kindHint}` },
     { id: "pset-chat", group: "lp", json: false, title: "Problem set in chat (answer key last)", desc: "Problems first, answer key and solutions at the end. Type “export” to get it as JSON for the dashboard.", make: (c) => `Give me a problem set on ${c.focus} for ${c.subject} from my sources, with 10 to 15 problems grouped under subtopic headings, from basic to difficult. Show only the problems first, with all given data in tables. Then, after a line that says ANSWER KEY, give for each problem: the final answer, how to approach it, a step-by-step solution${c.kind === "calc" ? " (show T-accounts or schedules for every squeezed figure)" : ""}, and the common trap. ${psProbHint(c.kind)}
 
@@ -11823,6 +11835,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
         // Publish only the three approved material collections. Navigation topics
         // are structural metadata, not progress, grades, or private study records.
         const clean={id:x.id,name:x.name,code:x.code,school:'',textbook:false};
+        clean.topicAliases=(x.topicAliases||[]).filter(a=>a?.topicId&&(x.topics||[]).some(t=>t.id===a.topicId)).map(a=>({label:String(a.label||'').slice(0,180),topicId:a.topicId}));
         clean.topics=(x.topics||[]).map(t=>({id:t.id,kind:t.kind||'topic',week:t.week,code:t.code,title:t.title,standard:t.standard,scope:t.scope,covers:clone(t.covers||[]),status:'Not started',done:false,sub:(t.sub||[]).map(v=>({id:v.id,t:v.t,title:v.title,p:v.p,done:false,s:false}))}));
         // Publish only teaching material. Personal attempt statuses, ratings,
         // spaced-repetition dates and mistake-linked private answers stay private.
@@ -13350,7 +13363,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       setStatus({busy:false,ran:true,checks,storage});
     };
     return h('section',{className:'view bsa193-page'},
-      h('div',{className:'page-head'},h('div',null,h('span',{className:'v2-eyebrow'},'v193 · SAFE DEVICE CHECKS'),h('h1',{className:'page-title'},'Device & Data Safety'),h('p',{className:'muted'},'Check this browser’s saved records and offline support without deleting or changing study data.'))),
+      h('div',{className:'page-head'},h('div',null,h('span',{className:'v2-eyebrow'},'SAFE DEVICE CHECKS'),h('h1',{className:'page-title'},'Device & Data Safety'),h('p',{className:'muted'},'Check this browser’s saved records and offline support without deleting or changing study data.'))),
       h('div',{className:'bsa193-summary v2-panel'},h('div',null,h('h2',null,'Your study data stays yours'),h('p',{className:'muted small'},'Your academic backup contains locally stored study records and V2 preferences, but not PDF file blobs, credentials or GitHub secrets. Keep original PDFs and an external backup.')),
         h('div',{className:'bsa193-actions'},h('button',{className:'btn primary',onClick:()=>bsaDownloadUnifiedBackup(toast)},'Download verified JSON backup'),h('button',{className:'btn',onClick:run,disabled:status.busy},status.busy?'Checking…':'Run device checks'),h('button',{className:'btn',onClick:()=>go('toolkit')},'Open Study Toolkit'))),
       h('div',{className:'bsa193-status-row'},h('span',{className:network?'bsa193-connected':'bsa193-offline'},network?'● Network online':'● Network offline'),h('span',null,'Device: '+deviceName()),status.ran&&h('span',null,'Estimated storage: '+status.storage)),
@@ -13599,7 +13612,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const duplicateCount=(()=>{const seen=new Set();let repeats=0;for(const x of [...catalog.journal.map(x=>x.prompt),...catalog.ordinary.map(x=>x.problem),...catalog.mcqs.map(x=>x.problem)]){const key=bsa198Fingerprint(x);if(!key)continue;if(seen.has(key))repeats++;else seen.add(key)}return repeats})();
     const searchLists=(items)=>items.filter(x=>!search||bsa198Fingerprint((x.title||'')+' '+(x.problem||'')+' '+(x.setTitle||'')).includes(bsa198Fingerprint(search)));
     return h('section',{className:'view bsa187-page bsa198-page'},
-      h('header',{className:'page-head bsa198-heading'},h('div',null,h('span',{className:'v2-eyebrow'},'v198 · ONE ORGANIZED PRACTICE HUB'),h('h1',{className:'page-title'},'Accounting Lab'),h('p',{className:'muted'},'Journal practice, existing problem sets and MCQs together—without duplicating your learning records.')),
+      h('header',{className:'page-head bsa198-heading'},h('div',null,h('span',{className:'v2-eyebrow'},'ONE ORGANIZED PRACTICE HUB'),h('h1',{className:'page-title'},'Accounting Lab'),h('p',{className:'muted'},'Journal practice, existing problem sets and MCQs together—without duplicating your learning records.')),
         h('button',{className:'btn primary',onClick:()=>{setTab('import');setPreview(null);setImportError('')}},'+ Import journal problems')),
       h('div',{className:'bsa198-overview'},[
         [catalog.journal.length,'Checkable journals'],[(subject.psets||[]).reduce((n,s)=>n+(s.problems||[]).length,0),'Problems in your sets'],[catalog.mcqs.length,'MCQs'],[synced.length,'Lab attempts']
@@ -13740,7 +13753,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const begin=task=>{if(timerState?.running){if(!window.confirm('A focus timer is already running. Replace it with this plan?'))return;}startTimer({mins:task.mins,subjectId:subject.id,label:task.title});go(task.route,task.opts||{});};
     const completed=tasks.filter(x=>checked(x.id)).length;
     return h('section',{className:'v2-panel bsa188-today','aria-label':'Smart Today study plan'},
-      h('div',{className:'bsa188-head'},h('div',null,h('span',{className:'v2-eyebrow'},'v196 · PRIORITIZED FROM YOUR RECORDS'),h('h2',null,'Your next study blocks'),h('p',{className:'muted small'},'Prioritizes upcoming exams, overdue review, open mistakes and unfinished work—not AI guesses.')),
+      h('div',{className:'bsa188-head'},h('div',null,h('span',{className:'v2-eyebrow'},'PRIORITIZED FROM YOUR RECORDS'),h('h2',null,'Your next study blocks'),h('p',{className:'muted small'},'Prioritizes upcoming exams, overdue review, open mistakes and unfinished work—not AI guesses.')),
         h('label',null,'Time available',h('select',{value:state.budget,onChange:e=>save({...state,budget:Number(e.target.value)})},[20,40,60,90].map(n=>h('option',{key:n,value:n},n+' min'))))),
       h('div',{className:'bsa188-progress'},h('span',null,completed+' / '+tasks.length+' manually checked'),h('div',{className:'bsa188-track'},h('span',{style:{width:(100*completed/Math.max(1,tasks.length))+'%'}}))),
       h('div',{className:'bsa188-items'},tasks.map((task,i)=>h('div',{className:'bsa188-item'+(checked(task.id)?' done':''),key:task.id},
@@ -13785,7 +13798,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       ...(subject.tasks||[]).filter(x=>x.due===day&&!x.done).map(x=>({id:x.id,kind:'task',label:x.title||x.name||'Task',description:'Class task',item:x})),
       ...sessions.filter(x=>x.date===day).map(x=>({id:x.id,kind:'session',label:sessTopic(subject,x),description:(x.time?fmtTime(x.time)+' · ':'')+fmtMins(x.mins)+(x.done?' · Completed':' · Planned'),item:x}))]}));
     const changeSession=(sessionId,date)=>{if(!days.includes(date))return;const session=sessions.find(x=>x.id===sessionId);if(!session||session.done){toast('Completed study history cannot be moved here.');return;}update(s=>{const item=(s.sessions||[]).find(x=>x.id===sessionId);if(item&&!item.done)item.date=date;});toast('Planned study block moved to '+date)};
-    return h('section',{className:'view bsa191-page'},h('div',{className:'page-head'},h('div',null,h('span',{className:'v2-eyebrow'},'v191 · SEE THE WEEK'),h('h1',{className:'page-title'},'Weekly Study Planner'),h('p',{className:'muted'},'A week at a glance using your saved plans, exams, and deadlines. Reschedule planned sessions without changing completed study history.'))),
+    return h('section',{className:'view bsa191-page'},h('div',{className:'page-head'},h('div',null,h('span',{className:'v2-eyebrow'},'SEE THE WEEK'),h('h1',{className:'page-title'},'Weekly Study Planner'),h('p',{className:'muted'},'A week at a glance using your saved plans, exams, and deadlines. Reschedule planned sessions without changing completed study history.'))),
       h('div',{className:'bsa191-toolbar'},h('button',{className:'btn',onClick:()=>setOffset(n=>n-1),'aria-label':'Previous week'},'← Earlier'),h('strong',null,new Date(start+'T12:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric'})+' – '+new Date(days[6]+'T12:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})),h('button',{className:'btn',onClick:()=>setOffset(0)},'This week'),h('button',{className:'btn',onClick:()=>setOffset(n=>n+1),'aria-label':'Next week'},'Later →'),h('button',{className:'btn primary',onClick:()=>openEditor('session',null,{date:today()})},'+ Plan session')),
       h('div',{className:'bsa191-grid'},events.map(({day,entries})=>h('section',{key:day,className:'bsa191-day'+(day===today()?' current':''),'aria-label':'Events on '+day,
         onDragOver:e=>{if(dragId)e.preventDefault()},onDrop:e=>{e.preventDefault();if(dragId)changeSession(dragId,day);setDragId('')}},
@@ -13829,7 +13842,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const sameTopicCount=topics.filter(x=>links.some(g=>g.id===x.id&&g.related.length)).length;
     const weakFor=id=>(subject.mistakes||[]).filter(m=>m&&m.topicId===id&&m.status!=='Cleared').length;
     const names={lectures:'Lectures',rules:'Rules & references',vault:'Flashcards',psets:'Problem sets',mcq:'MCQ library',mistakes:'Mistake log'};
-    return h('section',{className:'view bsa192-page'},h('div',{className:'page-head'},h('div',null,h('span',{className:'v2-eyebrow'},'v192 · YOUR KNOWLEDGE CONNECTIONS'),h('h1',{className:'page-title'},'Knowledge Map'),h('p',{className:'muted'},'Find the lectures, questions, rules and mistakes genuinely linked to each topic. No invented concept links.'))),
+    return h('section',{className:'view bsa192-page'},h('div',{className:'page-head'},h('div',null,h('span',{className:'v2-eyebrow'},'YOUR KNOWLEDGE CONNECTIONS'),h('h1',{className:'page-title'},'Knowledge Map'),h('p',{className:'muted'},'Find the lectures, questions, rules and mistakes genuinely linked to each topic. No invented concept links.'))),
       h('div',{className:'bsa192-stats'},h('span',null,topics.length+' topics'),h('span',null,sameTopicCount+' with linked materials'),h('button',{className:'btn',onClick:()=>go('roadmap')},'Edit your roadmap')),
       h('div',{className:'bsa192-map'},h('aside',{className:'bsa192-topic-list'},h('label',null,'Find topic',h('input',{type:'search',placeholder:'Topic or code',value:query,onChange:e=>setQuery(e.target.value)})),
         matched.length?matched.map(x=>{const rel=links.find(y=>y.id===x.id);return h('button',{type:'button',key:x.id,className:'bsa192-topic'+(focus?.id===x.id?' active':''),onClick:()=>setPicked(x.id)},h('strong',null,(x.code?x.code+' · ':'')+x.title),h('small',null,(rel?.related.length||0)+' linked resource groups · '+weakFor(x.id)+' open mistakes'))}):h('p',{className:'muted small'},'No matching topic.')),
@@ -13974,7 +13987,8 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
   // never guess classifications from question wording or silently rewrite 200+ records.
   function bsa3TopicLabel(s, topicId, freeLabel){
     const match=(s.topics||[]).find(t=>t.id===topicId);
-    return match?[match.code,match.title].filter(Boolean).join(' · '):String(freeLabel||'').trim()||'Uncategorized';
+    const resolved=match||((s.topics||[]).find(t=>t.id===bsa49ResolveTopic(s,freeLabel)));
+    return resolved?[resolved.code,resolved.title].filter(Boolean).join(' · '):String(freeLabel||'').trim()||'Uncategorized';
   }
   function bsa205LibraryItems(s){const rows=[];
     const safe=a=>Array.isArray(a)?a.filter(x=>x&&typeof x==='object'&&!Array.isArray(x)):[];
@@ -14084,6 +14098,100 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
      never silently replace lecture sections, rule decisions or answer keys. */
   const BSA44_KINDS=[['lecture','Lectures'],['practice','Written problems'],['mcq','MCQs'],['card','Flashcards'],['rule','Rules']];
   const bsa44Key=v=>String(v==null?'':v).normalize('NFKC').toLocaleLowerCase().replace(/\s+/g,' ').trim();
+  /* V4.6.9: AI Builder -> import subject identity contract. No fuzzy guessing:
+     equivalent name + course code is accepted, but contradictory codes are rejected. */
+  /* V4.6.9: One course-scoped topic identity across Library, AI, practice and reports.
+     No destructive migration: IDs and learner progress remain unchanged. Never infer
+     that a short fragment is the same as a longer topic. Explicit links beat aliases. */
+  function bsa49TopicParts(value){
+    const raw=String(value||'').normalize('NFKC').trim();
+    const chapter=(raw.match(/\b(?:chapter|chap(?:ter)?\.|ch\.|ch|module|unit|topic)\s*#?\s*(\d{1,3})\b/i)||[])[1]||'';
+    const standard=(raw.match(/\b(PAS|PFRS|IAS|IFRS|IFRIC|SIC)\s*[-.:]?\s*0*(\d{1,3})\b/i)||[]);
+    const normalize=v=>String(v||'').normalize('NFKC').toLowerCase().replace(/&/g,' and ').replace(/[^\p{L}\p{N}]+/gu,' ').replace(/\s+/g,' ').trim();
+    const name=normalize(raw.replace(/\b(?:chapter|chap(?:ter)?\.|ch\.|ch|module|unit|topic)\s*#?\s*\d{1,3}\s*[-.:–—]?\s*/ig,'').replace(/\b(?:chapter|chap(?:ter)?\.|ch\.|ch|module|unit|topic)\s*#?\s*\d{1,3}\b/ig,''));
+    return {full:normalize(raw),name,chapter,standard:standard.length?standard[1].toLowerCase()+' '+Number(standard[2]):''};
+  }
+  function bsa49ResolveTopic(subject,label,explicitCode){
+    if(!label&&!explicitCode)return null;
+    const all=(subject?.topics||[]).filter(t=>t?.kind!=='exam'),given=bsa49TopicParts(label),code=bsa49TopicParts(explicitCode);
+    const explicit=all.filter(t=>(given.full&&bsa49TopicParts(t.id).full===given.full)||(code.full&&bsa49TopicParts(t.code).full===code.full));
+    if(explicit.length===1)return explicit[0].id;
+    if(explicit.length>1)return null;
+    // A learner-confirmed alias is always scoped to this particular subject.
+    const linked=(subject?.topicAliases||[]).filter(a=>a?.label&&a?.topicId&&given.full&&bsa49TopicParts(a.label).full===given.full&&all.some(t=>t.id===a.topicId));
+    if(linked.length===1)return linked[0].topicId;
+    if(linked.length>1)return null;
+    const matches=all.filter(t=>{
+      const title=bsa49TopicParts(t.title),tCode=bsa49TopicParts(t.code),std=bsa49TopicParts(t.standard);
+      if(code.full&&tCode.full&&code.full!==tCode.full&&!(code.chapter&&tCode.chapter&&code.chapter===tCode.chapter))return false;
+      // Codes for different chapters prevent an unsafe title-only merge.
+      const ref=(tCode.chapter||title.chapter||std.chapter||String(t.week||'').match(/^\d+$/)?.[0]||'');
+      if(given.chapter&&ref&&given.chapter!==ref)return false;
+      if(given.full&&(given.full===title.full||given.full===tCode.full||given.full===std.full))return true;
+      if(given.name&&title.name&&given.name===title.name)return true;
+      // Recognise verified standard references only when uniquely assigned.
+      if(given.standard&&given.standard===std.standard)return true;
+      if(given.standard&&given.name.length<13&&given.standard===title.standard)return true;
+      const combined=bsa49TopicParts([t.code,t.title].filter(Boolean).join(' ')).full;
+      return !!combined&&given.full===combined;
+    });
+    return matches.length===1?matches[0].id:null;
+  }
+  function bsa49CanonicalizePack(subject,parsed){
+    const p=JSON.parse(JSON.stringify(parsed)),topics=(subject?.topics||[]);
+    const canonical=label=>{const id=bsa49ResolveTopic(subject,label);return topics.find(t=>t.id===id)?.title||label;};
+    for(const t of p.topics||[]){const id=bsa49ResolveTopic(subject,t.title,t.code);const existing=topics.find(x=>x.id===id);if(existing){t.title=existing.title;t.code=existing.code||t.code;t.standard=existing.standard||t.standard;}}
+    const attach=o=>{if(o?.topicText)o.topicText=canonical(o.topicText);if(o?.topic)o.topic=canonical(o.topic);};
+    for(const x of p.cards||[])attach(x);
+    for(const x of p.lectures||[])attach(x);
+    for(const x of [...(p.psets||[]),...(p.mcqSets||[])]){attach(x);for(const q of x.problems||[])attach(q)}
+    for(const x of p.rules||[])attach(x);
+    return p;
+  }
+  function bsa49UnmatchedLabels(subject){
+    const labels=new Map(),topics=new Set((subject?.topics||[]).map(t=>t.id));
+    const add=(label,id)=>{const value=String(label||'').trim();if(!value||topics.has(id)||bsa49ResolveTopic(subject,value))return;const key=bsa49TopicParts(value).full;if(key&&!labels.has(key))labels.set(key,value)};
+    for(const x of subject?.lectures||[])add(x.topicText,x.topicId);
+    for(const sets of [subject?.psets||[],subject?.mcqSets||[]])for(const set of sets){add(set.topicText||set.topic,set.topicId);for(const q of set.problems||[])add(q.topicText||q.topic||q.subtopic,q.topicId||set.topicId)}
+    for(const x of subject?.cards||[])add(x.topicText,x.topicId);
+    for(const x of subject?.rules||[])add(x.topic||x.topicText,x.topicId);
+    return [...labels.values()].slice(0,40);
+  }
+  function BSA49TopicLinks({subject,update}){
+    const labels=bsa49UnmatchedLabels(subject),linked=(subject.topicAliases||[]).filter(a=>a?.topicId&&(subject.topics||[]).some(t=>t.id===a.topicId));
+    const [choices,setChoices]=useState({});
+    const add=(label)=>{const id=choices[label];if(!id)return;update(s=>{const key=bsa49TopicParts(label).full;s.topicAliases=(s.topicAliases||[]).filter(a=>bsa49TopicParts(a.label).full!==key);s.topicAliases.push({label,topicId:id,at:Date.now()})});};
+    return h('details',{className:'bsa49-topic-links'},h('summary',null,'Connect alternate topic labels',labels.length?' · '+labels.length+' unlinked':' · all recognized'),
+      h('p',{className:'muted small'},'Link alternate chapter labels to ONE existing topic. This changes how materials are grouped in every study view; it does not erase, duplicate, or rewrite their original content. Do not link different chapters just because their names look similar.'),
+      labels.slice(0,15).map(label=>h('div',{className:'bsa49-alias-row',key:label},h('span',{title:label},label),h('select',{value:choices[label]||'',onChange:e=>setChoices(old=>({...old,[label]:e.target.value})), 'aria-label':'Link '+label+' to topic'},h('option',{value:''},'Choose same topic…'),(subject.topics||[]).filter(t=>t.kind!=='exam').map(t=>h('option',{key:t.id,value:t.id},[t.code,t.title].filter(Boolean).join(' · ')))),h('button',{className:'btn',type:'button',disabled:!choices[label],onClick:()=>add(label)},'Link'))),
+      linked.length>0&&h('div',{className:'bsa49-alias-existing'},h('strong',null,'Your saved label links'),linked.map(a=>h('div',{className:'bsa49-alias-row',key:a.label},h('span',null,a.label+' → '+(subject.topics.find(t=>t.id===a.topicId)?.title||'')),h('button',{className:'btn ghost',onClick:()=>update(s=>{s.topicAliases=(s.topicAliases||[]).filter(x=>!(x.label===a.label&&x.topicId===a.topicId))})},'Unlink')))));
+  }
+  const bsa49SubjectWords=value=>String(value||'').normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]+/gu,' ').trim().replace(/\s+/g,' ');
+  function bsa49MatchesSubject(raw,subject){
+    const incoming=bsa49SubjectWords(raw),name=bsa49SubjectWords(subject?.name),code=bsa49SubjectWords(subject?.code);
+    if(!incoming)return true;
+    if(incoming===name||code&&incoming===code)return true;
+    if(!name||!code)return false;
+    // Match just the two full identity pieces, regardless of order or punctuation.
+    // This recognizes "Financial Markets (AEC 23)" and "AEC 23 · Financial Markets".
+    const strip=(text,part)=>{const words=text.split(' '),needle=part.split(' ');for(let i=0;i<=words.length-needle.length;i++){if(needle.every((word,j)=>words[i+j]===word))return words.filter((_,j)=>j<i||j>=i+needle.length).join(' ')}return text};
+    return strip(incoming,code)===name || strip(incoming,name)===code;
+  }
+  function bsa49PackPrompt(subject,topic){
+    const who=JSON.stringify(String(subject?.name||''));
+    return [
+      'Continue following the source instructions, tutor prompt and rulebook I have already provided in this AI conversation. Do not invent a replacement instruction system.',
+      'Create a BSA Study Desk bsa-topic-pack-v1 JSON for my existing subject and selected topic.',
+      'SUBJECT NAME (exact JSON field value): '+who,
+      'Use the SAME topic title or category as the saved study roadmap. Do not invent a second topic when Chapter 8 and Corporate Bonds mean the same existing topic.',
+      'Organize the roadmap into about 3–8 substantive, broad subtopics per topic when appropriate. Do not create a new subtopic for each tiny fact, exception, individual exercise or flashcard. Retain EVERY supported detail in lecture sections, worked problems, flashcards and rule entries. More than eight headings is acceptable only when the actual syllabus has genuinely distinct major sections. Never erase details to fit an arbitrary count.',
+      'COURSE CODE (context only): '+String(subject?.code||'not supplied'),
+      topic?'TOPIC (use this exact existing dashboard topic): '+topic:'Use the actual chapter or topic from my sources.',
+      'In the JSON, top-level "subject" MUST equal '+who+' exactly. Do not write a combined name like "Course (CODE)" in the JSON field.',
+      BSA44_PROMPT,
+      'Return one valid complete JSON object only. Do not repeat material I already have; the dashboard previews duplicates and conflicts before saving.'
+    ].join('\n\n');
+  }
   function bsa44Empty(){return {kind:'partial',subject:'',topics:[],cards:[],mistakes:[],quizzes:[],drills:[],drillBad:[],lectures:[],psets:[],mcqSets:[],rules:[],grading:null,book:null}}
   function bsa44ParseOne(raw,label){
     let obj=null;
@@ -14181,7 +14289,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const draft=JSON.parse(JSON.stringify(bsa44Baseline(subject)));
     const totals={addedTopics:0,addedCards:0,addedRules:0,addedLectures:0,updatedLectures:0,addedSets:0,addedProblems:0,skipped:0,duplicates:0,conflicts:0,similar:0,enriched:0};
     const issues=[];const perFile=[];
-    for(const piece of pieces){const prepared=bsa44Prepare(draft,piece.parsed,includeSimilar);
+    for(const piece of pieces){const prepared=bsa44Prepare(draft,bsa49CanonicalizePack(draft,piece.parsed),includeSimilar);
       const counts=applyPartial(draft,prepared.safe);
       for(const key of ['addedTopics','addedCards','addedRules','addedLectures','updatedLectures','addedSets','addedProblems','skipped'])totals[key]+=Number(counts[key]||0);
       totals.duplicates+=prepared.stats.duplicate;totals.conflicts+=prepared.stats.conflict;totals.similar+=prepared.stats.similar;totals.enriched+=prepared.stats.existingEnriched;
@@ -14192,10 +14300,10 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
   }
   function bsa44ApplyPack(subject,pieces,includeSimilar){
     const results=[];
-    for(const piece of pieces){const prepared=bsa44Prepare(subject,piece.parsed,includeSimilar);results.push(applyPartial(subject,prepared.safe));}
+    for(const piece of pieces){const prepared=bsa44Prepare(subject,bsa49CanonicalizePack(subject,piece.parsed),includeSimilar);results.push(applyPartial(subject,prepared.safe));}
     return results;
   }
-  const BSA44_PROMPT=`Create ONE valid JSON object for BSA Study Desk using format "bsa-topic-pack-v1" and keys: "subject", "topic", "topics", "lectures", "problemSets", "mcqSets", "flashcards", "rules". The topic should match my actual course outline. Use only my supplied lecture files or authoritative verified sources. Never fabricate references, page numbers, standard text, or worked answers. Mark uncertain content in the source fields and omit unsupported questions. Preserve all amounts and conditions in exercises. Include genuine variation, not paraphrased duplicates. Each lecture needs title, topic, sections [{heading,body}]; each problem set needs title, topic, problems [{problem,answer,solution}]; MCQ sets need problems [{problem,choices:[four choices],answer:"A/B/C/D",solution}]; flashcards need question, answer, topic; rules need title, decisionRule, topic, and precise sourceTitle/sourceLocator if verified. Output only valid JSON, with each section as an array; empty arrays are okay. My existing imports will be checked for duplicates before saving.`;
+  const BSA44_PROMPT=`Create ONE valid JSON object for BSA Study Desk using format "bsa-topic-pack-v1" and keys: "subject", "topic", "topics", "lectures", "problemSets", "mcqSets", "flashcards", "rules". The topic should match my actual course outline. Use only my supplied lecture files or authoritative verified sources. Never fabricate references, page numbers, standard text, or worked answers. Mark uncertain content in the source fields and omit unsupported questions. Preserve all amounts and conditions in exercises. Include genuine variation, not paraphrased duplicates. In topics[].subtopics, use a clear outline of usually 3–8 broad, source-based learning areas rather than a separate entry for every fact, formula, exception, problem or flashcard; allow more for genuinely independent syllabus sections. Do not omit source details: retain all specific rules, examples, conditions and cases inside lectures, questions and rules. Each lecture needs title, topic, sections [{heading,body}]; each problem set needs title, topic, problems [{problem,answer,solution}]; MCQ sets need problems [{problem,choices:[four choices],answer:"A/B/C/D",solution}]; flashcards need question, answer, topic; rules need title, decisionRule, topic, and precise sourceTitle/sourceLocator if verified. Output only valid JSON, with each section as an array; empty arrays are okay. My existing imports will be checked for duplicates before saving.`;
   const BSA44_EXAMPLE={format:'bsa-topic-pack-v1',subject:'Replace with your course',topic:'Replace with topic title',topics:[{title:'Replace with topic title'}],lectures:[{title:'Topic overview',topic:'Replace with topic title',source:'Actual textbook and page',sections:[{heading:'Core concept',body:'Replace with accurate source-based explanation'}]}],problemSets:[{title:'Topic practice',topic:'Replace with topic title',problems:[{problem:'Replace with your real question',answer:'Verified answer',solution:'Verified working'}]}],mcqSets:[],flashcards:[{question:'Replace with your question',answer:'Verified answer',topic:'Replace with topic title'}],rules:[]};
   const BSA45_FS_PROMPT=`TASK: Convert the supplied financial statement PDF into ONE importable BSA Study Desk financial report JSON object. Output ONLY parsable JSON, without a code fence.
 Use EXACT format: "bsa-financial-statements-v1" and keys: "format", "company", "periodEnd" (YYYY-MM-DD or YYYY), "scope" (consolidated or separate), "currency", "unit", "source", "statements", "notes", "standards".
@@ -14235,6 +14343,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       'Continue following the AI prompt, source instructions and rulebook I already shared in this AI conversation. Do NOT replace them with a new set of instructions or ask me to upload them again if you still have access. If you no longer have access, tell me exactly what is missing.',
       'I am using BSA Study Desk. Please HELP FILL ONLY THE GAPS for:',
       'Subject: '+(subject.name||subject.code||'Current subject'),
+      'IMPORTANT: In any import JSON, top-level subject must be '+JSON.stringify(subject.name)+'. The course code '+(subject.code||'(none)')+' is separate context, not part of the JSON subject string.',
       'Topic: '+row.topic.title+(row.topic.code?' ('+row.topic.code+')':''),
       'Learning profile: '+bsa46Profile(subject).label,
       'Dashboard inventory (counts, NOT item-by-item evidence): '+row.lecture+' lectures; '+row.practice+' written questions; '+row.mcq+' MCQs; '+row.card+' flashcards; '+row.rule+' rules.',
@@ -14243,8 +14352,42 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       'Use my original course materials already available to you. Check for missing learning objectives and genuine new content, not volume. If you have no access to the actual source or saved item list, say so; counts alone cannot rule out repeats.',
       missing.length?'Generate ONLY the relevant missing types, not a new copy of the whole chapter.':'Do not regenerate already present categories. Instead identify any evidence-backed holes in depth or learning objectives, and ask for the saved items when needed to check overlap.',
       'Keep the same import JSON contract as my existing BSA_AI_SOURCE_RULES.md. For combined topic content, use the existing Topic Pack format as defined there; do not invent a new schema. Preserve citations, complete question conditions, verified solutions and real source pages. Do not fabricate filler. Do not add accounting journal entries or financial statements unless truly relevant.',
+      'Use a concise topic outline, usually 3–8 meaningful subtopic groupings when supported by the source. Do not label each individual item as a brand-new subtopic. Keep all distinct skills, definitions, exceptions, cases, calculations and rules inside their relevant lecture/problem/flashcard content. Preserve any existing topic ID or label by using its exact title.',
       'Do not replace existing notes, questions, cards, rule IDs or learner progress. For an importable result, output valid JSON only; for a coverage audit with no new material, describe the findings in plain language instead.'
     ].join('\n\n');
+  }
+  /* V4.6.9 Smart Flow: a derived view over existing data, not a second store.
+     Topic counts refresh after import; "missing" means missing resource type, not mastery. */
+  function BSA49SmartFlow({subject,update,go,toast,onImport,onBrowse,initialTopicId}){
+    const {rows}=bsa44TopicCounters(subject);
+    const [topicId,setTopicId]=useState(initialTopicId||'');
+    useEffect(()=>{if(initialTopicId)setTopicId(initialTopicId)},[initialTopicId,subject.id]);
+    const selected=rows.find(r=>r.topic.id===topicId)||rows.find(r=>bsa47ExpectedMaterials(subject,r.topic).some(k=>!bsa47HasMaterial(r,k)))||rows[0];
+    const topic=selected?.topic,needed=selected?bsa47ExpectedMaterials(subject,topic):[],missing=selected?needed.filter(k=>!bsa47HasMaterial(selected,k)):[];
+    const label=k=>({lecture:'Lectures',practice:'Practice questions',mcq:'MCQs',card:'Flashcards',rule:'Rules & references'}[k]||k);
+    const primary=missing[0]||'lecture';
+    const task=({lecture:'lecture',practice:'pset',mcq:'mcq-quiz',card:'cards',rule:'rulebook'})[primary]||'lecture';
+    const copy=async()=>{const prompt=selected?bsa47TopicGapPrompt(subject,selected):bsa49PackPrompt(subject,'');
+      toast(await copyText(prompt)?'Topic-specific request copied. Paste it into the AI chat that has your sources.':'Copy not supported here. Open AI Prompt Builder to view the request.');};
+    return h('section',{className:'bsa49-flow','aria-label':'Connected study material flow'},
+      h('div',{className:'bsa49-flow-top'},h('div',null,h('span',{className:'bsa205-overline'},'CONNECTED STUDY WORKSPACE'),h('h2',null,'Smart Flow'),h('p',{className:'muted small'},'One topic, one workflow. All materials stay linked.')),
+        h('span',{className:'bsa49-subject'},subject.code?subject.code+' · '+subject.name:subject.name)),
+      h('label',{className:'bsa49-topic-select'},h('strong',null,'Current topic'),h('select',{value:topic?.id||'',onChange:e=>setTopicId(e.target.value),'aria-label':'Choose topic for Smart Flow'},rows.length?rows.map(r=>h('option',{key:r.topic.id,value:r.topic.id},[r.topic.code,r.topic.title].filter(Boolean).join(' · '))):h('option',{value:''},'No topics saved yet'))),
+      topic?h(React.Fragment,null,
+        h('div',{className:'bsa49-flow-coverage'},h('div',null,h('strong',null,'Already saved'),h('p',null,selected.lecture+' lectures · '+(selected.practice+selected.mcq)+' questions · '+selected.card+' cards · '+selected.rule+' rules')),h('span',{className:'bsa49-gap-pill'},missing.length?'Missing: '+missing.map(label).join(', '):'Material types present')),
+        h('div',{className:'bsa49-flow-steps'},
+          h('div',{className:'bsa49-step'},h('strong',null,'1 · Generate missing materials'),h('p',{className:'muted small'},'Use your existing AI setup and sources.'),h('button',{className:'btn primary',onClick:copy},'Copy '+(missing.length?'missing-material request':'coverage-audit request')),
+            h('details',{className:'bsa-v1-step-extra'},h('summary',null,'Prompt options'),h('button',{className:'btn',onClick:()=>go('nlm',{topicId:topic.id,pid:task})},'Customize in AI Prompt Builder'))),
+          h('div',{className:'bsa49-step'},h('strong',null,'2 · Import & review'),h('p',{className:'muted small'},'Check topic matching and duplicates before saving.'),h('button',{className:'btn primary',onClick:()=>onImport(topic.title)},'Import this topic’s JSON')),
+          h('div',{className:'bsa49-step'},h('strong',null,'3 · Study & review'),h('p',{className:'muted small'},'Practice first; review your mistakes.'),h('button',{className:'btn primary',onClick:()=>selected.mcq?go('mcq',{topicId:topic.id}):selected.practice?onBrowse(topic.title):selected.card?go('vault',{topic:topic.id,drill:true}):go('lectures',{topic:topic.id})},'Practice now'),
+            h('details',{className:'bsa-v1-step-extra'},h('summary',null,'More study options'),h('div',{className:'bsa-v1-tool-actions'},
+              h('button',{className:'btn',onClick:()=>onBrowse(topic.title)},'Open topic materials'),
+              h('button',{className:'btn',onClick:()=>go('lectures',{topic:topic.id})},'Lectures'),
+              h('button',{className:'btn',onClick:()=>go('vault',{topic:topic.id})},'Flashcards'),
+              h('button',{className:'btn',onClick:()=>go('mistakes',{topic:topic.id})},'Mistakes & corrections'))))),
+        h('p',{className:'muted small bsa49-note'},'You can return to Smart Flow any time. It reads the latest saved records; it does not create duplicate copies of your notes or scores.'),
+        bsa49UnmatchedLabels(subject).length>0&&h(BSA49TopicLinks,{subject,update})):
+        h('div',{className:'bsa49-empty'},h('strong',null,'This subject has no roadmap topics yet.'),h('p',{className:'muted small'},'Import a Topic Pack to create its first topic and source-based material.'),h('button',{className:'btn primary',onClick:()=>onImport('')},'Import a Topic Pack')));
   }
   function BSA45ImportCenter({subject,go,toast,onPack}){
     const {rows,unknown}=bsa44TopicCounters(subject);
@@ -14275,7 +14418,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
           h('div',{className:'bsa47-gap-actions'},h('button',{className:'btn',type:'button',onClick:async()=>toast(await copyText(extraPrompt)?'Specialized task instruction copied':'Copy unavailable')},'Copy specialized instruction'),h('button',{className:'btn',type:'button',onClick:()=>chosen==='financial'?go('fs-lab'):onPack()},chosen==='financial'?'Open Financial Statements Lab':'Open JSON importer')))));
   }
 
-  function BSA44PackImporter({subject,update,toast,initialTopic}){
+  function BSA44PackImporter({subject,update,toast,initialTopic,onDone}){
     const [raw,setRaw]=useState(''),[docs,setDocs]=useState([]),[fileError,setFileError]=useState(''),[preview,setPreview]=useState(null),[includeSimilar,setIncludeSimilar]=useState(false),[confirmed,setConfirmed]=useState(false),[busy,setBusy]=useState(false),[result,setResult]=useState('');
     const reset=()=>{setPreview(null);setConfirmed(false);setResult('')};
     const selectFiles=async e=>{const files=[...(e.target.files||[])];e.target.value='';reset();setFileError('');if(!files.length)return;
@@ -14293,9 +14436,9 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
         for(const item of [...(parsed.lectures||[]),...(parsed.psets||[]),...(parsed.mcqSets||[]),...(parsed.cards||[])])if(!item.topicText&&!item.topicId)item.topicText=initialTopic;
         for(const item of parsed.rules||[])if(!item.topic&&!item.topicText&&!item.topicId)item.topic=initialTopic;
         return {...row,parsed};});};
-    const check=()=>{reset();try{const pieces=readPieces();const anySubject=pieces.find(x=>x.parsed.subject&&bsa44Key(x.parsed.subject)!==bsa44Key(subject.name)&&bsa44Key(x.parsed.subject)!==bsa44Key(subject.code));
-      if(anySubject)throw Error('Subject mismatch in '+anySubject.name+': "'+anySubject.parsed.subject+'". Select the correct subject or update this label before importing.');
-      setPreview({pieces,report:bsa44Plan(subject,pieces,includeSimilar)});setFileError('Preview is ready. No study data has changed.');
+    const check=()=>{reset();try{const pieces=readPieces();const anySubject=pieces.find(x=>x.parsed.subject&&!bsa49MatchesSubject(x.parsed.subject,subject));
+      if(anySubject)throw Error('Subject mismatch in '+anySubject.name+': "'+anySubject.parsed.subject+'". Current subject: '+subject.name+(subject.code?' ('+subject.code+')':'')+'. No changes made. Select the correct subject; a different course cannot be imported here.');
+      setPreview({pieces,report:bsa44Plan(subject,pieces,includeSimilar)});setFileError('Subject recognized · '+subject.name+(subject.code?' ('+subject.code+')':'')+'. Preview ready; no study data has changed.');
     }catch(e){setFileError(e.message||String(e));setPreview(null)}};
     const save=()=>{if(!preview||!confirmed)return;try{const plan=bsa44Plan(subject,preview.pieces,includeSimilar);const total=plan.totals;
       if(!(total.addedTopics+total.addedCards+total.addedRules+total.addedLectures+total.addedProblems+total.enriched)){setResult('No new material to save. Existing records were left unchanged.');return}
@@ -14304,6 +14447,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       setDocs([]);setRaw('');setPreview(null);setConfirmed(false);setResult(summary);toast(summary);
     }catch(e){setResult('Nothing saved: '+(e.message||String(e)))}};
     const summary=preview?.report?.totals,queued=docs.length+(raw.trim()?1:0);
+    const longOutlines=preview?preview.pieces.flatMap(piece=>(piece.parsed.topics||[]).filter(t=>(t.sub||[]).length>10).map(t=>({name:t.title||'Imported topic',count:t.sub.length,file:piece.name}))):[];
     return h('section',{className:'bsa44-importer', 'aria-label':'Bulk topic pack importer'},
       h('div',{className:'bsa44-import-intro'},h('div',null,h('span',{className:'bsa205-overline'},initialTopic?'ADDING TO · '+initialTopic:'ONE PREVIEW · ALL MATERIAL TYPES'),h('h2',null,'Import an entire topic at once'),h('p',null,'Upload several import JSONs together, or combine lecture notes, practice sets, MCQs, flashcards and rules in one Topic Pack. We compare material against this subject before saving.')),
         h('span',{className:'bsa44-step-chip'},'1 · Select    2 · Preview    3 · Confirm')),
@@ -14311,7 +14455,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
         h('label',{className:'bsa44-file-select'},h('span',{'aria-hidden':'true'},'⇪'),h('strong',null,'Choose JSON files together'),h('small',null,'Multiple files supported · JSON, TXT, MD · up to 25 files'),h('input',{type:'file',multiple:true,accept:'.json,.txt,.md,application/json',onChange:selectFiles,'aria-label':'Choose multiple topic material JSON files'})),
         docs.length>0&&h('div',{className:'bsa44-files'},docs.map((x,i)=>h('div',{key:i,className:'bsa44-file'},h('span',null,x.name),h('button',{type:'button',className:'btn ghost',onClick:()=>{setDocs(d=>d.filter((_,j)=>j!==i));reset()}},'Remove')))),
         h('label',{className:'bsa44-field'},'Or paste a complete Topic Pack JSON',h('textarea',{rows:7,value:raw,onChange:e=>{setRaw(e.target.value);reset()},placeholder:'{"format":"bsa-topic-pack-v1","subject":"...","topic":"...","lectures":[],"problemSets":[],"mcqSets":[],"flashcards":[],"rules":[]}',spellCheck:false})),
-        h('div',{className:'bsa44-small-actions'},h('button',{type:'button',className:'btn ghost',onClick:async()=>toast(await copyText((initialTopic?'Create the pack for topic: '+initialTopic+'.\n':'')+BSA44_PROMPT)?'Topic Pack AI prompt copied':'Could not copy prompt')},'Copy AI pack prompt'),
+        h('div',{className:'bsa44-small-actions'},h('button',{type:'button',className:'btn ghost',onClick:async()=>toast(await copyText(bsa49PackPrompt(subject,initialTopic))?'Topic Pack AI prompt copied':'Could not copy prompt')},'Copy AI pack prompt'),
           h('button',{type:'button',className:'btn ghost',onClick:()=>{const blob=new Blob([JSON.stringify({...BSA44_EXAMPLE,subject:subject.name,topic:initialTopic||BSA44_EXAMPLE.topic},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download='topic-pack-template.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),2000)}},'Download JSON example')),
         h('p',{className:'muted small'},'AI can create the JSON from your actual source materials using the copied prompt. A PDF itself is not automatically converted into verified lectures or answers.')),
       h('div',{className:'bsa205-card bsa44-import-review'},h('div',{className:'bsa44-review-head'},h('h3',null,'Import preview'),h('span',{className:'bsa205-tag'},queued+' item'+(queued===1?'':'s')+' selected')),
@@ -14321,21 +14465,22 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
         summary?h('div',{className:'bsa44-preview'},
           h('div',{className:'bsa44-preview-numbers'},[['New topics',summary.addedTopics],['New lectures',summary.addedLectures],['New questions',summary.addedProblems],['New cards',summary.addedCards],['New rules',summary.addedRules],['Extended lectures',summary.enriched]].map(([label,n])=>h('div',{key:label},h('strong',null,n),h('span',null,label)))),
           h('p',{className:'bsa44-preview-sub'},summary.duplicates+' exact duplicates · '+summary.similar+' similar variants '+(includeSimilar?'included when not exact':'held for review')+' · '+summary.conflicts+' conflicts held back'),
+          longOutlines.length>0&&h('details',{className:'bsa-v1-outline-warning'},h('summary',null,'Organization suggestion · '+longOutlines.length+' topic outlines are very detailed'),h('p',null,'These topics contain more than 10 subtopics each. This is not an error, and no details will be deleted or merged automatically. If they represent tiny facts rather than broad study sections, ask your AI to use a concise outline but keep every detail in lecture sections and practice.'),longOutlines.slice(0,12).map((t,i)=>h('p',{key:i},t.name+' · '+t.count+' subtopics · '+t.file))),
           preview.report.perFile.length>1&&h('details',null,h('summary',null,'File-by-file preview'),preview.report.perFile.map((x,i)=>h('p',{key:i,className:'muted small'},x.name+' · '+x.added+' new · '+x.duplicates+' duplicate · '+x.conflicts+' conflicts'))),
           preview.report.issues.length>0&&h('details',{className:'bsa44-issue-list'},h('summary',null,'Review '+preview.report.issues.length+' flagged items'),preview.report.issues.slice(0,55).map((x,i)=>h('p',{key:i},h('strong',null,x.kind.toUpperCase()+': '+x.title),h('small',null,x.why+' · '+x.file)))),
           h('label',{className:'bsa44-tick bsa44-confirm'},h('input',{type:'checkbox',checked:confirmed,onChange:e=>setConfirmed(e.target.checked)}),'I reviewed the source, answers and conflict warnings. Save only new material.'),
           h('button',{className:'btn primary bsa44-review-btn',disabled:!confirmed,onClick:save},'Import approved materials')):
           h('p',{className:'muted small'},'No data changes until you explicitly confirm. Existing answers, lecture sections, personal notes, IDs, scores and attempts are preserved.'))),
-      result&&h('p',{className:'bsa44-result',role:'status'},result));
+      result&&h('div',{className:'bsa49-import-complete',role:'status'},h('p',{className:'bsa44-result'},result),onDone&&h('button',{className:'btn primary',type:'button',onClick:onDone},'Continue → Check topic and study')));
   }
   function bsa44TopicCounters(subject){
     const topics=(subject.topics||[]).filter(t=>t.kind!=='exam');
     const map=new Map(topics.map(t=>[t.id,{topic:t,lecture:0,practice:0,mcq:0,card:0,rule:0}]));
     const unknown={topic:{id:'',title:'Uncategorized / unmatched'},lecture:0,practice:0,mcq:0,card:0,rule:0};
-    const place=(x,k,free)=>{const id=x.topicId&&map.has(x.topicId)?x.topicId:matchTopic(subject,free||x.topicText||x.topic||'');const dest=map.get(id)||unknown;dest[k]++;};
+    const place=(x,k,...labels)=>{const id=x.topicId&&map.has(x.topicId)?x.topicId:labels.concat([x.topicText,x.topic]).reduce((hit,label)=>hit||matchTopic(subject,label),null);const dest=map.get(id)||unknown;dest[k]++;};
     for(const L of subject.lectures||[])place(L,'lecture',L.topicText);
-    for(const S of subject.psets||[])for(const Q of S.problems||[])place(Q,'practice',Q.subtopic||Q.topicText||S.topicText||S.topic);
-    for(const S of subject.mcqSets||[])for(const Q of S.problems||[])place(Q,'mcq',Q.subtopic||Q.topicText||S.topicText||S.topic);
+    for(const S of subject.psets||[])for(const Q of S.problems||[])place({...Q,topicId:Q.topicId||S.topicId},'practice',Q.topicText,S.topicText,S.topic,Q.subtopic);
+    for(const S of subject.mcqSets||[])for(const Q of S.problems||[])place({...Q,topicId:Q.topicId||S.topicId},'mcq',Q.topicText,S.topicText,S.topic,Q.subtopic);
     for(const C of subject.cards||[])place(C,'card',C.topicText);
     for(const R of subject.rules||[])place(R,'rule',R.topic||R.topicText||R.collection||R.code);
     return {rows:[...map.values()],unknown};
@@ -14353,7 +14498,8 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       h('div',{className:'bsa44-topic-summary'},h('div',null,h('span',{className:'bsa205-overline'},'CONTENT INVENTORY · NOT A MASTERY SCORE'),h('h2',null,'What material is missing for each topic?'),h('p',null,'See saved lectures, practice, flashcards and relevant rules. Copy a ready-to-use request for ONLY the missing types. Your existing AI prompt, source rules and rulebook stay the same. A green inventory is not proof of mastery or full chapter coverage.')),
         h('div',{className:'bsa44-coverage-number'},h('strong',null,covered+' / '+rows.length),h('small',null,'topics with all selected types present'))),
       h('div',{className:'bsa44-topic-tools'},h('input',{type:'search',value:filter,onChange:e=>setFilter(e.target.value),placeholder:'Search topic or standard…','aria-label':'Search topic coverage'}),h('button',{className:'btn',type:'button',onClick:()=>go('nlm',{}),'aria-label':'Open AI Prompt Builder'},'✦ AI Prompt Builder'),h('button',{className:'btn primary',onClick:()=>onImport('')},'Import JSON')),
-      unmatched&&h('p',{className:'bsa44-unmatched'},'Unmatched materials: '+unmatched+'. Assign them a topic in the original editor before treating this inventory as complete.'),
+      unmatched&&h('p',{className:'bsa44-unmatched'},'Unmatched materials: '+unmatched+'. Connect alternate labels below or assign a topic in the original editor.'),
+      h(BSA49TopicLinks,{subject,update}),
       !rows.length&&h('div',{className:'bsa205-card'},h('p',null,'No roadmap topics saved yet. A Topic Pack can create a topic and its materials in one import.')),
       h('div',{className:'bsa44-topic-list'},visible.map(row=>{const t=row.topic,req=expected(t),missing=req.filter(k=>!has(row,k)),isOpen=expanded===t.id;
         return h('article',{className:'bsa44-topic-card',key:t.id},
@@ -14372,14 +14518,15 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
   }
   function BSA205Library({subject,update,toast,go,init}){
     subject=bsa45SafeLibrarySubject(subject);
-    const [tab,setTab]=useState(window.__BSA_SHARED_MODE__?'all':(['all','topics','packs','hub','inbox','sources','import','health'].includes(init?.tab)?init.tab:'all'));
+    const [tab,setTab]=useState(window.__BSA_SHARED_MODE__?'all':(['flow','all','topics','packs','hub','inbox','sources','import','health'].includes(init?.tab)?init.tab:'flow'));
     const [advancedOpen,setAdvancedOpen]=useState(false);
-    useEffect(()=>{if(init?.tab&&['all','topics','packs','hub','inbox','sources','import','health'].includes(init.tab))setTab(init.tab)},[init?.tab]);
+    useEffect(()=>{if(init?.tab&&['flow','all','topics','packs','hub','inbox','sources','import','health'].includes(init.tab))setTab(init.tab)},[init?.tab]);
     const [query,setQuery]=useState(''),[type,setType]=useState(()=>(subject.psets||[]).some(set=>(set.problems||[]).some(p=>!bsa198StoredKeyValid(p)))?'Written problem':'All'),[topicFilter,setTopicFilter]=useState(init?.topicLabel||'All topics'),[activeGroup,setActiveGroup]=useState(init?.topicLabel||''),[visibleCount,setVisibleCount]=useState(20),[showHidden,setShowHidden]=useState(false),[handoff,setHandoff]=useState('');
     const [selectedProblems,setSelectedProblems]=useState([]),[bulkTopic,setBulkTopic]=useState('');
     const [capture,setCapture]=useState(''),[captureSource,setCaptureSource]=useState(''),[warning,setWarning]=useState('');
     const [browseAllFolders,setBrowseAllFolders]=useState(false);
-    const [packTopic,setPackTopic]=useState('');
+    const [packTopic,setPackTopic]=useState(init?.tab==='packs'?(init?.topicLabel||''):'');
+    useEffect(()=>{if(init?.tab==='packs')setPackTopic(init.topicLabel||'')},[init?.tab,init?.topicLabel,subject.id]);
     const [groupMode,setGroupMode]=useState('sets'),[setSubtopic,setSetSubtopic]=useState('All');
     const sharedLibrary=!!window.__BSA_SHARED_MODE__;
     const rows=useMemo(()=>bsa205LibraryItems(subject),[subject]);
@@ -14431,9 +14578,13 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     const openPack=(topic='')=>{setPackTopic(topic);setTab('packs')};
     return h('section',{className:'view bsa205-page'},
       h('div',{className:'bsa205-page-head'},h('div',null,h('span',{className:'bsa205-overline'},'YOUR MATERIALS · ONE PLACE'),h('h1',null,'Study Library'),h('p',null,'Choose a topic to see its questions immediately. Your answers and progress stay saved.')),
-        !sharedLibrary&&h('div',{className:'bsa48-library-actions'},h('button',{className:'bsa205-head-action',onClick:()=>go('nlm',{}),'aria-label':'Open AI Prompt Builder'},'✦ AI Prompt Builder'),h('button',{className:'bsa205-head-action',onClick:()=>setTab('topics')},'＋ Check missing materials'))),
+        !sharedLibrary&&h('div',{className:'bsa48-library-actions'},h('button',{className:'bsa205-head-action',onClick:()=>go('nlm',{}),'aria-label':'Open AI Prompt Builder'},'✦ AI Prompt Builder'),h('button',{className:'bsa205-head-action',onClick:()=>setTab('topics')},'Topic gaps'))),
       h('p',{className:'bsa3-library-summary'},rows.filter(r=>r.type==='Written problem').length+' written problems · '+(subject.psets||[]).length+' original sets · '+categoryCounts.length+' topics · '+inbox.filter(x=>x.status==='new').length+' inbox items'),
-      !sharedLibrary&&h('div',{className:'bsa205-pagetabs bsa3-library-main-tabs',role:'group','aria-label':'Library areas'},[['all','Browse library'],['topics','Topic gaps'],['packs','Import JSON'],['hub','More import options'],['inbox','Inbox'],['sources','Sources']].map(([key,label])=>h('button',{key,type:'button',className:tab===key?'selected':'','aria-pressed':tab===key,onClick:()=>setTab(key)},label))),
+      !sharedLibrary&&h(React.Fragment,null,
+        h('div',{className:'bsa205-pagetabs bsa3-library-main-tabs bsa-v1-primary-tabs',role:'group','aria-label':'Main library sections'},[['flow','Smart Flow'],['all','Materials'],['topics','Topic gaps'],['packs','Import JSON']].map(([key,label])=>h('button',{key,type:'button',className:tab===key?'selected':'','aria-pressed':tab===key,onClick:()=>setTab(key)},label))),
+        h('details',{className:'bsa-v1-extra-nav',open:['hub','inbox','sources'].includes(tab)},
+          h('summary',null,'Other library tools', ['hub','inbox','sources'].includes(tab)&&h('span',{className:'bsa-v1-current-tab'},tab==='hub'?'Import options':tab==='inbox'?'Inbox':'Sources')),
+          h('div',{className:'bsa-v1-extra-tabs',role:'group','aria-label':'Additional library sections'},[['hub','Other import options'],['inbox','Inbox'],['sources','Sources']].map(([key,label])=>h('button',{key,type:'button',className:tab===key?'selected':'','aria-pressed':tab===key,onClick:()=>setTab(key)},label))))),
       tab==='hub'&&!sharedLibrary&&h(BSA45ImportCenter,{subject,go,toast,onPack:()=>openPack()}),
       h('details',{className:'bsa38-bookmarks'},h('summary',null,'My bookmarked problems ('+bsa38Work(subject,'bookmark:').length+')'),h('div',{className:'bsa38-bookmark-list'},bsa38Work(subject,'bookmark:').length?bsa38Work(subject,'bookmark:').slice(0,60).map(r=>h('button',{className:'btn',key:r.key,onClick:()=>go(r.route||'library',r.opts||{})},r.title||'Saved material')):h('p',null,'Bookmark a problem from a topic folder to find it quickly next time.'))),
       !sharedLibrary&&h('details',{className:'bsa3-library-extra',open:advancedOpen,onToggle:e=>setAdvancedOpen(e.currentTarget.open)},h('summary',null,'Advanced library tools'),advancedOpen&&h('div',null,h('button',{className:'btn',onClick:()=>openPack()},'Bulk import topic materials'),h('button',{className:'btn',onClick:()=>setTab('import')},'Accounting Lab importer'),h('button',{className:'btn',onClick:()=>setTab('health')},'Duplicate & library cleanup'),h(ScreenBoundary,{route:'library-triage',onHome:()=>setAdvancedOpen(false)},h(BSA38LibraryTriage,{subject,update,toast})))),
@@ -14477,8 +14628,9 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
           !sharedLibrary&&h('p',{className:'muted small'},'Topic changes only update the original problem label; they do not reset its answer, attempt status, or score.')),
         h('button',{type:'button',className:'btn bsa43-library-fs',onClick:()=>go('fs-lab')},'Financial Statements · Import / practice →'),
         h('details',{className:'bsa3-library-help'},h('summary',null,'Where are my other tools?'),h('p',null,'Use Study to read, Practice for quizzes and Accounting Lab, and Inbox for unsorted notes. Search covers all materials when “All material types” is selected.'))),
-      !sharedLibrary&&tab==='topics'&&h(BSA44TopicHealth,{subject,update,toast,go,onImport:openPack,onBrowse:(label)=>{setTab('all');setTopicFilter(label);setGroupMode('topics');setActiveGroup(label);setVisibleCount(20)}}),
-      !sharedLibrary&&tab==='packs'&&h(BSA44PackImporter,{key:subject.id+'|'+packTopic,subject,update,toast,initialTopic:packTopic}),
+      !sharedLibrary&&tab==='flow'&&h(BSA49SmartFlow,{subject,go,toast,onImport:openPack,onBrowse:(label)=>{const id=matchTopic(subject,label);const folder=bsa3TopicLabel(subject,id,label);setTab('all');setType('All');setTopicFilter(folder);setGroupMode('topics');setActiveGroup(folder);setBrowseAllFolders(false);setVisibleCount(20)},initialTopicId:init?.topicId,update}),
+      !sharedLibrary&&tab==='topics'&&h(BSA44TopicHealth,{subject,update,toast,go,onImport:openPack,onBrowse:(label)=>{const id=matchTopic(subject,label);const folder=bsa3TopicLabel(subject,id,label);setTab('all');setType('All');setTopicFilter(folder);setGroupMode('topics');setActiveGroup(folder);setBrowseAllFolders(false);setVisibleCount(20)}}),
+      !sharedLibrary&&tab==='packs'&&h(BSA44PackImporter,{key:subject.id+'|'+packTopic,subject,update,toast,initialTopic:packTopic,onDone:()=>setTab('flow')}),
       !sharedLibrary&&tab==='inbox'&&h('div',{className:'bsa205-inbox-grid'},
         h('div',{className:'bsa205-card'},h('h2',null,'Quick capture'),h('p',{className:'muted small'},'Collect problems or ideas now. Organize them when you have time.'),h('textarea',{rows:6,value:capture,onChange:e=>setCapture(e.target.value),placeholder:'Paste a question, a formula, or a note…','aria-label':'New inbox note'}),
           h('input',{value:captureSource,onChange:e=>setCaptureSource(e.target.value),placeholder:'Source / chapter (optional)','aria-label':'Inbox source'}),h('button',{className:'btn primary',disabled:!capture.trim(),onClick:addNote},'Save to Inbox'),warning&&h('p',{className:'bsa205-message'},warning)),
@@ -15623,7 +15775,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     const mark=(i)=>{const next=done.includes(i)?done.filter(x=>x!==i):[...done,i];setDone(next);try{localStorage.setItem('bsa-v45-guide-tested',JSON.stringify(next))}catch(_){}};
     const item=BSA3_GUIDE[step];
     return h('section',{className:'view bsa45-guide'},
-      h('header',{className:'bsa45-guide-hero'},h('span',{className:'bsa205-overline'},'WELCOME · BSA STUDY DESK V4.6'),h('h1',null,'One step at a time.'),h('p',null,'Studying '+subject.name+' · '+bsa46Profile(subject).label+'. Follow the same Learn → Recall → Apply → Correct cycle in every subject. Specialized tools appear only when relevant, or when you choose to show them.'),h('div',{className:'bsa45-guide-progress'},h('strong',null,done.length+' of '+BSA3_GUIDE.length+' tried'),h('div',{role:'progressbar','aria-valuemin':0,'aria-valuemax':BSA3_GUIDE.length,'aria-valuenow':done.length,style:{'--bsa-progress':Math.round(done.length/BSA3_GUIDE.length*100)+'%'}})),h('small',null,'Checking a step means you tried it. It does not increase your mastery score.')),
+      h('header',{className:'bsa45-guide-hero'},h('span',{className:'bsa205-overline'},'WELCOME · BSA STUDY DESK ' + BSA_RELEASE_LABEL),h('h1',null,'One step at a time.'),h('p',null,'Studying '+subject.name+' · '+bsa46Profile(subject).label+'. Follow the same Learn → Recall → Apply → Correct cycle in every subject. Specialized tools appear only when relevant, or when you choose to show them.'),h('div',{className:'bsa45-guide-progress'},h('strong',null,done.length+' of '+BSA3_GUIDE.length+' tried'),h('div',{role:'progressbar','aria-valuemin':0,'aria-valuemax':BSA3_GUIDE.length,'aria-valuenow':done.length,style:{'--bsa-progress':Math.round(done.length/BSA3_GUIDE.length*100)+'%'}})),h('small',null,'Checking a step means you tried it. It does not increase your mastery score.')),
       h('div',{className:'bsa45-guide-layout'},
         h('nav',{className:'bsa45-guide-list','aria-label':'Walkthrough steps'},BSA3_GUIDE.map((x,i)=>h('button',{key:i,type:'button',className:'bsa45-guide-nav-item'+(step===i?' selected':'')+(done.includes(i)?' completed':''),onClick:()=>setStep(i),'aria-current':step===i?'step':undefined},h('span',null,done.includes(i)?'✓':String(i+1).padStart(2,'0')),h('strong',null,x.title)))),
         h('article',{className:'bsa45-guide-step'},h('span',{className:'bsa205-overline'},'STEP '+(step+1)+' OF '+BSA3_GUIDE.length),h('h2',null,item.title),h('p',{className:'bsa45-guide-location'},'Where: '+item.where),h('p',null,item.steps),h('div',{className:'bsa45-guide-action-row'},h('button',{className:'btn primary',onClick:()=>go(item.tab,item.opts||{})},'Open '+item.where),h('label',{className:'bsa45-guide-check'},h('input',{type:'checkbox',checked:done.includes(step),onChange:()=>mark(step)}),h('span',null,'I tried this step')),h('button',{className:'btn',disabled:step===0,onClick:()=>setStep(i=>Math.max(0,i-1))},'Back'),h('button',{className:'btn',disabled:step===BSA3_GUIDE.length-1,onClick:()=>setStep(i=>Math.min(BSA3_GUIDE.length-1,i+1))},'Next →')))),
@@ -15688,7 +15840,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       ...(below?{}:{bottom:Math.max(14,window.innerHeight-pillY+12)+'px'}),
       maxHeight:(below?Math.max(155,window.innerHeight-pillY-73):Math.max(160,pillY-24))+'px'};
     const startDock=e=>{
-      // V4.6.8: NEVER capture a finger used for page scrolling. Mouse/pen and
+      // V4.6.9: NEVER capture a finger used for page scrolling. Mouse/pen and
       // keyboard still move the dock; touch simply taps to open/close.
       if(e.pointerType==='touch'||(e.button!==undefined&&e.button!==0))return;
       const parent=e.currentTarget.closest('.bsa4-dock');if(!parent)return;
@@ -16198,7 +16350,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
         h('div',{className:'bsa47-palettes'},
           h('div',{className:'bsa47-palette-heading'},h('strong',null,'Quick colors'),h('button',{type:'button',onClick:()=>setModal('look')},'All colors')),
           h(ThemeDots,{settings:data.settings,setSettings})),
-        h(SyncBadge,{onOpen:openSync}),h('small',{className:'bsa47-build-tag',title:'Installed dashboard build'},'V4.6.8'))), /* @__PURE__ */ React.createElement("header", { className: "mobilebar" }, /* @__PURE__ */ h("div",{className:"bsa-shortcut-anchor mobile"},React.createElement("button", { className: "brand-mark mobile-home-button", type: "button", onClick: () => setShortcutsOpen(v=>!v), title: "Open quick shortcuts", "aria-label": "Open quick shortcuts", "aria-expanded":shortcutsOpen,"aria-haspopup":"menu" }, "Σ"),shortcutMenu()), subjectPicker("subj-m"), h("button",{className:"icon-btn",onClick:()=>setSpotlightOpen(true),"aria-label":"Search dashboard"},"⌕"), !window.__BSA_SHARED_MODE__&&h('button',{type:'button',className:'icon-btn bsa48-mobile-ai',onClick:()=>go('nlm',{}),'aria-label':'Open AI Prompt Builder',title:'AI Prompt Builder'},'✦'), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal(syncAlert ? "sync" : "data"), "aria-label": syncAlert ? "Import, export and sync (needs attention)" : "Import and export", "data-sync": syncAlert }, /* @__PURE__ */ React.createElement(Icon, { name: "data" })), /* @__PURE__ */ h('button',{className:'icon-btn',onClick:()=>go('guide'),'aria-label':'Guided walkthrough',title:'Guided walkthrough'},'?'),h('button',{className:'icon-btn bsa46-mobile-settings',onClick:()=>setSidebarEdit(true),'aria-label':'Subject profile and workspace settings',title:'Workspace settings'},'⚙')), /* @__PURE__ */ React.createElement("main", { className: "content bsa33-content", "data-desk-page": nav.tab },
+        h(SyncBadge,{onOpen:openSync}),h('small',{className:'bsa47-build-tag',title:'Installed dashboard build'},BSA_RELEASE_LABEL))), /* @__PURE__ */ React.createElement("header", { className: "mobilebar" }, /* @__PURE__ */ h("div",{className:"bsa-shortcut-anchor mobile"},React.createElement("button", { className: "brand-mark mobile-home-button", type: "button", onClick: () => setShortcutsOpen(v=>!v), title: "Open quick shortcuts", "aria-label": "Open quick shortcuts", "aria-expanded":shortcutsOpen,"aria-haspopup":"menu" }, "Σ"),shortcutMenu()), subjectPicker("subj-m"), h("button",{className:"icon-btn",onClick:()=>setSpotlightOpen(true),"aria-label":"Search dashboard"},"⌕"), !window.__BSA_SHARED_MODE__&&h('button',{type:'button',className:'icon-btn bsa48-mobile-ai',onClick:()=>go('nlm',{}),'aria-label':'Open AI Prompt Builder',title:'AI Prompt Builder'},'✦'), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal(syncAlert ? "sync" : "data"), "aria-label": syncAlert ? "Import, export and sync (needs attention)" : "Import and export", "data-sync": syncAlert }, /* @__PURE__ */ React.createElement(Icon, { name: "data" })), /* @__PURE__ */ h('button',{className:'icon-btn',onClick:()=>go('guide'),'aria-label':'Guided walkthrough',title:'Guided walkthrough'},'?'),h('button',{className:'icon-btn bsa46-mobile-settings',onClick:()=>setSidebarEdit(true),'aria-label':'Subject profile and workspace settings',title:'Workspace settings'},'⚙')), /* @__PURE__ */ React.createElement("main", { className: "content bsa33-content", "data-desk-page": nav.tab },
       storeFull&&h('div',{className:'bsa48-save-failure',role:'alert'},h('strong',null,'Changes are not saving on this device.'),h('span',null,'The browser refused a local write. Export a full backup and review storage before further editing.'),h('button',{type:'button',className:'btn',onClick:()=>setModal({data:'export'})},'Open backup')),
       h("div",{className:"workspace-topbar v2-topbar"},
         h("div",{className:"workspace-context"},h("span",{className:"workspace-eyebrow"},"STUDY SPACE  /"),h("strong",null,(tabs.find(t=>t[0]===nav.tab)||[null,"Today"])[1]),h("span",{className:"workspace-subject"},subject.code||subject.name)),
@@ -16222,7 +16374,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     } }), modal === "more" && /* @__PURE__ */ React.createElement(MoreSheet, { onClose: () => setModal(null), onPick: (k) => setModal(k), settings: data.settings, setSettings, go: (t) => {
       setModal(null);
       go(t);
-    } }), modal && modal.nlm && h(Modal, { key: "bsa-direct-prompt-" + (modal.nlm.pid || "all") + "-" + subject.id, title: "AI Prompt Studio", wide: true, className: "bsa-prompt-modal", onClose: () => setModal(null) }, h(NotebookLMPrompts, { key: "bsa-prompt-" + (modal.nlm.pid || "all") + "-" + subject.id, subject, toast, initPid: modal.nlm.pid, initTopic: modal.nlm.topicId, onImport: () => setModal({ data: "import" }) })), sidebarEdit&&h(Modal,{title:'Customize sidebar',onClose:()=>setSidebarEdit(false),wide:true,className:'bsa45-sidebar-modal'},h(BSA45SidebarEditor,{tabs,sidebarPrefs,subject,setSubjectProfile,setSubjectTool,resetSubject:resetSubjectProfile,toggleSidebarPin,toggleSidebarHide,shiftSidebarPin,reset:()=>saveSidebar(()=>({pinned:BSA46_MAIN_DEFAULT.slice(),hidden:[]})),close:()=>setSidebarEdit(false),openThemes:()=>{setSidebarEdit(false);setModal('themes')},openAppearance:()=>{setSidebarEdit(false);setModal('look')},openImport:()=>{setSidebarEdit(false);go('library',{tab:'topics'})},openBackup:()=>{setSidebarEdit(false);setModal('data')},openGuide:()=>{setSidebarEdit(false);go('guide')},toggleDock:toggleDockFromSettings,settings:data.settings,setSettings})), modal === "themes" && h(BSA41ThemesModal,{settings:data.settings,setSettings,onClose:()=>setModal(null)}), modal === "look" && /* @__PURE__ */ React.createElement(AppearanceModal, { settings: data.settings, setSettings, onClose: () => setModal(null) }), modal === "subjects" && /* @__PURE__ */ React.createElement(SubjectModal, { data, update, onClose: () => setModal(null), toast }), (modal === "data" || modal === "sync" || modal && modal.data) && /* @__PURE__ */ React.createElement(DataModal, { data, update, replaceAll, onClose: () => setModal(null), toast, downloads, initTab: modal && modal.data ? modal.data : modal === "sync" ? "github" : "import", prefill: modal && modal.prefill }), (editor == null ? void 0 : editor.type) === "card" && /* @__PURE__ */ React.createElement(
+    } }), modal && modal.nlm && h(Modal, { key: "bsa-direct-prompt-" + (modal.nlm.pid || "all") + "-" + subject.id, title: "AI Prompt Studio", wide: true, className: "bsa-prompt-modal", onClose: () => setModal(null) }, h(NotebookLMPrompts, { key: "bsa-prompt-" + (modal.nlm.pid || "all") + "-" + subject.id, subject, toast, initPid: modal.nlm.pid, initTopic: modal.nlm.topicId, onImport: (topicId,format) => {setModal(null);if(format==='bsa-financial-statements-v1')go('fs-lab');else go('library',{tab:'packs',topicLabel:(subject.topics||[]).find(t=>t.id===topicId)?.title||''})} })), sidebarEdit&&h(Modal,{title:'Customize sidebar',onClose:()=>setSidebarEdit(false),wide:true,className:'bsa45-sidebar-modal'},h(BSA45SidebarEditor,{tabs,sidebarPrefs,subject,setSubjectProfile,setSubjectTool,resetSubject:resetSubjectProfile,toggleSidebarPin,toggleSidebarHide,shiftSidebarPin,reset:()=>saveSidebar(()=>({pinned:BSA46_MAIN_DEFAULT.slice(),hidden:[]})),close:()=>setSidebarEdit(false),openThemes:()=>{setSidebarEdit(false);setModal('themes')},openAppearance:()=>{setSidebarEdit(false);setModal('look')},openImport:()=>{setSidebarEdit(false);go('library',{tab:'topics'})},openBackup:()=>{setSidebarEdit(false);setModal('data')},openGuide:()=>{setSidebarEdit(false);go('guide')},toggleDock:toggleDockFromSettings,settings:data.settings,setSettings})), modal === "themes" && h(BSA41ThemesModal,{settings:data.settings,setSettings,onClose:()=>setModal(null)}), modal === "look" && /* @__PURE__ */ React.createElement(AppearanceModal, { settings: data.settings, setSettings, onClose: () => setModal(null) }), modal === "subjects" && /* @__PURE__ */ React.createElement(SubjectModal, { data, update, onClose: () => setModal(null), toast }), (modal === "data" || modal === "sync" || modal && modal.data) && /* @__PURE__ */ React.createElement(DataModal, { data, update, replaceAll, onClose: () => setModal(null), toast, downloads, initTab: modal && modal.data ? modal.data : modal === "sync" ? "github" : "import", prefill: modal && modal.prefill }), (editor == null ? void 0 : editor.type) === "card" && /* @__PURE__ */ React.createElement(
       CardEditor,
       {
         subject,
@@ -16318,7 +16470,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
   function bsaDownloadSafeDiagnostics(error) {
     try {
       const keys=bsaBackupKeys();
-      const report={app:'BSA Study Desk',build:'V3.3',time:new Date().toISOString(),
+      const report={app:'BSA Study Desk',build:BSA_RELEASE_LABEL,time:new Date().toISOString(),
         page:location.pathname,online:navigator.onLine,
         userAgent:navigator.userAgent,
         studyStorageKeyCount:keys.length,
@@ -16326,7 +16478,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
         academicProgressRecordPresent:localStorage.getItem(PROGRESS_KEY)!==null,
         error:String(error&&error.message||'Unknown display error').slice(0,600)};
       const u=URL.createObjectURL(new Blob([JSON.stringify(report,null,2)],{type:'application/json'}));
-      const a=document.createElement('a');a.href=u;a.download='BSA-Desk-Diagnostics-V3.3.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),5000);
+      const a=document.createElement('a');a.href=u;a.download='BSA-Desk-Diagnostics-'+BSA_RELEASE_LABEL+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),5000);
     } catch(e){alert('Diagnostic export unavailable: '+String(e.message||e))}
   }
   class DashboardBoundary extends React.Component {
