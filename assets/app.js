@@ -1,6 +1,6 @@
 (() => {
   // User-facing release label only. Do not use for storage schemas or caches.
-  const BSA_RELEASE_LABEL = "V2.3";
+  const BSA_RELEASE_LABEL = "V2.5";
   const S = (t, p = null, s = false) => ({ t, p, s });
   const CFAS_TOPICS = [
     {
@@ -5420,11 +5420,21 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
   // Preserve most-recent order even if two saved sessions land in the same millisecond.
   let bsa18LastSavedAt=0;
   function bsa18SavedAt(){bsa18LastSavedAt=Math.max(Date.now(),bsa18LastSavedAt+1);return bsa18LastSavedAt;}
+  // V2.5: changing an answer needn't rerender the entire dashboard. The
+  // resume strip changes only when session, question number, or size changes.
+  const bsa25DraftStripSignatures=new Map();
   function bsa197SaveDraft(subjectId,data){
-    try{localStorage.setItem(bsa197DraftKey(subjectId),JSON.stringify({...data,subjectId,updatedAt:bsa18SavedAt()}));bsa18PracticeChanged();return true;}
-    catch(_){return false;}
+    try{
+      localStorage.setItem(bsa197DraftKey(subjectId),JSON.stringify({...data,subjectId,updatedAt:bsa18SavedAt()}));
+      const signature=[data.runId||'',Number(data.pos)||0,Array.isArray(data.ids)?data.ids.length:0].join('|');
+      if(bsa25DraftStripSignatures.get(subjectId)!==signature){
+        bsa25DraftStripSignatures.set(subjectId,signature);
+        bsa18PracticeChanged();
+      }
+      return true;
+    }catch(_){return false;}
   }
-  function bsa197DeleteDraft(subjectId){try{localStorage.removeItem(bsa197DraftKey(subjectId));bsa18PracticeChanged();}catch(_){}}
+  function bsa197DeleteDraft(subjectId){try{localStorage.removeItem(bsa197DraftKey(subjectId));bsa25DraftStripSignatures.delete(subjectId);bsa18PracticeChanged();}catch(_){}}
   // Device-local structured-problem position and results. Individual typed answers
   // continue to use the existing per-problem bsa39 storage; no extra mastery or grades.
   function bsa18WrittenKey(id){return (window.__BSA_SHARED_MODE__?'bsa_shared_':'bsa_')+'written_session_v18_'+id;}
@@ -5461,7 +5471,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         text:typeof m.text==='string'?(m.text|| (m.role==='ai'?'This reply was interrupted. You can ask again.':'')):'This saved reply was unreadable. Please ask again.',
         err:!!m.err||m.role==='ai'&&!m.text}));
   }catch(_){return [];}}
-  function MultipleChoiceQuiz({ subject, update, toast, go, onExit, initialSetId = 'all', initialTopicId = 'all', initialMode = 'smart', autoResume = false }) {
+  function MultipleChoiceQuiz({ subject, update, toast, go, onExit, onBackToBank, onRunningChange, resumeInHeader = false, initialSetId = 'all', initialTopicId = 'all', initialMode = 'smart', autoResume = false }) {
     const all=useMemo(()=>mcqDedicatedPool(subject),[subject]);
     const [topic,setTopic]=useState(initialTopicId),[collection,setCollection]=useState(initialSetId);
     const [count,setCount]=useState(10),[mode,setMode]=useState(initialMode);
@@ -5469,6 +5479,10 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const [answers,setAnswers]=useState({}),[revealed,setRevealed]=useState({}),[guessed,setGuessed]=useState({});
     const [draft,setDraft]=useState(()=>bsa197LoadDraft(subject.id));
     const [feedbackExpanded,setFeedbackExpanded]=useState(false);
+    useEffect(()=>{
+      if(onRunningChange)onRunningChange(phase==='run');
+      return ()=>{if(onRunningChange)onRunningChange(false);};
+    },[phase,onRunningChange]);
     const saved=useRef(false),started=useRef(0),runId=useRef('');
     const topics=studyTopics(subject);
     const eligible=all.filter(q=>(topic==='all'||q.topicId===topic)&&(collection==='all'||q.setId===collection));
@@ -5575,15 +5589,16 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const discard=()=>{if(!window.confirm('Discard only this unfinished quiz? Saved scores and older study history are unaffected.'))return;
       bsa197DeleteDraft(subject.id);setDraft(null);setPaper([]);setPhase('setup');};
     return h('div',{className:'mcq-quiz bsa197-quiz'},
-      h('div',{className:'page-head'},h('div',null,h('span',{className:'panel-kicker'},'SMART QUIZ · v197'),
+      h('div',{className:'page-head'},h('div',null,h('span',{className:'panel-kicker'},'SMART QUIZ'),
         h('h1',{className:'page-title'},'Quiz & recall'),
-        h('p',{className:'muted'},'Less repeating. Better review. One question at a time.')),
-        h('button',{className:'btn',onClick:leave},phase==='run'?'Save & leave':'Back to library')),
+        h('p',{className:'muted'},'One question at a time. Your progress is saved.')),
+        phase!=='done'&&h('button',{type:'button',className:'btn',onClick:phase==='run'?leave:(onBackToBank||onExit)},
+          phase==='run'?'Save & leave':'← MCQ library')),
       phase==='setup'?h('div',{className:'panel mcq-shell bsa-v156-setup'},
         h('div',{className:'bsa-v156-setup-head'},h('span',{className:'bsa-v156-mascot','aria-hidden':'true'},'✦'),
           h('div',null,h('span',{className:'panel-kicker'},'YOUR REVIEW SESSION'),h('h2',null,'What should we work on?'),
             h('p',{className:'muted'},'Your previous answers help choose the next questions.'))),
-        draft&&h('div',{className:'bsa197-resume',role:'status'},
+        draft&&!resumeInHeader&&h('div',{className:'bsa197-resume',role:'status'},
           h('div',null,h('strong',null,'Continue your last quiz?'),
             h('p',{className:'muted small'},`${Math.min((draft.pos||0)+1,(draft.ids||[]).length)} of ${(draft.ids||[]).length} questions · saved on this device`)),
           h('div',{className:'bsa197-row'},h('button',{className:'btn primary',onClick:resume},'Resume quiz'),
@@ -5672,7 +5687,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
           h('strong',null,'What the app will remember'),
           h('p',null,'Missed and guessed items are scheduled sooner. Correct, confident answers are gradually spaced further apart.')), 
         h('div',{className:'step-actions'},h('button',{className:'btn primary',onClick:()=>setPhase('setup')},'Choose next session'),
-          h('button',{className:'btn',onClick:onExit},'Back to library'))));
+          h('button',{className:'btn',onClick:onBackToBank||onExit},'MCQ library'))));
   }
 
   /* v151 — a real MCQ library, not just a count/remove list.
@@ -5735,16 +5750,18 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
   }
 
   /* v153: Independent MCQ library and quiz route. */
-  function MCQPage({subject,update,toast,go,init}){
+  function MCQPage({subject,update,toast,go,init,pendingPractice,onQuizRunningChange}){
     const [quizSet,setQuizSet]=useState(()=>init?.resume?'all':(init?.setId||null));
+    const resumeInHeader=!!(pendingPractice?.kind==='mcq'&&pendingPractice.subjectId===subject.id&&!init?.resume);
     return h("section",{className:"view mcq-page"},
-      h("div",{className:"page-head"},
-        h("div",null,h("span",{className:"panel-kicker"},"QUESTION COLLECTIONS"),h("h1",{className:"page-title"},"Multiple-choice questions"),
-          h("p",{className:"muted"},"Browse question sets, inspect answers and explanations, or practice one question at a time."))),
-      quizSet!==null ? h(React.Fragment,null,
-        h("button",{className:"btn",onClick:()=>setQuizSet(null)},"← Back to MCQ library"),
-        h(MultipleChoiceQuiz,{subject,update,toast,go,initialSetId:quizSet,initialTopicId:init?.topicId||'all',initialMode:init?.mode||'smart',autoResume:!!init?.resume,onExit:()=>go('practice')})) :
+      quizSet!==null ?
+        h(MultipleChoiceQuiz,{subject,update,toast,go,initialSetId:quizSet,initialTopicId:init?.topicId||'all',
+          initialMode:init?.mode||'smart',autoResume:!!init?.resume,resumeInHeader,
+          onRunningChange:onQuizRunningChange,onBackToBank:()=>setQuizSet(null),onExit:()=>go('practice')}) :
       h(React.Fragment,null,
+        h("div",{className:"page-head"},
+          h("div",null,h("span",{className:"panel-kicker"},"QUESTION COLLECTIONS"),h("h1",{className:"page-title"},"Multiple-choice questions"),
+            h("p",{className:"muted"},"Browse question sets, inspect explanations, or practice one question at a time."))),
         h("div",{className:"mcq-page-actions"},
           h("button",{className:"btn primary",onClick:()=>setQuizSet("all")},"Start mixed MCQ quiz"),
           h("button",{className:"btn",onClick:()=>go("nlm",{pid:"mcq-quiz"})},"Generate / import MCQs")),
@@ -13853,6 +13870,42 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       h('button',{type:'button',className:'btn ghost',onClick:()=>onChange(bsa185Default())},'Reset layout'));
   }
 
+  /* V2.5: read-only practice history audit. No mutations or inferred mastery. */
+  function bsa25PracticeHealth(doc){
+    const issues=[];
+    let checks=0,events=0,quizzes=0,unlinked=0;
+    const subs=Array.isArray(doc?.subjects)?doc.subjects:[];
+    for(const sub of subs){
+      const label=String(sub?.code||sub?.name||'Subject').slice(0,55);
+      const seenChecks=new Set(),seenSessions=new Set();
+      for(const e of Array.isArray(sub?.learningEvents)?sub.learningEvents:[]){
+        if(e?.kind!=='mcq')continue;
+        events++;
+        if(!e.topicId)unlinked++; // May be legitimate for unassigned collections.
+        if(e.sessionKey&&(e.memoryKey||e.sourceId)){
+          checks++;
+          const key=String(e.sessionKey)+'|'+String(e.memoryKey||e.sourceId);
+          if(seenChecks.has(key))issues.push(label+': repeated checked answer in the same quiz session');
+          else seenChecks.add(key);
+        }
+      }
+      for(const q of Array.isArray(sub?.quizzes)?sub.quizzes:[]){
+        quizzes++;
+        if(q.sessionKey){
+          const key=String(q.sessionKey);
+          if(seenSessions.has(key))issues.push(label+': duplicate completed quiz session');
+          else seenSessions.add(key);
+        }
+        const score=Number(q.score),items=Number(q.items);
+        if(!Number.isFinite(score)||!Number.isFinite(items)||score<0||items<1||score>items){
+          issues.push(label+': quiz score has invalid numerator or denominator');
+        }
+      }
+    }
+    return {ok:issues.length===0,events,checks,quizzes,unlinked,count:issues.length,
+      issues:[...new Set(issues)].slice(0,5)};
+  }
+
   /* v193: read-only device & study-data diagnostics. No silent repairs or erasures. */
   function BSA193DeviceSafety({data,go,toast}){
     const [status,setStatus]=useState({busy:false,ran:false});
@@ -13865,7 +13918,16 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       try{
         const raw=localStorage.getItem(STORE_KEY);
         const doc=JSON.parse(raw||'null');
-        check('Main study record',bsaValidMainRecord(doc),raw?'Saved subjects are readable and structurally valid.':'No saved main record found.');
+        const valid=bsaValidMainRecord(doc);
+        check('Main study record',valid,raw?'Saved subjects are readable and structurally valid.':'No saved main record found.');
+        if(valid){
+          const audit=bsa25PracticeHealth(doc);
+          check('Practice history consistency',audit.ok,
+            `${audit.events} MCQ retrieval records · ${audit.quizzes} completed quiz summaries. `+
+            (audit.ok?'No duplicate session evidence or invalid quiz scores detected.':
+              `${audit.count} possible issue(s): `+audit.issues.join('; ')+'. Export a backup before making any corrections.')+
+            (audit.unlinked?` ${audit.unlinked} MCQ record(s) have no assigned topic; this is informational and may be expected for unassigned question collections.`:''));
+        }
       }catch(e){check('Main study record',false,'Saved study data could not be parsed. Export original data before troubleshooting.');}
       try{const key='bsa_v193_storage_probe';localStorage.setItem(key,'ok');const ok=localStorage.getItem(key)==='ok';localStorage.removeItem(key);check('Local storage writes',ok,ok?'A temporary test value was saved and removed.':'Writing a temporary test value failed.');}
       catch(e){check('Local storage writes',false,'Storage may be blocked or full.');}
@@ -14442,7 +14504,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const [picked,setPicked]=useState(0);
     const [query,setQuery]=useState('');
     const [limit,setLimit]=useState(()=>typeof window!=='undefined'&&window.matchMedia&&window.matchMedia('(max-width:680px)').matches?5:7);
-    const [zoom,setZoom]=useState(1);
+    const [zoom,setZoom]=useState(.75);
     const [focus,setFocus]=useState(false);
     const [mobileCanvas,setMobileCanvas]=useState(false);
     const [showInfo,setShowInfo]=useState(true);
@@ -14452,16 +14514,56 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const [finalShown,setFinalShown]=useState(false);
     const [draft,setDraft]=useState('');
     const mapScrollRef=useRef(null);
+    // V2.4: presentation-only two-axis panning, not a change to study records.
+    // Touch scrolling remains native; mouse and pen drag anywhere on the map,
+    // with a movement threshold so ordinary node clicks keep working.
+    const mapGestureRef=useRef(null);
+    const mapClickGuardRef=useRef(0);
+    const [draggingMap,setDraggingMap]=useState(false);
+    const onMapPointerDown=e=>{
+      if(e.pointerType==='touch'||e.button!==0||e.isPrimary===false||!mapScrollRef.current)return;
+      const frame=mapScrollRef.current;
+      mapGestureRef.current={id:e.pointerId,x:e.clientX,y:e.clientY,left:frame.scrollLeft,top:frame.scrollTop,moved:false};
+    };
+    const onMapPointerMove=e=>{
+      const gesture=mapGestureRef.current,frame=mapScrollRef.current;
+      if(!gesture||!frame||gesture.id!==e.pointerId)return;
+      const dx=e.clientX-gesture.x,dy=e.clientY-gesture.y;
+      if(!gesture.moved&&Math.hypot(dx,dy)<7)return;
+      if(!gesture.moved){
+        gesture.moved=true;setDraggingMap(true);
+        try{e.currentTarget.setPointerCapture(e.pointerId)}catch(_e){}
+      }
+      e.preventDefault();
+      frame.scrollLeft=gesture.left-dx;
+      frame.scrollTop=gesture.top-dy;
+    };
+    const onMapPointerEnd=e=>{
+      const gesture=mapGestureRef.current;
+      if(!gesture||gesture.id!==e.pointerId)return;
+      if(gesture.moved)mapClickGuardRef.current=Date.now();
+      mapGestureRef.current=null;setDraggingMap(false);
+      try{if(e.currentTarget.hasPointerCapture(e.pointerId))e.currentTarget.releasePointerCapture(e.pointerId)}catch(_e){}
+    };
+    const onMapClickCapture=e=>{
+      if(mapClickGuardRef.current&&Date.now()-mapClickGuardRef.current<170){
+        e.preventDefault();e.stopPropagation();mapClickGuardRef.current=0;
+      }else mapClickGuardRef.current=0;
+    };
     const panMap=distance=>{if(mapScrollRef.current)mapScrollRef.current.scrollBy({left:distance,behavior:'smooth'})};
     useEffect(()=>{if(target&&topics.some(t=>t.id===target))setTopicId(target)},[target,subject.id]);
-    useEffect(()=>{setPicked(0);setQuery('');setLimit(typeof window!=='undefined'&&window.matchMedia&&window.matchMedia('(max-width:680px)').matches?5:7);setZoom(1);setLectureId(wantedLecture);setRevealed(0);setFinalShown(false)},[topicId,subject.id]);
+    useEffect(()=>{setPicked(0);setQuery('');setLimit(typeof window!=='undefined'&&window.matchMedia&&window.matchMedia('(max-width:680px)').matches?5:7);setZoom(.75);setLectureId(wantedLecture);setRevealed(0);setFinalShown(false)},[topicId,subject.id]);
     useEffect(()=>{if(wantedLecture)setLectureId(wantedLecture)},[wantedLecture]);
     useEffect(()=>{setPicked(0);setLimit(typeof window!=='undefined'&&window.matchMedia&&window.matchMedia('(max-width:680px)').matches?5:7);setLeft(0);setRight(1);setRevealed(0);setFinalShown(false)},[lecture?.id]);
+    useEffect(()=>{if(mode==='map'&&mapScrollRef.current){mapScrollRef.current.scrollLeft=0;mapScrollRef.current.scrollTop=18}},[topicId,lecture?.id,mode]);
     const sourceTerms=(lecture?.terms||[]).filter(x=>x&&x.t&&x.d);
     const filtered=sections.map((sec,i)=>({...sec,sourceIndex:i})).filter(s=>!query||bsa15Clean(s.title+' '+s.body).toLowerCase().includes(query.toLowerCase()));
     const visible=filtered.slice(0,limit);
-    const selected=sections[picked]||sections[0];
-    const related=selected?sourceTerms.filter(t=>String(t.t).length>=4&&String(selected.body||'').toLowerCase().includes(String(t.t).toLowerCase())).slice(0,5):[];
+    // If search or Show More hides the formerly selected node, display details
+    // for a visible node instead of attaching term lines to an off-map point.
+    const activePicked=visible.some(sec=>sec.sourceIndex===picked)?picked:(visible[0]?.sourceIndex??picked);
+    const selected=sections[activePicked]||sections[0];
+    const related=visible.length&&selected?sourceTerms.filter(t=>String(t.t).length>=4&&String(selected.body||'').toLowerCase().includes(String(t.t).toLowerCase())).slice(0,5):[];
     const data=bsaTopicConnections(subject,topic?.id||'');
     const problems=(subject.psets||[]).flatMap(set=>(set.problems||[]).filter(p=>(p.topicId||set.topicId)===topic?.id).map(p=>({set,p})));
     const activeProblem=problems.find(({p})=>p.id===problemKey)||problems[0];
@@ -14474,6 +14576,12 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
     const first=compareOptions[Math.min(left,Math.max(0,compareOptions.length-1))],second=compareOptions[Math.min(right,Math.max(0,compareOptions.length-1))];
     const mapWidth=related.length?1120:810, mapHeight=Math.max(380,visible.length*78+74);
     const rootY=Math.round(mapHeight/2),nodeY=i=>42+i*78;
+    const centerSelectedMap=()=>{
+      const frame=mapScrollRef.current;if(!frame)return;
+      const i=visible.findIndex(sec=>sec.sourceIndex===activePicked);
+      const x=(i>=0?401+177:144)*zoom,y=(i>=0?nodeY(i)+32:rootY)*zoom;
+      frame.scrollTo({left:Math.max(0,x-frame.clientWidth/2),top:Math.max(0,y-frame.clientHeight/2),behavior:'smooth'});
+    };
     const openSection=sec=>lecture&&go('lectures',{open:lecture.id,sec:sec.id});
     const actionButtons=h('div',{className:'bsa15-source-actions'},
       lecture&&h('button',{className:'btn',type:'button',onClick:()=>go('lectures',{open:lecture.id})},h(Icon,{name:'lecture',size:16}),' Open lecture'),
@@ -14501,26 +14609,27 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
             h('button',{className:'bsa15-icon-btn',type:'button',onClick:()=>setFocus(v=>!v),'aria-pressed':focus},focus?'Exit focus':'Focus node'),
             h('div',{className:'bsa15-pan-controls',role:'group','aria-label':'Pan across concept map'},
               h('button',{type:'button',onClick:()=>panMap(-260),'aria-label':'Pan map left'},'←'),
-              h('button',{type:'button',onClick:()=>panMap(260),'aria-label':'Pan map right'},'→'))),
+              h('button',{type:'button',onClick:()=>panMap(260),'aria-label':'Pan map right'},'→')),
+            h('button',{type:'button',className:'bsa15-icon-btn bsa24-center-btn',onClick:centerSelectedMap,'aria-label':'Center selected concept on the map',title:'Center selected concept'},'◎')),
           sections.length&&h('div',{className:'bsa15-mobile-tree','aria-label':'Expandable source-linked concept branches'},
             h('div',{className:'bsa15-mobile-root'},h('small',null,'SELECTED TOPIC'),h('strong',null,topic.title),h('span',null,sections.length+' sections from saved lectures')),
-            h('div',{className:'bsa15-mobile-branches'},visible.map(sec=>h('button',{type:'button',key:sec.id,className:'bsa15-mobile-branch'+(picked===sec.sourceIndex?' is-picked':''),onClick:()=>{setPicked(sec.sourceIndex);setShowInfo(true)},'aria-pressed':picked===sec.sourceIndex},
+            h('div',{className:'bsa15-mobile-branches'},visible.map(sec=>h('button',{type:'button',key:sec.id,className:'bsa15-mobile-branch'+(activePicked===sec.sourceIndex?' is-picked':''),onClick:()=>{setPicked(sec.sourceIndex);setShowInfo(true)},'aria-pressed':activePicked===sec.sourceIndex},
               h('span',{className:'bsa15-mobile-branch-num'},String(sec.index+1).padStart(2,'0')),
               h('span',{className:'bsa15-mobile-branch-text'},h('strong',null,sec.title),h('small',null,bsa15Excerpt(sec.body,85))),
               h(Icon,{name:'chevron',size:18}))))),
-          sections.length?h('div',{className:'bsa15-scroll-frame',ref:mapScrollRef,'aria-label':'Scrollable concept map'},
+          sections.length?h('div',{className:'bsa15-scroll-frame'+(draggingMap?' is-dragging':''),ref:mapScrollRef,tabIndex:0,'aria-label':'Concept map. Drag with mouse, swipe on touch, or use arrow keys to pan.',onPointerDown:onMapPointerDown,onPointerMove:onMapPointerMove,onPointerUp:onMapPointerEnd,onPointerCancel:onMapPointerEnd,onLostPointerCapture:onMapPointerEnd,onClickCapture:onMapClickCapture,onDragStart:e=>e.preventDefault()},
             h('div',{className:'bsa15-zoom-space',style:{width:Math.round(mapWidth*zoom),height:Math.round(mapHeight*zoom)}},
               h('div',{className:'bsa15-map-stage',style:{width:mapWidth,height:mapHeight,transform:`scale(${zoom})`,transformOrigin:'top left'}},
                 h('svg',{className:'bsa15-connections',viewBox:`0 0 ${mapWidth} ${mapHeight}`,width:mapWidth,height:mapHeight,'aria-hidden':'true'},
-                  visible.map((sec,i)=>h('path',{key:'line-'+sec.id,d:`M 264 ${rootY} C 333 ${rootY}, 328 ${nodeY(i)+30}, 400 ${nodeY(i)+30}`,stroke:'var(--accent)',strokeWidth:picked===sec.sourceIndex?3:1.5,opacity:focus&&picked!==sec.sourceIndex?.09:.44,fill:'none'})),
-                  related.map((term,i)=>h('path',{key:'term-'+i,d:`M 755 ${nodeY(visible.findIndex(s=>s.sourceIndex===picked))+30} C 790 ${nodeY(visible.findIndex(s=>s.sourceIndex===picked))+30}, 791 ${nodeY(i)+30}, 830 ${nodeY(i)+30}`,stroke:'var(--accent)',strokeWidth:1.5,opacity:.45,fill:'none'}))),
+                  visible.map((sec,i)=>h('path',{key:'line-'+sec.id,d:`M 264 ${rootY} C 333 ${rootY}, 328 ${nodeY(i)+30}, 400 ${nodeY(i)+30}`,stroke:'var(--accent)',strokeWidth:activePicked===sec.sourceIndex?3:1.5,opacity:focus&&activePicked!==sec.sourceIndex?.09:.44,fill:'none'})),
+                  related.map((term,i)=>h('path',{key:'term-'+i,d:`M 755 ${nodeY(visible.findIndex(s=>s.sourceIndex===activePicked))+30} C 790 ${nodeY(visible.findIndex(s=>s.sourceIndex===activePicked))+30}, 791 ${nodeY(i)+30}, 830 ${nodeY(i)+30}`,stroke:'var(--accent)',strokeWidth:1.5,opacity:.45,fill:'none'}))),
                 h('button',{className:'bsa15-root-node',type:'button',style:{top:rootY-51,left:24},onClick:()=>setFocus(false)},h('small',null,'SELECTED TOPIC'),h('strong',null,topic.title),h('span',null,sections.length+' sections · tap a branch')),
-                visible.map((sec,i)=>h('button',{type:'button',key:sec.id,className:'bsa15-map-node'+(picked===sec.sourceIndex?' is-picked':'')+(focus&&picked!==sec.sourceIndex?' is-faded':''),style:{left:401,top:nodeY(i),animationDelay:Math.min(i,14)*35+'ms'},onClick:()=>{setPicked(sec.sourceIndex);setShowInfo(true)},'aria-pressed':picked===sec.sourceIndex},
+                visible.map((sec,i)=>h('button',{type:'button',key:sec.id,className:'bsa15-map-node'+(activePicked===sec.sourceIndex?' is-picked':'')+(focus&&activePicked!==sec.sourceIndex?' is-faded':''),style:{left:401,top:nodeY(i),animationDelay:Math.min(i,14)*35+'ms'},onClick:()=>{setPicked(sec.sourceIndex);setShowInfo(true)},'aria-pressed':activePicked===sec.sourceIndex},
                   h('span',{className:'bsa15-node-number'},String(sec.index+1).padStart(2,'0')),h('span',{className:'bsa15-node-title'},sec.title),h('span',{className:'bsa15-node-arrow'},'›'))),
                 related.map((term,i)=>h('button',{type:'button',key:term.t+'-'+i,className:'bsa15-term-node',style:{left:830,top:nodeY(i)},onClick:()=>setShowInfo(true)},h('small',null,'MENTIONED IN SECTION'),h('strong',null,term.t)))))):
             h('div',{className:'bsa15-empty'},'This topic has no saved lecture sections to map yet. Open the Library to import source-based material.'),
           filtered.length>visible.length&&h('button',{className:'btn bsa15-show-more',type:'button',onClick:()=>setLimit(n=>n+9)},'Show '+Math.min(9,filtered.length-visible.length)+' more sections · '+(filtered.length-visible.length)+' remaining'),
-          h('p',{className:'bsa15-hint'},'Swipe or use the arrows to explore branches. Tap a node for its exact explanation. Lines show lecture membership, not invented causal claims.')),
+          h('p',{className:'bsa15-hint'},'Drag the canvas to move in any direction (swipe on touchscreens), or use arrows and ◎ to center a selected concept. Tap a node for its source explanation. Lines show lecture membership, not invented causal claims.')),
         h('aside',{className:'bsa15-detail'+(showInfo?'':' is-closed')},
           h('div',{className:'bsa15-detail-top'},h('span',null,'CONCEPT DETAILS'),h('button',{type:'button',className:'bsa15-icon-btn',onClick:()=>setShowInfo(v=>!v),'aria-label':showInfo?'Collapse detail panel':'Expand detail panel'},showInfo?'−':'+')),
           showInfo&&selected&&h(React.Fragment,null,h('small',null,'SECTION '+(selected.index+1)+' · '+lecture?.title),h('h2',null,selected.title),h('p',{className:'bsa15-detail-excerpt'},bsa15Excerpt(selected.body,570)||'No source explanation in this section.'),
@@ -17133,6 +17242,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
         requestAnimationFrame(()=>{const pane=document.querySelector('#root > .shell > .content');if(pane && pane.scrollTop>0)pane.scrollTop=0;});
       }
     };
+    const [quizRunning,setQuizRunning]=useState(false);
     const pendingPractices=useMemo(()=>bsa18LatestPractice(data.subjects),[data.subjects,practiceRevision,nav.tab]);
     const pendingPractice=pendingPractices[0]||null;
     const resumePractice=(entry)=>{
@@ -17350,7 +17460,9 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       setData((d) => ({ ...d, activeId: id }));
       go("grades", { gtab: t });
     };
-    const viewProps = { key: `${subject.id}-${nav.key}`, subject, update, toast, go, openEditor, init: nav.opts, settings: data.settings, setSettings, onSubjectSettings:()=>setSidebarEdit(true) };
+    const viewProps = { key: `${subject.id}-${nav.key}`, subject, update, toast, go, openEditor, init: nav.opts,
+      pendingPractice, onQuizRunningChange:setQuizRunning, settings: data.settings, setSettings,
+      onSubjectSettings:()=>setSidebarEdit(true) };
     const openSubjects=()=>go('subjects');
     const subjectsButton=(id,mobile=false)=>h('button',{id,type:'button',className:'bsa12-subject-launch'+(mobile?' is-mobile':''),onClick:openSubjects,'aria-label':'Open My Subjects','title':'My Subjects'},
       h(Icon,{name:bsa13IconName(subject),size:mobile?19:20}),
@@ -17382,13 +17494,13 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       h("div",{className:"workspace-topbar v2-topbar"},
         h("div",{className:"workspace-context"},h("span",{className:"workspace-eyebrow"},"STUDY SPACE  /"),h("strong",null,(tabs.find(t=>t[0]===nav.tab)||[null,"Today"])[1]),h("span",{className:"workspace-subject"},subject.code||subject.name)),
         h("div",{className:"workspace-actions v2-top-actions"},h('button',{className:'bsa45-top-guide',onClick:()=>go('guide')},h(Icon,{name:'sparkles',size:16}),'Start here'),h('button',{className:'bsa45-top-dock',onClick:()=>{const hidden=localStorage.getItem('bsa45_dock_hidden')!=='1';window.dispatchEvent(new CustomEvent('bsa45:dock-visibility',{detail:{hidden}}));toast(hidden?'Study Dock hidden':'Study Dock visible');}},'Dock'),h("button",{className:"v2-top-search",onClick:()=>setSpotlightOpen(true),title:"Search · Ctrl/⌘ + K","aria-label":"Search all study materials"},h(Icon,{name:"search",size:16}),"Search",h("kbd",null,"⌘ K")))),
-      pendingPractice && !(nav.tab==='mcq'&&pendingPractice.kind==='mcq'&&nav.opts?.resume&&data.activeId===pendingPractice.subjectId) && !(nav.tab==='psets'&&pendingPractice.kind==='written'&&nav.opts?.open===pendingPractice.setId&&data.activeId===pendingPractice.subjectId) &&
+      pendingPractice && !(nav.tab==='mcq'&&quizRunning) && !(nav.tab==='mcq'&&pendingPractice.kind==='mcq'&&nav.opts?.resume&&data.activeId===pendingPractice.subjectId) && !(nav.tab==='psets'&&pendingPractice.kind==='written'&&nav.opts?.open===pendingPractice.setId&&data.activeId===pendingPractice.subjectId) &&
         h('div',{className:'bsa18-resume-strip',role:'region','aria-label':'Resume unfinished practice'},
           h('span',{className:'bsa18-resume-icon','aria-hidden':'true'},'↩'),
           h('div',{className:'bsa18-resume-detail'},h('strong',null,pendingPractice.kind==='mcq'?'Quiz paused':'Practice paused'),
             h('small',null,(pendingPractice.subjectName||'Subject')+' · '+pendingPractice.label+' · '+pendingPractice.position+'/'+pendingPractice.total)),
           h('button',{type:'button',className:'btn primary bsa18-resume-btn',onClick:()=>resumePractice(pendingPractice)},'Resume'),
-          h('button',{type:'button',className:'btn ghost bsa18-discard-btn',onClick:()=>discardPractice(pendingPractice)},'Exit / discard')),
+          h('button',{type:'button',className:'btn ghost bsa18-discard-btn',onClick:()=>discardPractice(pendingPractice)},'Discard draft')),
       h(ScreenBoundary,{key:nav.tab,route:nav.tab,onHome:()=>go("home")},h(React.Fragment,null,
       // Specialized screens own their headings and side navigation. Rendering a
       // second theme-specific banner here buries lecture content on iPad and
@@ -17527,7 +17639,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       React.createElement('button',{className:'btn',onClick:()=>bsaDownloadSafeDiagnostics(this.state.error)},'Download safe error report'),
       React.createElement('details',null,React.createElement('summary',null,'Technical details'),React.createElement('pre',null,String(this.state.error&&this.state.error.message||'Unknown render error'))));}
   }
-  if(window.__BSA_TEST__)window.__BSA18_TEST_HOOKS__={bsa197QuizKey,bsa197History,bsa197Recall,bsa197Pool,bsa197Pick,smartTopicStats,bsaAdaptiveSignals,bsaReadinessReport,bsa34LearningSnapshot,bsaUpsertMistake,learningEvidence,learningCapture,AcademicCommandCenter,bsa197LoadDraft,bsa197SaveDraft,bsa197DeleteDraft,bsa18SaveWritten,bsa18LoadWritten,bsa18DeleteWritten,bsa18LatestPractice,bsa18ReadTutorChat,MultipleChoiceQuiz,MCQPage,PsWrittenDrill,MockExam,AskView,App};
+  if(window.__BSA_TEST__)window.__BSA18_TEST_HOOKS__={bsa197QuizKey,bsa197History,bsa197Recall,bsa197Pool,bsa197Pick,smartTopicStats,bsaAdaptiveSignals,bsaReadinessReport,bsa34LearningSnapshot,bsaUpsertMistake,learningEvidence,learningCapture,AcademicCommandCenter,bsa197LoadDraft,bsa197SaveDraft,bsa197DeleteDraft,bsa18SaveWritten,bsa18LoadWritten,bsa18DeleteWritten,bsa18LatestPractice,bsa18ReadTutorChat,bsa25PracticeHealth,MultipleChoiceQuiz,MCQPage,PsWrittenDrill,MockExam,AskView,App};
   // v167: Owner app mounts only after this browser has been approved.
   // Shared student dashboards mount normally; the owner authorization script is never exported.
   let bsaOwnerMounted=false;
