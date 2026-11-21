@@ -3,7 +3,7 @@
    Your study data is NOT stored here; it lives in the browser's storage and in your GitHub data repo.
    If you change this file later, bump VERSION so every device picks up the new copy. */
 const CACHE_FAMILY = "study-desk-" + encodeURIComponent(new URL(self.registration.scope).pathname) + "-";
-const VERSION = CACHE_FAMILY + "asset-update-20261122-v223-study-lifecycle-shared-zero-r01";
+const VERSION = CACHE_FAMILY + "asset-update-20261122-v224-core-network-first-r01";
 const SCOPE = self.registration.scope;               // e.g. https://you.github.io/bsa-dashboard/
 const SHELL = ["index.html", "manifest.json", "icon-192.png", "icon-512.png", "icon-maskable-512.png", "apple-touch-icon.png", "favicon.png", "avatar-front.png", "avatar-back.png", "avatar-happy.png", "avatar-walk.png",'./BSA_AI_SOURCE_RULES.md','./BSA_AI_PROMPT.md','./EXAMPLE-universal-rulebook.json'];
 // Versioned application assets are essential: never activate an offline update
@@ -71,6 +71,27 @@ async function networkFirst(request) {
   return net; // nothing saved yet: wait for the network
 }
 
+// Our own app files DO change with releases. Network-first prevents an old
+// service worker cache from pinning yesterday's app.js or CSS indefinitely.
+// The cached copy still works offline and on poor connections.
+async function coreNetworkFirst(request, event) {
+  const cache = await caches.open(VERSION);
+  const cached = await cache.match(request, { ignoreVary: true });
+  const net = fetch(request, { cache: "no-cache" }).then(async (response) => {
+    if (response.ok) await put(cache, request, response.clone());
+    return response;
+  });
+  // A fallback response may arrive before a slow network fetch; keep the
+  // fetch alive so a subsequent navigation sees the refreshed asset.
+  event.waitUntil(net.catch(() => null));
+  try {
+    const fresh = await Promise.race([net, new Promise(resolve => setTimeout(() => resolve(null), 3500))]);
+    if (fresh && fresh.ok) return fresh;
+  } catch (_) { /* offline: use the last verified asset */ }
+  if (cached) return cached;
+  return net;
+}
+
 // Versioned libraries never change: use the saved copy, download only if missing.
 async function cacheFirst(request) {
   const cache = await caches.open(VERSION);
@@ -101,8 +122,8 @@ self.addEventListener("fetch", (event) => {
   if (url.hostname === "generativelanguage.googleapis.com") return;   // AI tutor always goes live
   if (req.mode === "navigate" || isAppPage(url)) { event.respondWith(networkFirst(req)); return; }
   if (url.hostname === "cdn.jsdelivr.net") { event.respondWith(cacheFirst(req)); return; }
-  if (CORE_ASSETS.some(path => url.href === new URL(path, SCOPE).href)) {
-    event.respondWith(cacheFirst(req)); return;
+  if (CORE_ASSETS.some(path => url.origin === new URL(path, SCOPE).origin && url.pathname === new URL(path, SCOPE).pathname)) {
+    event.respondWith(coreNetworkFirst(req, event)); return;
   }
   if (url.href.startsWith(SCOPE) || url.hostname === "fonts.googleapis.com" || url.hostname === "fonts.gstatic.com") {
     event.respondWith(staleWhileRevalidate(req, event));
