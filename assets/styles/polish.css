@@ -4362,3 +4362,6 @@ body.modal-open #bsa216-scroll-layer .bsa216-scroll-rail{display:none!important}
 #root .bsa223-reset-progress{align-self:center;flex-shrink:0;min-height:40px;background:var(--surface-2);border:1px solid var(--line)}
 #root .bsa223-reset-progress:hover{border-color:var(--accent)}
 @media(max-width:700px){#root .bsa223-reset-progress{width:100%;margin-top:10px}}
+
+/* V2.24 — dismiss closing/saved study timer immediately while React commits. */
+#bsa213-focus-layer .bsa212-float[data-bsa224-hidden="true"]{display:none!important;pointer-events:none!important}
