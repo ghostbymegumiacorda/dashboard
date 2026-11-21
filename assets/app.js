@@ -1,6 +1,32 @@
+/* pako synchronous compression utility, MIT License.
+(The MIT License)
+
+Copyright (C) 2014-2017 by Vitaly Puzrin and Andrei Tuputcyn
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+*/
+!function(t){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=t();else if("function"==typeof define&&define.amd)define([],t);else{("undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof self?self:this).pako=t()}}(function(){return function r(s,o,l){function h(e,t){if(!o[e]){if(!s[e]){var a="function"==typeof require&&require;if(!t&&a)return a(e,!0);if(d)return d(e,!0);var i=new Error("Cannot find module '"+e+"'");throw i.code="MODULE_NOT_FOUND",i}var n=o[e]={exports:{}};s[e][0].call(n.exports,function(t){return h(s[e][1][t]||t)},n,n.exports,r,s,o,l)}return o[e].exports}for(var d="function"==typeof require&&require,t=0;t<l.length;t++)h(l[t]);return h}({1:[function(t,e,a){"use strict";var s=t("./zlib/deflate"),o=t("./utils/common"),l=t("./utils/strings"),n=t("./zlib/messages"),r=t("./zlib/zstream"),h=Object.prototype.toString,d=0,f=-1,_=0,u=8;function c(t){if(!(this instanceof c))return new c(t);this.options=o.assign({level:f,method:u,chunkSize:16384,windowBits:15,memLevel:8,strategy:_,to:""},t||{});var e=this.options;e.raw&&0<e.windowBits?e.windowBits=-e.windowBits:e.gzip&&0<e.windowBits&&e.windowBits<16&&(e.windowBits+=16),this.err=0,this.msg="",this.ended=!1,this.chunks=[],this.strm=new r,this.strm.avail_out=0;var a=s.deflateInit2(this.strm,e.level,e.method,e.windowBits,e.memLevel,e.strategy);if(a!==d)throw new Error(n[a]);if(e.header&&s.deflateSetHeader(this.strm,e.header),e.dictionary){var i;if(i="string"==typeof e.dictionary?l.string2buf(e.dictionary):"[object ArrayBuffer]"===h.call(e.dictionary)?new Uint8Array(e.dictionary):e.dictionary,(a=s.deflateSetDictionary(this.strm,i))!==d)throw new Error(n[a]);this._dict_set=!0}}function i(t,e){var a=new c(e);if(a.push(t,!0),a.err)throw a.msg||n[a.err];return a.result}c.prototype.push=function(t,e){var a,i,n=this.strm,r=this.options.chunkSize;if(this.ended)return!1;i=e===~~e?e:!0===e?4:0,"string"==typeof t?n.input=l.string2buf(t):"[object ArrayBuffer]"===h.call(t)?n.input=new Uint8Array(t):n.input=t,n.next_in=0,n.avail_in=n.input.length;do{if(0===n.avail_out&&(n.output=new o.Buf8(r),n.next_out=0,n.avail_out=r),1!==(a=s.deflate(n,i))&&a!==d)return this.onEnd(a),!(this.ended=!0);0!==n.avail_out&&(0!==n.avail_in||4!==i&&2!==i)||("string"===this.options.to?this.onData(l.buf2binstring(o.shrinkBuf(n.output,n.next_out))):this.onData(o.shrinkBuf(n.output,n.next_out)))}while((0<n.avail_in||0===n.avail_out)&&1!==a);return 4===i?(a=s.deflateEnd(this.strm),this.onEnd(a),this.ended=!0,a===d):2!==i||(this.onEnd(d),!(n.avail_out=0))},c.prototype.onData=function(t){this.chunks.push(t)},c.prototype.onEnd=function(t){t===d&&("string"===this.options.to?this.result=this.chunks.join(""):this.result=o.flattenChunks(this.chunks)),this.chunks=[],this.err=t,this.msg=this.strm.msg},a.Deflate=c,a.deflate=i,a.deflateRaw=function(t,e){return(e=e||{}).raw=!0,i(t,e)},a.gzip=function(t,e){return(e=e||{}).gzip=!0,i(t,e)}},{"./utils/common":3,"./utils/strings":4,"./zlib/deflate":8,"./zlib/messages":13,"./zlib/zstream":15}],2:[function(t,e,a){"use strict";var f=t("./zlib/inflate"),_=t("./utils/common"),u=t("./utils/strings"),c=t("./zlib/constants"),i=t("./zlib/messages"),n=t("./zlib/zstream"),r=t("./zlib/gzheader"),b=Object.prototype.toString;function s(t){if(!(this instanceof s))return new s(t);this.options=_.assign({chunkSize:16384,windowBits:0,to:""},t||{});var e=this.options;e.raw&&0<=e.windowBits&&e.windowBits<16&&(e.windowBits=-e.windowBits,0===e.windowBits&&(e.windowBits=-15)),!(0<=e.windowBits&&e.windowBits<16)||t&&t.windowBits||(e.windowBits+=32),15<e.windowBits&&e.windowBits<48&&0==(15&e.windowBits)&&(e.windowBits|=15),this.err=0,this.msg="",this.ended=!1,this.chunks=[],this.strm=new n,this.strm.avail_out=0;var a=f.inflateInit2(this.strm,e.windowBits);if(a!==c.Z_OK)throw new Error(i[a]);if(this.header=new r,f.inflateGetHeader(this.strm,this.header),e.dictionary&&("string"==typeof e.dictionary?e.dictionary=u.string2buf(e.dictionary):"[object ArrayBuffer]"===b.call(e.dictionary)&&(e.dictionary=new Uint8Array(e.dictionary)),e.raw&&(a=f.inflateSetDictionary(this.strm,e.dictionary))!==c.Z_OK))throw new Error(i[a])}function o(t,e){var a=new s(e);if(a.push(t,!0),a.err)throw a.msg||i[a.err];return a.result}s.prototype.push=function(t,e){var a,i,n,r,s,o=this.strm,l=this.options.chunkSize,h=this.options.dictionary,d=!1;if(this.ended)return!1;i=e===~~e?e:!0===e?c.Z_FINISH:c.Z_NO_FLUSH,"string"==typeof t?o.input=u.binstring2buf(t):"[object ArrayBuffer]"===b.call(t)?o.input=new Uint8Array(t):o.input=t,o.next_in=0,o.avail_in=o.input.length;do{if(0===o.avail_out&&(o.output=new _.Buf8(l),o.next_out=0,o.avail_out=l),(a=f.inflate(o,c.Z_NO_FLUSH))===c.Z_NEED_DICT&&h&&(a=f.inflateSetDictionary(this.strm,h)),a===c.Z_BUF_ERROR&&!0===d&&(a=c.Z_OK,d=!1),a!==c.Z_STREAM_END&&a!==c.Z_OK)return this.onEnd(a),!(this.ended=!0);o.next_out&&(0!==o.avail_out&&a!==c.Z_STREAM_END&&(0!==o.avail_in||i!==c.Z_FINISH&&i!==c.Z_SYNC_FLUSH)||("string"===this.options.to?(n=u.utf8border(o.output,o.next_out),r=o.next_out-n,s=u.buf2string(o.output,n),o.next_out=r,o.avail_out=l-r,r&&_.arraySet(o.output,o.output,n,r,0),this.onData(s)):this.onData(_.shrinkBuf(o.output,o.next_out)))),0===o.avail_in&&0===o.avail_out&&(d=!0)}while((0<o.avail_in||0===o.avail_out)&&a!==c.Z_STREAM_END);return a===c.Z_STREAM_END&&(i=c.Z_FINISH),i===c.Z_FINISH?(a=f.inflateEnd(this.strm),this.onEnd(a),this.ended=!0,a===c.Z_OK):i!==c.Z_SYNC_FLUSH||(this.onEnd(c.Z_OK),!(o.avail_out=0))},s.prototype.onData=function(t){this.chunks.push(t)},s.prototype.onEnd=function(t){t===c.Z_OK&&("string"===this.options.to?this.result=this.chunks.join(""):this.result=_.flattenChunks(this.chunks)),this.chunks=[],this.err=t,this.msg=this.strm.msg},a.Inflate=s,a.inflate=o,a.inflateRaw=function(t,e){return(e=e||{}).raw=!0,o(t,e)},a.ungzip=o},{"./utils/common":3,"./utils/strings":4,"./zlib/constants":6,"./zlib/gzheader":9,"./zlib/inflate":11,"./zlib/messages":13,"./zlib/zstream":15}],3:[function(t,e,a){"use strict";var i="undefined"!=typeof Uint8Array&&"undefined"!=typeof Uint16Array&&"undefined"!=typeof Int32Array;a.assign=function(t){for(var e,a,i=Array.prototype.slice.call(arguments,1);i.length;){var n=i.shift();if(n){if("object"!=typeof n)throw new TypeError(n+"must be non-object");for(var r in n)e=n,a=r,Object.prototype.hasOwnProperty.call(e,a)&&(t[r]=n[r])}}return t},a.shrinkBuf=function(t,e){return t.length===e?t:t.subarray?t.subarray(0,e):(t.length=e,t)};var n={arraySet:function(t,e,a,i,n){if(e.subarray&&t.subarray)t.set(e.subarray(a,a+i),n);else for(var r=0;r<i;r++)t[n+r]=e[a+r]},flattenChunks:function(t){var e,a,i,n,r,s;for(e=i=0,a=t.length;e<a;e++)i+=t[e].length;for(s=new Uint8Array(i),e=n=0,a=t.length;e<a;e++)r=t[e],s.set(r,n),n+=r.length;return s}},r={arraySet:function(t,e,a,i,n){for(var r=0;r<i;r++)t[n+r]=e[a+r]},flattenChunks:function(t){return[].concat.apply([],t)}};a.setTyped=function(t){t?(a.Buf8=Uint8Array,a.Buf16=Uint16Array,a.Buf32=Int32Array,a.assign(a,n)):(a.Buf8=Array,a.Buf16=Array,a.Buf32=Array,a.assign(a,r))},a.setTyped(i)},{}],4:[function(t,e,a){"use strict";var l=t("./common"),n=!0,r=!0;try{String.fromCharCode.apply(null,[0])}catch(t){n=!1}try{String.fromCharCode.apply(null,new Uint8Array(1))}catch(t){r=!1}for(var h=new l.Buf8(256),i=0;i<256;i++)h[i]=252<=i?6:248<=i?5:240<=i?4:224<=i?3:192<=i?2:1;function d(t,e){if(e<65534&&(t.subarray&&r||!t.subarray&&n))return String.fromCharCode.apply(null,l.shrinkBuf(t,e));for(var a="",i=0;i<e;i++)a+=String.fromCharCode(t[i]);return a}h[254]=h[254]=1,a.string2buf=function(t){var e,a,i,n,r,s=t.length,o=0;for(n=0;n<s;n++)55296==(64512&(a=t.charCodeAt(n)))&&n+1<s&&56320==(64512&(i=t.charCodeAt(n+1)))&&(a=65536+(a-55296<<10)+(i-56320),n++),o+=a<128?1:a<2048?2:a<65536?3:4;for(e=new l.Buf8(o),n=r=0;r<o;n++)55296==(64512&(a=t.charCodeAt(n)))&&n+1<s&&56320==(64512&(i=t.charCodeAt(n+1)))&&(a=65536+(a-55296<<10)+(i-56320),n++),a<128?e[r++]=a:(a<2048?e[r++]=192|a>>>6:(a<65536?e[r++]=224|a>>>12:(e[r++]=240|a>>>18,e[r++]=128|a>>>12&63),e[r++]=128|a>>>6&63),e[r++]=128|63&a);return e},a.buf2binstring=function(t){return d(t,t.length)},a.binstring2buf=function(t){for(var e=new l.Buf8(t.length),a=0,i=e.length;a<i;a++)e[a]=t.charCodeAt(a);return e},a.buf2string=function(t,e){var a,i,n,r,s=e||t.length,o=new Array(2*s);for(a=i=0;a<s;)if((n=t[a++])<128)o[i++]=n;else if(4<(r=h[n]))o[i++]=65533,a+=r-1;else{for(n&=2===r?31:3===r?15:7;1<r&&a<s;)n=n<<6|63&t[a++],r--;1<r?o[i++]=65533:n<65536?o[i++]=n:(n-=65536,o[i++]=55296|n>>10&1023,o[i++]=56320|1023&n)}return d(o,i)},a.utf8border=function(t,e){var a;for((e=e||t.length)>t.length&&(e=t.length),a=e-1;0<=a&&128==(192&t[a]);)a--;return a<0?e:0===a?e:a+h[t[a]]>e?a:e}},{"./common":3}],5:[function(t,e,a){"use strict";e.exports=function(t,e,a,i){for(var n=65535&t|0,r=t>>>16&65535|0,s=0;0!==a;){for(a-=s=2e3<a?2e3:a;r=r+(n=n+e[i++]|0)|0,--s;);n%=65521,r%=65521}return n|r<<16|0}},{}],6:[function(t,e,a){"use strict";e.exports={Z_NO_FLUSH:0,Z_PARTIAL_FLUSH:1,Z_SYNC_FLUSH:2,Z_FULL_FLUSH:3,Z_FINISH:4,Z_BLOCK:5,Z_TREES:6,Z_OK:0,Z_STREAM_END:1,Z_NEED_DICT:2,Z_ERRNO:-1,Z_STREAM_ERROR:-2,Z_DATA_ERROR:-3,Z_BUF_ERROR:-5,Z_NO_COMPRESSION:0,Z_BEST_SPEED:1,Z_BEST_COMPRESSION:9,Z_DEFAULT_COMPRESSION:-1,Z_FILTERED:1,Z_HUFFMAN_ONLY:2,Z_RLE:3,Z_FIXED:4,Z_DEFAULT_STRATEGY:0,Z_BINARY:0,Z_TEXT:1,Z_UNKNOWN:2,Z_DEFLATED:8}},{}],7:[function(t,e,a){"use strict";var o=function(){for(var t,e=[],a=0;a<256;a++){t=a;for(var i=0;i<8;i++)t=1&t?3988292384^t>>>1:t>>>1;e[a]=t}return e}();e.exports=function(t,e,a,i){var n=o,r=i+a;t^=-1;for(var s=i;s<r;s++)t=t>>>8^n[255&(t^e[s])];return-1^t}},{}],8:[function(t,e,a){"use strict";var l,_=t("../utils/common"),h=t("./trees"),u=t("./adler32"),c=t("./crc32"),i=t("./messages"),d=0,f=4,b=0,g=-2,m=-1,w=4,n=2,p=8,v=9,r=286,s=30,o=19,k=2*r+1,y=15,x=3,z=258,B=z+x+1,S=42,E=113,A=1,Z=2,R=3,C=4;function N(t,e){return t.msg=i[e],e}function O(t){return(t<<1)-(4<t?9:0)}function D(t){for(var e=t.length;0<=--e;)t[e]=0}function I(t){var e=t.state,a=e.pending;a>t.avail_out&&(a=t.avail_out),0!==a&&(_.arraySet(t.output,e.pending_buf,e.pending_out,a,t.next_out),t.next_out+=a,e.pending_out+=a,t.total_out+=a,t.avail_out-=a,e.pending-=a,0===e.pending&&(e.pending_out=0))}function U(t,e){h._tr_flush_block(t,0<=t.block_start?t.block_start:-1,t.strstart-t.block_start,e),t.block_start=t.strstart,I(t.strm)}function T(t,e){t.pending_buf[t.pending++]=e}function F(t,e){t.pending_buf[t.pending++]=e>>>8&255,t.pending_buf[t.pending++]=255&e}function L(t,e){var a,i,n=t.max_chain_length,r=t.strstart,s=t.prev_length,o=t.nice_match,l=t.strstart>t.w_size-B?t.strstart-(t.w_size-B):0,h=t.window,d=t.w_mask,f=t.prev,_=t.strstart+z,u=h[r+s-1],c=h[r+s];t.prev_length>=t.good_match&&(n>>=2),o>t.lookahead&&(o=t.lookahead);do{if(h[(a=e)+s]===c&&h[a+s-1]===u&&h[a]===h[r]&&h[++a]===h[r+1]){r+=2,a++;do{}while(h[++r]===h[++a]&&h[++r]===h[++a]&&h[++r]===h[++a]&&h[++r]===h[++a]&&h[++r]===h[++a]&&h[++r]===h[++a]&&h[++r]===h[++a]&&h[++r]===h[++a]&&r<_);if(i=z-(_-r),r=_-z,s<i){if(t.match_start=e,o<=(s=i))break;u=h[r+s-1],c=h[r+s]}}}while((e=f[e&d])>l&&0!=--n);return s<=t.lookahead?s:t.lookahead}function H(t){var e,a,i,n,r,s,o,l,h,d,f=t.w_size;do{if(n=t.window_size-t.lookahead-t.strstart,t.strstart>=f+(f-B)){for(_.arraySet(t.window,t.window,f,f,0),t.match_start-=f,t.strstart-=f,t.block_start-=f,e=a=t.hash_size;i=t.head[--e],t.head[e]=f<=i?i-f:0,--a;);for(e=a=f;i=t.prev[--e],t.prev[e]=f<=i?i-f:0,--a;);n+=f}if(0===t.strm.avail_in)break;if(s=t.strm,o=t.window,l=t.strstart+t.lookahead,h=n,d=void 0,d=s.avail_in,h<d&&(d=h),a=0===d?0:(s.avail_in-=d,_.arraySet(o,s.input,s.next_in,d,l),1===s.state.wrap?s.adler=u(s.adler,o,d,l):2===s.state.wrap&&(s.adler=c(s.adler,o,d,l)),s.next_in+=d,s.total_in+=d,d),t.lookahead+=a,t.lookahead+t.insert>=x)for(r=t.strstart-t.insert,t.ins_h=t.window[r],t.ins_h=(t.ins_h<<t.hash_shift^t.window[r+1])&t.hash_mask;t.insert&&(t.ins_h=(t.ins_h<<t.hash_shift^t.window[r+x-1])&t.hash_mask,t.prev[r&t.w_mask]=t.head[t.ins_h],t.head[t.ins_h]=r,r++,t.insert--,!(t.lookahead+t.insert<x)););}while(t.lookahead<B&&0!==t.strm.avail_in)}function j(t,e){for(var a,i;;){if(t.lookahead<B){if(H(t),t.lookahead<B&&e===d)return A;if(0===t.lookahead)break}if(a=0,t.lookahead>=x&&(t.ins_h=(t.ins_h<<t.hash_shift^t.window[t.strstart+x-1])&t.hash_mask,a=t.prev[t.strstart&t.w_mask]=t.head[t.ins_h],t.head[t.ins_h]=t.strstart),0!==a&&t.strstart-a<=t.w_size-B&&(t.match_length=L(t,a)),t.match_length>=x)if(i=h._tr_tally(t,t.strstart-t.match_start,t.match_length-x),t.lookahead-=t.match_length,t.match_length<=t.max_lazy_match&&t.lookahead>=x){for(t.match_length--;t.strstart++,t.ins_h=(t.ins_h<<t.hash_shift^t.window[t.strstart+x-1])&t.hash_mask,a=t.prev[t.strstart&t.w_mask]=t.head[t.ins_h],t.head[t.ins_h]=t.strstart,0!=--t.match_length;);t.strstart++}else t.strstart+=t.match_length,t.match_length=0,t.ins_h=t.window[t.strstart],t.ins_h=(t.ins_h<<t.hash_shift^t.window[t.strstart+1])&t.hash_mask;else i=h._tr_tally(t,0,t.window[t.strstart]),t.lookahead--,t.strstart++;if(i&&(U(t,!1),0===t.strm.avail_out))return A}return t.insert=t.strstart<x-1?t.strstart:x-1,e===f?(U(t,!0),0===t.strm.avail_out?R:C):t.last_lit&&(U(t,!1),0===t.strm.avail_out)?A:Z}function K(t,e){for(var a,i,n;;){if(t.lookahead<B){if(H(t),t.lookahead<B&&e===d)return A;if(0===t.lookahead)break}if(a=0,t.lookahead>=x&&(t.ins_h=(t.ins_h<<t.hash_shift^t.window[t.strstart+x-1])&t.hash_mask,a=t.prev[t.strstart&t.w_mask]=t.head[t.ins_h],t.head[t.ins_h]=t.strstart),t.prev_length=t.match_length,t.prev_match=t.match_start,t.match_length=x-1,0!==a&&t.prev_length<t.max_lazy_match&&t.strstart-a<=t.w_size-B&&(t.match_length=L(t,a),t.match_length<=5&&(1===t.strategy||t.match_length===x&&4096<t.strstart-t.match_start)&&(t.match_length=x-1)),t.prev_length>=x&&t.match_length<=t.prev_length){for(n=t.strstart+t.lookahead-x,i=h._tr_tally(t,t.strstart-1-t.prev_match,t.prev_length-x),t.lookahead-=t.prev_length-1,t.prev_length-=2;++t.strstart<=n&&(t.ins_h=(t.ins_h<<t.hash_shift^t.window[t.strstart+x-1])&t.hash_mask,a=t.prev[t.strstart&t.w_mask]=t.head[t.ins_h],t.head[t.ins_h]=t.strstart),0!=--t.prev_length;);if(t.match_available=0,t.match_length=x-1,t.strstart++,i&&(U(t,!1),0===t.strm.avail_out))return A}else if(t.match_available){if((i=h._tr_tally(t,0,t.window[t.strstart-1]))&&U(t,!1),t.strstart++,t.lookahead--,0===t.strm.avail_out)return A}else t.match_available=1,t.strstart++,t.lookahead--}return t.match_available&&(i=h._tr_tally(t,0,t.window[t.strstart-1]),t.match_available=0),t.insert=t.strstart<x-1?t.strstart:x-1,e===f?(U(t,!0),0===t.strm.avail_out?R:C):t.last_lit&&(U(t,!1),0===t.strm.avail_out)?A:Z}function M(t,e,a,i,n){this.good_length=t,this.max_lazy=e,this.nice_length=a,this.max_chain=i,this.func=n}function P(){this.strm=null,this.status=0,this.pending_buf=null,this.pending_buf_size=0,this.pending_out=0,this.pending=0,this.wrap=0,this.gzhead=null,this.gzindex=0,this.method=p,this.last_flush=-1,this.w_size=0,this.w_bits=0,this.w_mask=0,this.window=null,this.window_size=0,this.prev=null,this.head=null,this.ins_h=0,this.hash_size=0,this.hash_bits=0,this.hash_mask=0,this.hash_shift=0,this.block_start=0,this.match_length=0,this.prev_match=0,this.match_available=0,this.strstart=0,this.match_start=0,this.lookahead=0,this.prev_length=0,this.max_chain_length=0,this.max_lazy_match=0,this.level=0,this.strategy=0,this.good_match=0,this.nice_match=0,this.dyn_ltree=new _.Buf16(2*k),this.dyn_dtree=new _.Buf16(2*(2*s+1)),this.bl_tree=new _.Buf16(2*(2*o+1)),D(this.dyn_ltree),D(this.dyn_dtree),D(this.bl_tree),this.l_desc=null,this.d_desc=null,this.bl_desc=null,this.bl_count=new _.Buf16(y+1),this.heap=new _.Buf16(2*r+1),D(this.heap),this.heap_len=0,this.heap_max=0,this.depth=new _.Buf16(2*r+1),D(this.depth),this.l_buf=0,this.lit_bufsize=0,this.last_lit=0,this.d_buf=0,this.opt_len=0,this.static_len=0,this.matches=0,this.insert=0,this.bi_buf=0,this.bi_valid=0}function Y(t){var e;return t&&t.state?(t.total_in=t.total_out=0,t.data_type=n,(e=t.state).pending=0,e.pending_out=0,e.wrap<0&&(e.wrap=-e.wrap),e.status=e.wrap?S:E,t.adler=2===e.wrap?0:1,e.last_flush=d,h._tr_init(e),b):N(t,g)}function q(t){var e,a=Y(t);return a===b&&((e=t.state).window_size=2*e.w_size,D(e.head),e.max_lazy_match=l[e.level].max_lazy,e.good_match=l[e.level].good_length,e.nice_match=l[e.level].nice_length,e.max_chain_length=l[e.level].max_chain,e.strstart=0,e.block_start=0,e.lookahead=0,e.insert=0,e.match_length=e.prev_length=x-1,e.match_available=0,e.ins_h=0),a}function G(t,e,a,i,n,r){if(!t)return g;var s=1;if(e===m&&(e=6),i<0?(s=0,i=-i):15<i&&(s=2,i-=16),n<1||v<n||a!==p||i<8||15<i||e<0||9<e||r<0||w<r)return N(t,g);8===i&&(i=9);var o=new P;return(t.state=o).strm=t,o.wrap=s,o.gzhead=null,o.w_bits=i,o.w_size=1<<o.w_bits,o.w_mask=o.w_size-1,o.hash_bits=n+7,o.hash_size=1<<o.hash_bits,o.hash_mask=o.hash_size-1,o.hash_shift=~~((o.hash_bits+x-1)/x),o.window=new _.Buf8(2*o.w_size),o.head=new _.Buf16(o.hash_size),o.prev=new _.Buf16(o.w_size),o.lit_bufsize=1<<n+6,o.pending_buf_size=4*o.lit_bufsize,o.pending_buf=new _.Buf8(o.pending_buf_size),o.d_buf=1*o.lit_bufsize,o.l_buf=3*o.lit_bufsize,o.level=e,o.strategy=r,o.method=a,q(t)}l=[new M(0,0,0,0,function(t,e){var a=65535;for(a>t.pending_buf_size-5&&(a=t.pending_buf_size-5);;){if(t.lookahead<=1){if(H(t),0===t.lookahead&&e===d)return A;if(0===t.lookahead)break}t.strstart+=t.lookahead,t.lookahead=0;var i=t.block_start+a;if((0===t.strstart||t.strstart>=i)&&(t.lookahead=t.strstart-i,t.strstart=i,U(t,!1),0===t.strm.avail_out))return A;if(t.strstart-t.block_start>=t.w_size-B&&(U(t,!1),0===t.strm.avail_out))return A}return t.insert=0,e===f?(U(t,!0),0===t.strm.avail_out?R:C):(t.strstart>t.block_start&&(U(t,!1),t.strm.avail_out),A)}),new M(4,4,8,4,j),new M(4,5,16,8,j),new M(4,6,32,32,j),new M(4,4,16,16,K),new M(8,16,32,32,K),new M(8,16,128,128,K),new M(8,32,128,256,K),new M(32,128,258,1024,K),new M(32,258,258,4096,K)],a.deflateInit=function(t,e){return G(t,e,p,15,8,0)},a.deflateInit2=G,a.deflateReset=q,a.deflateResetKeep=Y,a.deflateSetHeader=function(t,e){return t&&t.state?2!==t.state.wrap?g:(t.state.gzhead=e,b):g},a.deflate=function(t,e){var a,i,n,r;if(!t||!t.state||5<e||e<0)return t?N(t,g):g;if(i=t.state,!t.output||!t.input&&0!==t.avail_in||666===i.status&&e!==f)return N(t,0===t.avail_out?-5:g);if(i.strm=t,a=i.last_flush,i.last_flush=e,i.status===S)if(2===i.wrap)t.adler=0,T(i,31),T(i,139),T(i,8),i.gzhead?(T(i,(i.gzhead.text?1:0)+(i.gzhead.hcrc?2:0)+(i.gzhead.extra?4:0)+(i.gzhead.name?8:0)+(i.gzhead.comment?16:0)),T(i,255&i.gzhead.time),T(i,i.gzhead.time>>8&255),T(i,i.gzhead.time>>16&255),T(i,i.gzhead.time>>24&255),T(i,9===i.level?2:2<=i.strategy||i.level<2?4:0),T(i,255&i.gzhead.os),i.gzhead.extra&&i.gzhead.extra.length&&(T(i,255&i.gzhead.extra.length),T(i,i.gzhead.extra.length>>8&255)),i.gzhead.hcrc&&(t.adler=c(t.adler,i.pending_buf,i.pending,0)),i.gzindex=0,i.status=69):(T(i,0),T(i,0),T(i,0),T(i,0),T(i,0),T(i,9===i.level?2:2<=i.strategy||i.level<2?4:0),T(i,3),i.status=E);else{var s=p+(i.w_bits-8<<4)<<8;s|=(2<=i.strategy||i.level<2?0:i.level<6?1:6===i.level?2:3)<<6,0!==i.strstart&&(s|=32),s+=31-s%31,i.status=E,F(i,s),0!==i.strstart&&(F(i,t.adler>>>16),F(i,65535&t.adler)),t.adler=1}if(69===i.status)if(i.gzhead.extra){for(n=i.pending;i.gzindex<(65535&i.gzhead.extra.length)&&(i.pending!==i.pending_buf_size||(i.gzhead.hcrc&&i.pending>n&&(t.adler=c(t.adler,i.pending_buf,i.pending-n,n)),I(t),n=i.pending,i.pending!==i.pending_buf_size));)T(i,255&i.gzhead.extra[i.gzindex]),i.gzindex++;i.gzhead.hcrc&&i.pending>n&&(t.adler=c(t.adler,i.pending_buf,i.pending-n,n)),i.gzindex===i.gzhead.extra.length&&(i.gzindex=0,i.status=73)}else i.status=73;if(73===i.status)if(i.gzhead.name){n=i.pending;do{if(i.pending===i.pending_buf_size&&(i.gzhead.hcrc&&i.pending>n&&(t.adler=c(t.adler,i.pending_buf,i.pending-n,n)),I(t),n=i.pending,i.pending===i.pending_buf_size)){r=1;break}T(i,r=i.gzindex<i.gzhead.name.length?255&i.gzhead.name.charCodeAt(i.gzindex++):0)}while(0!==r);i.gzhead.hcrc&&i.pending>n&&(t.adler=c(t.adler,i.pending_buf,i.pending-n,n)),0===r&&(i.gzindex=0,i.status=91)}else i.status=91;if(91===i.status)if(i.gzhead.comment){n=i.pending;do{if(i.pending===i.pending_buf_size&&(i.gzhead.hcrc&&i.pending>n&&(t.adler=c(t.adler,i.pending_buf,i.pending-n,n)),I(t),n=i.pending,i.pending===i.pending_buf_size)){r=1;break}T(i,r=i.gzindex<i.gzhead.comment.length?255&i.gzhead.comment.charCodeAt(i.gzindex++):0)}while(0!==r);i.gzhead.hcrc&&i.pending>n&&(t.adler=c(t.adler,i.pending_buf,i.pending-n,n)),0===r&&(i.status=103)}else i.status=103;if(103===i.status&&(i.gzhead.hcrc?(i.pending+2>i.pending_buf_size&&I(t),i.pending+2<=i.pending_buf_size&&(T(i,255&t.adler),T(i,t.adler>>8&255),t.adler=0,i.status=E)):i.status=E),0!==i.pending){if(I(t),0===t.avail_out)return i.last_flush=-1,b}else if(0===t.avail_in&&O(e)<=O(a)&&e!==f)return N(t,-5);if(666===i.status&&0!==t.avail_in)return N(t,-5);if(0!==t.avail_in||0!==i.lookahead||e!==d&&666!==i.status){var o=2===i.strategy?function(t,e){for(var a;;){if(0===t.lookahead&&(H(t),0===t.lookahead)){if(e===d)return A;break}if(t.match_length=0,a=h._tr_tally(t,0,t.window[t.strstart]),t.lookahead--,t.strstart++,a&&(U(t,!1),0===t.strm.avail_out))return A}return t.insert=0,e===f?(U(t,!0),0===t.strm.avail_out?R:C):t.last_lit&&(U(t,!1),0===t.strm.avail_out)?A:Z}(i,e):3===i.strategy?function(t,e){for(var a,i,n,r,s=t.window;;){if(t.lookahead<=z){if(H(t),t.lookahead<=z&&e===d)return A;if(0===t.lookahead)break}if(t.match_length=0,t.lookahead>=x&&0<t.strstart&&(i=s[n=t.strstart-1])===s[++n]&&i===s[++n]&&i===s[++n]){r=t.strstart+z;do{}while(i===s[++n]&&i===s[++n]&&i===s[++n]&&i===s[++n]&&i===s[++n]&&i===s[++n]&&i===s[++n]&&i===s[++n]&&n<r);t.match_length=z-(r-n),t.match_length>t.lookahead&&(t.match_length=t.lookahead)}if(t.match_length>=x?(a=h._tr_tally(t,1,t.match_length-x),t.lookahead-=t.match_length,t.strstart+=t.match_length,t.match_length=0):(a=h._tr_tally(t,0,t.window[t.strstart]),t.lookahead--,t.strstart++),a&&(U(t,!1),0===t.strm.avail_out))return A}return t.insert=0,e===f?(U(t,!0),0===t.strm.avail_out?R:C):t.last_lit&&(U(t,!1),0===t.strm.avail_out)?A:Z}(i,e):l[i.level].func(i,e);if(o!==R&&o!==C||(i.status=666),o===A||o===R)return 0===t.avail_out&&(i.last_flush=-1),b;if(o===Z&&(1===e?h._tr_align(i):5!==e&&(h._tr_stored_block(i,0,0,!1),3===e&&(D(i.head),0===i.lookahead&&(i.strstart=0,i.block_start=0,i.insert=0))),I(t),0===t.avail_out))return i.last_flush=-1,b}return e!==f?b:i.wrap<=0?1:(2===i.wrap?(T(i,255&t.adler),T(i,t.adler>>8&255),T(i,t.adler>>16&255),T(i,t.adler>>24&255),T(i,255&t.total_in),T(i,t.total_in>>8&255),T(i,t.total_in>>16&255),T(i,t.total_in>>24&255)):(F(i,t.adler>>>16),F(i,65535&t.adler)),I(t),0<i.wrap&&(i.wrap=-i.wrap),0!==i.pending?b:1)},a.deflateEnd=function(t){var e;return t&&t.state?(e=t.state.status)!==S&&69!==e&&73!==e&&91!==e&&103!==e&&e!==E&&666!==e?N(t,g):(t.state=null,e===E?N(t,-3):b):g},a.deflateSetDictionary=function(t,e){var a,i,n,r,s,o,l,h,d=e.length;if(!t||!t.state)return g;if(2===(r=(a=t.state).wrap)||1===r&&a.status!==S||a.lookahead)return g;for(1===r&&(t.adler=u(t.adler,e,d,0)),a.wrap=0,d>=a.w_size&&(0===r&&(D(a.head),a.strstart=0,a.block_start=0,a.insert=0),h=new _.Buf8(a.w_size),_.arraySet(h,e,d-a.w_size,a.w_size,0),e=h,d=a.w_size),s=t.avail_in,o=t.next_in,l=t.input,t.avail_in=d,t.next_in=0,t.input=e,H(a);a.lookahead>=x;){for(i=a.strstart,n=a.lookahead-(x-1);a.ins_h=(a.ins_h<<a.hash_shift^a.window[i+x-1])&a.hash_mask,a.prev[i&a.w_mask]=a.head[a.ins_h],a.head[a.ins_h]=i,i++,--n;);a.strstart=i,a.lookahead=x-1,H(a)}return a.strstart+=a.lookahead,a.block_start=a.strstart,a.insert=a.lookahead,a.lookahead=0,a.match_length=a.prev_length=x-1,a.match_available=0,t.next_in=o,t.input=l,t.avail_in=s,a.wrap=r,b},a.deflateInfo="pako deflate (from Nodeca project)"},{"../utils/common":3,"./adler32":5,"./crc32":7,"./messages":13,"./trees":14}],9:[function(t,e,a){"use strict";e.exports=function(){this.text=0,this.time=0,this.xflags=0,this.os=0,this.extra=null,this.extra_len=0,this.name="",this.comment="",this.hcrc=0,this.done=!1}},{}],10:[function(t,e,a){"use strict";e.exports=function(t,e){var a,i,n,r,s,o,l,h,d,f,_,u,c,b,g,m,w,p,v,k,y,x,z,B,S;a=t.state,i=t.next_in,B=t.input,n=i+(t.avail_in-5),r=t.next_out,S=t.output,s=r-(e-t.avail_out),o=r+(t.avail_out-257),l=a.dmax,h=a.wsize,d=a.whave,f=a.wnext,_=a.window,u=a.hold,c=a.bits,b=a.lencode,g=a.distcode,m=(1<<a.lenbits)-1,w=(1<<a.distbits)-1;t:do{c<15&&(u+=B[i++]<<c,c+=8,u+=B[i++]<<c,c+=8),p=b[u&m];e:for(;;){if(u>>>=v=p>>>24,c-=v,0===(v=p>>>16&255))S[r++]=65535&p;else{if(!(16&v)){if(0==(64&v)){p=b[(65535&p)+(u&(1<<v)-1)];continue e}if(32&v){a.mode=12;break t}t.msg="invalid literal/length code",a.mode=30;break t}k=65535&p,(v&=15)&&(c<v&&(u+=B[i++]<<c,c+=8),k+=u&(1<<v)-1,u>>>=v,c-=v),c<15&&(u+=B[i++]<<c,c+=8,u+=B[i++]<<c,c+=8),p=g[u&w];a:for(;;){if(u>>>=v=p>>>24,c-=v,!(16&(v=p>>>16&255))){if(0==(64&v)){p=g[(65535&p)+(u&(1<<v)-1)];continue a}t.msg="invalid distance code",a.mode=30;break t}if(y=65535&p,c<(v&=15)&&(u+=B[i++]<<c,(c+=8)<v&&(u+=B[i++]<<c,c+=8)),l<(y+=u&(1<<v)-1)){t.msg="invalid distance too far back",a.mode=30;break t}if(u>>>=v,c-=v,(v=r-s)<y){if(d<(v=y-v)&&a.sane){t.msg="invalid distance too far back",a.mode=30;break t}if(z=_,(x=0)===f){if(x+=h-v,v<k){for(k-=v;S[r++]=_[x++],--v;);x=r-y,z=S}}else if(f<v){if(x+=h+f-v,(v-=f)<k){for(k-=v;S[r++]=_[x++],--v;);if(x=0,f<k){for(k-=v=f;S[r++]=_[x++],--v;);x=r-y,z=S}}}else if(x+=f-v,v<k){for(k-=v;S[r++]=_[x++],--v;);x=r-y,z=S}for(;2<k;)S[r++]=z[x++],S[r++]=z[x++],S[r++]=z[x++],k-=3;k&&(S[r++]=z[x++],1<k&&(S[r++]=z[x++]))}else{for(x=r-y;S[r++]=S[x++],S[r++]=S[x++],S[r++]=S[x++],2<(k-=3););k&&(S[r++]=S[x++],1<k&&(S[r++]=S[x++]))}break}}break}}while(i<n&&r<o);i-=k=c>>3,u&=(1<<(c-=k<<3))-1,t.next_in=i,t.next_out=r,t.avail_in=i<n?n-i+5:5-(i-n),t.avail_out=r<o?o-r+257:257-(r-o),a.hold=u,a.bits=c}},{}],11:[function(t,e,a){"use strict";var Z=t("../utils/common"),R=t("./adler32"),C=t("./crc32"),N=t("./inffast"),O=t("./inftrees"),D=1,I=2,U=0,T=-2,F=1,i=852,n=592;function L(t){return(t>>>24&255)+(t>>>8&65280)+((65280&t)<<8)+((255&t)<<24)}function r(){this.mode=0,this.last=!1,this.wrap=0,this.havedict=!1,this.flags=0,this.dmax=0,this.check=0,this.total=0,this.head=null,this.wbits=0,this.wsize=0,this.whave=0,this.wnext=0,this.window=null,this.hold=0,this.bits=0,this.length=0,this.offset=0,this.extra=0,this.lencode=null,this.distcode=null,this.lenbits=0,this.distbits=0,this.ncode=0,this.nlen=0,this.ndist=0,this.have=0,this.next=null,this.lens=new Z.Buf16(320),this.work=new Z.Buf16(288),this.lendyn=null,this.distdyn=null,this.sane=0,this.back=0,this.was=0}function s(t){var e;return t&&t.state?(e=t.state,t.total_in=t.total_out=e.total=0,t.msg="",e.wrap&&(t.adler=1&e.wrap),e.mode=F,e.last=0,e.havedict=0,e.dmax=32768,e.head=null,e.hold=0,e.bits=0,e.lencode=e.lendyn=new Z.Buf32(i),e.distcode=e.distdyn=new Z.Buf32(n),e.sane=1,e.back=-1,U):T}function o(t){var e;return t&&t.state?((e=t.state).wsize=0,e.whave=0,e.wnext=0,s(t)):T}function l(t,e){var a,i;return t&&t.state?(i=t.state,e<0?(a=0,e=-e):(a=1+(e>>4),e<48&&(e&=15)),e&&(e<8||15<e)?T:(null!==i.window&&i.wbits!==e&&(i.window=null),i.wrap=a,i.wbits=e,o(t))):T}function h(t,e){var a,i;return t?(i=new r,(t.state=i).window=null,(a=l(t,e))!==U&&(t.state=null),a):T}var d,f,_=!0;function H(t){if(_){var e;for(d=new Z.Buf32(512),f=new Z.Buf32(32),e=0;e<144;)t.lens[e++]=8;for(;e<256;)t.lens[e++]=9;for(;e<280;)t.lens[e++]=7;for(;e<288;)t.lens[e++]=8;for(O(D,t.lens,0,288,d,0,t.work,{bits:9}),e=0;e<32;)t.lens[e++]=5;O(I,t.lens,0,32,f,0,t.work,{bits:5}),_=!1}t.lencode=d,t.lenbits=9,t.distcode=f,t.distbits=5}function j(t,e,a,i){var n,r=t.state;return null===r.window&&(r.wsize=1<<r.wbits,r.wnext=0,r.whave=0,r.window=new Z.Buf8(r.wsize)),i>=r.wsize?(Z.arraySet(r.window,e,a-r.wsize,r.wsize,0),r.wnext=0,r.whave=r.wsize):(i<(n=r.wsize-r.wnext)&&(n=i),Z.arraySet(r.window,e,a-i,n,r.wnext),(i-=n)?(Z.arraySet(r.window,e,a-i,i,0),r.wnext=i,r.whave=r.wsize):(r.wnext+=n,r.wnext===r.wsize&&(r.wnext=0),r.whave<r.wsize&&(r.whave+=n))),0}a.inflateReset=o,a.inflateReset2=l,a.inflateResetKeep=s,a.inflateInit=function(t){return h(t,15)},a.inflateInit2=h,a.inflate=function(t,e){var a,i,n,r,s,o,l,h,d,f,_,u,c,b,g,m,w,p,v,k,y,x,z,B,S=0,E=new Z.Buf8(4),A=[16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15];if(!t||!t.state||!t.output||!t.input&&0!==t.avail_in)return T;12===(a=t.state).mode&&(a.mode=13),s=t.next_out,n=t.output,l=t.avail_out,r=t.next_in,i=t.input,o=t.avail_in,h=a.hold,d=a.bits,f=o,_=l,x=U;t:for(;;)switch(a.mode){case F:if(0===a.wrap){a.mode=13;break}for(;d<16;){if(0===o)break t;o--,h+=i[r++]<<d,d+=8}if(2&a.wrap&&35615===h){E[a.check=0]=255&h,E[1]=h>>>8&255,a.check=C(a.check,E,2,0),d=h=0,a.mode=2;break}if(a.flags=0,a.head&&(a.head.done=!1),!(1&a.wrap)||(((255&h)<<8)+(h>>8))%31){t.msg="incorrect header check",a.mode=30;break}if(8!=(15&h)){t.msg="unknown compression method",a.mode=30;break}if(d-=4,y=8+(15&(h>>>=4)),0===a.wbits)a.wbits=y;else if(y>a.wbits){t.msg="invalid window size",a.mode=30;break}a.dmax=1<<y,t.adler=a.check=1,a.mode=512&h?10:12,d=h=0;break;case 2:for(;d<16;){if(0===o)break t;o--,h+=i[r++]<<d,d+=8}if(a.flags=h,8!=(255&a.flags)){t.msg="unknown compression method",a.mode=30;break}if(57344&a.flags){t.msg="unknown header flags set",a.mode=30;break}a.head&&(a.head.text=h>>8&1),512&a.flags&&(E[0]=255&h,E[1]=h>>>8&255,a.check=C(a.check,E,2,0)),d=h=0,a.mode=3;case 3:for(;d<32;){if(0===o)break t;o--,h+=i[r++]<<d,d+=8}a.head&&(a.head.time=h),512&a.flags&&(E[0]=255&h,E[1]=h>>>8&255,E[2]=h>>>16&255,E[3]=h>>>24&255,a.check=C(a.check,E,4,0)),d=h=0,a.mode=4;case 4:for(;d<16;){if(0===o)break t;o--,h+=i[r++]<<d,d+=8}a.head&&(a.head.xflags=255&h,a.head.os=h>>8),512&a.flags&&(E[0]=255&h,E[1]=h>>>8&255,a.check=C(a.check,E,2,0)),d=h=0,a.mode=5;case 5:if(1024&a.flags){for(;d<16;){if(0===o)break t;o--,h+=i[r++]<<d,d+=8}a.length=h,a.head&&(a.head.extra_len=h),512&a.flags&&(E[0]=255&h,E[1]=h>>>8&255,a.check=C(a.check,E,2,0)),d=h=0}else a.head&&(a.head.extra=null);a.mode=6;case 6:if(1024&a.flags&&(o<(u=a.length)&&(u=o),u&&(a.head&&(y=a.head.extra_len-a.length,a.head.extra||(a.head.extra=new Array(a.head.extra_len)),Z.arraySet(a.head.extra,i,r,u,y)),512&a.flags&&(a.check=C(a.check,i,u,r)),o-=u,r+=u,a.length-=u),a.length))break t;a.length=0,a.mode=7;case 7:if(2048&a.flags){if(0===o)break t;for(u=0;y=i[r+u++],a.head&&y&&a.length<65536&&(a.head.name+=String.fromCharCode(y)),y&&u<o;);if(512&a.flags&&(a.check=C(a.check,i,u,r)),o-=u,r+=u,y)break t}else a.head&&(a.head.name=null);a.length=0,a.mode=8;case 8:if(4096&a.flags){if(0===o)break t;for(u=0;y=i[r+u++],a.head&&y&&a.length<65536&&(a.head.comment+=String.fromCharCode(y)),y&&u<o;);if(512&a.flags&&(a.check=C(a.check,i,u,r)),o-=u,r+=u,y)break t}else a.head&&(a.head.comment=null);a.mode=9;case 9:if(512&a.flags){for(;d<16;){if(0===o)break t;o--,h+=i[r++]<<d,d+=8}if(h!==(65535&a.check)){t.msg="header crc mismatch",a.mode=30;break}d=h=0}a.head&&(a.head.hcrc=a.flags>>9&1,a.head.done=!0),t.adler=a.check=0,a.mode=12;break;case 10:for(;d<32;){if(0===o)break t;o--,h+=i[r++]<<d,d+=8}t.adler=a.check=L(h),d=h=0,a.mode=11;case 11:if(0===a.havedict)return t.next_out=s,t.avail_out=l,t.next_in=r,t.avail_in=o,a.hold=h,a.bits=d,2;t.adler=a.check=1,a.mode=12;case 12:if(5===e||6===e)break t;case 13:if(a.last){h>>>=7&d,d-=7&d,a.mode=27;break}for(;d<3;){if(0===o)break t;o--,h+=i[r++]<<d,d+=8}switch(a.last=1&h,d-=1,3&(h>>>=1)){case 0:a.mode=14;break;case 1:if(H(a),a.mode=20,6!==e)break;h>>>=2,d-=2;break t;case 2:a.mode=17;break;case 3:t.msg="invalid block type",a.mode=30}h>>>=2,d-=2;break;case 14:for(h>>>=7&d,d-=7&d;d<32;){if(0===o)break t;o--,h+=i[r++]<<d,d+=8}if((65535&h)!=(h>>>16^65535)){t.msg="invalid stored block lengths",a.mode=30;break}if(a.length=65535&h,d=h=0,a.mode=15,6===e)break t;case 15:a.mode=16;case 16:if(u=a.length){if(o<u&&(u=o),l<u&&(u=l),0===u)break t;Z.arraySet(n,i,r,u,s),o-=u,r+=u,l-=u,s+=u,a.length-=u;break}a.mode=12;break;case 17:for(;d<14;){if(0===o)break t;o--,h+=i[r++]<<d,d+=8}if(a.nlen=257+(31&h),h>>>=5,d-=5,a.ndist=1+(31&h),h>>>=5,d-=5,a.ncode=4+(15&h),h>>>=4,d-=4,286<a.nlen||30<a.ndist){t.msg="too many length or distance symbols",a.mode=30;break}a.have=0,a.mode=18;case 18:for(;a.have<a.ncode;){for(;d<3;){if(0===o)break t;o--,h+=i[r++]<<d,d+=8}a.lens[A[a.have++]]=7&h,h>>>=3,d-=3}for(;a.have<19;)a.lens[A[a.have++]]=0;if(a.lencode=a.lendyn,a.lenbits=7,z={bits:a.lenbits},x=O(0,a.lens,0,19,a.lencode,0,a.work,z),a.lenbits=z.bits,x){t.msg="invalid code lengths set",a.mode=30;break}a.have=0,a.mode=19;case 19:for(;a.have<a.nlen+a.ndist;){for(;m=(S=a.lencode[h&(1<<a.lenbits)-1])>>>16&255,w=65535&S,!((g=S>>>24)<=d);){if(0===o)break t;o--,h+=i[r++]<<d,d+=8}if(w<16)h>>>=g,d-=g,a.lens[a.have++]=w;else{if(16===w){for(B=g+2;d<B;){if(0===o)break t;o--,h+=i[r++]<<d,d+=8}if(h>>>=g,d-=g,0===a.have){t.msg="invalid bit length repeat",a.mode=30;break}y=a.lens[a.have-1],u=3+(3&h),h>>>=2,d-=2}else if(17===w){for(B=g+3;d<B;){if(0===o)break t;o--,h+=i[r++]<<d,d+=8}d-=g,y=0,u=3+(7&(h>>>=g)),h>>>=3,d-=3}else{for(B=g+7;d<B;){if(0===o)break t;o--,h+=i[r++]<<d,d+=8}d-=g,y=0,u=11+(127&(h>>>=g)),h>>>=7,d-=7}if(a.have+u>a.nlen+a.ndist){t.msg="invalid bit length repeat",a.mode=30;break}for(;u--;)a.lens[a.have++]=y}}if(30===a.mode)break;if(0===a.lens[256]){t.msg="invalid code -- missing end-of-block",a.mode=30;break}if(a.lenbits=9,z={bits:a.lenbits},x=O(D,a.lens,0,a.nlen,a.lencode,0,a.work,z),a.lenbits=z.bits,x){t.msg="invalid literal/lengths set",a.mode=30;break}if(a.distbits=6,a.distcode=a.distdyn,z={bits:a.distbits},x=O(I,a.lens,a.nlen,a.ndist,a.distcode,0,a.work,z),a.distbits=z.bits,x){t.msg="invalid distances set",a.mode=30;break}if(a.mode=20,6===e)break t;case 20:a.mode=21;case 21:if(6<=o&&258<=l){t.next_out=s,t.avail_out=l,t.next_in=r,t.avail_in=o,a.hold=h,a.bits=d,N(t,_),s=t.next_out,n=t.output,l=t.avail_out,r=t.next_in,i=t.input,o=t.avail_in,h=a.hold,d=a.bits,12===a.mode&&(a.back=-1);break}for(a.back=0;m=(S=a.lencode[h&(1<<a.lenbits)-1])>>>16&255,w=65535&S,!((g=S>>>24)<=d);){if(0===o)break t;o--,h+=i[r++]<<d,d+=8}if(m&&0==(240&m)){for(p=g,v=m,k=w;m=(S=a.lencode[k+((h&(1<<p+v)-1)>>p)])>>>16&255,w=65535&S,!(p+(g=S>>>24)<=d);){if(0===o)break t;o--,h+=i[r++]<<d,d+=8}h>>>=p,d-=p,a.back+=p}if(h>>>=g,d-=g,a.back+=g,a.length=w,0===m){a.mode=26;break}if(32&m){a.back=-1,a.mode=12;break}if(64&m){t.msg="invalid literal/length code",a.mode=30;break}a.extra=15&m,a.mode=22;case 22:if(a.extra){for(B=a.extra;d<B;){if(0===o)break t;o--,h+=i[r++]<<d,d+=8}a.length+=h&(1<<a.extra)-1,h>>>=a.extra,d-=a.extra,a.back+=a.extra}a.was=a.length,a.mode=23;case 23:for(;m=(S=a.distcode[h&(1<<a.distbits)-1])>>>16&255,w=65535&S,!((g=S>>>24)<=d);){if(0===o)break t;o--,h+=i[r++]<<d,d+=8}if(0==(240&m)){for(p=g,v=m,k=w;m=(S=a.distcode[k+((h&(1<<p+v)-1)>>p)])>>>16&255,w=65535&S,!(p+(g=S>>>24)<=d);){if(0===o)break t;o--,h+=i[r++]<<d,d+=8}h>>>=p,d-=p,a.back+=p}if(h>>>=g,d-=g,a.back+=g,64&m){t.msg="invalid distance code",a.mode=30;break}a.offset=w,a.extra=15&m,a.mode=24;case 24:if(a.extra){for(B=a.extra;d<B;){if(0===o)break t;o--,h+=i[r++]<<d,d+=8}a.offset+=h&(1<<a.extra)-1,h>>>=a.extra,d-=a.extra,a.back+=a.extra}if(a.offset>a.dmax){t.msg="invalid distance too far back",a.mode=30;break}a.mode=25;case 25:if(0===l)break t;if(u=_-l,a.offset>u){if((u=a.offset-u)>a.whave&&a.sane){t.msg="invalid distance too far back",a.mode=30;break}u>a.wnext?(u-=a.wnext,c=a.wsize-u):c=a.wnext-u,u>a.length&&(u=a.length),b=a.window}else b=n,c=s-a.offset,u=a.length;for(l<u&&(u=l),l-=u,a.length-=u;n[s++]=b[c++],--u;);0===a.length&&(a.mode=21);break;case 26:if(0===l)break t;n[s++]=a.length,l--,a.mode=21;break;case 27:if(a.wrap){for(;d<32;){if(0===o)break t;o--,h|=i[r++]<<d,d+=8}if(_-=l,t.total_out+=_,a.total+=_,_&&(t.adler=a.check=a.flags?C(a.check,n,_,s-_):R(a.check,n,_,s-_)),_=l,(a.flags?h:L(h))!==a.check){t.msg="incorrect data check",a.mode=30;break}d=h=0}a.mode=28;case 28:if(a.wrap&&a.flags){for(;d<32;){if(0===o)break t;o--,h+=i[r++]<<d,d+=8}if(h!==(4294967295&a.total)){t.msg="incorrect length check",a.mode=30;break}d=h=0}a.mode=29;case 29:x=1;break t;case 30:x=-3;break t;case 31:return-4;case 32:default:return T}return t.next_out=s,t.avail_out=l,t.next_in=r,t.avail_in=o,a.hold=h,a.bits=d,(a.wsize||_!==t.avail_out&&a.mode<30&&(a.mode<27||4!==e))&&j(t,t.output,t.next_out,_-t.avail_out)?(a.mode=31,-4):(f-=t.avail_in,_-=t.avail_out,t.total_in+=f,t.total_out+=_,a.total+=_,a.wrap&&_&&(t.adler=a.check=a.flags?C(a.check,n,_,t.next_out-_):R(a.check,n,_,t.next_out-_)),t.data_type=a.bits+(a.last?64:0)+(12===a.mode?128:0)+(20===a.mode||15===a.mode?256:0),(0===f&&0===_||4===e)&&x===U&&(x=-5),x)},a.inflateEnd=function(t){if(!t||!t.state)return T;var e=t.state;return e.window&&(e.window=null),t.state=null,U},a.inflateGetHeader=function(t,e){var a;return t&&t.state?0==(2&(a=t.state).wrap)?T:((a.head=e).done=!1,U):T},a.inflateSetDictionary=function(t,e){var a,i=e.length;return t&&t.state?0!==(a=t.state).wrap&&11!==a.mode?T:11===a.mode&&R(1,e,i,0)!==a.check?-3:j(t,e,i,i)?(a.mode=31,-4):(a.havedict=1,U):T},a.inflateInfo="pako inflate (from Nodeca project)"},{"../utils/common":3,"./adler32":5,"./crc32":7,"./inffast":10,"./inftrees":12}],12:[function(t,e,a){"use strict";var D=t("../utils/common"),I=[3,4,5,6,7,8,9,10,11,13,15,17,19,23,27,31,35,43,51,59,67,83,99,115,131,163,195,227,258,0,0],U=[16,16,16,16,16,16,16,16,17,17,17,17,18,18,18,18,19,19,19,19,20,20,20,20,21,21,21,21,16,72,78],T=[1,2,3,4,5,7,9,13,17,25,33,49,65,97,129,193,257,385,513,769,1025,1537,2049,3073,4097,6145,8193,12289,16385,24577,0,0],F=[16,16,16,16,17,17,18,18,19,19,20,20,21,21,22,22,23,23,24,24,25,25,26,26,27,27,28,28,29,29,64,64];e.exports=function(t,e,a,i,n,r,s,o){var l,h,d,f,_,u,c,b,g,m=o.bits,w=0,p=0,v=0,k=0,y=0,x=0,z=0,B=0,S=0,E=0,A=null,Z=0,R=new D.Buf16(16),C=new D.Buf16(16),N=null,O=0;for(w=0;w<=15;w++)R[w]=0;for(p=0;p<i;p++)R[e[a+p]]++;for(y=m,k=15;1<=k&&0===R[k];k--);if(k<y&&(y=k),0===k)return n[r++]=20971520,n[r++]=20971520,o.bits=1,0;for(v=1;v<k&&0===R[v];v++);for(y<v&&(y=v),w=B=1;w<=15;w++)if(B<<=1,(B-=R[w])<0)return-1;if(0<B&&(0===t||1!==k))return-1;for(C[1]=0,w=1;w<15;w++)C[w+1]=C[w]+R[w];for(p=0;p<i;p++)0!==e[a+p]&&(s[C[e[a+p]]++]=p);if(0===t?(A=N=s,u=19):1===t?(A=I,Z-=257,N=U,O-=257,u=256):(A=T,N=F,u=-1),w=v,_=r,z=p=E=0,d=-1,f=(S=1<<(x=y))-1,1===t&&852<S||2===t&&592<S)return 1;for(;;){for(c=w-z,s[p]<u?(b=0,g=s[p]):s[p]>u?(b=N[O+s[p]],g=A[Z+s[p]]):(b=96,g=0),l=1<<w-z,v=h=1<<x;n[_+(E>>z)+(h-=l)]=c<<24|b<<16|g|0,0!==h;);for(l=1<<w-1;E&l;)l>>=1;if(0!==l?(E&=l-1,E+=l):E=0,p++,0==--R[w]){if(w===k)break;w=e[a+s[p]]}if(y<w&&(E&f)!==d){for(0===z&&(z=y),_+=v,B=1<<(x=w-z);x+z<k&&!((B-=R[x+z])<=0);)x++,B<<=1;if(S+=1<<x,1===t&&852<S||2===t&&592<S)return 1;n[d=E&f]=y<<24|x<<16|_-r|0}}return 0!==E&&(n[_+E]=w-z<<24|64<<16|0),o.bits=y,0}},{"../utils/common":3}],13:[function(t,e,a){"use strict";e.exports={2:"need dictionary",1:"stream end",0:"","-1":"file error","-2":"stream error","-3":"data error","-4":"insufficient memory","-5":"buffer error","-6":"incompatible version"}},{}],14:[function(t,e,a){"use strict";var l=t("../utils/common"),o=0,h=1;function i(t){for(var e=t.length;0<=--e;)t[e]=0}var d=0,s=29,f=256,_=f+1+s,u=30,c=19,g=2*_+1,m=15,n=16,b=7,w=256,p=16,v=17,k=18,y=[0,0,0,0,0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,0],x=[0,0,0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13],z=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,3,7],B=[16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15],S=new Array(2*(_+2));i(S);var E=new Array(2*u);i(E);var A=new Array(512);i(A);var Z=new Array(256);i(Z);var R=new Array(s);i(R);var C,N,O,D=new Array(u);function I(t,e,a,i,n){this.static_tree=t,this.extra_bits=e,this.extra_base=a,this.elems=i,this.max_length=n,this.has_stree=t&&t.length}function r(t,e){this.dyn_tree=t,this.max_code=0,this.stat_desc=e}function U(t){return t<256?A[t]:A[256+(t>>>7)]}function T(t,e){t.pending_buf[t.pending++]=255&e,t.pending_buf[t.pending++]=e>>>8&255}function F(t,e,a){t.bi_valid>n-a?(t.bi_buf|=e<<t.bi_valid&65535,T(t,t.bi_buf),t.bi_buf=e>>n-t.bi_valid,t.bi_valid+=a-n):(t.bi_buf|=e<<t.bi_valid&65535,t.bi_valid+=a)}function L(t,e,a){F(t,a[2*e],a[2*e+1])}function H(t,e){for(var a=0;a|=1&t,t>>>=1,a<<=1,0<--e;);return a>>>1}function j(t,e,a){var i,n,r=new Array(m+1),s=0;for(i=1;i<=m;i++)r[i]=s=s+a[i-1]<<1;for(n=0;n<=e;n++){var o=t[2*n+1];0!==o&&(t[2*n]=H(r[o]++,o))}}function K(t){var e;for(e=0;e<_;e++)t.dyn_ltree[2*e]=0;for(e=0;e<u;e++)t.dyn_dtree[2*e]=0;for(e=0;e<c;e++)t.bl_tree[2*e]=0;t.dyn_ltree[2*w]=1,t.opt_len=t.static_len=0,t.last_lit=t.matches=0}function M(t){8<t.bi_valid?T(t,t.bi_buf):0<t.bi_valid&&(t.pending_buf[t.pending++]=t.bi_buf),t.bi_buf=0,t.bi_valid=0}function P(t,e,a,i){var n=2*e,r=2*a;return t[n]<t[r]||t[n]===t[r]&&i[e]<=i[a]}function Y(t,e,a){for(var i=t.heap[a],n=a<<1;n<=t.heap_len&&(n<t.heap_len&&P(e,t.heap[n+1],t.heap[n],t.depth)&&n++,!P(e,i,t.heap[n],t.depth));)t.heap[a]=t.heap[n],a=n,n<<=1;t.heap[a]=i}function q(t,e,a){var i,n,r,s,o=0;if(0!==t.last_lit)for(;i=t.pending_buf[t.d_buf+2*o]<<8|t.pending_buf[t.d_buf+2*o+1],n=t.pending_buf[t.l_buf+o],o++,0===i?L(t,n,e):(L(t,(r=Z[n])+f+1,e),0!==(s=y[r])&&F(t,n-=R[r],s),L(t,r=U(--i),a),0!==(s=x[r])&&F(t,i-=D[r],s)),o<t.last_lit;);L(t,w,e)}function G(t,e){var a,i,n,r=e.dyn_tree,s=e.stat_desc.static_tree,o=e.stat_desc.has_stree,l=e.stat_desc.elems,h=-1;for(t.heap_len=0,t.heap_max=g,a=0;a<l;a++)0!==r[2*a]?(t.heap[++t.heap_len]=h=a,t.depth[a]=0):r[2*a+1]=0;for(;t.heap_len<2;)r[2*(n=t.heap[++t.heap_len]=h<2?++h:0)]=1,t.depth[n]=0,t.opt_len--,o&&(t.static_len-=s[2*n+1]);for(e.max_code=h,a=t.heap_len>>1;1<=a;a--)Y(t,r,a);for(n=l;a=t.heap[1],t.heap[1]=t.heap[t.heap_len--],Y(t,r,1),i=t.heap[1],t.heap[--t.heap_max]=a,t.heap[--t.heap_max]=i,r[2*n]=r[2*a]+r[2*i],t.depth[n]=(t.depth[a]>=t.depth[i]?t.depth[a]:t.depth[i])+1,r[2*a+1]=r[2*i+1]=n,t.heap[1]=n++,Y(t,r,1),2<=t.heap_len;);t.heap[--t.heap_max]=t.heap[1],function(t,e){var a,i,n,r,s,o,l=e.dyn_tree,h=e.max_code,d=e.stat_desc.static_tree,f=e.stat_desc.has_stree,_=e.stat_desc.extra_bits,u=e.stat_desc.extra_base,c=e.stat_desc.max_length,b=0;for(r=0;r<=m;r++)t.bl_count[r]=0;for(l[2*t.heap[t.heap_max]+1]=0,a=t.heap_max+1;a<g;a++)c<(r=l[2*l[2*(i=t.heap[a])+1]+1]+1)&&(r=c,b++),l[2*i+1]=r,h<i||(t.bl_count[r]++,s=0,u<=i&&(s=_[i-u]),o=l[2*i],t.opt_len+=o*(r+s),f&&(t.static_len+=o*(d[2*i+1]+s)));if(0!==b){do{for(r=c-1;0===t.bl_count[r];)r--;t.bl_count[r]--,t.bl_count[r+1]+=2,t.bl_count[c]--,b-=2}while(0<b);for(r=c;0!==r;r--)for(i=t.bl_count[r];0!==i;)h<(n=t.heap[--a])||(l[2*n+1]!==r&&(t.opt_len+=(r-l[2*n+1])*l[2*n],l[2*n+1]=r),i--)}}(t,e),j(r,h,t.bl_count)}function X(t,e,a){var i,n,r=-1,s=e[1],o=0,l=7,h=4;for(0===s&&(l=138,h=3),e[2*(a+1)+1]=65535,i=0;i<=a;i++)n=s,s=e[2*(i+1)+1],++o<l&&n===s||(o<h?t.bl_tree[2*n]+=o:0!==n?(n!==r&&t.bl_tree[2*n]++,t.bl_tree[2*p]++):o<=10?t.bl_tree[2*v]++:t.bl_tree[2*k]++,r=n,(o=0)===s?(l=138,h=3):n===s?(l=6,h=3):(l=7,h=4))}function W(t,e,a){var i,n,r=-1,s=e[1],o=0,l=7,h=4;for(0===s&&(l=138,h=3),i=0;i<=a;i++)if(n=s,s=e[2*(i+1)+1],!(++o<l&&n===s)){if(o<h)for(;L(t,n,t.bl_tree),0!=--o;);else 0!==n?(n!==r&&(L(t,n,t.bl_tree),o--),L(t,p,t.bl_tree),F(t,o-3,2)):o<=10?(L(t,v,t.bl_tree),F(t,o-3,3)):(L(t,k,t.bl_tree),F(t,o-11,7));r=n,(o=0)===s?(l=138,h=3):n===s?(l=6,h=3):(l=7,h=4)}}i(D);var J=!1;function Q(t,e,a,i){var n,r,s,o;F(t,(d<<1)+(i?1:0),3),r=e,s=a,o=!0,M(n=t),o&&(T(n,s),T(n,~s)),l.arraySet(n.pending_buf,n.window,r,s,n.pending),n.pending+=s}a._tr_init=function(t){J||(function(){var t,e,a,i,n,r=new Array(m+1);for(i=a=0;i<s-1;i++)for(R[i]=a,t=0;t<1<<y[i];t++)Z[a++]=i;for(Z[a-1]=i,i=n=0;i<16;i++)for(D[i]=n,t=0;t<1<<x[i];t++)A[n++]=i;for(n>>=7;i<u;i++)for(D[i]=n<<7,t=0;t<1<<x[i]-7;t++)A[256+n++]=i;for(e=0;e<=m;e++)r[e]=0;for(t=0;t<=143;)S[2*t+1]=8,t++,r[8]++;for(;t<=255;)S[2*t+1]=9,t++,r[9]++;for(;t<=279;)S[2*t+1]=7,t++,r[7]++;for(;t<=287;)S[2*t+1]=8,t++,r[8]++;for(j(S,_+1,r),t=0;t<u;t++)E[2*t+1]=5,E[2*t]=H(t,5);C=new I(S,y,f+1,_,m),N=new I(E,x,0,u,m),O=new I(new Array(0),z,0,c,b)}(),J=!0),t.l_desc=new r(t.dyn_ltree,C),t.d_desc=new r(t.dyn_dtree,N),t.bl_desc=new r(t.bl_tree,O),t.bi_buf=0,t.bi_valid=0,K(t)},a._tr_stored_block=Q,a._tr_flush_block=function(t,e,a,i){var n,r,s=0;0<t.level?(2===t.strm.data_type&&(t.strm.data_type=function(t){var e,a=4093624447;for(e=0;e<=31;e++,a>>>=1)if(1&a&&0!==t.dyn_ltree[2*e])return o;if(0!==t.dyn_ltree[18]||0!==t.dyn_ltree[20]||0!==t.dyn_ltree[26])return h;for(e=32;e<f;e++)if(0!==t.dyn_ltree[2*e])return h;return o}(t)),G(t,t.l_desc),G(t,t.d_desc),s=function(t){var e;for(X(t,t.dyn_ltree,t.l_desc.max_code),X(t,t.dyn_dtree,t.d_desc.max_code),G(t,t.bl_desc),e=c-1;3<=e&&0===t.bl_tree[2*B[e]+1];e--);return t.opt_len+=3*(e+1)+5+5+4,e}(t),n=t.opt_len+3+7>>>3,(r=t.static_len+3+7>>>3)<=n&&(n=r)):n=r=a+5,a+4<=n&&-1!==e?Q(t,e,a,i):4===t.strategy||r===n?(F(t,2+(i?1:0),3),q(t,S,E)):(F(t,4+(i?1:0),3),function(t,e,a,i){var n;for(F(t,e-257,5),F(t,a-1,5),F(t,i-4,4),n=0;n<i;n++)F(t,t.bl_tree[2*B[n]+1],3);W(t,t.dyn_ltree,e-1),W(t,t.dyn_dtree,a-1)}(t,t.l_desc.max_code+1,t.d_desc.max_code+1,s+1),q(t,t.dyn_ltree,t.dyn_dtree)),K(t),i&&M(t)},a._tr_tally=function(t,e,a){return t.pending_buf[t.d_buf+2*t.last_lit]=e>>>8&255,t.pending_buf[t.d_buf+2*t.last_lit+1]=255&e,t.pending_buf[t.l_buf+t.last_lit]=255&a,t.last_lit++,0===e?t.dyn_ltree[2*a]++:(t.matches++,e--,t.dyn_ltree[2*(Z[a]+f+1)]++,t.dyn_dtree[2*U(e)]++),t.last_lit===t.lit_bufsize-1},a._tr_align=function(t){var e;F(t,2,3),L(t,w,S),16===(e=t).bi_valid?(T(e,e.bi_buf),e.bi_buf=0,e.bi_valid=0):8<=e.bi_valid&&(e.pending_buf[e.pending++]=255&e.bi_buf,e.bi_buf>>=8,e.bi_valid-=8)}},{"../utils/common":3}],15:[function(t,e,a){"use strict";e.exports=function(){this.input=null,this.next_in=0,this.avail_in=0,this.total_in=0,this.output=null,this.next_out=0,this.avail_out=0,this.total_out=0,this.msg="",this.state=null,this.data_type=2,this.adler=0}},{}],"/":[function(t,e,a){"use strict";var i={};(0,t("./lib/utils/common").assign)(i,t("./lib/deflate"),t("./lib/inflate"),t("./lib/zlib/constants")),e.exports=i},{"./lib/deflate":1,"./lib/inflate":2,"./lib/utils/common":3,"./lib/zlib/constants":6}]},{},[])("/")});
+
 (() => {
   // User-facing release label only. Do not use for storage schemas or caches.
-  const BSA_RELEASE_LABEL = "V2.13";
+  const BSA_RELEASE_LABEL = "V2.16";
   const S = (t, p = null, s = false) => ({ t, p, s });
   const CFAS_TOPICS = [
     {
@@ -315,6 +341,35 @@
   ];
   const { useState, useEffect, useMemo, useRef, useCallback } = React;
   const STORE_KEY = "bsa-study-dashboard:v1";
+  /* V2.14: Lossless storage compaction. The data *schema* is unchanged.
+     Existing plain JSON loads as-is. Unified backups always contain full readable
+     JSON; internal localStorage is sometimes a compressed envelope. This does not
+     increase the browser's quota or protect against browser data clearing. */
+  const BSA214_COMPACT_PREFIX='bsa:packed-json:deflate1:';
+  function bsa214Pack(text){
+    const original=String(text||'');
+    if(original.length<120000||window.__BSA_SHARED_MODE__||typeof pako==='undefined')return original;
+    try{
+      const bytes=pako.deflate(original,{level:2});
+      const chunks=[];for(let i=0;i<bytes.length;i+=16384)chunks.push(String.fromCharCode.apply(null,bytes.subarray(i,i+16384)));
+      const candidate=BSA214_COMPACT_PREFIX+btoa(chunks.join(''));
+      return candidate.length<original.length*.86?candidate:original;
+    }catch(_){return original}
+  }
+  function bsa214Unpack(raw){
+    if(raw===null||!String(raw).startsWith(BSA214_COMPACT_PREFIX))return raw;
+    if(typeof pako==='undefined')throw Error('Study-record decompressor unavailable. Keep the original saved data.');
+    const b64=String(raw).slice(BSA214_COMPACT_PREFIX.length);
+    const binary=atob(b64),bytes=new Uint8Array(binary.length);
+    for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+    const text=pako.inflate(bytes,{to:'string'});
+    if(!text||text[0]!=='{')throw Error('Compressed study data could not be verified.');
+    return text;
+  }
+  function bsa214MainGet(){return bsa214Unpack(localStorage.getItem(STORE_KEY))}
+  function bsa214MainSet(plain){const text=String(plain);localStorage.setItem(STORE_KEY,bsa214Pack(text));return true}
+  function bsa214BackupGet(key){return key===STORE_KEY?bsa214MainGet():localStorage.getItem(key)}
+
   const uid = (p) => `${p}_${Math.random().toString(36).slice(2, 8)}${Date.now().toString(36).slice(-3)}`;
   const pad = (n) => String(n).padStart(2, "0");
   const today = () => {
@@ -372,16 +427,20 @@
     return { version: 1, updatedAt: 0, activeId: "cfas", settings: { ...DEFAULT_SETTINGS }, subjects: [buildCfas()] };
   }
   function loadLocal() {
-    let raw = null;
+    let raw = null, stored = null;
     try {
-      raw = localStorage.getItem(STORE_KEY);
-      if (!raw) return null;
+      // Keep the original bytes available for recovery even if decompression fails.
+      // Otherwise a compressed record with a missing decoder could be overwritten
+      // by the initial default dataset on the very next auto-save.
+      stored=localStorage.getItem(STORE_KEY);
+      if(stored===null)return null;
+      raw = bsa214Unpack(stored);
       const doc = normalizeDoc(JSON.parse(raw));
       if (!doc) throw Error('Saved study data did not have the expected subjects structure.');
       return doc;
     } catch (error) {
-      if (raw !== null) window.__BSA_UNREADABLE_DATA__ = {
-        raw, reason: String(error && error.message || 'Could not read the study data')
+      if (stored !== null) window.__BSA_UNREADABLE_DATA__ = {
+        raw:stored, reason: String(error && error.message || 'Could not read the study data')
       };
       return null;
     }
@@ -435,7 +494,8 @@
       id: uid("t"),
       kind: isExam ? "exam" : "topic",
       week: first(x, ["week", "module", "wk", "weekNumber"]),
-      code: first(x, ["code", "id"]).slice(0, 8),
+      // Do not truncate chapter identity ("Chapter 16" used to become "Chapter ").
+      code: first(x, ["code", "id"]).slice(0, 64),
       title: first(x, ["title", "topic", "name", "chapter"]) || "Untitled topic",
       standard: first(x, ["standard", "law", "std", "reference"]),
       scope: first(x, ["scope", "examScope", "exam"]),
@@ -1329,7 +1389,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
      - Offline edits are counted and kept; they upload as soon as a connection is back. */
   const GH_KEYS = { user: "bsa_gh_user", repo: "bsa_gh_repo", token: "bsa_gh_key", path: "bsa_gh_path" };
   const SYNC_META_KEY = "bsa_sync_meta";
-  const COLLS = ["topics", "cards", "mistakes", "quizzes", "sessions", "days", "lectures", "psets", "mcqSets", "classes", "attend", "tasks", "aiAttempts", "learningEvents", "labAttempts", "todayChecks", "tutorMemories", "studyInbox", "driveSources", "libraryFlags", "cycleRuns", "cycleCases", "practiceSessions", "problemWork", "fsReports", "fsAttempts"];
+  const COLLS = ["topics", "cards", "mistakes", "quizzes", "sessions", "days", "lectures", "psets", "mcqSets", "classes", "attend", "tasks", "aiAttempts", "learningEvents", "labAttempts", "todayChecks", "tutorMemories", "studyInbox", "driveSources", "libraryFlags", "cycleRuns", "cycleCases", "practiceSessions", "problemWork", "fsReports", "fsAttempts", "foundationChecks"];
   const TOMB_DAYS = 120;
   const POLL_MS = 3e4;
   const lsGet = (k) => {
@@ -1733,6 +1793,136 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     return { sha: j.content.sha };
   }
 
+  /* V2.16 recovery snapshots: distinct from live GitHub sync and browser-only keys.
+     Each slot is a private, versioned GitHub file. Overwrites retain Git history.
+     Slots cap visible files at 7 daily / 5 weekly / 12 monthly. */
+  const BSA216_RECOVERY_STATE='bsa216-recovery-status-v1';
+  let bsa216Recovery={};
+  try{bsa216Recovery=JSON.parse(localStorage.getItem(BSA216_RECOVERY_STATE)||'{}')||{}}catch(_){}
+  const bsa216StoreStatus=()=>{try{localStorage.setItem(BSA216_RECOVERY_STATE,JSON.stringify(bsa216Recovery))}catch(_){}};
+  function bsa216Buckets(when=Date.now()){
+    const now=new Date(when),date=now.toISOString().slice(0,10),dayIndex=Math.floor(when/86400000);
+    const weekIndex=Math.floor((dayIndex+3)/7),monthIndex=now.getUTCFullYear()*12+now.getUTCMonth();
+    return [{kind:'daily',label:date,slot:((dayIndex%7)+7)%7},
+      {kind:'weekly',label:String(weekIndex),slot:((weekIndex%5)+5)%5},
+      {kind:'monthly',label:now.toISOString().slice(0,7),slot:((monthIndex%12)+12)%12}];
+  }
+  function bsa216RecoveryPath(cfg,kind,slot){
+    const base=cfg.path.includes('/')?cfg.path.slice(0,cfg.path.lastIndexOf('/')+1):'';
+    return base+'recovery/'+kind+'-'+slot+'.json';
+  }
+  const bsa216Identity=cfg=>cfg.owner.toLowerCase()+'/'+cfg.repo.toLowerCase()+'/'+cfg.path;
+  async function bsa216PrivateRepo(cfg){
+    const r=await ghFetch(cfg,ghRepoUrl(cfg));
+    if(!r.ok)throw await ghError(r,cfg);
+    const j=await r.json();
+    if(j.private!==true)throw new Error('Historical backups require a private GitHub data repository. The selected repository is public.');
+    return true;
+  }
+  async function bsa216GetRaw(cfg,path){
+    const url=ghRepoUrl(cfg)+'/contents/'+path.split('/').map(encodeURIComponent).join('/');
+    const r=await ghFetch(cfg,url);
+    if(r.status===404)return {sha:null,data:null,url};
+    if(!r.ok)throw await ghError(r,cfg);
+    const item=await r.json();
+    if(item.type!=='file')throw new Error('Backup path conflicts with a folder.');
+    let encoded=item.content;
+    if(!encoded){const blob=await ghFetch(cfg,ghRepoUrl(cfg)+'/git/blobs/'+item.sha);if(!blob.ok)throw await ghError(blob,cfg);encoded=(await blob.json()).content;}
+    try{return {sha:item.sha,data:JSON.parse(b64decode(encoded)),url};}
+    catch(_){throw new Error('Existing recovery file cannot be decoded. Backup was not overwritten.');}
+  }
+  /* A verified recovery snapshot uses the SAME format as Complete Backup.
+     Whitelisted local study keys are included; API keys, passwords and sync
+     credentials are excluded by the established unified-backup rules. */
+  async function bsa216CollectBackup(doc){
+    const academic=clone(doc);
+    delete academic.settings; // existing complete-backup privacy boundary
+    if(!bsaValidMainRecord(academic))throw new Error('Cannot back up: current subject data failed validation.');
+    const items={};
+    for(const key of bsaBackupKeys()){
+      if(key===STORE_KEY)continue;
+      const v=bsa214BackupGet(key);
+      if(typeof v==='string')items[key]=v;
+    }
+    items[STORE_KEY]=JSON.stringify(academic);
+    const summary=bsaBackupPreview(items);
+    const rawSize=JSON.stringify(items).length;
+    if(rawSize>35*1024*1024)throw new Error('Backup exceeds the supported 35 MiB recovery limit. The dashboard data still syncs; export a complete backup and plan a larger-storage upgrade.');
+    return {format:'bsa-unified-study-backup',version:1,exportedAt:new Date().toISOString(),
+      source:'BSA Study Desk · private GitHub recovery',summary,items,
+      integrity:{algorithm:'SHA-256',digest:await bsaBackupDigest(items)}};
+  }
+  async function bsa216VerifySnapshot(snap){
+    if(!snap||snap.kind!=='bsa-recovery-v1'||!snap.backup||
+       snap.backup.format!=='bsa-unified-study-backup'||snap.backup.version!==1||
+       !snap.backup.items||typeof snap.backup.items!=='object')throw new Error('Recovery file format is not recognized.');
+    const items=snap.backup.items;
+    const entries=Object.entries(items);
+    if(!entries.length||entries.length>2000||entries.some(([k,v])=>
+      !BSA_BACKUP_PREFIXES.some(p=>k.startsWith(p))||BSA_BACKUP_EXCLUDE.test(k)||
+      BSA_BACKUP_LOCAL_ONLY.test(k)||typeof v!=='string'||['__proto__','prototype','constructor'].includes(k)))
+      throw new Error('Recovery file contains unsupported or restricted entries.');
+    if(!items[STORE_KEY])throw new Error('Recovery file is missing study data.');
+    bsaBackupPreview(items);
+    if(snap.backup.integrity?.algorithm!=='SHA-256'||
+       await bsaBackupDigest(items)!==snap.backup.integrity.digest)throw new Error('Recovery file integrity check failed.');
+    return true;
+  }
+  async function bsa216WriteSnapshot(cfg,bundle,bucket,force=false){
+    const path=bsa216RecoveryPath(cfg,bucket.kind,bucket.slot);
+    const old=await bsa216GetRaw(cfg,path);
+    if(!force&&old.data&&old.data.kind==='bsa-recovery-v1'&&old.data.period===bucket.label)return {path,unchanged:true};
+    if(old.data&&old.data.kind!=='bsa-recovery-v1')throw new Error('Existing backup path contains unexpected data; refusing to overwrite.');
+    const snap={kind:'bsa-recovery-v1',period:bucket.label,category:bucket.kind,createdAt:new Date().toISOString(),source:bsa216Identity(cfg),backup:bundle};
+    const body={message:'Verified '+bucket.kind+' recovery · '+bucket.label,content:b64encode(JSON.stringify(snap))};
+    if(old.sha)body.sha=old.sha;
+    const resp=await ghFetch(cfg,old.url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(!resp.ok)throw await ghError(resp,cfg);
+    const written=await bsa216GetRaw(cfg,path);
+    if(written.data?.kind!=='bsa-recovery-v1'||written.data.period!==bucket.label)throw new Error('GitHub did not return the expected recovery snapshot.');
+    await bsa216VerifySnapshot(written.data);
+    if(written.data.backup.integrity.digest!==bundle.integrity.digest)throw new Error('Uploaded snapshot differs from the local source.');
+    return {path,unchanged:false};
+  }
+  async function bsa216MaybeSnapshot(cfg,doc,force=false){
+    const id=bsa216Identity(cfg),buckets=bsa216Buckets(),previous=bsa216Recovery.id===id?bsa216Recovery:{};
+    const due=buckets.filter(b=>force||previous[b.kind]!==b.label);
+    if(!due.length)return;
+    if(!force&&previous.error&&Date.now()-Number(previous.lastAttempt||0)<60*60*1000)return;
+    try{
+      await bsa216PrivateRepo(cfg);
+      const bundle=await bsa216CollectBackup(doc);
+      const next={...previous,id,privacy:'private'};
+      for(const b of due){await bsa216WriteSnapshot(cfg,bundle,b,force);next[b.kind]=b.label;}
+      bsa216Recovery={...next,lastVerified:Date.now(),error:''};bsa216StoreStatus();emit();
+    }catch(e){bsa216Recovery={...previous,id,error:String(e.message||e),lastAttempt:Date.now()};bsa216StoreStatus();emit();}
+  }
+  async function bsa216ListSnapshots(cfg){
+    await bsa216PrivateRepo(cfg);
+    const dir=bsa216RecoveryPath(cfg,'daily',0).split('/').slice(0,-1).join('/');
+    const r=await ghFetch(cfg,ghRepoUrl(cfg)+'/contents/'+dir.split('/').map(encodeURIComponent).join('/'));
+    if(r.status===404)return [];
+    if(!r.ok)throw await ghError(r,cfg);
+    const list=await r.json();
+    if(!Array.isArray(list))throw new Error('Recovery folder is not a directory.');
+    const names=/^(daily-[0-6]|weekly-[0-4]|monthly-(?:[0-9]|1[01]))\.json$/;
+    // Recovery list is user-invoked; validate each copy before making it downloadable.
+    const items=await Promise.all(list.filter(i=>i.type==='file'&&names.test(i.name)).map(async i=>{
+      const path=dir+'/'+i.name;
+      const result=await bsa216GetRaw(cfg,path);
+      const item=result.data;
+      if(!item||item.kind!=='bsa-recovery-v1')return null;
+      try{await bsa216VerifySnapshot(item);return {path,category:item.category,period:item.period,createdAt:item.createdAt,backup:item.backup};}
+      catch(e){return {path,category:'Damaged snapshot',period:item.period||i.name,createdAt:item.createdAt||'',error:e.message};}
+    }));
+    return items.filter(Boolean).sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));
+  }
+  function bsa216DownloadRecovery(bundle,label){
+    if(bundle?.format!=='bsa-unified-study-backup')throw new Error('Recovery data failed validation.');
+    const payload=JSON.stringify(bundle,null,2);
+    const url=URL.createObjectURL(new Blob([payload],{type:'application/json'}));
+    const link=document.createElement('a');link.href=url;link.download='BSA-Study-Desk-recovery-'+String(label).replace(/[^a-zA-Z0-9-]/g,'_')+'.json';document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),15000);
+  }
   /* ----- the sync loop ----- */
   function markDirty() {
     if (!ghConfig() || !syncMeta.linked) return;
@@ -1766,7 +1956,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     if (!quiet || syncState.status !== "idle") emit({ status: "syncing" });
     const pendingAtStart = syncMeta.pending || 0;
     try {
-      let done = false;
+      let done = false, syncedDoc = null;
       for (let attempt = 0; attempt < 4 && !done; attempt++) {
         const res = await ghGet(cfg, attempt === 0 && syncMeta.sha ? syncMeta.etag : null);
         let sha = syncMeta.sha || null, remote = null;
@@ -1782,6 +1972,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
           merged = mergeDocs(local, remote);
           if (docSig(merged) !== docSig(local)) syncHost.apply(remote);
         }
+        syncedDoc = merged;
         const needPush = pendingAtStart > 0 || !sha || res.empty || remote && docSig(merged) !== docSig(remote);
         if (!needPush) {
           syncMeta.sha = sha;
@@ -1804,6 +1995,9 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       syncMeta.error = "";
       saveMeta();
       emit({ status: "idle", error: "" });
+      // Snapshot the verified synchronized main document, independent of live sync status.
+      // A backup failure is reported separately and does not discard any study edits.
+      await bsa216MaybeSnapshot(cfg,syncedDoc||syncHost.get());
       if (syncMeta.pending) syncAgain = true;
     } catch (e) {
       if (e.offline) emit({ status: "offline" });
@@ -1865,6 +2059,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       syncMeta = { linked: true, pending: 0, lastSync: Date.now(), error: "", etag: null, ...meta };
       saveMeta();
       emit({ status: "idle", error: "" });
+      setTimeout(()=>runSync('recovery-init'),800);
     },
     useRemote(cfg, res) {
       this.saveConfig(cfg);
@@ -1951,6 +2146,13 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const [busy, setBusy] = useState(false);
     const [err, setErr] = useState("");
     const [choice, setChoice] = useState(null);
+    const [recoveryList,setRecoveryList]=useState(null);
+    const [recoveryBusy,setRecoveryBusy]=useState(false);
+    const [recoveryError,setRecoveryError]=useState('');
+    const [recoveryRevision,setRecoveryRevision]=useState(0);
+    const status=bsa216Recovery.id===(cfg?bsa216Identity(cfg):'')?bsa216Recovery:{};
+    const loadRecovery=async()=>{if(!cfg)return;setRecoveryBusy(true);setRecoveryError('');try{setRecoveryList(await bsa216ListSnapshots(cfg));setRecoveryRevision(n=>n+1)}catch(e){setRecoveryError(e.message||String(e))}finally{setRecoveryBusy(false)}};
+    const createRecovery=async()=>{if(!cfg)return;setRecoveryBusy(true);setRecoveryError('');try{await bsa216MaybeSnapshot(cfg,data,true);if(bsa216Recovery.error)throw new Error(bsa216Recovery.error);await loadRecovery();toast('Verified recovery snapshots saved to your private repo.')}catch(e){setRecoveryError(e.message||String(e))}finally{setRecoveryBusy(false)}};
     const set = (k) => (ev) => setForm((f) => ({ ...f, [k]: ev.target.value }));
     const v = syncView(s);
     const formCfg = () => ({ owner: form.user.trim().replace(/^@/, ""), repo: form.repo.trim(), path: (form.path.trim() || "data.json").replace(/^\/+/, ""), token: form.token.trim(),sessionOnly:!!form.sessionOnly });
@@ -2065,6 +2267,19 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         null,
         SITE_REPO && cfg && cfg.repo.toLowerCase() === SITE_REPO.toLowerCase() && e("p", { className: "error small" }, `You’re still syncing into “${SITE_REPO}”, the public repo that hosts this page. Tap Change repo or token and switch to your private data repo.`),
         e("p", { className: "muted small" }, "Changes upload a few seconds after you make them. While the app is open it checks for changes from your other devices every 30 seconds and whenever you switch back to it. Changes made offline wait on this device and upload when the internet returns."),
+        e('section',{className:'bsa216-recovery-panel','aria-label':'Private GitHub recovery snapshots'},
+          e('div',{className:'bsa216-recovery-head'},e('div',null,e('strong',null,'Automatic recovery snapshots'),e('p',{className:'muted small'},'Rotating daily, weekly and monthly copies of synced study data in your private GitHub repo. Verified after upload; older revisions stay in Git history.')),
+            e('span',{className:'bsa216-recovery-status'},status.lastVerified?'Last verified '+ago(status.lastVerified):'Not yet verified')),
+          status.error&&e('p',{className:'bsa216-recovery-warning',role:'alert'},'Recovery protection needs attention: '+status.error),
+          e('p',{className:'muted small'},'Backups include current subject data and whitelisted local study records (XP and drafts when available on this device). They exclude credentials, API keys and PDF blobs. Other devices may hold different local-only records.'),
+          e('div',{className:'bsa216-recovery-actions'},
+            e('button',{className:'btn',type:'button',disabled:recoveryBusy,onClick:loadRecovery},recoveryBusy?'Checking…':'View recovery points'),
+            e('button',{className:'btn',type:'button',disabled:recoveryBusy,onClick:createRecovery},'Create verified backup now')),
+          recoveryError&&e('p',{className:'error small',role:'alert'},recoveryError),
+          Array.isArray(recoveryList)&&e('div',{className:'bsa216-recovery-list'},
+            recoveryList.length?recoveryList.map(r=>e('div',{key:r.path,className:'bsa216-recovery-item'},
+              e('span',null,e('strong',null,r.category+' · '+r.period),e('small',null,fmtStamp(Date.parse(r.createdAt)))),
+              r.error?e('small',{role:'alert'},r.error):e('button',{type:'button',className:'btn',onClick:()=>{try{bsa216DownloadRecovery(r.backup,r.period);toast('Downloaded a validated complete study-data backup. Use Import → Restore if needed.')}catch(e){setRecoveryError(e.message)}}},'Download copy'))):e('p',{className:'muted small'},'No recovery files found yet. Create one now.'))),
         err && e("p", { className: "error", role: "alert" }, err),
         e(
           "div",
@@ -2285,6 +2500,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       }
       setBusy(p.id);
       let summary;
+      if(raw.length>300000){toast('Large import detected. Make a complete backup first; the browser may reject a large local write even when the site-storage estimate looks generous.');}
       update(null, (d) => {
         let s;
         if (where === "new") {
@@ -2570,17 +2786,27 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       h('p',{className:'muted small'},'These are consistency warnings, not proof of factual correctness. Verify the source before saving.'),
       h('ul',null,qualityWarnings.map((w,i)=>h('li',{key:i},w))),
       h('label',{className:'check'},h('input',{type:'checkbox',checked:qualityAck,onChange:e=>setQualityAck(e.target.checked)}),' I reviewed these warnings and still want to import')),
-      preview.drillBad && preview.drillBad.length > 0 && h("p", { className: "muted" }, `${preview.drillBad.length} computation drill${preview.drillBad.length === 1 ? " was" : "s were"} left out because a formula didn’t work. First one: ${preview.drillBad[0]}`), preview.unmatched > 0 && /* @__PURE__ */ React.createElement("p", { className: "muted" }, preview.unmatched, " flashcards don’t match a roadmap topic and will go to “Unsorted”. You can reassign them by editing each card."), /* @__PURE__ */ React.createElement("div", { className: "grid-2" }, /* @__PURE__ */ React.createElement(Field, { label: "Add to" }, /* @__PURE__ */ React.createElement("select", { value: target, onChange: (e) => {setTarget(e.target.value);setQualityAck(false);} }, data.subjects.map((s) => /* @__PURE__ */ React.createElement("option", { key: s.id, value: s.id }, s.name, s.code ? ` (${s.code})` : "")), /* @__PURE__ */ React.createElement("option", { value: "__new" }, "New subject…"))), target === "__new" && /* @__PURE__ */ React.createElement(Field, { label: "New subject name" }, /* @__PURE__ */ React.createElement("input", { value: newName, onChange: (e) => setNewName(e.target.value) }))), /* @__PURE__ */ React.createElement("div", { className: "row-end" }, /* @__PURE__ */ React.createElement("button", { className: "btn ghost", onClick: () => setParsed(null) }, "Back"), /* @__PURE__ */ React.createElement("button", { className: "btn primary", disabled:qualityWarnings.length>0&&!qualityAck, onClick: doImport }, "Import")))), tab === "pdfs" && h(PdfSourceShelf,{subject:active,toast}), tab === "packs" && h(StarterPacks, { data, update, toast, onClose }), tab === "github" && React.createElement(GitHubPanel, { data, toast }), tab === "export" && /* @__PURE__ */ React.createElement("div", { className: "export" }, h("div",{className:"panel backup-guidance"},h("strong",null,"Complete backup (recommended)"),h("p",{className:"muted small"},"Includes locally saved study records, XP, Study Life and sessions, with a SHA-256 integrity check. Excludes private keys and the PDF source shelf. Export validates subjects first; store it somewhere outside this device."),h("button",{className:"btn primary",onClick:()=>bsaDownloadUnifiedBackup(toast)},"Download complete study backup"),h("button",{className:"btn",onClick:()=>{try{const keys=bsaBackupKeys(),items={};keys.forEach(k=>items[k]=localStorage.getItem(k));const counts=bsaBackupPreview(items);toast('Backup check: '+counts.subjects+' subjects, '+counts.flashcards+' cards, '+counts.problemSets+' sets, '+counts.sessionRecords+' sessions, '+keys.length+' records included. No data changed.')}catch(e){toast('Backup check failed: '+e.message)}}},"Check backup contents"),h("p",{className:"muted small"},"The export below transfers subject records, including any ratings, attempts, grades and personal notes stored within those subjects. It excludes the separate XP ledger and Study Life. Keep this file private; use Complete backup above for all local study data.")),  /* @__PURE__ */ React.createElement("div", { className: "grid-2" }, /* @__PURE__ */ React.createElement(Field, { label: "What to export" }, /* @__PURE__ */ React.createElement("select", { value: scope, onChange: (e) => setScope(e.target.value) }, /* @__PURE__ */ React.createElement("option", { value: "all" }, "All subjects (", data.subjects.length, ")"), /* @__PURE__ */ React.createElement("option", { value: "one" }, "Only ", active.name)))), /* @__PURE__ */ React.createElement("textarea", { className: "code", rows: 10, readOnly: true, value: exportText, onFocus: (e) => e.target.select() }), /* @__PURE__ */ React.createElement("div", { className: "row-end" }, /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: async () => toast(await copyText(exportText) ? "JSON copied" : "Select the text and copy it manually") }, "Copy JSON"), /* @__PURE__ */ React.createElement("button", { className: "btn primary", onClick: save }, "Download ", fileName)), (() => {
+      preview.drillBad && preview.drillBad.length > 0 && h("p", { className: "muted" }, `${preview.drillBad.length} computation drill${preview.drillBad.length === 1 ? " was" : "s were"} left out because a formula didn’t work. First one: ${preview.drillBad[0]}`), preview.unmatched > 0 && /* @__PURE__ */ React.createElement("p", { className: "muted" }, preview.unmatched, " flashcards don’t match a roadmap topic and will go to “Unsorted”. You can reassign them by editing each card."), /* @__PURE__ */ React.createElement("div", { className: "grid-2" }, /* @__PURE__ */ React.createElement(Field, { label: "Add to" }, /* @__PURE__ */ React.createElement("select", { value: target, onChange: (e) => {setTarget(e.target.value);setQualityAck(false);} }, data.subjects.map((s) => /* @__PURE__ */ React.createElement("option", { key: s.id, value: s.id }, s.name, s.code ? ` (${s.code})` : "")), /* @__PURE__ */ React.createElement("option", { value: "__new" }, "New subject…"))), target === "__new" && /* @__PURE__ */ React.createElement(Field, { label: "New subject name" }, /* @__PURE__ */ React.createElement("input", { value: newName, onChange: (e) => setNewName(e.target.value) }))), /* @__PURE__ */ React.createElement("div", { className: "row-end" }, /* @__PURE__ */ React.createElement("button", { className: "btn ghost", onClick: () => setParsed(null) }, "Back"), /* @__PURE__ */ React.createElement("button", { className: "btn primary", disabled:qualityWarnings.length>0&&!qualityAck, onClick: doImport }, "Import")))), tab === "pdfs" && h(PdfSourceShelf,{subject:active,toast}), tab === "packs" && h(StarterPacks, { data, update, toast, onClose }), tab === "github" && React.createElement(GitHubPanel, { data, toast }), tab === "export" && /* @__PURE__ */ React.createElement("div", { className: "export" }, h("div",{className:"panel backup-guidance"},h("strong",null,"Complete backup (recommended)"),h("p",{className:"muted small"},"Includes locally saved study records, XP, Study Life and sessions, with a SHA-256 integrity check. Excludes private keys and the PDF source shelf. Export validates subjects first; store it somewhere outside this device."),h("button",{className:"btn primary",onClick:()=>bsaDownloadUnifiedBackup(toast)},"Download complete study backup"),h("button",{className:"btn",onClick:()=>{try{const keys=bsaBackupKeys(),items={};keys.forEach(k=>items[k]=bsa214BackupGet(k));const counts=bsaBackupPreview(items);toast('Backup check: '+counts.subjects+' subjects, '+counts.flashcards+' cards, '+counts.problemSets+' sets, '+counts.sessionRecords+' sessions, '+keys.length+' records included. No data changed.')}catch(e){toast('Backup check failed: '+e.message)}}},"Check backup contents"),h("p",{className:"muted small"},"The export below transfers subject records, including any ratings, attempts, grades and personal notes stored within those subjects. It excludes the separate XP ledger and Study Life. Keep this file private; use Complete backup above for all local study data.")),  /* @__PURE__ */ React.createElement("div", { className: "grid-2" }, /* @__PURE__ */ React.createElement(Field, { label: "What to export" }, /* @__PURE__ */ React.createElement("select", { value: scope, onChange: (e) => setScope(e.target.value) }, /* @__PURE__ */ React.createElement("option", { value: "all" }, "All subjects (", data.subjects.length, ")"), /* @__PURE__ */ React.createElement("option", { value: "one" }, "Only ", active.name)))), /* @__PURE__ */ React.createElement("textarea", { className: "code", rows: 10, readOnly: true, value: exportText, onFocus: (e) => e.target.select() }), /* @__PURE__ */ React.createElement("div", { className: "row-end" }, /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: async () => toast(await copyText(exportText) ? "JSON copied" : "Select the text and copy it manually") }, "Copy JSON"), /* @__PURE__ */ React.createElement("button", { className: "btn primary", onClick: save }, "Download ", fileName)), (() => {
       let bytes=0, records=0;
       try {for(const key of bsaBackupKeys()){const value=localStorage.getItem(key);if(value!==null){bytes+=(key.length+value.length)*2;records++;}}}
       catch(e){bytes=JSON.stringify(data).length*2;}
       const kb = Math.round(bytes / 1024);
-      // Approximate only: quota varies by browser and device.
+      let unpacked=0;try{unpacked=(bsa214MainGet()||'').length*2;}catch(_){unpacked=0;}
+      const packed=localStorage.getItem(STORE_KEY)||'';
+      const compact=packed.startsWith(BSA214_COMPACT_PREFIX);
+      const mainStored=packed.length*2;
+      const bySubject=(data.subjects||[]).map(sub=>({name:String(sub.name||'Subject'),kb:Math.round(JSON.stringify(sub).length*2/1024)})).sort((a,b)=>b.kb-a.kb);
+      // Reference bar only: browsers set their own independent per-key/localStorage quotas.
       const pct = Math.min(100, Math.round(bytes / 5242880 * 100));
       return h("div", { className: "store-meter bsa48-store-info" },
         h("div", { className: "panel-row" }, h("span", { className: "small" }, "Estimated local study records"), h("strong", { className: "small" }, `${kb.toLocaleString()} KB · ${records} records`)),
         h("div", { className: "bar-sm",role:"progressbar","aria-label":"Rough local record size against a 5 MiB reference, not device capacity", "aria-valuenow":pct,"aria-valuemin":0,"aria-valuemax":100 }, h("span", { style: { width: `${Math.max(2, pct)}%`, background: pct > 85 ? "var(--bad)" : pct > 60 ? "var(--warn)" : "var(--accent)" } })),
-        h("p", { className: "muted small" }, `${pct}% of a 5 MiB comparison reference — NOT your iPad's or browser's actual free space. Local data, PDFs and offline cache have different storage limits.`),
+        h("p", { className: "muted small" }, `${pct}% of a 5 MiB comparison reference — NOT your actual device capacity. Saved study data is losslessly compacted when it is large enough; this helps, but the browser can still refuse writes.`),
+        h('p',{className:'muted small'},compact?`Main study dataset: ${(unpacked/1048576).toFixed(2)} MiB before compaction → ${(mainStored/1048576).toFixed(2)} MiB stored on this device. Backups remain normal, full JSON.`:'Main study dataset: '+(mainStored/1048576).toFixed(2)+' MiB stored. Smaller records remain normal JSON.'),
+        h('details',{className:'bsa214-storage-details'},h('summary',null,'Which subjects occupy the most space?'),
+          h('p',{className:'muted small'},'Approximate uncompressed subject sizes; this is not proof of browser availability.'),
+          bySubject.slice(0,8).map((item,i)=>h('div',{key:i,className:'bsa214-storage-row'},h('span',null,item.name),h('strong',null,item.kb.toLocaleString()+' KB')))),
+        h('button',{className:'btn',type:'button',onClick:()=>bsaDownloadUnifiedBackup(toast)},'Download verified complete backup'),
         browserSpace&&h("p",{className:"muted small"},`Browser-reported site storage: approximately ${(browserSpace.used/1048576).toFixed(1)} MiB used out of ${(browserSpace.quota/1048576).toFixed(0)} MiB estimated origin quota. This includes browser-managed data and is not a localStorage limit.`),
         pct>=75&&h("p", { className: "bsa48-store-advice" },"Local records are getting large for typical browser storage. Download a complete backup before importing more material; delete only known disposable caches after confirming the backup."));
     })(), /* @__PURE__ */ React.createElement("p", { className: "muted" }, "To restore, paste this JSON into the Import tab. Keep a copy in Google Drive before big changes.")), tab === "prompt" && h(NotebookLMPrompts, { subject: active, toast, onImport: () => setTab("import"), onResources:()=>setTab("resources") }), tab === "resources" && h(BsaResourceHub,{toast}));
@@ -5538,7 +5764,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       if(onRunningChange)onRunningChange(phase==='run');
       return ()=>{if(onRunningChange)onRunningChange(false);};
     },[phase,onRunningChange]);
-    const saved=useRef(false),started=useRef(0),runId=useRef('');
+    const saved=useRef(false),started=useRef(0),runId=useRef(''),questionStarted=useRef(Date.now());
     const topics=studyTopics(subject);
     const eligible=all.filter(q=>(topic==='all'||q.topicId===topic)&&(collection==='all'||q.setId===collection));
     const catalog=useMemo(()=>bsa197Pool(eligible,subject.learningEvents||[]),[all,topic,collection,subject.learningEvents]);
@@ -5548,6 +5774,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const strongCount=catalog.filter(q=>q._recall.mastered).length;
     const available=mode==='due'?dueCount:mode==='weak'?weakCount:mode==='fresh'?newCount:catalog.length;
     const current=paper[pos];
+    useEffect(()=>{if(phase==='run')questionStarted.current=Date.now();},[phase,pos,current?.id]);
     const checkedPaper=paper.filter(q=>!!revealed[q.id]&&!!answers[q.id]);
     const score=checkedPaper.filter(q=>answers[q.id]===q.key).length;
     const start=()=>{
@@ -5557,7 +5784,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       if(!picks.length)return;
       bsa197DeleteDraft(subject.id);
       setDraft(null);setPaper(picks);setPos(0);setAnswers({});setRevealed({});setGuessed({});
-      setFeedbackExpanded(false);saved.current=false;started.current=Date.now();runId.current=uid('quizrun');setPhase('run');
+      setFeedbackExpanded(false);saved.current=false;started.current=Date.now();questionStarted.current=Date.now();runId.current=uid('quizrun');setPhase('run');
     };
     const resume=()=>{
       if(!draft)return;
@@ -5570,7 +5797,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       setPos(Math.max(0,Math.min(match.length-1,Number(draft.pos)||0)));
       setAnswers(draft.answers||{});setRevealed(draft.revealed||{});setGuessed(draft.guessed||{});
       started.current=Number(draft.startedAt)||Date.now();runId.current=draft.runId||uid('quizrun');
-      saved.current=false;setFeedbackExpanded(false);setDraft(null);setPhase('run');
+      saved.current=false;questionStarted.current=Date.now();setFeedbackExpanded(false);setDraft(null);setPhase('run');
     };
     useEffect(()=>{if(autoResume && draft)resume();},[]);
     useEffect(()=>{
@@ -5581,7 +5808,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     // V1.8 statistics integrity: only a learner's checked answer is an attempt.
     // Use a stable session+question identity to prevent replay/resume/finish from
     // recording the same question twice, including after GitHub synchronization.
-    const recordCheckedIn=(s,q,choice,isGuess,sessionKey,at)=>{
+    const recordCheckedIn=(s,q,choice,isGuess,sessionKey,at,elapsedMs=0)=>{
       if(!q||!choice||!sessionKey)return false;
       s.learningEvents=s.learningEvents||[];
       const memoryKey=bsa197QuizKey(q);
@@ -5590,7 +5817,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       const correct=choice===q.key;
       s.learningEvents.push({id:uid('le'),topicId:q.topicId||'',kind:'mcq',sourceId:q.id,
         memoryKey,sessionKey,result:correct?'correct':'incorrect',
-        guessed:!!isGuess,assisted:false,at,date:today(),note:'MCQ · '+mode});
+        guessed:!!isGuess,assisted:false,at,date:today(),elapsedMs:Number.isFinite(elapsedMs)&&elapsedMs>=12000&&elapsedMs<=900000?Math.round(elapsedMs):undefined,note:'MCQ · '+mode});
       if(!correct){
         const wrongChoice=q.choices.find((c,i)=>mxChoiceKey(c,i)===choice);
         bsaUpsertMistake(s,{topicId:q.topicId||null,topicText:'',date:today(),question:psPlain(q.q).slice(0,400),
@@ -5606,7 +5833,8 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       if(!q||!answers[q.id]||revealed[q.id])return;
       const choice=answers[q.id],isGuess=!!guessed[q.id];
       const key=runId.current||(runId.current=uid('quizrun'));
-      update(s=>{recordCheckedIn(s,q,choice,isGuess,key,Date.now());});
+      const measured=Math.max(0,Date.now()-questionStarted.current);
+      update(s=>{recordCheckedIn(s,q,choice,isGuess,key,Date.now(),measured);});
       playQuizFeedbackSound(choice===q.key?'correct':'wrong');
       setFeedbackExpanded(false);
       setRevealed(x=>({...x,[q.id]:true}));
@@ -5667,7 +5895,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
           event.preventDefault();
           if(!revealed[q.id])checkAnswer();
           else if(pos===paper.length-1)finish();
-          else{playQuizFeedbackSound('next');setPos(i=>i+1);setFeedbackExpanded(false);}
+          else{playQuizFeedbackSound('next');questionStarted.current=Date.now();setPos(i=>i+1);setFeedbackExpanded(false);}
         }
       };
       window.addEventListener('keydown',onQuizKey);
@@ -5757,6 +5985,12 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
               current.why&&h('div',{className:'bsa-explanation-block'},h('span',{className:'bsa-result-eyebrow'},'EXPLANATION'),h('div',{dangerouslySetInnerHTML:{__html:psMdHtml(current.why)}})),
               current.trap&&h('div',{className:'bsa-trap-block'},h('span',{className:'bsa-result-eyebrow'},'EXAM TRAP'),h('div',{dangerouslySetInnerHTML:{__html:psMdHtml(current.trap)}}))):
               !!(current.why||current.trap)&&h('button',{className:'btn ghost bsa197-expand','aria-expanded':false,onClick:()=>setFeedbackExpanded(true)},'Show explanation & exam trap'))),
+        revealed[current.id]&&h('div',{className:'bsa214-mcq-foundation-action'},
+          h('button',{type:'button',className:'btn',onClick:()=>{
+            const ok=bsa197SaveDraft(subject.id,{ids:paper.map(q=>q.id),topic,collection,mode,count,pos,answers,revealed,guessed,startedAt:started.current,runId:runId.current});
+            if(!ok){toast('Save failed: remain in your quiz and make a backup first.');return;}
+            go('study',{focusId:current.topicId||mcqAssignedTopic(subject,current)||'all',foundation:true,mcqId:current.id});
+          }},'✧ Check foundation behind this answer')),
         revealed[current.id]&&h('details',{className:'bsa28-understanding'},
           h('summary',null,'Explain & apply · optional understanding check'),
           h('p',{className:'muted small'},'Without looking at the explanation, explain WHY this treatment works, WHEN the rule applies, and WHAT would change if one fact were different. Definitions and formulas matter too.'),
@@ -11283,6 +11517,7 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
         tocQuery&&!l.sections.some(sec=>sec.h&&norm(sec.h).includes(norm(tocQuery)))&&h('p',{className:'muted small'},'No sections match this search.')),
       sourceView.sections.map((s,i) => h("section", { key: s.id, id: s.id, className: "lx-sec bsa-section" },
         h('div',{className:'bsa-sec-topline'},h("div", { className: "lx-sec-count" }, `SECTION ${String(i+1).padStart(2,"0")} / ${String(sourceView.sections.length).padStart(2,"0")}`),
+        h('button',{type:'button',className:'btn ghost bsa214-section-foundation',onClick:()=>go('study',{focusId:l.topicId||'all',foundation:true,lectureId:l.id,sectionId:s.id})},'✧ Foundation Check'),
         h('button',{type:'button',className:'btn ghost bsa27-section-ask',title:'Ask Tutor about this exact lecture section',onClick:()=>go('ask',{focus:{kind:'lecture-section',id:l.id,sectionId:s.id,
           sectionTitle:String(s.h||'Section '+(i+1)).slice(0,180),sectionNumber:i+1,excerpt:String(s.body||'').slice(0,500),title:l.title}})},
           h(Icon,{name:'ask',size:14}),' Ask Tutor'),
@@ -11307,15 +11542,6 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
             h("button", { className: "btn bad", onClick: () => { set((x) => { x.rv = lxStudied(x, true); }); toast("Back in 3 days."); } }, "Shaky, show me sooner"))
         : h("button", { className: `btn${l.done ? "" : " primary"}`, onClick: () => { const was = l.done; set((x) => { x.done = !was; x.rv = was ? null : lxStudied(x, false); }); toast(was ? "Marked as not studied" : "Studied. It comes back in 3 days for a quick re-skim."); } }, l.done ? "Studied ✓ (undo)" : "Mark as studied")),
       h(LecturePracticeGenerator,{subject,lecture:l,update,toast,go}),
-      h('nav',{className:'bsa27-lecture-quicknav',role:'navigation','aria-label':'Lecture page navigation'},
-        h('button',{type:'button',className:'bsa27-lecture-navbutton',title:'Jump to top of lecture','aria-label':'Go to top of lecture',onClick:()=>{
-          const root=document.querySelector('.lx-reader');
-          root?.scrollIntoView({behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
-        }},'↑'),
-        h('button',{type:'button',className:'bsa27-lecture-navbutton',title:'Jump to bottom of lecture','aria-label':'Go to bottom of lecture',onClick:()=>{
-          const root=document.querySelector('.lx-reader');
-          root?.lastElementChild?.scrollIntoView({behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'end'});
-        }},'↓')),
       h("div", { className: "lx-foot panel", style: { marginTop: "-.4rem" } }, l.terms.length > 0 && h("button", { className: "btn", onClick: addCards }, `Make ${l.terms.length} flashcards`), h("button", { className: "btn primary", onClick:()=>go("practice",{start:"cloze",lectureId:l.id}) }, "Practice key terms · Fill Blanks"), cloze.length > 0 && h("button", { className: "btn", onClick: addCloze, title: "Source-backed key definitions and important terms only; not arbitrary bold words" }, `Make ${cloze.length} cloze cards`), h("button", { className: "btn", onClick: () => {
           const secs=[...document.querySelectorAll('.lx-reader .lx-sec.bsa-section')];
           const section=secs.find(x=>{const r=x.getBoundingClientRect();return r.top<=window.innerHeight*0.35&&r.bottom>window.innerHeight*0.35;})||secs.find(x=>x.getBoundingClientRect().top>0)||secs.at(-1);
@@ -13353,7 +13579,7 @@ ${c.kindHint}` }
     for(const sub of doc.subjects){
       if(!sub||typeof sub!=='object'||Array.isArray(sub)||typeof sub.id!=='string'||!sub.id.trim()||sub.id.length>=500||ids.has(sub.id)||typeof sub.name!=='string'||!sub.name.trim()||sub.name.length>=1000)return false;
       ids.add(sub.id);
-      for(const field of ['topics','cards','mistakes','quizzes','sessions','lectures','psets','labAttempts','todayChecks','tutorMemories','studyInbox','driveSources','libraryFlags','cycleRuns','cycleCases','practiceSessions','problemWork'])if(sub[field]!==undefined&&!Array.isArray(sub[field]))return false;
+      for(const field of ['topics','cards','mistakes','quizzes','sessions','lectures','psets','labAttempts','todayChecks','tutorMemories','studyInbox','driveSources','libraryFlags','cycleRuns','cycleCases','practiceSessions','problemWork','foundationChecks'])if(sub[field]!==undefined&&!Array.isArray(sub[field]))return false;
       for(const attempt of sub.labAttempts||[])if(!attempt||typeof attempt.id!=='string'||!Number.isFinite(Number(attempt.exercise))||!Number.isFinite(Number(attempt.date))||typeof attempt.correct!=='boolean')return false;
       for(const check of sub.todayChecks||[])if(!check||typeof check.id!=='string'||typeof check.day!=='string'||!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(check.day)||typeof check.taskId!=='string')return false;
       if((sub.tutorMemories||[]).length>50||(sub.tutorMemories||[]).some(m=>!m||typeof m.id!=='string'||typeof m.text!=='string'||m.text.length>600))return false;
@@ -13377,7 +13603,7 @@ ${c.kindHint}` }
   async function bsaDownloadUnifiedBackup(toast) {
     try {
       const items={};
-      bsaBackupKeys().forEach(k=>{items[k]=localStorage.getItem(k)});
+      bsaBackupKeys().forEach(k=>{items[k]=bsa214BackupGet(k)});
       if(!items[STORE_KEY])throw Error("Main dashboard record is missing or excluded; do not rely on this as a complete backup.");
       /* Dashboard settings may include private configuration: export only study records. */
       if(items[STORE_KEY]) {
@@ -13423,7 +13649,7 @@ ${c.kindHint}` }
       integrity='SHA-256 verified';
     }
     const current={subjects:0,flashcards:0,problemSets:0,lectures:0,sessionRecords:0};
-    try{const local=localStorage.getItem(STORE_KEY);if(local)Object.assign(current,bsaBackupPreview({[STORE_KEY]:local}))}catch(e){}
+    try{const local=bsa214MainGet();if(local)Object.assign(current,bsaBackupPreview({[STORE_KEY]:local}))}catch(e){}
     return {bundle,entries,preview,current,integrity,fileName:file.name};
   }
   function bsaApplyInspectedBackup(inspected) {
@@ -13434,14 +13660,14 @@ ${c.kindHint}` }
       for(const [key,value] of entries){
         if(key===STORE_KEY){
           const restored=JSON.parse(value);
-          const current=JSON.parse(localStorage.getItem(key)||'{}');
+          const current=JSON.parse(bsa214MainGet()||'{}');
           restored.settings=current.settings||restored.settings;
-          localStorage.setItem(key,JSON.stringify(restored));
+          bsa214MainSet(JSON.stringify(restored));
         } else localStorage.setItem(key,value);
       }
       // Read every key back before allowing the app to reload.
       for(const [key,value] of entries){
-        const actual=localStorage.getItem(key);
+        const actual=bsa214BackupGet(key);
         if(key===STORE_KEY){
           const got=JSON.parse(actual||'null');
           if(!bsaValidMainRecord(got))throw Error('The restored main record could not be verified.');
@@ -14624,9 +14850,10 @@ ${c.kindHint}` }
   function StartupDataRecovery(){
     const problem=window.__BSA_UNREADABLE_DATA__;
     const exportRaw=()=>{
-      const blob=new Blob([problem.raw],{type:'application/json;charset=utf-8'});
+      const compressed=String(problem.raw||'').startsWith(BSA214_COMPACT_PREFIX);
+      const blob=new Blob([problem.raw],{type:compressed?'text/plain;charset=utf-8':'application/json;charset=utf-8'});
       const url=URL.createObjectURL(blob), a=document.createElement('a');
-      a.href=url;a.download='BSA-RECOVERY-original-data-'+new Date().toISOString().slice(0,10)+'.json';a.click();
+      a.href=url;a.download='BSA-RECOVERY-original-data-'+new Date().toISOString().slice(0,10)+(compressed?'.txt':'.json');a.click();
       setTimeout(()=>URL.revokeObjectURL(url),5000);
     };
     const reset=()=>{
@@ -14718,7 +14945,7 @@ ${c.kindHint}` }
       const checks=[];
       const check=(label,ok,detail)=>checks.push({label,ok,detail});
       try{
-        const raw=localStorage.getItem(STORE_KEY);
+        const raw=bsa214MainGet();
         const doc=JSON.parse(raw||'null');
         const valid=bsaValidMainRecord(doc);
         check('Main study record',valid,raw?'Saved subjects are readable and structurally valid.':'No saved main record found.');
@@ -15732,6 +15959,12 @@ ${c.kindHint}` }
   function bsa49ResolveTopic(subject,label,explicitCode){
     if(!label&&!explicitCode)return null;
     const all=(subject?.topics||[]).filter(t=>t?.kind!=='exam'),given=bsa49TopicParts(label),code=bsa49TopicParts(explicitCode);
+    // A bare chapter number is ambiguous when multiple roadmap topics claim it.
+    // An existing user-confirmed alias is the only safe exception.
+    if(given.chapter&&!given.name&&all.filter(t=>bsa215TopicChapter(t)===given.chapter).length>1){
+      const chosen=(subject?.topicAliases||[]).filter(a=>a?.topicId&&bsa49TopicParts(a.label).full===given.full&&all.some(t=>t.id===a.topicId));
+      return chosen.length===1?chosen[0].topicId:null;
+    }
     const explicit=all.filter(t=>(given.full&&bsa49TopicParts(t.id).full===given.full)||(code.full&&bsa49TopicParts(t.code).full===code.full));
     if(explicit.length===1)return explicit[0].id;
     if(explicit.length>1)return null;
@@ -15753,8 +15986,45 @@ ${c.kindHint}` }
       const combined=bsa49TopicParts([t.code,t.title].filter(Boolean).join(' ')).full;
       return !!combined&&given.full===combined;
     });
-    return matches.length===1?matches[0].id:null;
+    return matches.length===1?matches[0].id:matches.length>1?null:bsa215UniqueChapterMatch(subject,label,explicitCode);
   }
+
+  /* V2.15: Unique, explicit chapter identifiers are stronger than phrasing alone.
+     Never infer equivalent chapters from page numbers, textbook editions, or
+     merely overlapping keywords. A conflicting descriptive title is NOT auto-linked. */
+  function bsa215TopicChapter(topic){
+    const values=[topic?.code,topic?.title,topic?.standard].filter(Boolean);
+    const found=[...new Set(values.map(v=>bsa49TopicParts(v).chapter).filter(Boolean))];
+    if(found.length===1)return found[0];
+    if(found.length>1)return null; // internally contradictory metadata
+    const short=String(topic?.code||'').trim();
+    return /^\d{1,3}$/.test(short)?String(Number(short)):null;
+  }
+  function bsa215MeaningTokens(value){
+    const stop=new Set(['the','and','of','in','to','a','an','for','with','on','at','by','from','as','chapter','topic','module','unit','ch','chap','section','part','page','pages','pp']);
+    return new Set(bsa49TopicParts(value).name.split(' ').filter(w=>w.length>=3&&!stop.has(w)&&!/^[0-9]+$/.test(w)));
+  }
+  function bsa215UniqueChapterMatch(subject,label,explicitCode){
+    const given=bsa49TopicParts(label),code=bsa49TopicParts(explicitCode),chapter=given.chapter||code.chapter;
+    if(!chapter||given.chapter&&code.chapter&&given.chapter!==code.chapter)return null;
+    const candidates=(subject?.topics||[]).filter(t=>t?.kind!=='exam'&&bsa215TopicChapter(t)===chapter);
+    if(candidates.length!==1)return null;
+    const target=candidates[0],wordSet=bsa215MeaningTokens(label);
+    // Pure chapter references ("Chapter 16") safely resolve only when the
+    // roadmap itself has exactly one numbered topic with that chapter.
+    if(!wordSet.size)return target.id;
+    const title=bsa215MeaningTokens(target.title),common=[...wordSet].filter(w=>title.has(w));
+    // Descriptive variants require strong actual title overlap, not just a number.
+    return common.length>=2?target.id:null;
+  }
+  function bsa215LinkSafety(subject,label,targetId){
+    const topic=(subject?.topics||[]).find(t=>t.id===targetId&&t.kind!=='exam');
+    if(!topic)return {ok:false,reason:'Choose an existing roadmap topic.'};
+    const from=bsa49TopicParts(label).chapter,to=bsa215TopicChapter(topic);
+    if(from&&to&&from!==to)return {ok:false,reason:'Chapter '+from+' cannot be linked to roadmap chapter '+to+'. Choose the correct topic.'};
+    return {ok:true};
+  }
+
   function bsa49CanonicalizePack(subject,parsed){
     const p=JSON.parse(JSON.stringify(parsed)),topics=(subject?.topics||[]);
     const canonical=label=>{const id=bsa49ResolveTopic(subject,label);return topics.find(t=>t.id===id)?.title||label;};
@@ -15773,16 +16043,79 @@ ${c.kindHint}` }
     for(const sets of [subject?.psets||[],subject?.mcqSets||[]])for(const set of sets){add(set.topicText||set.topic,set.topicId);for(const q of set.problems||[])add(q.topicText||q.topic||q.subtopic,q.topicId||set.topicId)}
     for(const x of subject?.cards||[])add(x.topicText,x.topicId);
     for(const x of subject?.rules||[])add(x.topic||x.topicText,x.topicId);
-    return [...labels.values()].slice(0,40);
+    return [...labels.values()].slice(0,500);
   }
+  /* V2.15: Non-destructive, subject-scoped batch alias management. */
   function BSA49TopicLinks({subject,update}){
-    const labels=bsa49UnmatchedLabels(subject),linked=(subject.topicAliases||[]).filter(a=>a?.topicId&&(subject.topics||[]).some(t=>t.id===a.topicId));
-    const [choices,setChoices]=useState({});
-    const add=(label)=>{const id=choices[label];if(!id)return;update(s=>{const key=bsa49TopicParts(label).full;s.topicAliases=(s.topicAliases||[]).filter(a=>bsa49TopicParts(a.label).full!==key);s.topicAliases.push({label,topicId:id,at:Date.now()})});};
-    return h('details',{className:'bsa49-topic-links'},h('summary',null,'Connect alternate topic labels',labels.length?' · '+labels.length+' unlinked':' · all recognized'),
-      h('p',{className:'muted small'},'Link alternate chapter labels to ONE existing topic. This changes how materials are grouped in every study view; it does not erase, duplicate, or rewrite their original content. Do not link different chapters just because their names look similar.'),
-      labels.slice(0,15).map(label=>h('div',{className:'bsa49-alias-row',key:label},h('span',{title:label},label),h('select',{value:choices[label]||'',onChange:e=>setChoices(old=>({...old,[label]:e.target.value})), 'aria-label':'Link '+label+' to topic'},h('option',{value:''},'Choose same topic…'),(subject.topics||[]).filter(t=>t.kind!=='exam').map(t=>h('option',{key:t.id,value:t.id},[t.code,t.title].filter(Boolean).join(' · ')))),h('button',{className:'btn',type:'button',disabled:!choices[label],onClick:()=>add(label)},'Link'))),
-      linked.length>0&&h('div',{className:'bsa49-alias-existing'},h('strong',null,'Your saved label links'),linked.map(a=>h('div',{className:'bsa49-alias-row',key:a.label},h('span',null,a.label+' → '+(subject.topics.find(t=>t.id===a.topicId)?.title||'')),h('button',{className:'btn ghost',onClick:()=>update(s=>{s.topicAliases=(s.topicAliases||[]).filter(x=>!(x.label===a.label&&x.topicId===a.topicId))})},'Unlink')))));
+    const labels=bsa49UnmatchedLabels(subject);
+    const topics=(subject.topics||[]).filter(t=>t.kind!=='exam');
+    const linked=(subject.topicAliases||[]).filter(a=>a?.label&&a?.topicId&&topics.some(t=>t.id===a.topicId));
+    const [search,setSearch]=useState(''),[selected,setSelected]=useState({}),[choices,setChoices]=useState({});
+    const [batchTarget,setBatchTarget]=useState(''),[savedSelected,setSavedSelected]=useState({}),[savedTarget,setSavedTarget]=useState('');
+    const [limit,setLimit]=useState(15),[savedLimit,setSavedLimit]=useState(15),[note,setNote]=useState('');
+    const filtered=labels.filter(label=>bsa49TopicParts(label).full.includes(bsa49TopicParts(search).full));
+    const shown=filtered.slice(0,limit),checked=labels.filter(label=>selected[label]);
+    const linkedShown=linked.slice(0,savedLimit),linkedChecked=linked.filter(a=>savedSelected[a.label]);
+    const topicTitle=id=>{const t=topics.find(t=>t.id===id);return t?[t.code,t.title].filter(Boolean).join(' · '):'Unknown topic'};
+    const topicSelect=(value,onChange,emptyLabel)=>h('select',{value,onChange:e=>onChange(e.target.value),'aria-label':emptyLabel},
+      h('option',{value:''},emptyLabel),topics.map(t=>h('option',{key:t.id,value:t.id},topicTitle(t.id))));
+    const linkPairs=(pairs,action)=>{
+      if(!pairs.length){setNote('Choose at least one label and a destination topic.');return false;}
+      const conflicts=pairs.map(([label,id])=>({label,...bsa215LinkSafety(subject,label,id)})).filter(x=>!x.ok);
+      if(conflicts.length){setNote(conflicts[0].label+': '+conflicts[0].reason+' No links changed.');return false;}
+      if(pairs.length>1&&!window.confirm(action+' '+pairs.length+' label(s) to the selected roadmap topic? Original materials and learning records will not change.'))return false;
+      update(s=>{
+        const replacements=new Map(pairs.map(([label,id])=>[bsa49TopicParts(label).full,{label,topicId:id,at:Date.now()}]));
+        s.topicAliases=(s.topicAliases||[]).filter(a=>!replacements.has(bsa49TopicParts(a.label).full));
+        s.topicAliases.push(...replacements.values());
+      });
+      setNote(pairs.length+' label link(s) saved. Original materials, scores and topic IDs are unchanged.');
+      return true;
+    };
+    const reassignSaved=()=>{
+      if(!savedTarget||!linkedChecked.length){setNote('Choose saved links and a destination topic first.');return;}
+      if(linkPairs(linkedChecked.map(a=>[a.label,savedTarget]),'Move'))setSavedSelected({});
+    };
+    const unlinkSaved=()=>{
+      if(!linkedChecked.length)return;
+      if(!window.confirm('Unlink '+linkedChecked.length+' selected alternate label(s)? The study materials remain saved, but may appear unmatched until reconnected.'))return;
+      const keys=new Set(linkedChecked.map(a=>bsa49TopicParts(a.label).full));
+      update(s=>{s.topicAliases=(s.topicAliases||[]).filter(a=>!keys.has(bsa49TopicParts(a.label).full))});
+      setSavedSelected({});setNote(linkedChecked.length+' label link(s) removed. No study materials were deleted.');
+    };
+    return h('details',{className:'bsa49-topic-links bsa215-topic-links'},
+      h('summary',null,'Connect alternate topic labels',labels.length?' · '+labels.length+' need review':' · all recognized',linked.length?' · '+linked.length+' linked':''),
+      h('p',{className:'muted small'},'Different chapter headings from AI files can refer to the same roadmap topic. Saved links below are ALREADY connected: a line such as “Chapter 16 → Foreign Exchange Derivative Markets” is not an unlinked chapter. Linking changes grouping, never your original content, answers, scores or topic IDs.'),
+      h('p',{className:'muted small'},'Exact chapter codes and uniquely identified numbered chapters can be recognized during import. Ambiguous edition/page labels still require your decision; unrelated chapters are never merged automatically.'),
+      labels.length>0&&h('section',{className:'bsa215-pending-links','aria-label':'Unmatched topic labels'},
+        h('div',{className:'bsa215-links-heading'},h('strong',null,'Needs your review · '+labels.length),h('span',{className:'muted small'},'Select several aliases only when they truly refer to the same chapter.')),
+        h('label',{className:'bsa215-link-search'},'Find unmatched label',h('input',{type:'search',value:search,onChange:e=>{setSearch(e.target.value);setLimit(15)},placeholder:'Filter imported chapter names…'})),
+        h('div',{className:'bsa215-batch-toolbar'},
+          h('button',{type:'button',className:'btn ghost',onClick:()=>{const next={...selected};for(const label of shown)next[label]=true;setSelected(next)}},'Select shown ('+shown.length+')'),
+          h('button',{type:'button',className:'btn ghost',onClick:()=>setSelected({})},'Clear selection'),
+          topicSelect(batchTarget,setBatchTarget,'Link selected to topic…'),
+          h('button',{type:'button',className:'btn primary',disabled:!checked.length||!batchTarget,onClick:()=>{if(linkPairs(checked.map(label=>[label,batchTarget]),'Link'))setSelected({})}},'Link selected ('+checked.length+')')),
+        h('div',{className:'bsa215-links-list'},shown.map(label=>h('div',{className:'bsa215-link-row',key:label},
+          h('label',{className:'bsa215-link-label'},h('input',{type:'checkbox',checked:!!selected[label],onChange:e=>setSelected(v=>({...v,[label]:e.target.checked})),'aria-label':'Select '+label}),h('span',{title:label},label)),
+          topicSelect(choices[label]||'',v=>setChoices(old=>({...old,[label]:v})),'Choose same roadmap topic'),
+          h('button',{className:'btn',type:'button',disabled:!choices[label],onClick:()=>{linkPairs([[label,choices[label]]],'Link')}},'Link')))),
+        !shown.length&&h('p',{className:'muted small'},'No unmatched labels match this search.'),
+        filtered.length>limit&&h('button',{type:'button',className:'btn ghost bsa215-show-more',onClick:()=>setLimit(v=>v+30)},'Show '+Math.min(30,filtered.length-limit)+' more unmatched labels')),
+      linked.length>0&&h('details',{className:'bsa215-saved-links'},
+        h('summary',null,'Already connected · '+linked.length+' saved label links'),
+        h('p',{className:'muted small'},'These labels are working links, not missing content. Expand this list only if you want to change their destination or disconnect them.'),
+        h('div',{className:'bsa215-batch-toolbar'},
+          h('button',{type:'button',className:'btn ghost',onClick:()=>{const next={...savedSelected};for(const a of linkedShown)next[a.label]=true;setSavedSelected(next)}},'Select shown ('+linkedShown.length+')'),
+          h('button',{type:'button',className:'btn ghost',onClick:()=>setSavedSelected({})},'Clear selection'),
+          topicSelect(savedTarget,setSavedTarget,'Move selected to topic…'),
+          h('button',{type:'button',className:'btn',disabled:!linkedChecked.length||!savedTarget,onClick:reassignSaved},'Move selected ('+linkedChecked.length+')'),
+          h('button',{type:'button',className:'btn ghost bsa215-unlink',disabled:!linkedChecked.length,onClick:unlinkSaved},'Unlink selected ('+linkedChecked.length+')')),
+        h('div',{className:'bsa215-links-list'},linkedShown.map(a=>h('label',{className:'bsa215-saved-row',key:a.label},
+          h('input',{type:'checkbox',checked:!!savedSelected[a.label],onChange:e=>setSavedSelected(v=>({...v,[a.label]:e.target.checked})),'aria-label':'Select saved link '+a.label}),
+          h('span',{title:a.label},a.label),h('span',{className:'bsa215-link-arrow','aria-hidden':true},'→'),
+          h('strong',null,topicTitle(a.topicId))))),
+        linked.length>savedLimit&&h('button',{type:'button',className:'btn ghost bsa215-show-more',onClick:()=>setSavedLimit(v=>v+30)},'Show '+Math.min(30,linked.length-savedLimit)+' more saved links')),
+      note&&h('p',{className:'bsa215-link-note',role:'status'},note));
   }
   const bsa49SubjectWords=value=>String(value||'').normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]+/gu,' ').trim().replace(/\s+/g,' ');
   function bsa49MatchesSubject(raw,subject){
@@ -15803,6 +16136,7 @@ ${c.kindHint}` }
       'Create a BSA Study Desk bsa-topic-pack-v1 JSON for my existing subject and selected topic.',
       'SUBJECT NAME (exact JSON field value): '+who,
       'Use the SAME topic title or category as the saved study roadmap. Do not invent a second topic when Chapter 8 and Corporate Bonds mean the same existing topic.',
+      'EXISTING SAVED ROADMAP (reuse exact topic title and chapter/code when applicable; do not invent an alternate chapter label): '+JSON.stringify((subject?.topics||[]).filter(t=>t?.kind!=='exam').slice(0,120).map(t=>({code:t.code||'',title:t.title||''}))),
       'Organize the roadmap into about 3–8 substantive, broad subtopics per topic when appropriate. Do not create a new subtopic for each tiny fact, exception, individual exercise or flashcard. Retain EVERY supported detail in lecture sections, worked problems, flashcards and rule entries. More than eight headings is acceptable only when the actual syllabus has genuinely distinct major sections. Never erase details to fit an arbitrary count.',
       'COURSE CODE (context only): '+String(subject?.code||'not supplied'),
       topic?'TOPIC (use this exact existing dashboard topic): '+topic:'Use the actual chapter or topic from my sources.',
@@ -16105,7 +16439,9 @@ ${c.kindHint}` }
       if(issues.length<90)issues.push(...prepared.issues.slice(0,90-issues.length).map(x=>({...x,file:piece.name})));
       perFile.push({name:piece.name,added:(counts.addedTopics||0)+(counts.addedCards||0)+(counts.addedRules||0)+(counts.addedLectures||0)+(counts.addedProblems||0),duplicates:prepared.stats.duplicate,conflicts:prepared.stats.conflict});
     }
-    return {totals,issues,perFile};
+    const previous=new Set(bsa49UnmatchedLabels(subject).map(label=>bsa49TopicParts(label).full));
+    const newlyUnmatched=bsa49UnmatchedLabels(draft).filter(label=>!previous.has(bsa49TopicParts(label).full));
+    return {totals,issues,perFile,newlyUnmatched};
   }
   function bsa44ApplyPack(subject,pieces,includeSimilar){
     const results=[];
@@ -16276,6 +16612,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
         summary?h('div',{className:'bsa44-preview'},
           h('div',{className:'bsa44-preview-numbers'},[['New topics',summary.addedTopics],['New lectures',summary.addedLectures],['New questions',summary.addedProblems],['New cards',summary.addedCards],['New rules',summary.addedRules],['Extended lectures',summary.enriched]].map(([label,n])=>h('div',{key:label},h('strong',null,n),h('span',null,label)))),
           h('p',{className:'bsa44-preview-sub'},summary.duplicates+' exact duplicates · '+summary.similar+' possible paraphrases / numerical variants '+(includeSimilar?'approved for import':'held for review')+' · '+summary.conflicts+' answer/source conflicts protected'),
+          preview.report.newlyUnmatched.length>0&&h('div',{className:'bsa215-import-topic-alert',role:'status'},h('strong',null,preview.report.newlyUnmatched.length+' new topic label(s) need a roadmap link'),h('p',null,'The imported material can be kept safely, but these names cannot be confidently matched to one existing chapter. Link them under Study Library → Topic coverage after import; no different chapters will be joined automatically.'),h('small',null,preview.report.newlyUnmatched.slice(0,6).join(' · ')+(preview.report.newlyUnmatched.length>6?' · …':''))),
           longOutlines.length>0&&h('details',{className:'bsa-v1-outline-warning'},h('summary',null,'Organization suggestion · '+longOutlines.length+' topic outlines are very detailed'),h('p',null,'These topics contain more than 10 subtopics each. This is not an error, and no details will be deleted or merged automatically. If they represent tiny facts rather than broad study sections, ask your AI to use a concise outline but keep every detail in lecture sections and practice.'),longOutlines.slice(0,12).map((t,i)=>h('p',{key:i},t.name+' · '+t.count+' subtopics · '+t.file))),
           preview.report.perFile.length>1&&h('details',null,h('summary',null,'File-by-file preview'),preview.report.perFile.map((x,i)=>h('p',{key:i,className:'muted small'},x.name+' · '+x.added+' new · '+x.duplicates+' duplicate · '+x.conflicts+' conflicts'))),
           preview.report.issues.length>0&&h('details',{className:'bsa44-issue-list'},h('summary',null,'Review '+preview.report.issues.length+' flagged items'),preview.report.issues.slice(0,55).map((x,i)=>h('p',{key:i},h('strong',null,x.kind.toUpperCase()+': '+x.title),h('small',null,x.why+' · '+x.file)))),
@@ -17089,15 +17426,22 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     const stem=String(q?.q||q?.problem||'');
     const words=bsa213Words(stem);
     const numerical=/\b(?:calculate|compute|determine|formula|yield|price|present value|adjusting entry|depreciation|interest|ratio|journalize)\b/i.test(stem)&&/\d/.test(stem);
-    return Math.min(8,Math.max(3,(numerical?5:3)+Math.floor(words/100)));
+    return Math.min(9,Math.max(numerical?3.5:1.1,(numerical?3.8:1.35)+Math.floor(words/100)*(numerical?1.1:.5)));
   }
-  function bsa213McqScope(pool,minutes){
+  function bsa213McqScope(pool,minutes,events=[]){
     const q=Array.isArray(pool)?pool:[];
     if(!q.length)return null;
-    const avg=q.slice(0,8).reduce((sum,x)=>sum+bsa213McqEstimate(x),0)/Math.min(q.length,8);
+    const baseline=q.slice(0,12).reduce((sum,x)=>sum+bsa213McqEstimate(x),0)/Math.min(q.length,12);
+    const ids=new Set(q.map(x=>x.id));
+    const samples=(events||[]).filter(x=>x.kind==='mcq'&&ids.has(x.sourceId)&&!x.guessed&&!x.assisted&&Number(x.elapsedMs)>=12000&&Number(x.elapsedMs)<=600000)
+      .slice(-75).map(x=>Number(x.elapsedMs)/60000).sort((a,b)=>a-b);
+    const stable=samples.length>=6?samples.slice(Math.floor(samples.length*.15),Math.ceil(samples.length*.85)):[];
+    const measured=stable.length?stable.reduce((a,b)=>a+b,0)/stable.length:null;
+    // Personal history can refine time, but never let a fast click-through suggest impossible workloads.
+    const avg=measured===null?baseline:Math.min(baseline*1.6,Math.max(baseline*.65,(baseline+measured)/2));
     const usable=Math.max(1,minutes-1); // leave time to check explanations
     const count=Math.max(1,Math.min(q.length,50,Math.floor(usable/avg)));
-    return {count,available:q.length,perQuestion:Math.ceil(avg),estimated:Math.min(minutes,Math.ceil(count*avg+1))};
+    return {count,available:q.length,perQuestion:Math.round(avg*10)/10,estimated:Math.min(minutes,Math.ceil(count*avg+1)),personalized:measured!==null};
   }
   function bsa213WrittenMinutes(problem){
     const question=String(problem?.problem||problem?.question||'');
@@ -17124,9 +17468,9 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     }
     if(block.key==='mcq'&&block.route==='mcq'){
       const pool=mcqDedicatedPool(subject).filter(q=>bsa34TopicMatch(q,focus,subject)&&(block.opts?.setId?block.opts.setId===q.setId:true));
-      const measure=bsa213McqScope(pool,minutes);
+      const measure=bsa213McqScope(pool,minutes,subject.learningEvents||[]);
       if(measure)return {...block,opts:{...(block.opts||{}),count:measure.count},
-        detail:'Aim for up to '+measure.count+' MCQ'+(measure.count===1?'':'s')+' (allow about '+measure.perQuestion+' min each including reasoning). Stop and save if you need longer.',scope:measure};
+        detail:'Aim for up to '+measure.count+' MCQ'+(measure.count===1?'':'s')+' (about '+measure.perQuestion+' min each including reasoning'+(measure.personalized?', adjusted using your answer pace':'')+'). Stop and save if you need longer.',scope:measure};
     }
     if(block.key==='apply'){
       if(block.route==='psets'){
@@ -17406,17 +17750,119 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       block.ref?.startsWith('builtin:')?Number(a.exercise)===Number(block.ref.slice(8)):a.problemId===block.ref));
     return false;
   }
+  /* V2.14: source-driven foundation check. No hard-coded accounting taxonomy,
+     AI correctness guarantee, or self-reported mastery inflation. All sources
+     come from the CURRENT subject and selected topic. */
+  function bsa214TopicStanding(subject,focus){
+    const matches=x=>bsa34TopicMatch(x,focus,subject);
+    const pool=bsa197Pool(mcqDedicatedPool(subject).filter(matches),subject.learningEvents||[]);
+    const marked={unseen:0,due:0,weak:0,mastered:0};
+    for(const q of pool){if(!q._recall.seen)marked.unseen++;if(q._recall.due)marked.due++;if(q._recall.weak)marked.weak++;if(q._recall.mastered)marked.mastered++;}
+    const lectures=(subject.lectures||[]).filter(matches);
+    let sectionTotal=0,unreviewed=0;
+    for(const lecture of lectures){const sections=lxSourcePresentation(lecture).sections||[];const done=new Set(lecture.reviewedSections||[]);sectionTotal+=sections.length;unreviewed+=sections.filter((x,i)=>!done.has(x.id||String(i))).length;}
+    const mistakes=(subject.mistakes||[]).filter(m=>m.status!=='Cleared'&&matches(m)).length;
+    const events=(subject.learningEvents||[]).filter(e=>matches(e)&&['correct','incorrect','partial'].includes(e.result));
+    const checked=events.length,independent=events.filter(bsa22IndependentCorrect).length;
+    const pending=bsa214RecentClosed(subject,focus)?.summary?.pending||null;
+    const checkedFoundation=(subject.foundationChecks||[]).filter(x=>focus==='all'||x.topicId===focus);
+    return {...marked,total:pool.length,sectionTotal,unreviewed,mistakes,checked,independent,pending,
+      foundation:checkedFoundation.length,foundationLatest:checkedFoundation.slice(-1)[0]||null};
+  }
+  function bsa214FoundationSources(subject,focus){
+    const result=[],seen=new Set(),matches=x=>bsa34TopicMatch(x,focus,subject),remember=entry=>{
+      if(!entry||!entry.source||entry.source.length<30||seen.has(entry.id))return;
+      seen.add(entry.id);result.push(entry);
+    };
+    const mcqs=mcqDedicatedPool(subject).filter(matches),byId=new Map(mcqs.map(q=>[q.id,q]));
+    const checkedIds=new Set((subject.learningEvents||[]).filter(e=>e.kind==='mcq'&&['correct','incorrect'].includes(e.result)).map(e=>e.sourceId));
+    for(const m of (subject.mistakes||[]).slice().reverse()){
+      if(m.status==='Cleared'||!matches(m))continue;
+      const q=byId.get(m.sourceMcqId);if(!q||!checkedIds.has(q.id))continue;
+      const correct=q.choices.find((c,i)=>mxChoiceKey(c,i)===q.key)||q.key;
+      remember({id:'mcq:'+q.id,kind:'mcq',topicId:q.topicId||'',sourceId:q.id,
+        title:'Reviewed mistake · '+psPlain(q.q).slice(0,90),
+        source:'Question: '+psPlain(q.q)+'\nOptions: '+q.choices.map(psPlain).join(' | ')+'\nSaved answer: '+psPlain(correct)+'\nSaved explanation: '+psPlain(q.why||q.trap||''),
+        prompt:'Explain why the correct treatment applies here, not just which letter is right. Then describe when this reasoning would NOT apply.'});
+      if(result.length>=8)break;
+    }
+    for(const lecture of (subject.lectures||[]).filter(matches)){
+      const sections=lxSourcePresentation(lecture).sections||[],done=new Set(lecture.reviewedSections||[]);
+      const candidates=sections.map((sec,i)=>({sec,i,reviewed:done.has(sec.id||String(i))})).sort((a,b)=>Number(a.reviewed)-Number(b.reviewed));
+      for(const {sec,i} of candidates){
+        remember({id:'lecture:'+lecture.id+':'+(sec.id||String(i)),kind:'lecture',topicId:lecture.topicId||'',sourceId:lecture.id,sectionId:sec.id||String(i),
+          title:lecture.title+' · '+String(sec.h||'Section '+(i+1)),source:String(sec.body||'').slice(0,8000),
+          prompt:'Explain the main rule or idea from this lecture section in your own words. When does it apply, and what changes when the facts are different?'});
+        if(result.length>=25)break;
+      }
+      if(result.length>=25)break;
+    }
+    for(const q of mcqs){
+      if(!checkedIds.has(q.id))continue;const correct=q.choices.find((c,i)=>mxChoiceKey(c,i)===q.key)||q.key;
+      remember({id:'mcq:'+q.id,kind:'mcq',topicId:q.topicId||'',sourceId:q.id,title:'Reviewed MCQ · '+psPlain(q.q).slice(0,90),
+        source:'Question: '+psPlain(q.q)+'\nSaved answer: '+psPlain(correct)+'\nSaved explanation: '+psPlain(q.why||''),
+        prompt:'Explain the underlying principle or concept behind this checked answer. What different situation would change the answer?'});
+      if(result.length>=35)break;
+    }
+    for(const c of (subject.cards||[]).filter(matches).slice(0,12)){
+      remember({id:'card:'+c.id,kind:'card',topicId:c.topicId||'',sourceId:c.id,title:'Concept Vault · '+String(c.q||'').slice(0,90),
+        source:'Card: '+String(c.q||'')+'\nSaved answer: '+String(c.a||''),
+        prompt:'Explain the meaning of this concept in your own words and use it in a different example.'});
+    }
+    return result;
+  }
+  function BSA214FoundationCheck({subject,update,go,toast,focus,init}){
+    const sources=useMemo(()=>bsa214FoundationSources(subject,focus),[subject,focus]);
+    const wished=init?.mcqId?'mcq:'+init.mcqId:init?.lectureId?'lecture:'+init.lectureId+':'+(init.sectionId||''):'';
+    const [sourceId,setSourceId]=useState(()=>wished||'');
+    const current=sources.find(x=>x.id===sourceId)||sources.find(x=>x.id.startsWith('lecture:'+init?.lectureId+':')&&!!init?.lectureId)||sources[0];
+    const [explain,setExplain]=useState(''),[transfer,setTransfer]=useState(''),[savedAt,setSavedAt]=useState(0);
+    useEffect(()=>{setSourceId(wished||'');setExplain('');setTransfer('');setSavedAt(0);},[subject.id,focus,wished]);
+    const save=()=>{
+      if(!current||explain.trim().length<20||transfer.trim().length<15)return;
+      const stamp=Date.now();
+      update(s=>{s.foundationChecks=s.foundationChecks||[];
+        s.foundationChecks.push({id:uid('foundation'),at:stamp,topicId:current.topicId||focus,sourceKind:current.kind,sourceId:current.sourceId,sectionId:current.sectionId||'',
+          sourceLabel:current.title.slice(0,180),explanation:explain.trim().slice(0,2400),application:transfer.trim().slice(0,2400),status:'self-explanation-unverified'});
+      });setSavedAt(stamp);toast('Foundation reflection saved. This is not a verified mastery result.');
+    };
+    const ask=()=>{
+      if(!current)return;
+      if(explain.trim().length>=20&&transfer.trim().length>=15&&!savedAt)save();
+      const sourceTitle=current.title;
+      const text='SOURCE MATERIAL:\n'+current.source.slice(0,9000)+'\n\nMY EXPLANATION (UNVERIFIED):\n'+explain.slice(0,2400)+'\n\nMY APPLICATION / WHAT-IF ANSWER (UNVERIFIED):\n'+transfer.slice(0,2400);
+      go('ask',{focus:{kind:'selection',originTab:'lectures',sourceTitle,sectionTitle:current.title,text,
+        title:'Foundation Check · '+sourceTitle},returnTo:{tab:'study',opts:{focusId:focus,foundation:true,lectureId:current.kind==='lecture'?current.sourceId:'',sectionId:current.sectionId||'',mcqId:current.kind==='mcq'?current.sourceId:''},label:'Return to Foundation Check'}});
+    };
+    return h('section',{className:'bsa214-foundation',id:'bsa214-foundation','aria-label':'Source-driven Foundation Check'},
+      h('div',{className:'bsa214-foundation-head'},h('div',null,h('span',{className:'bsa33-eyebrow'},'FOUNDATION CHECK · SOURCE DRIVEN'),h('h3',null,'Can I explain and apply this?'),
+        h('p',{className:'muted small'},'Selected from THIS topic’s saved lectures and checked questions. No memorized fixed topic list. Your written explanation is a reflection, not a verified grade.'))),
+      !sources.length?h('div',{className:'bsa214-foundation-empty'},'No suitable lecture section or checked concept is linked to this topic yet. Import a source or complete an MCQ first; the dashboard will not invent a foundation test.'):
+      h('div',{className:'bsa214-foundation-content'},
+        h('label',null,'Choose a connected concept',h('select',{value:current?.id||'',onChange:e=>{setSourceId(e.target.value);setExplain('');setTransfer('');setSavedAt(0)}},sources.map(x=>h('option',{key:x.id,value:x.id},x.title.slice(0,130))))),
+        h('div',{className:'bsa214-foundation-prompt'},h('strong',null,current.prompt),h('small',null,'Source: '+current.title)),
+        h('label',null,'1 · Explain the why (without notes)',h('textarea',{rows:3,maxLength:2400,placeholder:'In my own words, the rule works because…',value:explain,onChange:e=>{setExplain(e.target.value);setSavedAt(0)}})),
+        h('label',null,'2 · Apply or change the situation',h('textarea',{rows:3,maxLength:2400,placeholder:'If the facts changed, I would… because…',value:transfer,onChange:e=>{setTransfer(e.target.value);setSavedAt(0)}})),
+        h('details',{className:'bsa214-foundation-source'},h('summary',null,'Reveal the saved source after attempting'),h('p',null,current.source.slice(0,4500))),
+        h('div',{className:'bsa214-foundation-actions'},
+          h('button',{type:'button',className:'btn primary',disabled:explain.trim().length<20||transfer.trim().length<15||!!savedAt,onClick:save},savedAt?'Reflection saved ✓':'Save my explanation'),
+          h('button',{type:'button',className:'btn',disabled:explain.trim().length<20,onClick:ask},'✦ Ask Tutor to challenge my reasoning'),
+          h('button',{type:'button',className:'btn',onClick:()=>{const topicId=current.topicId||(!String(focus).startsWith('label:')?focus:'');if(!topicId||topicId==='all'){toast('This material is not linked to one known MCQ topic. Assign its roadmap topic first to avoid switching to unrelated questions.');return}go('mcq',{topicId,mode:'fresh'});}},'Try an unseen MCQ ↗')),
+        h('small',{className:'muted'},'A Tutor explanation is feedback, not a verified answer. Demonstrated understanding still requires independent application and later retrieval.')));
+  }
+
   function BSA205Study({subject,update,settings,go,toast,init}){
     const [budget,setBudget]=useState(40),[customEnabled,setCustomEnabled]=useState(false),[customMinutes,setCustomMinutes]=useState('18'),[reflection,setReflection]=useState(''),[focusMode,setFocusMode]=useState('balanced');
     const sessionMinutes=customEnabled?Math.max(5,Math.min(180,Math.round(Number(customMinutes)||18))):budget;
     const [focusId,setFocusId]=useState(init?.focusId||'all');
-    const [continuePrevious,setContinuePrevious]=useState(true);
+    const [continuePrevious,setContinuePrevious]=useState(true),[foundationOpen,setFoundationOpen]=useState(!!init?.foundation),[reflectOpen,setReflectOpen]=useState(false);
     const focusChoices=useMemo(()=>bsa34FocusChoices(subject),[subject]);
-    useEffect(()=>{if(init?.focusId&&focusChoices.some(x=>x.id===init.focusId))setFocusId(init.focusId)},[init?.focusId,subject.id]);
+    useEffect(()=>{if(init?.focusId&&focusChoices.some(x=>x.id===init.focusId))setFocusId(init.focusId);if(init?.foundation){setFoundationOpen(true);requestAnimationFrame(()=>setTimeout(()=>document.getElementById('bsa214-foundation')?.scrollIntoView({behavior:'smooth',block:'center'}),100));}},[init?.focusId,init?.foundation,init?.mcqId,init?.lectureId,subject.id]);
     const sessions=(subject.practiceSessions||[]).slice().sort((a,b)=>(Number(b.lastAt||b.createdAt)||0)-(Number(a.lastAt||a.createdAt)||0));
     const journey=bsa33Journey(subject);
     const active=journey.session;
     const prior=bsa214RecentClosed(subject,focusId);
+    const standing=useMemo(()=>bsa214TopicStanding(subject,focusId),[subject,focusId]);
     const proposal=useMemo(()=>bsa214AdaptProposal(subject,bsa212ModePlan(subject,sessionMinutes,settings,focusId,focusMode),focusId,focusMode,sessionMinutes,bsa214RecentClosed(subject,focusId),continuePrevious),[subject,sessionMinutes,settings,focusId,focusMode,continuePrevious]);
     const create=()=>{
       if(active){toast('Finish or file your existing plan before creating a new one.');return}
@@ -17424,7 +17870,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       if(timerState?.running){toast('Pause or finish your separate Pomodoro timer first to avoid running two study clocks.');return}
       const createdAt=Date.now();const newSession={id:uid('session205'),createdAt,lastAt:createdAt,budget:sessionMinutes,focusId,focusLabel:bsa34TopicTitle(subject,focusId),blocks:proposal.map(b=>({...b,done:false})),archived:false,focusMode,focusPhaseIndex:0,focusPhaseElapsedMs:0,focusPhaseStartedAt:createdAt,focusWaiting:false,focusSaved:false,focusEnded:false,timerStartedAt:createdAt,timerElapsedMs:0,timerPaused:false};
       update(s=>{s.practiceSessions=[...(s.practiceSessions||[]),newSession]});
-      setReflection('');toast('Guided focus started. Your floating phase timer follows you; drag its grip to reposition.');
+      setReflection('');setReflectOpen(false);toast('Guided focus started. Your floating phase timer follows you; drag its grip to reposition.');
     };
     const enableGuided=id=>{
       update(s=>{const x=(s.practiceSessions||[]).find(r=>r.id===id);if(!x||x.archived||bsa212Guided(x))return;
@@ -17467,13 +17913,22 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     const timerExists=bsa211HasTimer(active);
     const timerRunning=Number(active?.timerStartedAt)>0;
     const timerPercent=Math.min(100,Math.round(elapsedMs/plannedMs*100));
-    useEffect(()=>setReflection(active?.reflection||''),[active?.id]);
-    const saveReflection=()=>{if(!active)return;update(s=>{const x=(s.practiceSessions||[]).find(r=>r.id===active.id);if(x){x.reflection=reflection.slice(0,1000);x.lastAt=Date.now()}});toast('Reflection saved in this study plan. It does not count as a quiz score.');};
+    useEffect(()=>{setReflection(active?.reflection||'');setReflectOpen(false);},[active?.id]);
+    const saveReflection=()=>{if(!active)return;update(s=>{const x=(s.practiceSessions||[]).find(r=>r.id===active.id);if(x){x.reflection=reflection.slice(0,1000);x.lastAt=Date.now()}});setReflectOpen(false);toast('Reflection saved in this study plan. It does not count as a quiz score.');};
     return h('section',{className:'view bsa205-page bsa33-study'},
       h('header',{className:'bsa33-study-head'},
         h('div',null,h('span',{className:'bsa205-overline'},'STEP 01 · PREPARE YOUR SESSION'),h('h1',null,'One clear session.',h('span',null,' Better recall.')),
           h('p',null,active?'Move from a short lesson to independent answers, then correct mistakes and reflect.':'Plan, retrieve from memory, get feedback, then revisit after a gap. Your existing resources power every step.')),
         h('div',{className:'bsa33-study-crest','aria-hidden':'true'},'✦')),
+      h('section',{className:'bsa214-standing','aria-label':'Current topic learning standing'},
+        h('div',{className:'bsa214-standing-head'},h('div',null,h('span',{className:'bsa33-eyebrow'},'TOPIC STANDING · BASED ON REAL RECORDS'),h('h3',null,bsa34TopicTitle(subject,focusId)),h('p',null,'Answered questions and review needs are measured separately from task checkmarks and study minutes.')),
+          h('button',{type:'button',className:'btn',onClick:()=>{setFoundationOpen(v=>!v)}},foundationOpen?'Hide Foundation Check':'Foundation Check')),
+        h('div',{className:'bsa214-standing-grid'},[
+          ['Unseen MCQs',standing.unseen],['Due to review',standing.due],['Weak MCQs',standing.weak],['Unreviewed sections',standing.unreviewed],['Open mistakes',standing.mistakes],['Independent correct attempts',standing.independent]
+        ].map(([label,value])=>h('div',{key:label},h('strong',null,value),h('small',null,label)))),
+        standing.pending&&h('p',{className:'bsa214-standing-pending'},'Unfinished from your recent session: '+standing.pending.title),
+        h('small',{className:'muted'},standing.checked+' checked practice record(s) · '+standing.sectionTotal+' lecture section(s) linked · '+standing.foundation+' saved self-explanation(s). These are not an automatic mastery score.')),
+      foundationOpen&&h(BSA214FoundationCheck,{subject,update,go,toast,focus:focusId,init}),
       active?h('div',{className:'bsa33-session-board'},
         h('div',{className:'bsa33-session-top'},
           h('div',null,h('span',{className:'bsa33-eyebrow'},'YOUR CURRENT STUDY PLAN'),h('h2',null,'You are making progress.'),
@@ -17509,14 +17964,19 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
           h('label',{className:'bsa33-task-done'},h('input',{type:'checkbox',checked:!!block.effectiveDone,disabled:!!block.evidence,onChange:()=>toggle(active.id,block.key),'aria-label':'Mark '+block.title+' complete after doing it'}),h('span',null,block.evidence?'Attempt recorded':block.done?'Done':'Mark done'))))),
         h('div',{className:'bsa33-session-footer'},h('span',null,'Answered practice is recognized automatically. Checked tasks are self-reported; neither implies mastery.'),
           h('button',{className:'bsa33-text-button bsa214-end-button',onClick:()=>{if(window.confirm('End this study session and save its progress? Your session history will remain available, and you can start a different topic. Save any unfinished quiz using its own Save & Leave first.'))archive(active.id)}},'End & Save session')),
-        h('p',{className:'bsa214-end-note'},'End & Save closes this plan and frees the timer for another topic. Save & Leave on the floating timer only pauses this same session for later.'),
-        (journey.percent===100||bsa212Guided(active)&&(active.focusEnded||active.blocks[bsa212PhaseIndex(active)]?.key==='teachback'||active.blocks[bsa212PhaseIndex(active)]?.key==='warmup'))&&h('section',{className:'bsa33-reflect', 'aria-label':'End of session reflection'},
+        h('p',{className:'bsa214-end-note'},'End & Save closes this plan and frees the timer for another topic. Save & Leave only pauses this same session for later.'),
+        h('div',{className:'bsa214-session-small-actions'},
+          bsa212Guided(active)&&h('button',{className:'btn',type:'button',onClick:()=>window.dispatchEvent(new Event('bsa214:show-focus-timer'))},'◷ Show floating timer'),
+          h('button',{className:'btn',type:'button',onClick:()=>setReflectOpen(v=>!v)},reflectOpen?'Hide reflection':'Finish & reflect (optional)'),
+          h('button',{className:'btn',type:'button',onClick:()=>{setFoundationOpen(true);requestAnimationFrame(()=>document.getElementById('bsa214-foundation')?.scrollIntoView({behavior:'smooth',block:'start'}))}},'Check understanding')),
+        
+        reflectOpen&&h('section',{className:'bsa33-reflect', 'aria-label':'End of session reflection'},
           h('span',{className:'bsa33-eyebrow'},'STEP 03 · REFLECT & REVISIT'),
           h('h3',null,'What can you remember without your notes?'),
           h('p',null,'Try a brief teach-back. Write a key idea and one uncertainty. This is self-reflection, not an automatically graded answer.'),
           h('label',null,'My own explanation',h('textarea',{rows:3,maxLength:1000,value:reflection,onChange:e=>setReflection(e.target.value),placeholder:'I can explain… / I still need to check…'})),
           h('div',{className:'bsa33-actions'},h('button',{className:'bsa33-button bsa33-button-primary',onClick:saveReflection},'Save reflection'),
-          h('button',{className:'bsa33-button bsa33-button-outline',onClick:()=>go('practice',{start:'review'})},'Practice spaced reviews ↗')),
+          h('button',{className:'bsa33-button bsa33-button-outline',onClick:()=>setReflectOpen(false)},'Close reflection'),h('button',{className:'bsa33-button bsa33-button-outline',onClick:()=>go('practice',{start:'review'})},'Practice spaced reviews ↗')),
           h('small',null,'Retention comes from repeated retrieval over time—not from marking a checklist complete.'))):
         h('div',{className:'bsa33-create-board',id:'bsa214-study-builder'},
           h('div',{className:'bsa33-create-copy'},h('span',{className:'bsa33-eyebrow'},'LET’S PLAN YOUR STUDY TIME'),h('h2',null,'Build a focused session'),h('p',null,'Choose a topic. The plan links to matching materials where available and will never quietly pick a different topic.')),
@@ -17549,19 +18009,78 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
         h('div',{className:'bsa33-utility-panel'},h('h3',null,'Need a specific tool?'),h('p',null,'These are shortcuts, not extra study dashboards.'),h('div',{className:'bsa33-tool-links'},
           [['Find a lecture','lectures'],['Search written problems','library'],['Open AI Tutor','ask'],['Open scratchpad','workspace']].map(([label,tab])=>h('button',{key:tab,onClick:()=>go(tab,tab==='workspace'?{tab:'scratch'}:{})},label,' ↗'))))),
       h('details',{className:'bsa33-history'},h('summary',null,'Previous study plans ('+sessions.length+')'),
-        sessions.length?h('div',{className:'bsa33-history-list'},sessions.slice(0,15).map(s=>h('div',{key:s.id,className:'bsa214-history-item'},
+        sessions.length?h('div',{className:'bsa33-history-list'},sessions.slice(0,5).map(s=>h('div',{key:s.id,className:'bsa214-history-item'},
           h('strong',null,s.focusLabel||'Mixed topics',' · ',bsa205Date(s.createdAt)),
           h('span',null,(s.focusEndSummary?.completed?.length??(s.blocks||[]).filter(b=>b.done).length)+' / '+(s.blocks||[]).length+' completed/attempted · '+(bsa211HasTimer(s)?bsa211Clock(bsa211ElapsedMs(s,clockNow)):'time untracked')),
           h('small',null,s.archived?'Ended & saved':'Current'),
           s.focusEndSummary?.pending&&h('small',null,'Unfinished: '+s.focusEndSummary.pending.title),
           s.reflection&&h('small',null,'Your reflection: '+String(s.reflection).slice(0,160)),
-          s.archived&&h('button',{type:'button',className:'bsa214-history-replan',onClick:()=>{setFocusId(s.focusId||'all');setFocusMode(s.focusMode||'balanced');setContinuePrevious(true);document.getElementById('bsa214-study-builder')?.scrollIntoView({behavior:'smooth',block:'start'})}},'Plan again for this topic ↗')))):h('p',null,'Your study session history will appear here.')));
+          null))):h('p',null,'Your study session history will appear here.')));
+  }
+  /* V2.16: one unobtrusive, screen-edge scroll rail for all long study screens.
+     The lecture's former in-content bottom navigation is intentionally removed. */
+  function bsa216ScrollArea(){
+    const main=document.querySelector('#root .bsa33-content');
+    if(!main)return null;
+    const style=getComputedStyle(main);
+    if(/auto|scroll/.test(style.overflowY)&&main.scrollHeight>main.clientHeight+360)return main;
+    // Nested Tutor history scrolls independently on some desktop layouts.
+    const chat=main.querySelector('.bsa44-tutor .ai-log');
+    if(chat&&chat.scrollHeight>chat.clientHeight+360)return chat;
+    const root=document.scrollingElement||document.documentElement;
+    return root.scrollHeight>window.innerHeight+360&&main.scrollHeight>window.innerHeight*0.7?root:null;
+  }
+  function BSA216ScrollRail({route}){
+    const [state,setState]=useState({show:false,atTop:true,atBottom:false});
+    const current=useRef(null);
+    useEffect(()=>{
+      let frame=0,extra=0,observer=null,mutations=null;
+      const check=()=>{
+        frame=0;
+        const node=bsa216ScrollArea();current.current=node;
+        if(!node){setState(v=>v.show?{show:false,atTop:true,atBottom:false}:v);return;}
+        const isWindow=node===document.scrollingElement||node===document.documentElement;
+        const y=isWindow?window.scrollY:node.scrollTop;
+        const capacity=Math.max(0,node.scrollHeight-(isWindow?window.innerHeight:node.clientHeight));
+        const timer=document.querySelector('#bsa213-focus-layer .bsa212-float');
+        const t=timer?.getBoundingClientRect();
+        const vh=window.innerHeight;
+        const options=[.48,.25,.7].map(f=>Math.round(vh*f));
+        const center=options.find(v=>!t||t.right<window.innerWidth-85||v+66<t.top||v-66>t.bottom)||options[0];
+        const next={show:capacity>360,atTop:y<90,atBottom:y>capacity-90,center};
+        setState(v=>v.show===next.show&&v.atTop===next.atTop&&v.atBottom===next.atBottom&&v.center===next.center?v:next);
+      };
+      const schedule=()=>{if(!frame)frame=requestAnimationFrame(check)};
+      const page=document.querySelector('#root .bsa33-content');
+      window.addEventListener('scroll',schedule,{passive:true});
+      page?.addEventListener('scroll',schedule,{passive:true,capture:true});
+      window.addEventListener('resize',schedule,{passive:true});
+      window.addEventListener('pointerup',schedule,{passive:true});
+      if(typeof ResizeObserver!=='undefined'&&page){observer=new ResizeObserver(schedule);observer.observe(page);}
+      if(typeof MutationObserver!=='undefined'&&page){mutations=new MutationObserver(schedule);mutations.observe(page,{childList:true,subtree:true});}
+      extra=setTimeout(schedule,250);schedule();
+      return()=>{window.removeEventListener('scroll',schedule);page?.removeEventListener('scroll',schedule,true);window.removeEventListener('resize',schedule);window.removeEventListener('pointerup',schedule);observer?.disconnect();mutations?.disconnect();clearTimeout(extra);if(frame)cancelAnimationFrame(frame)};
+    },[route]);
+    const jump=(bottom)=>{
+      const el=current.current||bsa216ScrollArea();if(!el)return;
+      const windowRoot=el===document.scrollingElement||el===document.documentElement;
+      const behavior=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches?'auto':'smooth';
+      if(windowRoot)window.scrollTo({top:bottom?document.documentElement.scrollHeight:0,behavior});
+      else el.scrollTo({top:bottom?el.scrollHeight:0,behavior});
+    };
+    if(!state.show)return null;
+    let layer=document.getElementById('bsa216-scroll-layer');
+    if(!layer){layer=document.createElement('div');layer.id='bsa216-scroll-layer';document.body.appendChild(layer);}
+    return ReactDOM.createPortal(h('nav',{className:'bsa216-scroll-rail',role:'navigation','aria-label':'Long page navigation',style:{top:(state.center||Math.round(window.innerHeight*.48))+'px'}},
+      h('button',{type:'button',title:'Go to top of page','aria-label':'Go to top of page',disabled:state.atTop,onClick:()=>jump(false)},'↑'),
+      h('button',{type:'button',title:'Go to bottom of page','aria-label':'Go to bottom of page',disabled:state.atBottom,onClick:()=>jump(true)},'↓')),layer);
   }
   function BSA212FloatingFocus({subject,update,go,toast,nav}){
     const active=bsa33Journey(subject).session;
     const session=bsa212Guided(active)?active:null;
     const [now,setNow]=useState(()=>Date.now());
     const [expanded,setExpanded]=useState(false);
+    useEffect(()=>{const show=()=>{setExpanded(true);setPos(null);try{localStorage.removeItem('bsa212-floating-pos')}catch(_){}};window.addEventListener('bsa214:show-focus-timer',show);return()=>window.removeEventListener('bsa214:show-focus-timer',show)},[]);
     const [pos,setPos]=useState(()=>{try{const p=JSON.parse(localStorage.getItem('bsa212-floating-pos')||'null');return p&&Number.isFinite(p.x)&&Number.isFinite(p.y)?p:null}catch(_){return null}});
     const drag=useRef(null);
     useEffect(()=>{if(!session)return;setNow(Date.now());const t=setInterval(()=>setNow(Date.now()),1000);return()=>clearInterval(t)},[session?.id]);
@@ -18782,7 +19301,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     useEffect(() => {
       if(window.__BSA_UNREADABLE_DATA__)return;
       try {
-        localStorage.setItem(STORE_KEY, JSON.stringify(data));
+        bsa214MainSet(JSON.stringify(data));
         if (storeFull) setStoreFull(false);
       } catch (e) {
         if (!storeFull) {
@@ -18835,7 +19354,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       const onStorage = (e) => {
         if (e.key !== STORE_KEY || !e.newValue) return;
         try {
-          const other = normalizeDoc(JSON.parse(e.newValue));
+          const other = normalizeDoc(JSON.parse(bsa214Unpack(e.newValue)));
           if (other) setData((cur) => {
             const m = mergeDocs(cur, other);
             return docSig(m) === docSig(cur) ? cur : m;
@@ -18997,7 +19516,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       storeFull&&h('div',{className:'bsa48-save-failure',role:'alert'},h('strong',null,'Changes are not saving on this device.'),h('span',null,'The browser refused a local write. Export a full backup and review storage before further editing.'),h('button',{type:'button',className:'btn',onClick:()=>setModal({data:'export'})},'Open backup')),
       h("div",{className:"workspace-topbar v2-topbar"},
         h("div",{className:"workspace-context"},h("span",{className:"workspace-eyebrow"},"STUDY SPACE  /"),h("strong",null,(tabs.find(t=>t[0]===nav.tab)||[null,"Today"])[1]),h("span",{className:"workspace-subject"},subject.code||subject.name)),
-        h("div",{className:"workspace-actions v2-top-actions"},h('button',{className:'bsa45-top-guide',onClick:()=>go('guide')},h(Icon,{name:'sparkles',size:16}),'Start here'),h('button',{className:'bsa45-top-dock',onClick:()=>{const hidden=localStorage.getItem('bsa45_dock_hidden')!=='1';window.dispatchEvent(new CustomEvent('bsa45:dock-visibility',{detail:{hidden}}));toast(hidden?'Study Dock hidden':'Study Dock visible');}},'Dock'),h("button",{className:"v2-top-search",onClick:()=>setSpotlightOpen(true),title:"Search · Ctrl/⌘ + K","aria-label":"Search all study materials"},h(Icon,{name:"search",size:16}),"Search",h("kbd",null,"⌘ K")))),
+        h("div",{className:"workspace-actions v2-top-actions"},h('button',{className:'bsa45-top-guide',onClick:()=>go('guide')},h(Icon,{name:'sparkles',size:16}),'Start here'),bsa212Guided(bsa33Journey(subject).session)&&h('button',{className:'bsa214-show-timer-top',type:'button',onClick:()=>window.dispatchEvent(new Event('bsa214:show-focus-timer'))},'◷ Show timer'),h('button',{className:'bsa45-top-dock',onClick:()=>{const hidden=localStorage.getItem('bsa45_dock_hidden')!=='1';window.dispatchEvent(new CustomEvent('bsa45:dock-visibility',{detail:{hidden}}));toast(hidden?'Study Dock hidden':'Study Dock visible');}},'Dock'),h("button",{className:"v2-top-search",onClick:()=>setSpotlightOpen(true),title:"Search · Ctrl/⌘ + K","aria-label":"Search all study materials"},h(Icon,{name:"search",size:16}),"Search",h("kbd",null,"⌘ K")))),
       pendingPractice && !(nav.tab==='mcq'&&quizRunning) && !(nav.tab==='mcq'&&pendingPractice.kind==='mcq'&&nav.opts?.resume&&data.activeId===pendingPractice.subjectId) && !(nav.tab==='psets'&&pendingPractice.kind==='written'&&nav.opts?.open===pendingPractice.setId&&data.activeId===pendingPractice.subjectId) &&
         h('div',{className:'bsa18-resume-strip',role:'region','aria-label':'Resume unfinished practice'},
           h('span',{className:'bsa18-resume-icon','aria-hidden':'true'},'↩'),
@@ -19016,7 +19535,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       spotlightOpen && h(BSA181Spotlight,{data,go,onSwitch:(id,tab,opts)=>{setData(d=>({...d,activeId:id}));go(tab,opts)},onClose:()=>setSpotlightOpen(false)}),
       /* @__PURE__ */ h("nav",{className:"bottom-nav v2-bottom-nav","aria-label":"Mobile navigation",onTouchStart:touchNavStart,onTouchEnd:touchNavEnd},
         [["home","Today","home"],["study","Learn","lecture"],["practice","Practice","bolt"],["library","Library","book"]].map(([k,l,ic])=>h("button",{type:"button",key:k,className:nav.tab===k?"on":"","aria-current":nav.tab===k?"page":undefined,onClick:()=>go(k)},h(Icon,{name:ic}),h("span",null,l))),
-        h("button",{type:"button",onClick:()=>setModal("more"),className:"v2-more-mobile"+(!["home","study","practice","library"].includes(nav.tab)?" on":""),"aria-label":"More tools"},h(Icon,{name:"more"}),h("span",null,"More"))), /* @__PURE__ */ React.createElement("div", { className: `toast${msg ? " show" : ""}`, role: "status", "aria-live": "polite" }, msg), h(FocusBar, { data, update, toast }), h(BSA212FloatingFocus,{key:subject.id,subject,update,go,toast,nav}), h(BSA4StudyDock,{key:subject.id,subject,data,settings:data.settings,setSettings,onSwitch:(id,tab)=>{setData(d=>({...d,activeId:id}));go(tab||'insights')},go,navTab:nav.tab}), modal === "quick" && /* @__PURE__ */ React.createElement(QuickAdd, { onClose: () => setModal(null), onPick: (k) => {
+        h("button",{type:"button",onClick:()=>setModal("more"),className:"v2-more-mobile"+(!["home","study","practice","library"].includes(nav.tab)?" on":""),"aria-label":"More tools"},h(Icon,{name:"more"}),h("span",null,"More"))), /* @__PURE__ */ React.createElement("div", { className: `toast${msg ? " show" : ""}`, role: "status", "aria-live": "polite" }, msg), (!bsa212Guided(bsa33Journey(subject).session))&&h(FocusBar, { data, update, toast }), h(BSA212FloatingFocus,{key:subject.id,subject,update,go,toast,nav}), h(BSA216ScrollRail,{route:nav.tab+':'+nav.key}), h(BSA4StudyDock,{key:subject.id,subject,data,settings:data.settings,setSettings,onSwitch:(id,tab)=>{setData(d=>({...d,activeId:id}));go(tab||'insights')},go,navTab:nav.tab}), modal === "quick" && /* @__PURE__ */ React.createElement(QuickAdd, { onClose: () => setModal(null), onPick: (k) => {
       if (k === "grade") {
         setModal(null);
         go("grades", { gtab: "scores" });
@@ -19143,7 +19662,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       React.createElement('button',{className:'btn',onClick:()=>bsaDownloadSafeDiagnostics(this.state.error)},'Download safe error report'),
       React.createElement('details',null,React.createElement('summary',null,'Technical details'),React.createElement('pre',null,String(this.state.error&&this.state.error.message||'Unknown render error'))));}
   }
-  if(window.__BSA_TEST__)window.__BSA18_TEST_HOOKS__={bsa197QuizKey,bsa197History,bsa197Recall,bsa197Pool,bsa197Pick,smartTopicStats,bsaAdaptiveSignals,bsaReadinessReport,bsa34LearningSnapshot,bsaUpsertMistake,learningEvidence,learningCapture,AcademicCommandCenter,bsa197LoadDraft,bsa197SaveDraft,bsa197DeleteDraft,bsa18SaveWritten,bsa18LoadWritten,bsa18DeleteWritten,bsa18LatestPractice,bsa18ReadTutorChat,bsa25PracticeHealth,bsa26TutorName,bsa26TopicMatch,bsa26SafeAction,bsa26TutorCapabilityContext,bsa26LocalStudyPlan,BSA26_COPILOT_FEATURES,bsa26SafeReturn,bsa26ReturnFor,bsa26FsDraft,bsa4TutorDraft,bsa27SelectionFocus,bsa27DefaultTutorQuestion,gemSourceSystem,bsa212ModePlan,bsa213QuickPlan,bsa213ReadScope,bsa213Words,bsa213McqScope,bsa213WrittenMinutes,bsa214Archive,bsa214RecentClosed,bsa214HistoryLabel,bsa214AdaptProposal,bsa212Allocate,bsa212PhaseElapsed,bsa212PhaseGoal,bsa212Action,bsa28SourceHistory,bsa28NewTopicRequest,bsa210TutorCore,bsa28ReadReflections,bsa28WriteReflections,bsa29Meaningful,bsa213ClozeQuality,bsa29Candidates,bsa29Pool,bsa29Exact,bsa29ReadDraft,bsa29SaveDraft,bsa210DuplicateSignal,bsa210MaterialPair,bsa210AnswerMeaning,bsa44Prepare,BSA29ClozePractice,psMathSegments,psMathHtml,psS,psInlineHtml,MultipleChoiceQuiz,MCQPage,PsWrittenDrill,MockExam,AskView,App};
+  if(window.__BSA_TEST__)window.__BSA18_TEST_HOOKS__={bsa197QuizKey,bsa197History,bsa197Recall,bsa197Pool,bsa197Pick,smartTopicStats,bsaAdaptiveSignals,bsaReadinessReport,bsa34LearningSnapshot,bsaUpsertMistake,learningEvidence,learningCapture,AcademicCommandCenter,bsa197LoadDraft,bsa197SaveDraft,bsa197DeleteDraft,bsa18SaveWritten,bsa18LoadWritten,bsa18DeleteWritten,bsa18LatestPractice,bsa18ReadTutorChat,bsa25PracticeHealth,bsa26TutorName,bsa26TopicMatch,bsa26SafeAction,bsa26TutorCapabilityContext,bsa26LocalStudyPlan,BSA26_COPILOT_FEATURES,bsa26SafeReturn,bsa26ReturnFor,bsa26FsDraft,bsa4TutorDraft,bsa27SelectionFocus,bsa27DefaultTutorQuestion,gemSourceSystem,bsa212ModePlan,bsa213QuickPlan,bsa213ReadScope,bsa213Words,bsa213McqScope,bsa213WrittenMinutes,bsa214Archive,bsa214RecentClosed,bsa214HistoryLabel,bsa214AdaptProposal,bsa214TopicStanding,bsa214FoundationSources,mcqDedicatedPool,studyTopics,bsa34TopicMatch,bsa213McqEstimate,bsa214Pack,bsa214Unpack,bsa214MainGet,bsa214MainSet,bsa49TopicParts,bsa49ResolveTopic,bsa49UnmatchedLabels,BSA49TopicLinks,bsa215TopicChapter,bsa215UniqueChapterMatch,bsa215LinkSafety,bsa44Plan,bsa44ParseOne,normTopic,bsa49CanonicalizePack,bsa214BackupGet,bsaBackupPreview,loadLocal,bsa212Allocate,bsa212PhaseElapsed,bsa212PhaseGoal,bsa212Action,bsa28SourceHistory,bsa28NewTopicRequest,bsa210TutorCore,bsa28ReadReflections,bsa28WriteReflections,bsa29Meaningful,bsa213ClozeQuality,bsa29Candidates,bsa29Pool,bsa29Exact,bsa29ReadDraft,bsa29SaveDraft,bsa210DuplicateSignal,bsa210MaterialPair,bsa210AnswerMeaning,bsa44Prepare,BSA29ClozePractice,psMathSegments,psMathHtml,psS,psInlineHtml,MultipleChoiceQuiz,MCQPage,PsWrittenDrill,MockExam,AskView,App};
   // v167: Owner app mounts only after this browser has been approved.
   // Shared student dashboards mount normally; the owner authorization script is never exported.
   let bsaOwnerMounted=false;
