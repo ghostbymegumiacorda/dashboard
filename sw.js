@@ -3,7 +3,7 @@
    Your study data is NOT stored here; it lives in the browser's storage and in your GitHub data repo.
    If you change this file later, bump VERSION so every device picks up the new copy. */
 const CACHE_FAMILY = "study-desk-" + encodeURIComponent(new URL(self.registration.scope).pathname) + "-";
-const VERSION = CACHE_FAMILY + "asset-update-20261122-v25-balanced-reliability-r01";
+const VERSION = CACHE_FAMILY + "asset-update-20261122-v27-one-shot-tutor-highlight-r01";
 const SCOPE = self.registration.scope;               // e.g. https://you.github.io/bsa-dashboard/
 const SHELL = ["index.html", "manifest.json", "icon-192.png", "icon-512.png", "icon-maskable-512.png", "apple-touch-icon.png", "favicon.png", "avatar-front.png", "avatar-back.png", "avatar-happy.png", "avatar-walk.png",'./BSA_AI_SOURCE_RULES.md','./BSA_AI_PROMPT.md','./EXAMPLE-universal-rulebook.json'];
 // Versioned application assets are essential: never activate an offline update
