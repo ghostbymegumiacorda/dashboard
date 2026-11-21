@@ -2631,7 +2631,9 @@ body:has(.bsa45-tutor-compact) .bsa4-dock{display:none!important}
 #root .bsa48-store-info .muted{margin:0;line-height:1.5;}
 #root .bsa48-store-advice{color:var(--text);border-left:3px solid var(--warn);margin:0;padding:7px 11px;background:var(--surface-2);}
 /* The modal must dominate the sidebar/quick shortcuts' local stacking context. */
-body.modal-open{overflow:hidden!important;overscroll-behavior:none!important;}
+/* V4.6.8: dialogs no longer freeze the document scroller.  The fixed
+   backdrop isolates interaction; .modal-body is the only dialog scroller. */
+body.modal-open{overflow-y:auto!important;overscroll-behavior-y:auto!important;}
 body.modal-open #root .bsa-shortcut-menu{display:none!important;pointer-events:none!important;}
 body>.backdrop{z-index:200500!important;position:fixed!important;inset:0!important;isolation:isolate;
  overflow:hidden;overscroll-behavior:contain;padding:calc(env(safe-area-inset-top,0px) + 10px) 12px calc(env(safe-area-inset-bottom,0px) + 10px)!important;}
@@ -2658,17 +2660,12 @@ body>.backdrop .modal-body>.tabs>button{flex:0 0 auto!important;white-space:nowr
    The main page uses ONE document scrollbar; only the rail and real dialogs
    have independent scroll regions. Older modal-open classes must not freeze
    the document after their dialog has been dismissed. */
-html { overflow-y:auto!important; }
-html:has(> body > .backdrop){overflow-y:hidden!important;}
-body:not(:has(> .backdrop)) {
+/* The document owns reading-page scrolling on every viewport.  Avoid
+   overflow:hidden on html/body (including :has(backdrop)) on touch browsers. */
+html,html:has(> body > .backdrop){overflow-y:auto!important;overscroll-behavior-y:auto!important;}
+body,body.modal-open,body.modal-open:not(:has(> .backdrop)),body:has(> .backdrop){
   height:auto!important;max-height:none!important;
-  overflow-y:visible!important;overscroll-behavior-y:auto!important;
-}
-body.modal-open:not(:has(> .backdrop)) {
-  overflow-y:visible!important;overscroll-behavior-y:auto!important;
-}
-body:has(> .backdrop) {
-  overflow-y:hidden!important;overscroll-behavior-y:none!important;
+  overflow-y:auto!important;overscroll-behavior-y:auto!important;
 }
 #root>.shell {height:auto!important;max-height:none!important;min-height:100dvh!important;overflow:visible!important;}
 #root>.shell>.content {
@@ -2970,3 +2967,74 @@ body > .backdrop .bsa3-more-groups .bsa3-tool-group .bsa205-more-grid > button:f
 
 /* Mobile update check: expose build identity inside More tools without relying on sidebar. */
 body > .backdrop .bsa47-mobile-build {display:block;margin:-2px 0 12px;color:var(--muted);font-weight:700;font-size:.73rem;letter-spacing:.025em;}
+
+
+/* V4.6.8 | Native single-finger scrolling, Android Chrome and iPad Safari.
+   One document scroller for lessons, an independently scrollable side rail,
+   a single inner scroller for genuine modal sheets. No preventDefault() on
+   ordinary touch events. Keep this last to supersede older theme CSS. */
+html, html:has(> body > .backdrop), body, body.modal-open,
+body:has(> .backdrop), body.modal-open:not(:has(> .backdrop)) {
+  height:auto!important;
+  max-height:none!important;
+  overflow-y:auto!important;
+  overscroll-behavior-y:auto!important;
+  touch-action:auto!important;
+}
+#root, #root > .shell, #root > .shell > .content {
+  height:auto!important;
+  max-height:none!important;
+  overflow-y:visible!important;
+  touch-action:auto!important;
+}
+#root > .shell { min-height:100dvh!important; }
+#root > .shell > .content {
+  overflow-x:visible!important;
+  min-height:0!important;
+  -webkit-overflow-scrolling:touch;
+}
+/* The overlay, not the page, prevents background taps; its body scrolls
+   natively with ONE finger even when its children are long accordions. */
+body > .backdrop {
+  position:fixed!important;
+  inset:0!important;
+  overflow:hidden!important;
+  overscroll-behavior:contain!important;
+  touch-action:auto!important;
+}
+body > .backdrop > .modal {
+  display:flex!important;
+  flex-direction:column!important;
+  min-height:0!important;
+  max-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 12px)!important;
+  overflow:hidden!important;
+  touch-action:auto!important;
+}
+body > .backdrop .modal-body {
+  display:block;
+  flex:1 1 auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  overscroll-behavior-y:contain!important;
+  touch-action:auto!important;
+  -webkit-overflow-scrolling:touch!important;
+}
+body > .backdrop .modal-body :is(.bsa3-more-groups,.bsa3-tool-group,.bsa205-more-grid) {
+  touch-action:auto!important;
+}
+/* All floating-dock touch drags were catching one-finger gestures.  Touch
+   now scrolls the page; dock repositioning remains mouse/keyboard only. */
+html[data-desk-theme] .bsa4-dock-trigger,
+.bsa4-dock-trigger {touch-action:pan-y!important;cursor:pointer!important;}
+html[data-desk-theme] .bsa4-dock-panel,
+.bsa4-dock-panel {touch-action:auto!important;-webkit-overflow-scrolling:touch!important;}
+@media(hover:none) {
+  body {background-attachment:scroll!important;}
+  #root > .shell > .content {touch-action:auto!important;}
+}
+
+/* Timer's drag handle must not capture page scrolling on touchscreens. */
+.bsa190-focus .bsa190-handle,
+.focus-bar.bsa190-focus .bsa190-handle {touch-action:pan-y!important;cursor:pointer!important;}
