@@ -30,7 +30,7 @@ THE SOFTWARE.
   if (window.__BSA_DESK_APP_LOADED__) return;
   window.__BSA_DESK_APP_LOADED__ = true;
   // User-facing release label only. Do not use for storage schemas or caches.
-  const BSA_RELEASE_LABEL = "V2.24";
+  const BSA_RELEASE_LABEL = "V2.25";
   const S = (t, p = null, s = false) => ({ t, p, s });
   const CFAS_TOPICS = [
     {
