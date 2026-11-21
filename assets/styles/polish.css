@@ -3895,3 +3895,144 @@ body>.backdrop .bsa16-delete-dialog .modal-foot>.btn{min-width:0;white-space:nor
 .ask-context-details .bsa210-tutor-preferences>summary{cursor:pointer;font-weight:650;list-style-position:inside}
 .ask-context-details .bsa210-tutor-preferences textarea{display:block;width:100%;box-sizing:border-box;max-width:100%;min-height:5.2rem;resize:vertical;margin-top:.5rem;font:inherit;line-height:1.45}
 .ask-context-details .bsa210-tutor-preferences .row-end{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:.65rem;margin-top:.4rem}
+
+/* V2.11: real session goal vs checked activities. Never equate minutes with mastery. */
+#root .bsa211-task-rate{display:grid;gap:3px;justify-items:end}
+#root .bsa211-task-rate small{font-size:.7rem;color:var(--muted);font-weight:650}
+#root .bsa211-time-panel{display:grid;gap:12px;min-width:0;padding:16px 18px;border:1px solid color-mix(in srgb,var(--accent) 25%,var(--line));border-radius:17px;background:color-mix(in srgb,var(--accent) 4%,var(--surface));}
+#root .bsa211-time-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+#root .bsa211-time-heading>div{display:grid;gap:5px}
+#root .bsa211-time-heading strong{font-size:.9rem}
+#root .bsa211-time-state{border:1px solid var(--line);border-radius:999px;padding:5px 10px;font-size:.72rem;font-weight:750;color:var(--muted)}
+#root .bsa211-time-state.running{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,var(--line));}
+#root .bsa211-time-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+#root .bsa211-time-stats>div{display:grid;gap:5px;min-width:0;border:1px solid var(--line);border-radius:12px;padding:11px 13px;background:var(--surface)}
+#root .bsa211-time-stats small{color:var(--muted);font-size:.73rem}
+#root .bsa211-time-stats strong{font:800 clamp(.98rem,1.9vw,1.35rem)/1.2 var(--display,inherit);letter-spacing:-.02em;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+#root .bsa211-time-meter{height:7px;border-radius:999px;background:var(--surface-2);overflow:hidden;border:1px solid var(--line)}
+#root .bsa211-time-meter span{display:block;height:100%;background:var(--accent);border-radius:999px;transition:width .4s ease}
+#root .bsa211-time-bottom{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+#root .bsa211-time-bottom p{font-size:.73rem;color:var(--muted);line-height:1.5;max-width:67ch;flex:1 1 300px;margin:0}
+#root .bsa211-time-button{flex:0 0 auto;min-height:40px;padding:9px 15px;color:var(--text);background:var(--surface);border:1px solid var(--line);border-radius:10px;font-weight:800;font-size:.77rem;cursor:pointer}
+#root .bsa211-time-button:hover{border-color:var(--accent)}
+#root .bsa33-time-field small{font-weight:450;line-height:1.45;color:var(--muted)}
+@media(max-width:540px){#root .bsa211-time-stats{grid-template-columns:repeat(2,minmax(0,1fr))}#root .bsa211-time-stats>div:first-child{grid-column:1/-1}#root .bsa211-time-button{width:100%}}
+@media(prefers-reduced-motion:reduce){#root .bsa211-time-meter span{transition:none}}
+
+/* V2.11: Sidebar editor is a React portal on BODY, not a descendant of #root.
+   All older #root .bsa46-settings selectors therefore missed the modal. */
+body>.backdrop>.modal.bsa45-sidebar-modal{width:min(790px,calc(100vw - 28px))!important;max-width:min(790px,calc(100vw - 28px))!important;color:var(--text);}
+body>.backdrop .bsa45-sidebar-modal .modal-body{padding:clamp(13px,2.2vw,22px)!important;}
+body>.backdrop .bsa46-settings{display:grid;gap:15px;min-width:0;color:var(--text);font-size:.85rem;}
+body>.backdrop .bsa46-settings *{box-sizing:border-box}
+body>.backdrop .bsa46-settings-intro{display:grid;gap:4px;padding:12px 16px;border:1px solid var(--line);background:var(--surface-2);border-radius:13px;min-width:0}
+body>.backdrop .bsa46-settings-intro strong{font-size:.95rem;overflow-wrap:anywhere}
+body>.backdrop .bsa46-settings-intro span{font-size:.77rem;color:var(--muted);line-height:1.5}
+body>.backdrop .bsa46-settings-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;min-width:0}
+body>.backdrop .bsa46-settings-tabs button{min-width:0;min-height:41px;padding:9px 8px;white-space:normal;border:1px solid var(--line);background:var(--surface);color:var(--text);font-size:.76rem;font-weight:750;line-height:1.3;border-radius:10px;cursor:pointer}
+body>.backdrop .bsa46-settings-tabs button.selected{background:var(--accent-soft);border-color:var(--accent);color:var(--text)}
+body>.backdrop .bsa46-settings-body{display:grid;gap:13px;min-width:0;padding:3px 0}
+body>.backdrop .bsa46-settings-body h3{font-size:1rem;margin:0;line-height:1.35}
+body>.backdrop .bsa46-settings-body p{margin:0;line-height:1.5}
+body>.backdrop .bsa46-field{display:grid;gap:8px;min-width:0;font-weight:730;font-size:.82rem}
+body>.backdrop .bsa46-field select{min-height:44px;width:100%;border:1px solid var(--line);border-radius:11px;padding:10px 13px;background:var(--surface);color:var(--text);font:inherit}
+body>.backdrop .bsa46-profile-explain{display:grid;gap:5px;padding:14px 16px;background:var(--surface-2);border:1px solid var(--line);border-radius:13px;min-width:0}
+body>.backdrop .bsa46-profile-explain p{font-size:.8rem}
+body>.backdrop .bsa46-profile-explain small{font-size:.73rem;line-height:1.4;color:var(--muted)}
+body>.backdrop .bsa211-settings-fold{min-width:0;border:1px solid var(--line);border-radius:13px;background:var(--surface);overflow:clip}
+body>.backdrop .bsa211-settings-fold>summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 15px;min-height:47px;font-weight:780;font-size:.8rem;cursor:pointer;list-style:none;}
+body>.backdrop .bsa211-settings-fold>summary::-webkit-details-marker{display:none}
+body>.backdrop .bsa211-settings-fold>summary:before{content:'▸';color:var(--accent);font-size:1rem;margin-right:3px;transition:transform .2s}
+body>.backdrop .bsa211-settings-fold[open]>summary:before{transform:rotate(90deg)}
+body>.backdrop .bsa211-settings-fold>summary>span{flex:1}
+body>.backdrop .bsa211-settings-fold>summary>small{font-size:.7rem;color:var(--muted);font-weight:550;text-align:right;line-height:1.3}
+body>.backdrop .bsa211-fold-body{display:grid;gap:10px;padding:5px 13px 14px;min-width:0}
+body>.backdrop .bsa46-special-list{display:grid;gap:8px;min-width:0}
+body>.backdrop .bsa46-special-item{display:flex;gap:14px;align-items:center;justify-content:space-between;padding:11px 12px;border:1px solid var(--line);background:var(--surface-2);border-radius:11px;min-width:0}
+body>.backdrop .bsa46-special-item>span{display:grid;gap:5px;min-width:0;flex:1}
+body>.backdrop .bsa46-special-item strong{font-size:.78rem}
+body>.backdrop .bsa46-special-item small{font-size:.71rem;color:var(--muted)}
+body>.backdrop .bsa46-special-item select{min-height:40px;min-width:132px;max-width:180px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--text)}
+body>.backdrop .bsa211-editor-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+body>.backdrop .bsa211-editor-heading>div{display:grid;gap:4px}
+body>.backdrop .bsa211-pin-count{border-radius:999px;background:var(--accent-soft);color:var(--text);padding:7px 12px;font-size:.72rem;font-weight:800}
+body>.backdrop .bsa46-settings-body>input[type=search]{display:block;min-height:44px;width:100%;min-width:0;border:1px solid var(--line);border-radius:11px;background:var(--surface);color:var(--text);padding:10px 13px;font-size:16px}
+body>.backdrop .bsa211-shortcut-groups{display:grid;gap:10px;min-width:0}
+body>.backdrop .bsa46-editor-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(290px,100%),1fr));gap:9px;min-width:0}
+body>.backdrop .bsa46-editor-item{display:flex;align-items:center;gap:7px;min-width:0;flex-wrap:wrap;padding:10px 11px;border:1px solid var(--line);border-radius:11px;background:var(--surface-2)}
+body>.backdrop .bsa46-editor-name{flex:1 1 125px;min-width:0;font-size:.78rem;overflow-wrap:anywhere}
+body>.backdrop .bsa46-editor-item button{padding:7px 9px;min-height:34px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--text);font-weight:750;font-size:.72rem;cursor:pointer}
+body>.backdrop .bsa46-editor-item button.selected{border-color:var(--accent);background:var(--accent-soft)}
+body>.backdrop .bsa46-editor-item label{display:inline-flex;align-items:center;gap:6px;font-size:.73rem;white-space:nowrap}
+body>.backdrop .bsa46-editor-item input{width:17px;height:17px;accent-color:var(--accent)}
+body>.backdrop .bsa46-move{display:flex;gap:4px}
+body>.backdrop .bsa46-settings-actions{display:flex;gap:8px;flex-wrap:wrap;padding-top:3px}
+body>.backdrop .bsa46-setting-buttons{display:flex;gap:9px;flex-wrap:wrap}
+body>.backdrop .bsa46-settings :is(.bsa46-settings-actions,.bsa46-setting-buttons) .btn{min-height:40px}
+body>.backdrop .bsa46-settings-footer{position:sticky;bottom:-1px;z-index:2;display:flex;justify-content:flex-end;padding:12px 0 3px;background:var(--surface);border-top:1px solid var(--line)}
+body>.backdrop .bsa46-settings-footer .btn{min-height:41px;min-width:100px}
+body>.backdrop .bsa47-settings-palettes{display:grid;gap:10px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2)}
+body>.backdrop .bsa47-setting-tool-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+body>.backdrop .bsa47-setting-tool-grid button{min-height:46px;padding:10px;border:1px solid var(--line);border-radius:11px;background:var(--surface-2);color:var(--text);font-size:.78rem;font-weight:750;cursor:pointer;text-align:left}
+body>.backdrop .bsa46-settings .muted{color:var(--muted);font-size:.77rem}
+body>.backdrop .bsa46-settings :is(button,select,input,summary):focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media(max-width:700px){
+ body>.backdrop>.modal.bsa45-sidebar-modal{width:100%!important;max-width:100%!important;}
+ body>.backdrop .bsa46-settings-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
+ body>.backdrop .bsa46-special-item{flex-wrap:wrap}
+ body>.backdrop .bsa46-special-item select{width:100%;max-width:100%}
+ body>.backdrop .bsa46-editor-grid{grid-template-columns:minmax(0,1fr)}
+ body>.backdrop .bsa211-settings-fold>summary{flex-wrap:wrap}
+ body>.backdrop .bsa211-settings-fold>summary small{flex:1 1 100%;text-align:left;margin-left:19px}
+ body>.backdrop .bsa47-setting-tool-grid{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){body>.backdrop .bsa211-settings-fold>summary:before{transition:none}}
+
+/* V2.12 Guided Focus: intentionally quiet, touch-draggable, and distinct from
+   the legacy independent Pomodoro. Styles are root-scoped so modal portals and
+   AI Tutor chat/composer are untouched. The grip alone blocks touch scrolling. */
+#root .bsa212-mode-picker{display:grid;gap:10px;min-width:0}
+#root .bsa212-mode-picker>.bsa33-eyebrow{letter-spacing:.07em}
+#root .bsa212-mode-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+#root button.bsa212-mode{display:grid;text-align:left;gap:5px;min-width:0;min-height:72px;border:1px solid var(--line);background:var(--surface);border-radius:13px;padding:12px 13px;color:var(--text);cursor:pointer}
+#root button.bsa212-mode strong{font-size:.84rem;line-height:1.2}
+#root button.bsa212-mode small{font-size:.72rem;line-height:1.4;color:var(--muted)}
+#root button.bsa212-mode.selected{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 9%,var(--surface));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 36%,transparent)}
+#root .bsa212-current-block{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:13px;padding:14px 16px;border:1px solid color-mix(in srgb,var(--accent) 33%,var(--line));border-radius:15px;background:color-mix(in srgb,var(--accent) 5%,var(--surface))}
+#root .bsa212-current-block>div{display:grid;gap:5px;flex:1 1 190px;min-width:0}
+#root .bsa212-current-block h3{font-size:1rem;line-height:1.28;margin:0}
+#root .bsa212-current-block small,#root .bsa212-current-block>p{font-size:.74rem;color:var(--muted);line-height:1.4;margin:0}
+#root .bsa212-current-block>p{flex:1 1 190px}
+#root .bsa212-current-block>button{padding:9px 12px;white-space:normal}
+#root .bsa212-float{position:fixed;z-index:135;bottom:calc(100px + env(safe-area-inset-bottom,0px));right:18px;width:210px;max-width:calc(100vw - 16px);color:var(--text);background:var(--surface);border:1px solid color-mix(in srgb,var(--accent) 34%,var(--line));border-radius:17px;box-shadow:0 8px 28px rgba(0,0,0,.21);overflow:hidden;isolation:isolate;font-family:inherit;box-sizing:border-box}
+#root .bsa212-float *{box-sizing:border-box}
+#root .bsa212-float.expanded{width:320px}
+#root .bsa212-float.is-due{border-color:var(--accent);box-shadow:0 8px 28px rgba(0,0,0,.23)}
+#root .bsa212-float-top{display:flex;align-items:center;gap:2px;min-height:51px;padding:5px 6px}
+#root .bsa212-float button{font-family:inherit;cursor:pointer}
+#root .bsa212-float button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#root .bsa212-float-grip{display:grid;place-items:center;flex:0 0 27px;align-self:stretch;min-height:37px;border:0;border-radius:9px;color:var(--muted);background:transparent;font-size:20px;font-weight:700;cursor:grab!important;touch-action:none!important;user-select:none;-webkit-user-select:none}
+#root .bsa212-float-grip:active{cursor:grabbing!important;background:var(--surface-2)}
+#root .bsa212-float-summary{display:grid;gap:1px;flex:1 1 auto;min-width:0;min-height:38px;background:transparent;border:0;text-align:left;color:var(--text);padding:2px 4px;align-content:center}
+#root .bsa212-float-digits{font-weight:820;font-variant-numeric:tabular-nums;font-size:1.09rem;line-height:1.16;letter-spacing:-.025em}
+#root .bsa212-float-summary>span{color:var(--muted);font-size:.65rem;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+#root .bsa212-float-expand{display:grid;place-items:center;flex:0 0 25px;min-width:25px;min-height:32px;border:0;border-radius:9px;background:var(--surface-2);color:var(--text);font-size:18px}
+#root .bsa212-float-body{display:grid;gap:9px;padding:4px 13px 12px;border-top:1px solid var(--line);max-height:min(420px,calc(100dvh - 105px));overflow-y:auto;overscroll-behavior:contain}
+#root .bsa212-float-phase{font-size:.88rem;line-height:1.3}
+#root .bsa212-float-body>p{margin:0;color:var(--muted);font-size:.72rem;line-height:1.45}
+#root .bsa212-float-meter{height:6px;width:100%;border-radius:999px;background:var(--surface-2);overflow:hidden}
+#root .bsa212-float-meter>span{display:block;height:100%;background:var(--accent);border-radius:999px;transition:width .25s linear}
+#root .bsa212-float-meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:5px;color:var(--muted);font-size:.67rem;font-weight:650;font-variant-numeric:tabular-nums}
+#root .bsa212-float-actions{display:flex;flex-wrap:wrap;gap:5px}
+#root .bsa212-float-actions>button{flex:1 1 auto;min-height:35px;border:1px solid var(--line);border-radius:9px;color:var(--text);background:var(--surface-2);font-size:.7rem;font-weight:700;padding:6px 8px;white-space:nowrap}
+#root .bsa212-float-actions>button:hover{border-color:var(--accent)}
+#root .bsa212-float-notice{padding:8px 9px;border:1px solid color-mix(in srgb,var(--accent) 35%,var(--line));border-radius:9px;background:color-mix(in srgb,var(--accent) 7%,var(--surface));font-size:.72rem;line-height:1.45}
+#root .bsa212-float-footnote{font-size:.63rem!important}
+#root .bsa212-float-reset{justify-self:end;padding:4px 0;border:0;background:transparent;color:var(--muted);font-size:.67rem}
+@media(max-width:680px){#root .bsa212-mode-options{grid-template-columns:1fr}#root .bsa212-float{right:10px;bottom:calc(99px + env(safe-area-inset-bottom,0px));width:200px}#root .bsa212-float.expanded{width:min(308px,calc(100vw - 20px))}#root .bsa212-current-block>button{width:100%}}
+@media(prefers-reduced-motion:reduce){#root .bsa212-float-meter>span{transition:none}}
+#root .bsa212-legacy-upgrade{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid var(--line);background:var(--surface);border-radius:13px;flex-wrap:wrap}
+#root .bsa212-legacy-upgrade>div{display:grid;gap:3px;flex:1 1 200px}
+#root .bsa212-legacy-upgrade strong{font-size:.82rem}
+#root .bsa212-legacy-upgrade small{font-size:.72rem;color:var(--muted)}
+#root .bsa212-legacy-upgrade button{min-height:35px}
