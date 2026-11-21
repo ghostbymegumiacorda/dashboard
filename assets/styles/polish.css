@@ -3384,3 +3384,56 @@ html,body,#root{overflow-x:clip!important}
 #root .rail .bsa45-pin-link .ico,#root .rail .nav-group-links .ico{width:18px;height:18px;flex:0 0 18px}
 #root .mobilebar .icon-btn>.ico,#root .bottom-nav .ico{flex:0 0 auto;stroke-width:1.85}
 #root .bsa12-subject-launch:focus-visible,#root .bsa12-course-search:focus-within,#root .bsa12-subjects-view button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+
+/* V1.3 — Subject identity editor. All colors are derived from the selected theme. */
+.bsa13-customizer{grid-column:1/-1;min-width:0;border:1px solid var(--line);border-radius:16px;background:var(--surface);padding:12px;display:flex;flex-direction:column;gap:11px}
+.bsa13-customizer-head{display:flex;align-items:center;gap:11px;min-width:0}
+.bsa13-custom-preview{display:grid;place-items:center;width:48px;height:48px;flex:0 0 48px;border-radius:14px;color:var(--course-icon-accent,var(--accent));background:color-mix(in srgb,var(--course-icon-accent,var(--accent)) 12%,var(--surface));border:1px solid color-mix(in srgb,var(--course-icon-accent,var(--accent)) 27%,var(--line))}
+.bsa13-customizer-head>div{min-width:0;display:flex;flex-direction:column;gap:3px;flex:1}
+.bsa13-customizer-head strong{font-size:.84rem;color:var(--text)}
+.bsa13-customizer-head small{font-size:.72rem;color:var(--muted);line-height:1.35}
+.bsa13-picker-toggle{border:1px solid var(--line);border-radius:11px;min-height:38px;padding:8px 11px;display:flex;align-items:center;gap:5px;background:var(--surface-2);color:var(--text);font:inherit;font-size:.77rem;font-weight:750;cursor:pointer;flex:0 0 auto}
+.bsa13-picker-body{display:flex;flex-direction:column;gap:10px;min-width:0}
+.bsa13-picker-search{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2);padding:0 12px}
+.bsa13-picker-search input{background:transparent;color:var(--text);border:0;min-width:0;flex:1;min-height:42px;font:inherit}
+.bsa13-picker-categories{display:flex;gap:5px;overflow-x:auto;padding-bottom:3px;scrollbar-width:thin;touch-action:pan-x}
+.bsa13-picker-categories button{white-space:nowrap;flex:0 0 auto;min-height:34px;padding:6px 10px;border:1px solid var(--line);background:var(--surface-2);color:var(--text);border-radius:999px;font:inherit;font-size:.7rem;font-weight:750;cursor:pointer}
+.bsa13-picker-categories button.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.bsa13-icon-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;max-height:205px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+.bsa13-icon-grid button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;text-align:center;min-width:0;min-height:69px;border:1px solid var(--line);border-radius:11px;background:var(--surface-2);color:var(--text);padding:6px 3px;font:inherit;cursor:pointer}
+.bsa13-icon-grid button span{max-width:100%;font-size:.61rem;line-height:1.2;overflow-wrap:anywhere}
+.bsa13-icon-grid button.selected{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.bsa13-icon-grid button:hover{border-color:var(--accent)}
+.bsa13-color-label{font-size:.75rem;font-weight:800;color:var(--text)}
+.bsa13-colors{display:flex;gap:8px;flex-wrap:wrap}
+.bsa13-colors button{width:31px;height:31px;border-radius:10px;border:2px solid transparent;background:transparent;padding:3px;cursor:pointer;display:grid;place-items:center}
+.bsa13-colors button span{display:block;width:100%;height:100%;border-radius:6px;background:var(--swatch)}
+.bsa13-colors button.selected{border-color:var(--text)}
+.bsa13-colors button.selected span{outline:1px solid var(--surface)}
+.bsa12-subject-icon{color:var(--course-icon-accent,var(--accent));background:color-mix(in srgb,var(--course-icon-accent,var(--accent)) 12%,var(--surface));border:1px solid color-mix(in srgb,var(--course-icon-accent,var(--accent)) 20%,var(--line))}
+.bsa11-course-glyph,.bsa11-choice-monogram{color:var(--course-icon-accent,var(--accent))}
+.bsa13-danger-entry,.bsa13-remove-panel{grid-column:1/-1}
+.bsa13-danger-entry{border-top:1px solid var(--line);padding-top:10px}
+.bsa13-remove-trigger{min-height:38px;background:transparent;border:0;color:var(--muted);font:inherit;font-size:.77rem;font-weight:750;display:flex;align-items:center;gap:7px;cursor:pointer;padding:6px 0}
+.bsa13-remove-trigger:hover{color:var(--text)}
+.bsa13-remove-panel{display:flex;flex-direction:column;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:14px;min-width:0}
+.bsa13-remove-panel strong{font-size:.87rem;color:var(--text)}
+.bsa13-remove-panel p{font-size:.75rem;color:var(--muted);line-height:1.5;margin:0;overflow-wrap:anywhere}
+.bsa13-delete-name{display:flex!important;flex-direction:column!important;gap:6px!important;color:var(--text)!important;font-size:.75rem!important}
+.bsa13-delete-name input{font:inherit;min-height:42px;width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);color:var(--text)}
+.bsa13-delete-ack{display:flex!important;flex-direction:row!important;align-items:flex-start;gap:8px!important;line-height:1.5;color:var(--text)!important;font-size:.73rem!important}
+.bsa13-delete-ack input{width:17px;height:17px;flex:0 0 17px;margin-top:2px;accent-color:var(--accent)}
+.bsa13-archive-course,.bsa13-delete-final{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 13px;min-height:42px;border-radius:11px;border:1px solid var(--line);background:var(--surface-2);color:var(--text);font:inherit;font-size:.77rem;font-weight:750;cursor:pointer;align-self:flex-start}
+.bsa13-delete-final{border-color:#bf4050;color:#fff;background:#ad3446}
+.bsa13-delete-final:disabled{opacity:.45;cursor:not-allowed}
+.bsa13-archive-course:hover{border-color:var(--accent)}
+.bsa13-customizer button:focus-visible,.bsa13-remove-panel button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.bsa12-subject-collection[data-view='list'] .bsa13-customizer,.bsa12-subject-collection[data-view='list'] .bsa13-danger-entry,.bsa12-subject-collection[data-view='list'] .bsa13-remove-panel{grid-column:1/-1}
+@media(max-width:650px){.bsa13-icon-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.bsa13-customizer{padding:10px}.bsa13-picker-toggle{font-size:.71rem;padding:6px 9px}}
+@media(max-width:360px){.bsa13-icon-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(prefers-reduced-motion:reduce){.bsa13-icon-grid button{transition:none}}
+
+/* V1.3: lecture card source metadata can be long; show concise cards, never delete source. */
+.lx-row-main .bsa13-lecture-meta{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;overflow-wrap:anywhere;line-height:1.45;max-width:100%}
+.lx-toc ol{padding-left:1.5rem}
