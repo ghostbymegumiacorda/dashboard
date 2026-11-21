@@ -1,6 +1,6 @@
 (() => {
   // User-facing release label only. Do not use for storage schemas or caches.
-  const BSA_RELEASE_LABEL = "V1.1";
+  const BSA_RELEASE_LABEL = "V1.2";
   const S = (t, p = null, s = false) => ({ t, p, s });
   const CFAS_TOPICS = [
     {
@@ -2704,7 +2704,21 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     book: "M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3zM5 17a3 3 0 0 1 3-3h11",
     chart: "M4 20V11M10 20V5M16 20v-8M3 20h18",
     more: "M5 12h.01M12 12h.01M19 12h.01",
-    subjects: "M4 6h16M4 12h16M4 18h10",
+    subjects: "M4 5.5h16v13H4zM8 5.5v13M11 9h6M11 12h6M11 15h4",
+    grid: "M3 3.5h7.5V11H3zM13.5 3.5H21V11h-7.5zM3 14h7.5v6.5H3zM13.5 14H21v6.5h-7.5z",
+    list: "M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01",
+    settings: "M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.6 1.6M16.4 16.4L18 18M18 6l-1.6 1.6M7.6 16.4L6 18M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z",
+    search: "M10.7 3.8a6.9 6.9 0 1 0 0 13.8 6.9 6.9 0 0 0 0-13.8zM16.2 16.2 21 21",
+    sparkles: "m12 3 1.8 6.2L20 11l-6.2 1.8L12 19l-1.8-6.2L4 11l6.2-1.8zM19 18v4M17 20h4",
+    graduate: "M2.5 9 12 4l9.5 5-9.5 5zM6 11v5c3.8 2.7 8.2 2.7 12 0v-5M21 9v7",
+    edit: "M12 20h9M5 16.5 16.5 5a2 2 0 0 1 3 3L8 19.5 4 20z",
+    filter: "M4 6h16M7 12h10M10 18h4",
+    archive: "M3 5h18v4H3zM5 9v11h14V9M10 13h4",
+    close: "M5 5l14 14M19 5 5 19",
+    chevrondown: "m6 9 6 6 6-6",
+    bookopen: "M12 6c-3-2-6-2-9-1v14c3-1 6-1 9 1 3-2 6-2 9-1V5c-3-1-6-1-9 1zM12 6v14",
+    library: "M4 5h5v15H4zM10 3h5v17h-5zM16 8h4v12h-4z",
+    upload: "M12 16V3M7 8l5-5 5 5M4 16v5h16v-5",
     chevron: "M9 6l6 6-6 6",
     check: "M5 12.5l4.5 4.5L19 7.5",
     calendar: "M4 6h16v14H4zM4 10h16M8 3.5v4M16 3.5v4",
@@ -11889,11 +11903,11 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       replaceOnce('function markDirty() {','function markDirty() { if(window.__BSA_SHARED_MODE__)return;','Owner sync writes');
       // Do not allow shared users to navigate to owner settings, data export,
       // account controls, teaching tools or other private screens.
-      const sharedTabs='["home","study","practice","library","insights","lectures","rules","vault","psets","mcq","mistakes","accounting-lab","toolkit","fs-lab"]';
+      const sharedTabs='["home","subjects","study","practice","library","insights","lectures","rules","vault","psets","mcq","mistakes","accounting-lab","toolkit","fs-lab"]';
       replaceOnce('    const go = (tab, opts = {}) => {','    const go = (tab, opts = {}) => { if(window.__BSA_SHARED_MODE__ && !'+sharedTabs+'.includes(tab))return;','Shared navigation boundary');
       replaceOnce('    const openEditor = (type, item = null, defaults = {}) => {','    const openEditor = (type, item = null, defaults = {}) => { if(window.__BSA_SHARED_MODE__ && !["mistake","quiz"].includes(type))return;','Shared editing boundary');
-      replaceOnce('    const shortcutItems = [["home","Today","⌂"],["study","Learn & plan","✦"],["practice","Practice","✓"],["library","Library","▤"],["insights","Insights","◈"],["subjects","Switch subject","∑"]];',
-        '    const shortcutItems = window.__BSA_SHARED_MODE__ ? [["home","Today","⌂"],["study","Learn","✦"],["practice","Practice","✓"],["library","Library","▤"],["insights","Progress","◈"]] : [["home","Today","⌂"],["study","Learn & plan","✦"],["practice","Practice","✓"],["library","Library","▤"],["insights","Insights","◈"],["subjects","Switch subject","∑"]];',
+      replaceOnce('    const shortcutItems = [["home","Today","home"],["subjects","My Subjects","subjects"],["study","Learn & plan","lecture"],["practice","Practice","bolt"],["library","Library","library"],["insights","Progress","chart"]];',
+        '    const shortcutItems = window.__BSA_SHARED_MODE__ ? [["home","Today","home"],["subjects","My Subjects","subjects"],["study","Learn","lecture"],["practice","Practice","bolt"],["library","Library","library"],["insights","Progress","chart"]] : [["home","Today","home"],["subjects","My Subjects","subjects"],["study","Learn & plan","lecture"],["practice","Practice","bolt"],["library","Library","library"],["insights","Progress","chart"]];',
         'Shared shortcuts');
       replaceOnce('    const navGroups = [','    const navGroups = window.__BSA_SHARED_MODE__ ? [\n      {name:"Your study flow",items:["home","study","practice","library"]},\n      {name:"Study materials",items:["lectures","rules","vault"]},\n      {name:"Practice & questions",items:["mcq","psets","accounting-lab","fs-lab"]},\n      {name:"Review & progress",items:["mistakes","insights"]},\n      {name:"More tools",items:["toolkit"]}\n    ] : [','Shared navigation groups');
       replaceOnce('const [tool,setTool]=useState(initialTool||"notes");','const [tool,setTool]=useState(window.__BSA_SHARED_MODE__ ? "foundation" : (initialTool||"notes"));','Student toolkit default');
@@ -11904,8 +11918,8 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       const swreg='if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {';
       replaceOnce(swreg,'if (!window.__BSA_SHARED_MODE__ && "serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {','Shared service worker');
       // Private owner components remain inaccessible even if URLs are modified.
-      replaceOnce('modal === "subjects" && /* @__PURE__ */ React.createElement(SubjectModal,',
-        '!window.__BSA_SHARED_MODE__ && modal === "subjects" && /* @__PURE__ */ React.createElement(SubjectModal,','Subject management modal');
+      replaceOnce('!window.__BSA_SHARED_MODE__ && modal === "subjects" && /* @__PURE__ */ React.createElement(SubjectModal,',
+        '!window.__BSA_SHARED_MODE__ && !window.__BSA_SHARED_MODE__ && modal === "subjects" && /* @__PURE__ */ React.createElement(SubjectModal,','Subject management modal');
       // The exact DataModal pattern is intentionally checked for safety.
       replaceOnce('(modal === "data" || modal === "sync" || modal && modal.data) && /* @__PURE__ */ React.createElement(DataModal,',
         '!window.__BSA_SHARED_MODE__ && (modal === "data" || modal === "sync" || modal && modal.data) && /* @__PURE__ */ React.createElement(DataModal,','Import/export/sync modal');
@@ -16025,6 +16039,85 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
           canManage&&h('footer',{className:'bsa11-subject-actions'},h('button',{type:'button',onClick:()=>{setOpen(false);onManage()}},'+ Add or manage subjects')))
       ),document.body));
   }
+
+  /* V1.2 Subjects Library: one course identity, optional year/semester labels.
+     This view never copies, merges, deletes, or changes study material arrays. */
+  function BSA12Subjects({data,update,activeId,onOpen,onManage,toast}) {
+    const subjects=Array.isArray(data.subjects)?data.subjects:[];
+    const [query,setQuery]=useState('');
+    const [layout,setLayout]=useState(()=>{try{return localStorage.getItem('bsa12_subject_layout')==='list'?'list':'grid'}catch(_){return 'grid'}});
+    const [yearFilter,setYearFilter]=useState('all');
+    const [semFilter,setSemFilter]=useState('all');
+    const [includeArchived,setIncludeArchived]=useState(false);
+    const [editing,setEditing]=useState(null);
+    const [draft,setDraft]=useState({year:'',sem:'',status:'current'});
+    const parseTerm = (s) => {
+      const raw=String(s.curriculumTerm||'');
+      const year=String(s.academicYear|| (raw.match(/(?:year|yr)\s*([1-9])/i)||[])[1]||'');
+      let sem=String(s.semester||'');
+      if(!sem){const num=raw.match(/(?:semester|sem)\s*([123])/i);
+        sem=num?num[1]:/\b(summer|midyear)\b/i.test(raw)?'summer':'';}
+      return {year,sem};
+    };
+    const labelOf=s=>{const p=parseTerm(s);return p.year&&p.sem?'Year '+p.year+' · '+(p.sem==='summer'?'Summer':'Semester '+p.sem):p.year?'Year '+p.year:p.sem?(p.sem==='summer'?'Summer':'Semester '+p.sem):(s.curriculumTerm||'Unassigned term')};
+    const codes=s=>[(s.code||'').trim(),(s.name||'').trim(),s.curriculumTerm||'',s.academicYear||'',s.semester||''].join(' ').toLocaleLowerCase();
+    const sort=(a,b)=>{
+      const x=parseTerm(a),y=parseTerm(b);
+      const year=n=>n?Number(n):99,term=n=>n==='summer'?3:Number(n||9);
+      return year(x.year)-year(y.year)||term(x.sem)-term(y.sem)||(a.code||a.name||'').localeCompare(b.code||b.name||'');
+    };
+    const filtered=subjects.filter(s=>{
+      const p=parseTerm(s);
+      return (!query.trim()||codes(s).includes(query.trim().toLocaleLowerCase()))&&
+        (yearFilter==='all'||(p.year||'unassigned')===yearFilter)&&
+        (semFilter==='all'||(p.sem||'unassigned')===semFilter)&&
+        (includeArchived||s.courseStatus!=='archived');
+    }).sort(sort);
+    const groups=new Map();
+    filtered.forEach(s=>{const k=labelOf(s);if(!groups.has(k))groups.set(k,[]);groups.get(k).push(s)});
+    const updateCourse=(id,patch)=>update(null,d=>{const s=d.subjects.find(x=>x.id===id);if(s)Object.assign(s,patch,{_u:Date.now()})});
+    const startEdit=s=>{const p=parseTerm(s);setEditing(s.id);setDraft({year:p.year,sem:p.sem,status:s.courseStatus||'current',original:s.curriculumTerm||'',touchedTerm:false});};
+    const saveEdit=s=>{const term=!draft.touchedTerm?draft.original:(draft.year?(draft.sem?'Year '+draft.year+' · '+(draft.sem==='summer'?'Summer':'Semester '+draft.sem):'Year '+draft.year):'');
+      updateCourse(s.id,{academicYear:draft.year,semester:draft.sem,curriculumTerm:term,courseStatus:draft.status});setEditing(null);
+      toast('Subject organization saved. Its study materials were not changed.');};
+    const toggleLayout=v=>{setLayout(v);try{localStorage.setItem('bsa12_subject_layout',v)}catch(_){}};
+    const subjectCard=s=>{
+      const active=s.id===activeId;
+      const count=(s.topics||[]).filter(t=>t.kind!=='exam').length;
+      const editingThis=editing===s.id;
+      return h('article',{key:s.id,className:'bsa12-subject-card'+(active?' is-current':'')},
+        h('div',{className:'bsa12-course-heading'},
+          h('span',{className:'bsa12-subject-icon','aria-hidden':'true'},h(Icon,{name:bsa46ProfileId(s)==='finance'?'chart':bsa46ProfileId(s)==='quantitative'?'bolt':bsa46ProfileId(s)==='humanities'?'bookopen':'graduate',size:22})),
+          h('div',{className:'bsa12-course-title'},h('strong',null,s.name||'Unnamed subject'),h('small',null,s.code||'No course code')),
+          active&&h('span',{className:'bsa12-current-indicator'},h(Icon,{name:'check',size:13}),'Active')),
+        h('p',{className:'bsa12-course-meta'},h('span',null,labelOf(s)),h('span',null,count+' topics'),h('span',null,(s.lectures||[]).length+' lectures')),
+        editingThis&&h('div',{className:'bsa12-inline-edit'},
+          h('label',null,'Academic year',h('select',{value:draft.year,onChange:e=>setDraft(d=>({...d,year:e.target.value,touchedTerm:true}))},[['','Unassigned'],...['1','2','3','4','5'].map(n=>[n,'Year '+n])].map(([v,l])=>h('option',{value:v,key:v},l)))),
+          h('label',null,'Semester / term',h('select',{value:draft.sem,onChange:e=>setDraft(d=>({...d,sem:e.target.value,touchedTerm:true}))},[['','Unassigned'],['1','Semester 1'],['2','Semester 2'],['3','Semester 3'],['summer','Summer / midyear']].map(([v,l])=>h('option',{value:v,key:v},l)))),
+          h('label',null,'Course status',h('select',{value:draft.status,onChange:e=>setDraft(d=>({...d,status:e.target.value}))},[['current','Currently taking'],['planned','Planned'],['completed','Completed'],['on-hold','On hold'],['archived','Archived (not deleted)']].map(([v,l])=>h('option',{value:v,key:v},l))))),
+        h('div',{className:'bsa12-course-actions'},
+          h('button',{type:'button',className:'bsa12-open-course',onClick:()=>onOpen(s.id)},active?'Continue studying':'Open subject',h(Icon,{name:'chevron',size:16})),
+          !window.__BSA_SHARED_MODE__&&h('button',{type:'button',className:'bsa12-edit-course','aria-label':'Organize '+s.name, 'aria-expanded':editingThis,onClick:()=>editingThis?setEditing(null):startEdit(s)},h(Icon,{name:editingThis?'close':'edit',size:17}),h('span',null,editingThis?'Cancel':'Organize')),
+          !window.__BSA_SHARED_MODE__&&editingThis&&h('button',{type:'button',className:'bsa12-save-course',onClick:()=>saveEdit(s)},h(Icon,{name:'check',size:16}),'Save')));
+    };
+    return h('section',{className:'bsa12-subjects-view view','data-testid':'subjects-hub'},
+      h('div',{className:'bsa12-subjects-head'},
+        h('div',null,h('span',{className:'bsa12-eyebrow'},'YOUR ACADEMIC WORKSPACE'),h('h1',null,'My Subjects'),h('p',{className:'muted'},'Switch courses and organize your subjects by academic year and semester. Your saved study records stay connected.')),
+        !window.__BSA_SHARED_MODE__&&h('button',{className:'bsa12-add-course',type:'button',onClick:onManage},h(Icon,{name:'plus',size:18}),'Add subject')),
+      h('div',{className:'bsa12-subject-toolbar'},
+        h('label',{className:'bsa12-course-search'},h(Icon,{name:'search',size:19}),h('input',{type:'search',value:query,onChange:e=>setQuery(e.target.value),placeholder:'Search course or code…','aria-label':'Search subjects'})),
+        h('div',{className:'bsa12-course-filters'},
+          h('label',null,h('span',null,'Year'),h('select',{value:yearFilter,onChange:e=>setYearFilter(e.target.value),'aria-label':'Filter academic year'},[['all','All years'],...['1','2','3','4','5'].map(n=>[n,'Year '+n]),['unassigned','Unassigned']].map(([v,l])=>h('option',{value:v,key:v},l)))),
+          h('label',null,h('span',null,'Term'),h('select',{value:semFilter,onChange:e=>setSemFilter(e.target.value),'aria-label':'Filter semester'},[['all','All terms'],['1','Semester 1'],['2','Semester 2'],['3','Semester 3'],['summer','Summer'],['unassigned','Unassigned']].map(([v,l])=>h('option',{value:v,key:v},l))))),
+        h('div',{className:'bsa12-layout-switch',role:'group','aria-label':'Subject view'},
+          h('button',{className:layout==='grid'?'on':'',type:'button','aria-pressed':layout==='grid','aria-label':'Grid view',title:'Grid view',onClick:()=>toggleLayout('grid')},h(Icon,{name:'grid',size:19})),
+          h('button',{className:layout==='list'?'on':'',type:'button','aria-pressed':layout==='list','aria-label':'List view',title:'List view',onClick:()=>toggleLayout('list')},h(Icon,{name:'list',size:19})))),
+      h('div',{className:'bsa12-library-caption'},h('strong',null,filtered.length+' subject'+(filtered.length===1?'':'s')),h('label',null,h('input',{type:'checkbox',checked:includeArchived,onChange:e=>setIncludeArchived(e.target.checked)}),'Show archived')),
+      filtered.length?h('div',{className:'bsa12-course-groups'},[...groups].map(([term,items])=>h('section',{key:term,className:'bsa12-course-group'},h('div',{className:'bsa12-course-group-heading'},h('span',null,term),h('small',null,items.length+' course'+(items.length===1?'':'s'))),h('div',{className:'bsa12-subject-collection','data-view':layout},items.map(subjectCard)))))
+        :h('div',{className:'bsa12-empty-courses'},h(Icon,{name:'filter',size:24}),h('strong',null,'No matching subjects'),h('p',null,'Try another year or semester filter, or show archived subjects.'),h('button',{className:'btn',type:'button',onClick:()=>{setQuery('');setYearFilter('all');setSemFilter('all');setIncludeArchived(true)}},'Clear filters')),
+      h('p',{className:'bsa12-course-footnote'},'Organizing courses only changes their labels and status. Lectures, problems, topic identities, AI prompts and progress stay attached to their existing subject IDs.'));
+  }
+
   function App() {
     const [data, setData] = useState(() => loadLocal() || buildDefault());
     const [nav, setNav] = useState({ tab: "home", opts: {}, key: 0 });
@@ -16202,18 +16295,19 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
         const workspace = document.querySelector(".shell > .content");
         if (workspace && workspace.scrollHeight > workspace.clientHeight + 3 &&
             /^(auto|scroll)$/.test(getComputedStyle(workspace).overflowY)) workspace.scrollTop = 0;
-        window.scrollTo({top:0,behavior:"instant"});
+        window.scrollTo({top:0,behavior:'instant'});
+        requestAnimationFrame(()=>{const pane=document.querySelector('#root > .shell > .content');if(pane && pane.scrollTop>0)pane.scrollTop=0;});
       }
     };
-    const shortcutItems = [["home","Today","⌂"],["study","Learn & plan","✦"],["practice","Practice","✓"],["library","Library","▤"],["insights","Insights","◈"],["subjects","Switch subject","∑"]];
+    const shortcutItems = [["home","Today","home"],["subjects","My Subjects","subjects"],["study","Learn & plan","lecture"],["practice","Practice","bolt"],["library","Library","library"],["insights","Progress","chart"]];
     const shortcutGo = (tab) => {
       setShortcutsOpen(false);
-      if (tab === "subjects") setModal("subjects");
+      if (tab === "subjects") go("subjects");
       else go(tab);
     };
     const shortcutMenu = () => shortcutsOpen ? h("div",{className:"bsa-shortcut-menu",role:"menu","aria-label":"Quick shortcuts"},
       h("div",{className:"bsa-shortcut-title"},"Quick shortcuts"),
-      shortcutItems.map(([tab,label,symbol])=>h("button",{key:tab,type:"button",role:"menuitem",onClick:()=>shortcutGo(tab)},h("span",{className:"bsa-shortcut-symbol","aria-hidden":"true"},symbol),label)),
+      shortcutItems.map(([tab,label,symbol])=>h("button",{key:tab,type:"button",role:"menuitem",onClick:()=>shortcutGo(tab)},h("span",{className:"bsa-shortcut-symbol","aria-hidden":"true"},h(Icon,{name:symbol,size:17})),label)),
       !window.__BSA_SHARED_MODE__ && h("div",{className:"bsa-shortcut-separator",role:"separator"}),
       !window.__BSA_SHARED_MODE__ && h("button",{type:"button",role:"menuitem",onClick:()=>{setShortcutsOpen(false);go("safety");}},h("span",{className:"bsa-shortcut-symbol","aria-hidden":"true"},"✓"),"Device & data safety"),
       !window.__BSA_SHARED_MODE__ && h("button",{type:"button",role:"menuitem",onClick:()=>{setShortcutsOpen(false);go("toolkit",{tool:"share"});}},h("span",{className:"bsa-shortcut-symbol","aria-hidden":"true"},"↗"),"Publish materials"),
@@ -16244,7 +16338,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       try {
         const qs = new URLSearchParams(location.search);
         const want = qs.get("go");
-        const okTabs = ["study", "library", "insights", "accounting-cycle", "fs-lab", "safety", "week", "knowledge", "accounting-lab", "curriculum", "guide", "home", "workspace", "break", "life", "achievements", "stats-clean", "private-vault", "practice", "roadmap", "calendar", "vault", "mistakes", "grades", "lectures", "psets", "rules", "class", "toolkit", "howto"];
+        const okTabs = ["study", "library", "insights", "accounting-cycle", "fs-lab", "safety", "week", "knowledge", "accounting-lab", "curriculum", "guide", "home", "workspace", "break", "life", "achievements", "stats-clean", "private-vault", "practice", "subjects", "roadmap", "calendar", "vault", "mistakes", "grades", "lectures", "psets", "rules", "class", "toolkit", "howto"];
         if (want && okTabs.includes(want)) {
           setNav({ tab: want, opts: want === "practice" ? { start: "review" } : {}, key: 1 });
           history.replaceState(null, "", location.pathname);
@@ -16333,6 +16427,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     useEffect(() => { setBadge(reviewCount); }, [reviewCount]);
     const tabs = [
       ["home", "Today", "home"],
+      ["subjects", "My Subjects", "subjects"],
       ["study", "Plan & learn", "lecture"],
       ["library", "Find materials", "book"],
       ["insights", "Your progress", "grade"],
@@ -16408,15 +16503,20 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       go("grades", { gtab: t });
     };
     const viewProps = { key: `${subject.id}-${nav.key}`, subject, update, toast, go, openEditor, init: nav.opts, settings: data.settings, setSettings, onSubjectSettings:()=>setSidebarEdit(true) };
-    const subjectPicker = (id) => h(BSA11SubjectSwitcher,{id,subjects:data.subjects,activeId:data.activeId,onSwitch:switchSubject,onManage:()=>setModal('subjects'),onOpen:()=>setShortcutsOpen(false),canManage:!window.__BSA_SHARED_MODE__});
+    const openSubjects=()=>go('subjects');
+    const subjectsButton=(id,mobile=false)=>h('button',{id,type:'button',className:'bsa12-subject-launch'+(mobile?' is-mobile':''),onClick:openSubjects,'aria-label':'Open My Subjects','title':'My Subjects'},
+      h(Icon,{name:'subjects',size:mobile?19:20}),
+      h('span',{className:'bsa12-subject-launch-copy'},h('strong',null,'Subjects'),h('small',null,subject.code||subject.name)),
+      h(Icon,{name:'chevron',size:16}));
     return /* @__PURE__ */ React.createElement("div", { className: "shell"+(railCompact?" bsa47-rail-collapsed":"") }, /* @__PURE__ */ React.createElement("aside", { className: "rail", "aria-label": "Main" },
       h('div',{className:'bsa47-rail-header'},
         h("div",{className:"bsa-shortcut-anchor"},React.createElement("button", { className: "brand brand-home-button", type: "button", onClick: () => setShortcutsOpen(v=>!v), title: "Open quick shortcuts", "aria-label": "Open quick shortcuts", "aria-expanded":shortcutsOpen,"aria-haspopup":"menu" }, /* @__PURE__ */ React.createElement("span", { className: "brand-mark", "aria-hidden": "true" }, "Σ"), /* @__PURE__ */ React.createElement("span", null, "BSA Study Desk")),shortcutMenu()),
-        h('button',{type:'button',className:'bsa47-rail-toggle','aria-label':railCompact?'Expand sidebar':'Collapse sidebar','aria-expanded':!railCompact, title:railCompact?'Expand sidebar to show all study tools':'Collapse sidebar to give study materials more room',onClick:toggleRail},railCompact?'❯':'❮')),
-      /* @__PURE__ */ React.createElement("div", { className: "rail-subject" }, /* @__PURE__ */ React.createElement("span", { className: "rail-label" }, "CURRENT SUBJECT"), subjectPicker("subj"), /* @__PURE__ */ React.createElement("button", { className: "link-btn", onClick: () => setModal("subjects") }, "+ Add new subject")), h("div",{className:"rail-nav-wrap bsa46-rail-nav"},
+        h('button',{type:'button',className:'bsa47-rail-toggle','aria-label':railCompact?'Expand sidebar':'Collapse sidebar','aria-expanded':!railCompact, title:railCompact?'Expand sidebar to show all study tools':'Collapse sidebar to give study materials more room',onClick:toggleRail},h(Icon,{name:'chevron',size:19}))),
+      /* @__PURE__ */ React.createElement("div", { className: "rail-subject" }, /* @__PURE__ */ React.createElement("span", { className: "rail-label" }, "CURRENT SUBJECT"), subjectsButton("subj"), /* @__PURE__ */ React.createElement("button", { className: "link-btn", onClick: openSubjects }, "View all courses")), h("div",{className:"rail-nav-wrap bsa46-rail-nav"},
+      h('button',{className:'bsa12-subject-nav-link'+(nav.tab==='subjects'?' on':''),type:'button',onClick:openSubjects,'aria-current':nav.tab==='subjects'?'page':undefined},h(Icon,{name:'subjects',size:19}),h('span',null,'My Subjects'),h(Icon,{name:'chevron',size:15})),
       h('div',{className:'bsa46-profile-row'},h('span',null,bsa46Profile(subject).label),h('button',{type:'button',className:'bsa46-profile-edit',onClick:()=>setSidebarEdit(true),'aria-label':'Change study profile for '+subject.name},'Edit')),
-      h('div',{className:'bsa46-nav-search'},h('span',{'aria-hidden':true},'⌕'),h('input',{id:'desk-nav-search',className:'nav-search',type:'search',placeholder:'Find any tool…',value:navSearch,onChange:e=>setNavSearch(e.target.value),'aria-label':'Search all dashboard tools'})),
-      !window.__BSA_SHARED_MODE__&&h('button',{type:'button',className:'bsa48-builder-cta',onClick:()=>go('nlm',{}),'aria-label':'Open AI Prompt Builder'},h('span',{'aria-hidden':'true'},'✦'),h('span',null,h('strong',null,'AI Prompt Builder'),h('small',null,'Create → copy → import'))),
+      h('div',{className:'bsa46-nav-search'},h('span',{'aria-hidden':true},h(Icon,{name:'search',size:17})),h('input',{id:'desk-nav-search',className:'nav-search',type:'search',placeholder:'Find any tool…',value:navSearch,onChange:e=>setNavSearch(e.target.value),'aria-label':'Search all dashboard tools'})),
+      !window.__BSA_SHARED_MODE__&&h('button',{type:'button',className:'bsa48-builder-cta',onClick:()=>go('nlm',{}),'aria-label':'Open AI Prompt Builder'},h('span',{'aria-hidden':'true'},h(Icon,{name:'sparkles',size:19})),h('span',null,h('strong',null,'AI Prompt Builder'),h('small',null,'Create → copy → import'))),
       h('nav',{className:'rail-nav','aria-label':'Study Desk sections'},
         !navNeedle&&h('section',{className:'bsa45-pinned-block bsa46-shortcuts','aria-label':'Favorite tools'},
           h('div',{className:'bsa46-section-label'},h('strong',null,'YOUR SHORTCUTS'),h('button',{type:'button',onClick:()=>go('guide'),'aria-label':'Open guided walkthrough',title:'Guided walkthrough'},'Help ?')),
@@ -16424,23 +16524,23 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
         filteredNavGroups.map(group=>h('section',{className:'nav-group',key:group.name},h('button',{className:'nav-group-heading',type:'button','aria-expanded':Boolean(navSearch||!collapsedNav[group.name]),onClick:()=>setCollapsedNav(prev=>({...prev,[group.name]:!prev[group.name]}))},h('span',null,group.name),h('span',{className:'nav-chevron','aria-hidden':'true'},navSearch||!collapsedNav[group.name]?'⌄':'›')),(navSearch||!collapsedNav[group.name])?h('div',{className:'nav-group-links'},group.tabs.map(([k,l,ic,n])=>h('button',{key:k,className:nav.tab===k?'on':'','aria-current':nav.tab===k?'page':undefined,title:(DESK_FEATURE_GUIDE.find(f=>f.id===k)||{}).desc||l,onClick:()=>go(k)},h(Icon,{name:ic}),h('span',null,l),n?h('span',{className:'n'},n):null,navNeedle&&!bsa46ToolVisible(subject,k)?h('small',{className:'bsa46-search-note'},'optional'):null))):null)))),
       h('div',{className:'bsa47-utility-rail'},
         h('div',{className:'bsa47-utility-actions'},
-          h('button',{className:'bsa47-utility-button',type:'button',onClick:()=>setSidebarEdit(true),title:'Customize your workspace','aria-label':'Workspace settings'},h('span',{'aria-hidden':true},'⚙'),h('span',null,'Settings')),
+          h('button',{className:'bsa47-utility-button',type:'button',onClick:()=>setSidebarEdit(true),title:'Customize your workspace','aria-label':'Workspace settings'},h(Icon,{name:'settings',size:17}),h('span',null,'Settings')),
           h('button',{className:'bsa47-utility-button bsa47-import-button',type:'button',onClick:()=>go('library',{tab:'topics'}),title:'Find missing topic material'},h(Icon,{name:'data',size:16}),h('span',null,'Import'))),
         h('div',{className:'bsa47-palettes'},
           h('div',{className:'bsa47-palette-heading'},h('strong',null,'Quick colors'),h('button',{type:'button',onClick:()=>setModal('look')},'All colors')),
           h(ThemeDots,{settings:data.settings,setSettings})),
-        h(SyncBadge,{onOpen:openSync}),h('small',{className:'bsa47-build-tag',title:'Installed dashboard build'},BSA_RELEASE_LABEL))), /* @__PURE__ */ React.createElement("header", { className: "mobilebar" }, /* @__PURE__ */ h("div",{className:"bsa-shortcut-anchor mobile"},React.createElement("button", { className: "brand-mark mobile-home-button", type: "button", onClick: () => setShortcutsOpen(v=>!v), title: "Open quick shortcuts", "aria-label": "Open quick shortcuts", "aria-expanded":shortcutsOpen,"aria-haspopup":"menu" }, "Σ"),shortcutMenu()), subjectPicker("subj-m"), h("button",{className:"icon-btn",onClick:()=>setSpotlightOpen(true),"aria-label":"Search dashboard"},"⌕"), !window.__BSA_SHARED_MODE__&&h('button',{type:'button',className:'icon-btn bsa48-mobile-ai',onClick:()=>go('nlm',{}),'aria-label':'Open AI Prompt Builder',title:'AI Prompt Builder'},'✦'), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal(syncAlert ? "sync" : "data"), "aria-label": syncAlert ? "Import, export and sync (needs attention)" : "Import and export", "data-sync": syncAlert }, /* @__PURE__ */ React.createElement(Icon, { name: "data" })), /* @__PURE__ */ h('button',{className:'icon-btn',onClick:()=>go('guide'),'aria-label':'Guided walkthrough',title:'Guided walkthrough'},'?'),h('button',{className:'icon-btn bsa46-mobile-settings',onClick:()=>setSidebarEdit(true),'aria-label':'Subject profile and workspace settings',title:'Workspace settings'},'⚙')), /* @__PURE__ */ React.createElement("main", { className: "content bsa33-content", "data-desk-page": nav.tab },
+        h(SyncBadge,{onOpen:openSync}),h('small',{className:'bsa47-build-tag',title:'Installed dashboard build'},BSA_RELEASE_LABEL))), /* @__PURE__ */ React.createElement("header", { className: "mobilebar" }, /* @__PURE__ */ h("div",{className:"bsa-shortcut-anchor mobile"},React.createElement("button", { className: "brand-mark mobile-home-button", type: "button", onClick: () => setShortcutsOpen(v=>!v), title: "Open quick shortcuts", "aria-label": "Open quick shortcuts", "aria-expanded":shortcutsOpen,"aria-haspopup":"menu" }, "Σ"),shortcutMenu()), subjectsButton("subj-m",true), h("button",{className:"icon-btn",onClick:()=>setSpotlightOpen(true),"aria-label":"Search dashboard"},h(Icon,{name:"search",size:19})), !window.__BSA_SHARED_MODE__&&h('button',{type:'button',className:'icon-btn bsa48-mobile-ai',onClick:()=>go('nlm',{}),'aria-label':'Open AI Prompt Builder',title:'AI Prompt Builder'},h(Icon,{name:'sparkles',size:19})), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal(syncAlert ? "sync" : "data"), "aria-label": syncAlert ? "Import, export and sync (needs attention)" : "Import and export", "data-sync": syncAlert }, /* @__PURE__ */ React.createElement(Icon, { name: "data" })), /* @__PURE__ */ h('button',{className:'icon-btn',onClick:()=>go('guide'),'aria-label':'Guided walkthrough',title:'Guided walkthrough'},'?'),h('button',{className:'icon-btn bsa46-mobile-settings',onClick:()=>setSidebarEdit(true),'aria-label':'Subject profile and workspace settings',title:'Workspace settings'},h(Icon,{name:'settings',size:19}))), /* @__PURE__ */ React.createElement("main", { className: "content bsa33-content", "data-desk-page": nav.tab },
       storeFull&&h('div',{className:'bsa48-save-failure',role:'alert'},h('strong',null,'Changes are not saving on this device.'),h('span',null,'The browser refused a local write. Export a full backup and review storage before further editing.'),h('button',{type:'button',className:'btn',onClick:()=>setModal({data:'export'})},'Open backup')),
       h("div",{className:"workspace-topbar v2-topbar"},
         h("div",{className:"workspace-context"},h("span",{className:"workspace-eyebrow"},"STUDY SPACE  /"),h("strong",null,(tabs.find(t=>t[0]===nav.tab)||[null,"Today"])[1]),h("span",{className:"workspace-subject"},subject.code||subject.name)),
-        h("div",{className:"workspace-actions v2-top-actions"},h('button',{className:'bsa45-top-guide',onClick:()=>go('guide')},'✦ Start here'),h('button',{className:'bsa45-top-dock',onClick:()=>{const hidden=localStorage.getItem('bsa45_dock_hidden')!=='1';window.dispatchEvent(new CustomEvent('bsa45:dock-visibility',{detail:{hidden}}));toast(hidden?'Study Dock hidden':'Study Dock visible');}},'Dock'),h("button",{className:"v2-top-search",onClick:()=>setSpotlightOpen(true),title:"Search · Ctrl/⌘ + K","aria-label":"Search all study materials"},"⌕  Search",h("kbd",null,"⌘ K")))),
+        h("div",{className:"workspace-actions v2-top-actions"},h('button',{className:'bsa45-top-guide',onClick:()=>go('guide')},h(Icon,{name:'sparkles',size:16}),'Start here'),h('button',{className:'bsa45-top-dock',onClick:()=>{const hidden=localStorage.getItem('bsa45_dock_hidden')!=='1';window.dispatchEvent(new CustomEvent('bsa45:dock-visibility',{detail:{hidden}}));toast(hidden?'Study Dock hidden':'Study Dock visible');}},'Dock'),h("button",{className:"v2-top-search",onClick:()=>setSpotlightOpen(true),title:"Search · Ctrl/⌘ + K","aria-label":"Search all study materials"},h(Icon,{name:"search",size:16}),"Search",h("kbd",null,"⌘ K")))),
       h(ScreenBoundary,{key:nav.tab,route:nav.tab,onHome:()=>go("home")},h(React.Fragment,null,
       // Specialized screens own their headings and side navigation. Rendering a
       // second theme-specific banner here buries lecture content on iPad and
       // cannot be reliably fixed with a CSS-only hide (old cached styles).
-      !['home','study','practice','library','insights','lectures','psets','mcq','vault','ask','rules','fs-lab','workspace','accounting-lab','accounting-cycle'].includes(nav.tab)
+      !['home','study','practice','library','insights','lectures','psets','mcq','vault','ask','rules','fs-lab','workspace','accounting-lab','accounting-cycle','subjects'].includes(nav.tab)
         && h(BSA43ThemeNavigation,{theme:data.settings.presentationTheme||"studio",tab:nav.tab,opts:nav.opts,go,subject}),
-      nav.tab === "guide" && h(BSA3StartGuide,{go,subject}), nav.tab === "break" && h(BreakCorner), nav.tab === "joy" && h(JoyHub,{go}), nav.tab === "life" && h(StudyLife,{go}), nav.tab === "achievements" && h(AcademicProgress,{go}), nav.tab === "stats-clean" && h(StudyReport,{data,update,toast,go}), nav.tab === "private-vault" && !window.__BSA_SHARED_MODE__ && h(PrivateVault,{toast}), nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data,initialTool:nav.opts?.tool})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), nav.tab === "home" && h(BSA3Today, { ...viewProps }), nav.tab === "study" && h(BSA205Study,{...viewProps}), nav.tab === "library" && h(BSA205Library,{...viewProps}), nav.tab === "insights" && h(BSA205Mastery,{...viewProps}), nav.tab === "accounting-cycle" && h(BSA205Cycle,{...viewProps}), nav.tab === "fs-lab" && h(BSA43FinancialStatements,{...viewProps}), nav.tab === "accounting-lab" && h(BSA187AccountingLab,{subject,update,toast,go,init:nav.opts}), nav.tab === "week" && h(BSA344Schedule,{subject,update,go,openEditor,toast,init:nav.opts,initialMode:"week"}), nav.tab === "knowledge" && h(BSA192KnowledgeMap,{subject,go}), nav.tab === "safety" && h(BSA193DeviceSafety,{data,go,toast}), nav.tab === "practice" && h(React.Fragment,null,h(BSA3Practice,{ ...viewProps, data }),bsa46ToolVisible(subject,'fs-lab')&&h('div',{className:'bsa42-fs-shortcut'},h('div',null,h('strong',null,'Financial Statement Lab'),h('p',null,'Import report JSON, inspect audited disclosures, and practice any accounting standard.')),h('button',{className:'btn',onClick:()=>go('fs-lab')},'Open Financial Statements ↗'))), nav.tab === "mcq" && h(MCQPage,{...viewProps}), nav.tab === "rules" && h(RulesLibrary,{...viewProps}), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(BSA344Schedule,{subject,update,go,openEditor,toast,init:nav.opts,initialMode:"month"}), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "workspace" && h(BSA181Workspace, { ...viewProps, initialTab:nav.opts?.tab, undoAvailable:!!undo, onGlobalUndo:doUndo }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(BSA43ProblemSets, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps, key:subject.id }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })))),
+      nav.tab === "subjects" && h(BSA12Subjects,{data,update,activeId:data.activeId,onOpen:id=>{setData(d=>({...d,activeId:id}));go('home')},onManage:()=>setModal('subjects'),toast}), nav.tab === "guide" && h(BSA3StartGuide,{go,subject}), nav.tab === "break" && h(BreakCorner), nav.tab === "joy" && h(JoyHub,{go}), nav.tab === "life" && h(StudyLife,{go}), nav.tab === "achievements" && h(AcademicProgress,{go}), nav.tab === "stats-clean" && h(StudyReport,{data,update,toast,go}), nav.tab === "private-vault" && !window.__BSA_SHARED_MODE__ && h(PrivateVault,{toast}), nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data,initialTool:nav.opts?.tool})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), nav.tab === "home" && h(BSA3Today, { ...viewProps }), nav.tab === "study" && h(BSA205Study,{...viewProps}), nav.tab === "library" && h(BSA205Library,{...viewProps}), nav.tab === "insights" && h(BSA205Mastery,{...viewProps}), nav.tab === "accounting-cycle" && h(BSA205Cycle,{...viewProps}), nav.tab === "fs-lab" && h(BSA43FinancialStatements,{...viewProps}), nav.tab === "accounting-lab" && h(BSA187AccountingLab,{subject,update,toast,go,init:nav.opts}), nav.tab === "week" && h(BSA344Schedule,{subject,update,go,openEditor,toast,init:nav.opts,initialMode:"week"}), nav.tab === "knowledge" && h(BSA192KnowledgeMap,{subject,go}), nav.tab === "safety" && h(BSA193DeviceSafety,{data,go,toast}), nav.tab === "practice" && h(React.Fragment,null,h(BSA3Practice,{ ...viewProps, data }),bsa46ToolVisible(subject,'fs-lab')&&h('div',{className:'bsa42-fs-shortcut'},h('div',null,h('strong',null,'Financial Statement Lab'),h('p',null,'Import report JSON, inspect audited disclosures, and practice any accounting standard.')),h('button',{className:'btn',onClick:()=>go('fs-lab')},'Open Financial Statements ↗'))), nav.tab === "mcq" && h(MCQPage,{...viewProps}), nav.tab === "rules" && h(RulesLibrary,{...viewProps}), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(BSA344Schedule,{subject,update,go,openEditor,toast,init:nav.opts,initialMode:"month"}), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "workspace" && h(BSA181Workspace, { ...viewProps, initialTab:nav.opts?.tab, undoAvailable:!!undo, onGlobalUndo:doUndo }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(BSA43ProblemSets, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps, key:subject.id }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })))),
       h(BSA181HighlightTool,{subject,tab:nav.tab,go,toast}),
       spotlightOpen && h(BSA181Spotlight,{data,go,onSwitch:(id,tab,opts)=>{setData(d=>({...d,activeId:id}));go(tab,opts)},onClose:()=>setSpotlightOpen(false)}),
       /* @__PURE__ */ h("nav",{className:"bottom-nav v2-bottom-nav","aria-label":"Mobile navigation",onTouchStart:touchNavStart,onTouchEnd:touchNavEnd},
@@ -16453,7 +16553,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     } }), modal === "more" && /* @__PURE__ */ React.createElement(MoreSheet, { onClose: () => setModal(null), onPick: (k) => setModal(k), settings: data.settings, setSettings, go: (t) => {
       setModal(null);
       go(t);
-    } }), modal && modal.nlm && h(Modal, { key: "bsa-direct-prompt-" + (modal.nlm.pid || "all") + "-" + subject.id, title: "AI Prompt Studio", wide: true, className: "bsa-prompt-modal", onClose: () => setModal(null) }, h(NotebookLMPrompts, { key: "bsa-prompt-" + (modal.nlm.pid || "all") + "-" + subject.id, subject, toast, initPid: modal.nlm.pid, initTopic: modal.nlm.topicId, onImport: (topicId,format) => {setModal(null);if(format==='bsa-financial-statements-v1')go('fs-lab');else go('library',{tab:'packs',topicLabel:(subject.topics||[]).find(t=>t.id===topicId)?.title||''})} })), sidebarEdit&&h(Modal,{title:'Customize sidebar',onClose:()=>setSidebarEdit(false),wide:true,className:'bsa45-sidebar-modal'},h(BSA45SidebarEditor,{tabs,sidebarPrefs,subject,setSubjectProfile,setSubjectTool,resetSubject:resetSubjectProfile,toggleSidebarPin,toggleSidebarHide,shiftSidebarPin,reset:()=>saveSidebar(()=>({pinned:BSA46_MAIN_DEFAULT.slice(),hidden:[]})),close:()=>setSidebarEdit(false),openThemes:()=>{setSidebarEdit(false);setModal('themes')},openAppearance:()=>{setSidebarEdit(false);setModal('look')},openImport:()=>{setSidebarEdit(false);go('library',{tab:'topics'})},openBackup:()=>{setSidebarEdit(false);setModal('data')},openGuide:()=>{setSidebarEdit(false);go('guide')},toggleDock:toggleDockFromSettings,settings:data.settings,setSettings})), modal === "themes" && h(BSA41ThemesModal,{settings:data.settings,setSettings,onClose:()=>setModal(null)}), modal === "look" && /* @__PURE__ */ React.createElement(AppearanceModal, { settings: data.settings, setSettings, onClose: () => setModal(null) }), modal === "subjects" && /* @__PURE__ */ React.createElement(SubjectModal, { data, update, onClose: () => setModal(null), toast }), (modal === "data" || modal === "sync" || modal && modal.data) && /* @__PURE__ */ React.createElement(DataModal, { data, update, replaceAll, onClose: () => setModal(null), toast, downloads, initTab: modal && modal.data ? modal.data : modal === "sync" ? "github" : "import", prefill: modal && modal.prefill }), (editor == null ? void 0 : editor.type) === "card" && /* @__PURE__ */ React.createElement(
+    } }), modal && modal.nlm && h(Modal, { key: "bsa-direct-prompt-" + (modal.nlm.pid || "all") + "-" + subject.id, title: "AI Prompt Studio", wide: true, className: "bsa-prompt-modal", onClose: () => setModal(null) }, h(NotebookLMPrompts, { key: "bsa-prompt-" + (modal.nlm.pid || "all") + "-" + subject.id, subject, toast, initPid: modal.nlm.pid, initTopic: modal.nlm.topicId, onImport: (topicId,format) => {setModal(null);if(format==='bsa-financial-statements-v1')go('fs-lab');else go('library',{tab:'packs',topicLabel:(subject.topics||[]).find(t=>t.id===topicId)?.title||''})} })), sidebarEdit&&h(Modal,{title:'Customize sidebar',onClose:()=>setSidebarEdit(false),wide:true,className:'bsa45-sidebar-modal'},h(BSA45SidebarEditor,{tabs,sidebarPrefs,subject,setSubjectProfile,setSubjectTool,resetSubject:resetSubjectProfile,toggleSidebarPin,toggleSidebarHide,shiftSidebarPin,reset:()=>saveSidebar(()=>({pinned:BSA46_MAIN_DEFAULT.slice(),hidden:[]})),close:()=>setSidebarEdit(false),openThemes:()=>{setSidebarEdit(false);setModal('themes')},openAppearance:()=>{setSidebarEdit(false);setModal('look')},openImport:()=>{setSidebarEdit(false);go('library',{tab:'topics'})},openBackup:()=>{setSidebarEdit(false);setModal('data')},openGuide:()=>{setSidebarEdit(false);go('guide')},toggleDock:toggleDockFromSettings,settings:data.settings,setSettings})), modal === "themes" && h(BSA41ThemesModal,{settings:data.settings,setSettings,onClose:()=>setModal(null)}), modal === "look" && /* @__PURE__ */ React.createElement(AppearanceModal, { settings: data.settings, setSettings, onClose: () => setModal(null) }), !window.__BSA_SHARED_MODE__ && modal === "subjects" && /* @__PURE__ */ React.createElement(SubjectModal, { data, update, onClose: () => setModal(null), toast }), (modal === "data" || modal === "sync" || modal && modal.data) && /* @__PURE__ */ React.createElement(DataModal, { data, update, replaceAll, onClose: () => setModal(null), toast, downloads, initTab: modal && modal.data ? modal.data : modal === "sync" ? "github" : "import", prefill: modal && modal.prefill }), (editor == null ? void 0 : editor.type) === "card" && /* @__PURE__ */ React.createElement(
       CardEditor,
       {
         subject,
