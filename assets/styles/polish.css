@@ -3661,3 +3661,12 @@ html,body,#root{overflow-x:clip!important}
  .bsa15-phone-branches .bsa15-hint{padding:9px 13px}
  .bsa15-phone-canvas .bsa15-hint{padding:10px 13px}
 }
+
+/* V1.6: make duplicate imports and delete scope obvious without adding UI clutter. */
+.bsa16-duplicate-warning,.bsa16-duplicate-notice{padding:12px 14px;border:1px solid var(--border, #a5a5a5);border-radius:12px;background:var(--panel-soft,var(--surface-soft,transparent));line-height:1.55}
+.bsa16-copy-count{display:inline-flex;align-self:flex-start;margin-top:5px;padding:3px 8px;border-radius:999px;border:1px solid currentColor;font-size:11px;opacity:.8;font-weight:650}
+@media(max-width:600px){.bsa15-delete-message{max-height:min(60dvh,460px);overflow:auto}.bsa16-copy-count{font-size:10px}.bsa16-duplicate-warning{padding:10px}}
+
+body>.backdrop .bsa16-delete-dialog .modal-foot{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
+body>.backdrop .bsa16-delete-dialog .modal-foot>.btn{min-width:0;white-space:normal;line-height:1.3}
+@media(max-width:520px){body>.backdrop .bsa16-delete-dialog .modal-foot{flex-direction:column;align-items:stretch}body>.backdrop .bsa16-delete-dialog .modal-foot>.btn{width:100%;min-height:43px}}
