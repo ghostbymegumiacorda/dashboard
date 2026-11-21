@@ -4096,7 +4096,7 @@ body>.backdrop .bsa46-settings :is(button,select,input,summary):focus-visible{ou
 #root .bsa33-create-board>.bsa214-adapt-note,
 #root .bsa33-create-board>.bsa33-proposal-list{grid-column:1/-1!important}
 #root .bsa33-create-board>.bsa212-mode-picker{grid-column:1!important}
-#root .bsa33-create-board>.bsa213-time-field{grid-column:2!important}
+@media (min-width:801px){#root .bsa33-create-board>.bsa213-time-field{grid-column:2!important}}
 #root .bsa33-create-board>.bsa33-button{grid-column:1/-1!important;justify-self:end;width:min(100%,380px)}
 @media(max-width:800px){
   #root .bsa33-create-board{grid-template-columns:minmax(0,1fr)!important}
@@ -4365,3 +4365,46 @@ body.modal-open #bsa216-scroll-layer .bsa216-scroll-rail{display:none!important}
 
 /* V2.24 — dismiss closing/saved study timer immediately while React commits. */
 #bsa213-focus-layer .bsa212-float[data-bsa224-hidden="true"]{display:none!important;pointer-events:none!important}
+
+
+/* V2.25: Plan & Learn mobile grid regression correction.
+   Historic desktop grid placement (time field column 2) previously defeated
+   the generic mobile >* override because the former selector was more specific.
+   This generated an implicit second column, crushing the text into letters.
+   Explicit mobile placement prevents implicit tracks on Android/iOS tablets. */
+@media (max-width:800px){
+  #root .bsa33-study #bsa214-study-builder.bsa33-create-board{
+    display:grid;
+    grid-template-columns:minmax(0,1fr)!important;
+    grid-auto-columns:minmax(0,1fr);
+    grid-auto-flow:row;
+    min-width:0;
+    width:100%;
+    box-sizing:border-box;
+  }
+  #root .bsa33-study #bsa214-study-builder.bsa33-create-board > *{
+    grid-column:1 / -1!important;
+    grid-row:auto!important;
+    min-width:0;
+    max-width:100%;
+    box-sizing:border-box;
+  }
+  #root .bsa33-study #bsa214-study-builder.bsa33-create-board > .bsa213-time-field,
+  #root .bsa33-study #bsa214-study-builder.bsa33-create-board > .bsa212-mode-picker,
+  #root .bsa33-study #bsa214-study-builder.bsa33-create-board > .bsa34-focus-field,
+  #root .bsa33-study #bsa214-study-builder.bsa33-create-board > .bsa33-create-copy,
+  #root .bsa33-study #bsa214-study-builder.bsa33-create-board > .bsa33-proposal-list{
+    grid-column:1 / -1!important;
+  }
+  #root .bsa33-study #bsa214-study-builder.bsa33-create-board > .bsa33-button{
+    width:100%;
+    justify-self:stretch;
+  }
+  #root .bsa33-study #bsa214-study-builder .bsa33-create-copy h2,
+  #root .bsa33-study #bsa214-study-builder .bsa33-create-copy p,
+  #root .bsa33-study #bsa214-study-builder .bsa33-eyebrow{
+    max-width:100%;
+    overflow-wrap:normal;
+    word-break:normal;
+  }
+}
