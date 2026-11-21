@@ -1,6 +1,6 @@
 (() => {
   // User-facing release label only. Do not use for storage schemas or caches.
-  const BSA_RELEASE_LABEL = "V1.5";
+  const BSA_RELEASE_LABEL = "V1.6";
   const S = (t, p = null, s = false) => ({ t, p, s });
   const CFAS_TOPICS = [
     {
@@ -1375,10 +1375,78 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
   }
   const sigOf = (o, skip) => JSON.stringify(o, (k, v) => k === "_u" || skip && skip.includes(k) ? void 0 : v);
   const docSig = (d) => JSON.stringify(d, (k, v) => k === "activeId" || k === "updatedAt" || k === "syncedBy" || k === "syncedAt" ? void 0 : v);
+  // V1.6: deletion/undo is a durable, subject-scoped action, not just a toast.
+  // A stale GitHub/device copy must not revive a removed lecture. A later Undo
+  // is an explicit restore and supersedes the previous deletion.
+  function bsa16LectureKey(subjectId,lectureId){return String(subjectId)+'::'+String(lectureId);}
+  function bsa16ActionClock(doc,key){
+    const old=doc.lectureActions?.[key];
+    return Math.max(Date.now(),(Number(old?.at)||0)+1);
+  }
+  function bsa16SetLectureAction(doc,subjectId,id,removed,at){
+    if(!doc.lectureActions||typeof doc.lectureActions!=='object')doc.lectureActions={};
+    const key=bsa16LectureKey(subjectId,id);
+    const time=Number(at)||bsa16ActionClock(doc,key);
+    doc.lectureActions[key]={removed:!!removed,at:time};
+    if(removed){doc.deleted=doc.deleted||{};doc.deleted[id]=time;}
+    else if(doc.deleted)delete doc.deleted[id];
+  }
+  function bsa16MergeLectureActions(local,remote){
+    const out={};
+    for(const source of [local||{},remote||{}])for(const [key,act] of Object.entries(source)){
+      if(!act||typeof act!=='object'||!Number.isFinite(Number(act.at)))continue;
+      const old=out[key];
+      if(!old||Number(act.at)>Number(old.at)||Number(act.at)===Number(old.at)&&act.removed&&!old.removed){
+        out[key]={removed:!!act.removed,at:Number(act.at)};
+      }
+    }
+    return out;
+  }
+  function bsa16ApplyLectureActions(subjects,actions){
+    for(const subject of subjects||[]){
+      subject.lectures=(subject.lectures||[]).filter(lecture=>{
+        const act=actions[bsa16LectureKey(subject.id,lecture.id)];
+        return !act?.removed;
+      });
+    }
+    return subjects;
+  }
+  function bsa16SameChapter(a,b){
+    return norm(a?.title||'')===norm(b?.title||'')&&
+      String(a?.topicId||'')===String(b?.topicId||'');
+  }
+  function bsa16DeleteLectureRecords(doc,subjectId,ids){
+    const subject=(doc.subjects||[]).find(s=>s.id===subjectId);
+    if(!subject)return 0;
+    const targets=new Set(ids);
+    const before=(subject.lectures||[]).length;
+    subject.lectures=(subject.lectures||[]).filter(x=>!targets.has(x.id));
+    for(const id of targets)bsa16SetLectureAction(doc,subjectId,id,true);
+    return before-subject.lectures.length;
+  }
+  function bsa16UndoLectureRecords(doc,subjectId,snapshots){
+    const subject=(doc.subjects||[]).find(s=>s.id===subjectId);
+    if(!subject)return 0;
+    subject.lectures=subject.lectures||[];
+    let count=0;
+    for(const {lecture,index} of snapshots){
+      if(subject.lectures.some(l=>l.id===lecture.id))continue;
+      const key=bsa16LectureKey(subjectId,lecture.id);
+      const at=bsa16ActionClock(doc,key);
+      const restored=clone(lecture);
+      restored._u=at;
+      subject.lectures.splice(Math.max(0,Math.min(index,subject.lectures.length)),0,restored);
+      bsa16SetLectureAction(doc,subjectId,lecture.id,false,at);
+      count++;
+    }
+    return count;
+  }
+  if(typeof window!=='undefined')window.__BSA16LectureSyncTest={normalizeDoc,stampChanges,mergeDocs,bsa16LectureKey,bsa16SameChapter,bsa16DeleteLectureRecords,bsa16UndoLectureRecords,bsa16SetLectureAction};
   function normalizeDoc(d) {
     if (!d || !Array.isArray(d.subjects) || !d.subjects.length) return null;
     d.settings = { ...DEFAULT_SETTINGS, ...d.settings || {} };
     if (!d.deleted || typeof d.deleted !== "object") d.deleted = {};
+    if (!d.lectureActions || typeof d.lectureActions !== "object" || Array.isArray(d.lectureActions)) d.lectureActions = {};
     for (const s of d.subjects) {
       if (!s.id) s.id = uid("subj");
       if (s.cal && typeof s.cal !== "object") delete s.cal;
@@ -1403,6 +1471,9 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       }
       for (const t of s.topics) if (Array.isArray(t.sub)) for (const x of t.sub) if (x && !x.id) x.id = uid("s");
     }
+    // A saved document can contain a stale lecture alongside an authoritative
+    // delete action (e.g. after a conflicting sync). Apply the decision on load.
+    bsa16ApplyLectureActions(d.subjects,d.lectureActions);
     if (!d.subjects.some((s) => s.id === d.activeId)) d.activeId = d.subjects[0].id;
     return d;
   }
@@ -1422,6 +1493,17 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         for (const it of s[c] || []) {
           ids.add(it.id);
           const pit = pmap.get(it.id);
+          // A deliberate new import of a previously deleted lecture ID is a
+          // restore request. A remote sync merge never passes through here.
+          if(c==='lectures'&&!pit){
+            const key=bsa16LectureKey(s.id,it.id);
+            const previousAction=next.lectureActions?.[key];
+            if(previousAction?.removed){
+              const restoredAt=Math.max(now,Number(previousAction.at||0)+1);
+              bsa16SetLectureAction(next,s.id,it.id,false,restoredAt);
+              it._u=restoredAt;
+            }
+          }
           if (c === "topics") {
             if (!pit || sigOf(pit, ["sub"]) !== sigOf(it, ["sub"])) it._u = now;
             const psub = new Map((pit && pit.sub || []).map((x) => [x.id, x]));
@@ -1482,7 +1564,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const ua = a._u || 0, ub = b._u || 0;
     return ua > ub ? a : ub > ua ? b : preferR ? b : a;
   }
-  function mergeList(L, R, deleted, preferR, level) {
+  function mergeList(L, R, deleted, preferR, level, lectureActions) {
     L = Array.isArray(L) ? L : [];
     R = Array.isArray(R) ? R : [];
     const lm = new Map(L.filter((x) => x && x.id).map((x) => [x.id, x]));
@@ -1492,13 +1574,24 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       const a = lm.get(id), b = rm.get(id);
       const m = { ...pickNewer(a, b, preferR) };
       if (level === "subject") {
-        for (const c of COLLS) m[c] = mergeList(a && a[c], b && b[c], deleted, preferR, c === "topics" ? "topic" : c === "days" ? "day" : c === "psets" || c === "mcqSets" ? "pset" : "item");
+        for(const c of COLLS){
+          // New lecture actions are subject-scoped. The legacy `deleted` map
+          // is global, so don't let one imported lecture ID remove the same
+          // ID in a completely different subject.
+          let tombstones=deleted;
+          if(c==='lectures'&&lectureActions){
+            tombstones={...deleted};
+            for(const key of Object.keys(lectureActions))delete tombstones[key.slice(key.indexOf('::')+2)];
+          }
+          m[c]=mergeList(a&&a[c],b&&b[c],tombstones,preferR,
+            c==='lectures'?'lecture':c==='topics'?'topic':c==='days'?'day':c==='psets'||c==='mcqSets'?'pset':'item',lectureActions);
+        }
       } else if (level === 'pset' && (a && a.problems || b && b.problems)) {
-        m.problems=mergeList(a&&a.problems,b&&b.problems,deleted,preferR,'item');
+        m.problems=mergeList(a&&a.problems,b&&b.problems,deleted,preferR,'item',lectureActions);
       } else if (level === "day" && a && b) {
         for (const k of ["reviews", "right", "mins"]) m[k] = Math.max(a[k] || 0, b[k] || 0);
       } else if (level === "topic" && (a && a.sub || b && b.sub)) {
-        m.sub = mergeList(a && a.sub, b && b.sub, deleted, preferR, "item");
+        m.sub = mergeList(a && a.sub, b && b.sub, deleted, preferR, "item", lectureActions);
       }
       // A deletion wins unless something inside was changed after it.
       if (deleted[id] && deleted[id] >= latestOf(m)) continue;
@@ -1516,8 +1609,15 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       for (const [id, t] of Object.entries(src)) if (t > cutoff && !(deleted[id] >= t)) deleted[id] = t;
     }
     const lu = local.settingsU || 0, ru = remote.settingsU || 0;
-    let subjects = mergeList(local.subjects, remote.subjects, deleted, preferR, "subject");
+    const lectureActions=bsa16MergeLectureActions(local.lectureActions,remote.lectureActions);
+    // An explicit later restoration overrides an older legacy tombstone.
+    for(const [key,act] of Object.entries(lectureActions)){
+      const lectureId=key.slice(key.indexOf('::')+2);
+      if(!act.removed&&Number(act.at)>Number(deleted[lectureId]||0))delete deleted[lectureId];
+    }
+    let subjects = mergeList(local.subjects, remote.subjects, deleted, preferR, "subject", lectureActions);
     if (!subjects.length) subjects = (preferR ? remote : local).subjects;
+    bsa16ApplyLectureActions(subjects,lectureActions);
     const out = clone({
       version: 1,
       updatedAt: Math.max(local.updatedAt || 0, remote.updatedAt || 0),
@@ -1525,6 +1625,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       settings: { ...DEFAULT_SETTINGS, ...(ru > lu || ru === lu && preferR ? remote.settings : local.settings) || {} },
       settingsU: Math.max(lu, ru),
       deleted,
+      lectureActions,
       subjects
     });
     return normalizeDoc(out) || local;
@@ -10212,35 +10313,57 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
     useEffect(()=>{if(init?.topic||init?.topicId)setTopic(init.topic||init.topicId)},[init?.topic,init?.topicId,subject.id]);
     const [query, setQuery] = useState("");
     const [edit, setEdit] = useState(null);
-    // A lecture is removed independently of its topic, cards, practice, rules or scores.
-    // Keep the deleted lecture in component state for a deliberate one-click Undo.
+    // A lecture belongs to a stable subject ID. Imported copies can have
+    // different IDs but the same chapter title; never silently delete all.
     const [deleteId,setDeleteId] = useState(null);
     const [recentlyDeleted,setRecentlyDeleted] = useState(null);
-    const deletionTarget = deleteId && lectures.find(l=>l.id===deleteId);
-    const deleteLecture = () => {
-      if (!deletionTarget || window.__BSA_SHARED_MODE__) {setDeleteId(null);return;}
-      const originalIndex=lectures.findIndex(l=>l.id===deleteId);
-      const original=clone(deletionTarget);
-      update(s=>{s.lectures=(s.lectures||[]).filter(l=>l.id!==deleteId)});
-      setRecentlyDeleted({lecture:original,index:originalIndex});
+    const [deleteNotice,setDeleteNotice] = useState('');
+    const deletionTarget=deleteId&&lectures.find(l=>l.id===deleteId);
+    const matchingCopies=deletionTarget?lectures.filter(l=>bsa16SameChapter(l,deletionTarget)):[];
+    const deleteLecture=(allCopies=false)=>{
+      if(!deletionTarget||window.__BSA_SHARED_MODE__){setDeleteId(null);return;}
+      const subjectId=subject.id;
+      const selected=(allCopies?matchingCopies:[deletionTarget]).map(l=>({lecture:clone(l),index:lectures.findIndex(x=>x.id===l.id)}));
+      const ids=selected.map(x=>x.lecture.id);
+      // Capture everything NOW, never read modal state inside the queued updater.
+      update(null,doc=>{bsa16DeleteLectureRecords(doc,subjectId,ids);});
+      setRecentlyDeleted({subjectId,items:selected});
+      const remaining=lectures.filter(l=>bsa16SameChapter(l,deletionTarget)&&!ids.includes(l.id)).length;
+      setDeleteNotice(remaining?`Removed ${ids.length} copy. ${remaining} matching import${remaining===1?' remains':'s remain'}; delete those as well to remove the entire chapter.`:'');
       setDeleteId(null);setEdit(null);setOpen(null);
-      toast('Lecture removed. Use Undo below to restore it.');
+      // Do not announce verified success until the updated subject arrives.
     };
     const undoLectureDelete=()=>{
       if(!recentlyDeleted)return;
-      const {lecture,index}=recentlyDeleted;
-      update(s=>{s.lectures=s.lectures||[];if(!s.lectures.some(l=>l.id===lecture.id))s.lectures.splice(Math.min(index,s.lectures.length),0,clone(lecture));});
-      setRecentlyDeleted(null);toast('Lecture restored, including its sections and key terms.');
+      const {subjectId,items}=recentlyDeleted;
+      update(null,doc=>{bsa16UndoLectureRecords(doc,subjectId,items);});
+      setRecentlyDeleted(null);setDeleteNotice('');
+      toast('Lecture restore requested.');
     };
+    useEffect(()=>{
+      if(!recentlyDeleted||recentlyDeleted.subjectId!==subject.id)return;
+      const ids=new Set(recentlyDeleted.items.map(x=>x.lecture.id));
+      // If a device sync reintroduces an ID, automatically reapply deletion.
+      // This is idempotent and never alters unrelated course materials.
+      if(lectures.some(l=>ids.has(l.id))){
+        update(null,doc=>bsa16DeleteLectureRecords(doc,recentlyDeleted.subjectId,[...ids]));
+      }
+    },[lectures,recentlyDeleted,subject.id,update]);
     const deleteDialog=deletionTarget&&!window.__BSA_SHARED_MODE__&&h(Modal,{
-      title:'Delete this lecture?',wide:false,onClose:()=>setDeleteId(null),
-      footer:h(React.Fragment,null,h('button',{className:'btn',onClick:()=>setDeleteId(null)},'Keep lecture'),h('button',{className:'btn danger',onClick:deleteLecture},'Delete lecture'))},
+      title:'Delete this lecture?',wide:false,className:'bsa16-delete-dialog',onClose:()=>setDeleteId(null),
+      footer:h(React.Fragment,null,h('button',{className:'btn',onClick:()=>setDeleteId(null)},'Keep lecture'),
+        h('button',{className:'btn danger',onClick:()=>deleteLecture(false)},matchingCopies.length>1?'Delete this copy':'Delete lecture'),
+        matchingCopies.length>1&&h('button',{className:'btn danger',onClick:()=>deleteLecture(true)},'Delete all '+matchingCopies.length+' copies'))},
       h('div',{className:'bsa15-delete-message'},h('strong',null,deletionTarget.title),
-        h('p',null,'This removes only the lecture and its sections from the current subject. It does not delete the topic, flashcards, problem sets, rules, scores, or other study material.'),
+        matchingCopies.length>1&&h('p',{className:'bsa16-duplicate-warning',role:'note'},'Found '+matchingCopies.length+' lecture records with this chapter title and topic. Deleting one will leave the other copies visible. Choose “Delete all” to remove every matching import.'),
+        h('p',null,'This removes only the selected lecture records and their sections from the current subject. It does not delete the topic, flashcards, problem sets, rules, scores, or other study material.'),
         h('p',{className:'muted small'},'Undo will be available from the Lectures list until you leave this page. Export a backup for longer-term recovery.')));
+    const deletedStillPresent=recentlyDeleted?.subjectId===subject.id&&recentlyDeleted.items.some(x=>lectures.some(l=>l.id===x.lecture.id));
     const undoPanel=recentlyDeleted&&h('div',{className:'bsa15-undo-banner',role:'status'},
-      h(Icon,{name:'check',size:19}),h('span',null,'Lecture deleted · ',recentlyDeleted.lecture.title),
+      h(Icon,{name:deletedStillPresent?'alert':'check',size:19}),
+      h('span',null,deletedStillPresent?'Removing remaining synced copies…':'Removed '+recentlyDeleted.items.length+' lecture '+(recentlyDeleted.items.length===1?'record':'records')+' · '+recentlyDeleted.items[0].lecture.title),
       h('button',{className:'btn primary',onClick:undoLectureDelete},'Undo deletion'));
+    const duplicateNotice=deleteNotice&&h('p',{className:'bsa16-duplicate-notice',role:'status'},deleteNotice);
     // Keep reading and list scrolling independent. iPad Safari scrolls the
     // document, not necessarily the `.content` element.
     const lxLastListScroll = useRef(0);
@@ -10274,13 +10397,14 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
       h("div", { className: "page-head" }, h("div", null, h("h1", { className: "page-title" }, "Lectures"), h("p", { className: "muted" }, "Read your saved lessons, review examples, and check your understanding one topic at a time.")), h("div", { className: "head-actions" }, h("button", { className: "btn", onClick: () => setEdit("new") }, h(Icon, { name: "plus", size: 16 }), " Write a lecture"), h('button',{className:'btn',onClick:()=>go('knowledge',{topicId:topic==='all'?'':topic})},h(Icon,{name:'network',size:16}),' Visualize'), h("button", { className: "btn primary", onClick: () => go("library", { tab: "topics" }) }, "Topic gaps & import"))),
       h(PsSampleCard, { subject, update, toast }),
       lectures.length > 0 && h("div", { className: "filters" }, h("input", { className: "search", type: "search", placeholder: "Search lectures", value: query, onChange: (e) => setQuery(e.target.value), "aria-label": "Search lectures" }), usedTopics.length > 0 && h("div", { className: "chip-scroll", role: "group", "aria-label": "Filter by topic" }, h("button", { className: `chip${topic === "all" ? " on" : ""}`, onClick: () => setTopic("all") }, "All topics"), usedTopics.map((t) => h("button", { key: t.id, className: `chip${topic === t.id ? " on" : ""}`, onClick: () => setTopic(t.id), title: t.title }, t.code || t.title.slice(0, 18))), lectures.some((l) => !l.topicId) && h("button", { className: `chip${topic === "" ? " on" : ""}`, onClick: () => setTopic("") }, "Unsorted"))),
-      undoPanel,
+      undoPanel,duplicateNotice,
       !lectures.length ? h("div", { className: "empty big" }, h(Icon, { name: "lecture", size: 32 }), h("h2", null, "No lectures yet"), h("p", { className: "muted" }, "Open Topic Gaps to see what this subject needs, then import your source-based lecture JSON."), h("button", { className: "btn primary", onClick: () => go("library", { tab: "topics" }) }, "Find topic gaps & import")) : !shown.length ? h("div", { className: "empty" }, h("p", null, "No lectures match."), h("p", { className: "muted" }, "Clear the search or pick “All topics”.")) : groups.map((g) => h("div", { key: g.key, className: "ps-group" }, h("h2", { className: "ps-group-h" }, g.label, g.std && h("span", { className: "std" }, g.std)), h("div", { className: "lx-list bsa15-lecture-list" }, g.items.map((l) => h('article',{key:l.id,className:'bsa15-lecture-card'},
         h('button',{className:'bsa15-lecture-open',type:'button',onClick:()=>lxOpenLecture(l.id)},
           h('span',{className:'bsa15-lecture-icon'},h(Icon,{name:'lecture',size:21})),
           h('span',{className:'bsa15-lecture-card-text'},h('strong',null,l.title),
             h('small',null,[l.source,`${(l.sections||[]).length} sections`,(l.terms||[]).length?`${l.terms.length} key terms`:null].filter(Boolean).join(' · '))),
-          l.done&&h('span',{className:'bsa15-studied-label'},'Studied')),
+          l.done&&h('span',{className:'bsa15-studied-label'},'Studied'),
+          lectures.filter(other=>bsa16SameChapter(other,l)).length>1&&h('span',{className:'bsa16-copy-count'},lectures.filter(other=>bsa16SameChapter(other,l)).length+' matching imports')),
         !window.__BSA_SHARED_MODE__&&h('div',{className:'bsa15-lecture-card-actions'},
           h('button',{className:'btn',type:'button','aria-label':'Edit lecture '+l.title,onClick:()=>setEdit(l)},'Manage'),
           h('button',{className:'btn danger ghost',type:'button','aria-label':'Delete lecture '+l.title,onClick:()=>setDeleteId(l.id)},h(Icon,{name:'close',size:16}),' Delete'))))))),
