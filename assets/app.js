@@ -1062,11 +1062,20 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         }
       };
       document.addEventListener("keydown", onKey);
+      // V4.6.5: only an actually mounted dialog may lock the page scroll.
+      // Multiple dialog portals can briefly coexist during transitions; count
+      // the mounted dialogs instead of assuming a single modal owns the lock.
+      document.body.dataset.bsaModalCount = String((Number(document.body.dataset.bsaModalCount) || 0) + 1);
       document.body.classList.add("modal-open");
       return () => {
         var _a2;
         document.removeEventListener("keydown", onKey);
-        document.body.classList.remove("modal-open");
+        const remaining = Math.max(0, (Number(document.body.dataset.bsaModalCount) || 1) - 1);
+        if (remaining) document.body.dataset.bsaModalCount = String(remaining);
+        else {
+          delete document.body.dataset.bsaModalCount;
+          document.body.classList.remove("modal-open");
+        }
         (_a2 = prev == null ? void 0 : prev.focus) == null ? void 0 : _a2.call(prev);
       };
     }, []);
@@ -15807,6 +15816,23 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     const [nav, setNav] = useState({ tab: "home", opts: {}, key: 0 });
     useEffect(()=>{const handler=e=>{if(e.detail==='joy')setNav(v=>({tab:'joy',opts:{},key:v.key+1}))};window.addEventListener('bsa-life-navigation',handler);return()=>window.removeEventListener('bsa-life-navigation',handler)},[]);
     const [modal, setModal] = useState(null);
+    // V4.6.5 safety net: a previously interrupted portal may have left the
+    // body's modal-open class behind. Restore scrolling whenever no dialog
+    // portal exists; never clear the lock while a real dialog is mounted.
+    useEffect(() => {
+      const repair = () => {
+        if (!document.body.querySelector(":scope > .backdrop")) {
+          document.body.classList.remove("modal-open");
+          delete document.body.dataset.bsaModalCount;
+        }
+      };
+      repair();
+      const observer = new MutationObserver(repair);
+      observer.observe(document.body,{childList:true});
+      const onReturn = () => { if (document.visibilityState === "visible") repair(); };
+      document.addEventListener("visibilitychange",onReturn);
+      return () => { observer.disconnect(); document.removeEventListener("visibilitychange",onReturn); };
+    }, []);
     const [spotlightOpen,setSpotlightOpen]=useState(false);
     useEffect(()=>{const f=e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();setSpotlightOpen(v=>!v)}};document.addEventListener("keydown",f);return()=>document.removeEventListener("keydown",f)},[]);
     const [navSearch, setNavSearch] = useState("");
@@ -15919,7 +15945,15 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       if(opts?.topicId)bsa4SaveContext(dataRef.current.activeId,{topicId:opts.topicId});
       bsa181Recent(tab,opts,dataRef.current.activeId,(dataRef.current.subjects.find(x=>x.id===dataRef.current.activeId)||{}).name+" · "+tab);
       setNav((n) => ({ tab, opts, key: n.key + 1 }));
-      if (!opts.open) { const workspace=document.querySelector(".shell > .content"); if (workspace) workspace.scrollTop=0; else window.scrollTo({top:0}); }
+      if (!opts.open) {
+        // V4.6.5: the iPad uses document scroll, not .content scroll. Reset
+        // whichever is the actual scroll container; do not leave a new page
+        // at the previous page's lower scroll position.
+        const workspace = document.querySelector(".shell > .content");
+        if (workspace && workspace.scrollHeight > workspace.clientHeight + 3 &&
+            /^(auto|scroll)$/.test(getComputedStyle(workspace).overflowY)) workspace.scrollTop = 0;
+        window.scrollTo({top:0,behavior:"instant"});
+      }
     };
     const shortcutItems = [["home","Today","⌂"],["study","Learn & plan","✦"],["practice","Practice","✓"],["library","Library","▤"],["insights","Insights","◈"],["subjects","Switch subject","∑"]];
     const shortcutGo = (tab) => {
