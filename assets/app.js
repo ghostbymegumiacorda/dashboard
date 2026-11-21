@@ -1,6 +1,6 @@
 (() => {
   // User-facing release label only. Do not use for storage schemas or caches.
-  const BSA_RELEASE_LABEL = "V1.3";
+  const BSA_RELEASE_LABEL = "V1.5";
   const S = (t, p = null, s = false) => ({ t, p, s });
   const CFAS_TOPICS = [
     {
@@ -1298,20 +1298,19 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const [code, setCode] = useState("");
     const [exams, setExams] = useState(true);
     const [newIcon,setNewIcon]=useState('graduate');
-    const [newColor,setNewColor]=useState('#7961D3');
     const active = data.subjects.find((s) => s.id === data.activeId);
     const [rename, setRename] = useState({ name: active.name, code: active.code || "", school: active.school || "" });
     const add = () => {
       const id = uid("subj");
       const topics = exams ? ["Prelim exam", "Midterm exam", "Semi-final exam", "Final exam"].map((title) => ({ id: uid("t"), kind: "exam", week: "", title, standard: "", scope: "", covers: [], note: "" })) : [];
       update(null, (d) => {
-        d.subjects.push({ id, name: name.trim(), code: code.trim(), school: active.school || "", subjectIcon:newIcon, subjectColor:newColor, topics, cards: [], mistakes: [], quizzes: [], sessions: [] });
+        d.subjects.push({ id, name: name.trim(), code: code.trim(), school: active.school || "", subjectIcon:newIcon, topics, cards: [], mistakes: [], quizzes: [], sessions: [] });
         d.activeId = id;
       });
       toast(`${name.trim()} added. Pick a study profile in Workspace settings, then import its materials.`);
       onClose();
     };
-    return /* @__PURE__ */ React.createElement(Modal, { title: "Subjects", onClose }, /* @__PURE__ */ React.createElement("h3", null, "Add a new subject"), /* @__PURE__ */ React.createElement("div", { className: "grid-2" }, /* @__PURE__ */ React.createElement(Field, { label: "Subject name" }, /* @__PURE__ */ React.createElement("input", { value: name, onChange: (e) => setName(e.target.value), placeholder: "e.g. Intermediate Accounting 1" })), /* @__PURE__ */ React.createElement(Field, { label: "Course code" }, /* @__PURE__ */ React.createElement("input", { value: code, onChange: (e) => setCode(e.target.value), placeholder: "e.g. AEC 12" }))), /* @__PURE__ */ React.createElement("label", { className: "check" }, /* @__PURE__ */ React.createElement("input", { type: "checkbox", checked: exams, onChange: (e) => setExams(e.target.checked) }), /* @__PURE__ */ React.createElement("span", null, "Start with prelim, midterm, semi-final and final exam rows")), h(BSA13IconPicker,{icon:newIcon,color:newColor,onChange:v=>{setNewIcon(v.icon);setNewColor(v.color)}}), /* @__PURE__ */ React.createElement("div", { className: "row-end" }, /* @__PURE__ */ React.createElement("button", { className: "btn primary", disabled: !name.trim(), onClick: add }, "Add subject")), /* @__PURE__ */ React.createElement("hr", null), /* @__PURE__ */ React.createElement("h3", null, "Current subject"), /* @__PURE__ */ React.createElement("div", { className: "grid-2" }, /* @__PURE__ */ React.createElement(Field, { label: "Name" }, /* @__PURE__ */ React.createElement("input", { value: rename.name, onChange: (e) => setRename({ ...rename, name: e.target.value }) })), /* @__PURE__ */ React.createElement(Field, { label: "Code" }, /* @__PURE__ */ React.createElement("input", { value: rename.code, onChange: (e) => setRename({ ...rename, code: e.target.value }) }))), /* @__PURE__ */ React.createElement(Field, { label: "School" }, /* @__PURE__ */ React.createElement("input", { value: rename.school, onChange: (e) => setRename({ ...rename, school: e.target.value }) })), /* @__PURE__ */ React.createElement("div", { className: "row-end" }, h("button",{className:"btn ghost",type:"button",onClick:()=>{onClose();onShowLibrary();}},"Organize / remove in My Subjects"), /* @__PURE__ */ React.createElement("span", { className: "spacer" }), /* @__PURE__ */ React.createElement("button", { className: "btn", disabled: !rename.name.trim(), onClick: () => {
+    return /* @__PURE__ */ React.createElement(Modal, { title: "Subjects", onClose }, /* @__PURE__ */ React.createElement("h3", null, "Add a new subject"), /* @__PURE__ */ React.createElement("div", { className: "grid-2" }, /* @__PURE__ */ React.createElement(Field, { label: "Subject name" }, /* @__PURE__ */ React.createElement("input", { value: name, onChange: (e) => setName(e.target.value), placeholder: "e.g. Intermediate Accounting 1" })), /* @__PURE__ */ React.createElement(Field, { label: "Course code" }, /* @__PURE__ */ React.createElement("input", { value: code, onChange: (e) => setCode(e.target.value), placeholder: "e.g. AEC 12" }))), /* @__PURE__ */ React.createElement("label", { className: "check" }, /* @__PURE__ */ React.createElement("input", { type: "checkbox", checked: exams, onChange: (e) => setExams(e.target.checked) }), /* @__PURE__ */ React.createElement("span", null, "Start with prelim, midterm, semi-final and final exam rows")), h(BSA13IconPicker,{icon:newIcon,onChange:v=>setNewIcon(v.icon)}), /* @__PURE__ */ React.createElement("div", { className: "row-end" }, /* @__PURE__ */ React.createElement("button", { className: "btn primary", disabled: !name.trim(), onClick: add }, "Add subject")), /* @__PURE__ */ React.createElement("hr", null), /* @__PURE__ */ React.createElement("h3", null, "Current subject"), /* @__PURE__ */ React.createElement("div", { className: "grid-2" }, /* @__PURE__ */ React.createElement(Field, { label: "Name" }, /* @__PURE__ */ React.createElement("input", { value: rename.name, onChange: (e) => setRename({ ...rename, name: e.target.value }) })), /* @__PURE__ */ React.createElement(Field, { label: "Code" }, /* @__PURE__ */ React.createElement("input", { value: rename.code, onChange: (e) => setRename({ ...rename, code: e.target.value }) }))), /* @__PURE__ */ React.createElement(Field, { label: "School" }, /* @__PURE__ */ React.createElement("input", { value: rename.school, onChange: (e) => setRename({ ...rename, school: e.target.value }) })), /* @__PURE__ */ React.createElement("div", { className: "row-end" }, h("button",{className:"btn ghost",type:"button",onClick:()=>{onClose();onShowLibrary();}},"Organize / remove in My Subjects"), /* @__PURE__ */ React.createElement("span", { className: "spacer" }), /* @__PURE__ */ React.createElement("button", { className: "btn", disabled: !rename.name.trim(), onClick: () => {
       update((s) => {
         s.name = rename.name.trim();
         s.code = rename.code.trim();
@@ -2206,7 +2205,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
 
   // v4.6.1: canonical downloadable reference documents, embedded for offline use.
   const BSA_RESOURCE_FILES = [
-    {id:"source-rules",name:"AI Source & Output Instructions",filename:"BSA_AI_SOURCE_RULES.md",type:"text/markdown;charset=utf-8",summary:"Updated source-first requirements for Topic Packs, individual JSON imports, rulebooks, and financial statements.",body:"# BSA Study Desk — Source-First AI and JSON Import Contract\n\nDashboard public release: V1.3 (2026-11-21). Works with the subject-adaptive dashboard (including CFAS, Financial Markets, mathematics, history, theology, and custom subjects). Attach this document alongside the **actual course sources** when asking another AI to create importable study material.\n\n**Important:** These are instructions only. They do not contain textbook facts, standards, verified questions, or answers. A subject profile is not a source document.\n\n## A. Universal evidence rules\n\n1. Identify **subject**, **topic**, source title/edition, the pages/chapters available, and the requested output format.\n2. Use the attached textbook, lecture, syllabus, exercises, or official standard as the primary source. Preserve scope, figures, conditions, and terminology; do not claim to have read missing pages.\n3. Use external sources only if the AI can actually access and verify them. Label external facts as supplemental, check jurisdiction and effective dates, and cite real URLs or source sections. Do not fabricate sources, pages, standards, editions, or answer keys.\n4. Omit unsupported information rather than fill gaps with plausible-sounding facts. An original practice scenario is allowed only when clearly labeled **illustrative**, internally solvable, and independently checked.\n5. Verify numerical solutions and MCQ answer keys. For a rule, distinguish the applicability trigger, treatment, exceptions, conditions, and actual evidence locator.\n6. Before generating a large pack, compare its content internally: remove exact duplicates, near-identical paraphrases, repeated lecture sections, duplicated rule codes, and materially identical questions. Never silently replace an existing learner's corrections or progress.\n7. **Do not confuse subject coverage with mastery.** Material present means the topic has resources, not that the learner understands it.\n\n## B. Choose exactly one output contract\n\nFor any import request, return **one valid JSON object only**, with no markdown fence, preface, comments, trailing commas, unescaped newlines, `NaN`, or placeholder items. Use the format matching the selected dashboard import screen.\n\n| Format | Required content | Purpose |\n|---|---|---|\n| `bsa-topic-pack-v1` | `subject`, `topic`, and some of `topics`, `lectures`, `problemSets`, `mcqSets`, `flashcards`, `rules` | **Mixed-format** topic pack. Include multiple arrays together. Empty arrays are allowed; at least one array must contain content. |\n| `bsa-lecture-v1` | `subject`, nonempty `lectures` array | Only lectures with real `sections`. |\n| `bsa-problemset-v1` | `subject`, nonempty `problemSets` array | Only written practice sets with complete `problems`. |\n| `bsa-mcq-v1` | `subject`, nonempty `mcqSets` array | Only MCQ sets. Each problem needs exactly four `choices` and an answer beginning `A`, `B`, `C`, or `D`. |\n| `bsa-flashcards-v1` | `subject`, nonempty `flashcards` array | Only flashcards. Each needs a question/front and answer/back. |\n| `bsa-rulebook-v1` | `subject`, **one nonempty `rules` array** | **Rules-only**; do not add lectures, problems, MCQs, flashcards or other material arrays. An optional `coverage` object may document batches. |\n| `bsa-financial-statements-v1` | `company`, `periodEnd`, `currency`, `unit`, `source`, `statements`, `notes`, `standards` | Financial Statements Lab. Not a Topic Pack, not a rulebook. |\n\nTyped single-material imports must not contain another material's nonempty array. A Topic Pack is the explicit exception. For typed rules, the rulebook importer accepts up to **100 rules per import**; generate complete source coverage in numbered batches rather than cutting off a standard after five or inventing five rules.\n\n## C. Required structures and quality\n\n### Topic Pack (`bsa-topic-pack-v1`)\n\nUse a consistent subject and actual chapter/topic name. Within `lectures`, each item needs a title, topic, source, and `sections` containing `heading`/`body` (the importer also understands lecture-section `h`/`body` in typed lecture imports). Keep section headings free of leading list ordinals (for example, use `Introduction`, not `1. Introduction`); the dashboard numbers outlines. Retain meaningful section codes such as `13.1` or `PAS 7.28`. Check every item for required fields before returning complete JSON. Written and MCQ items must preserve the **full original question**, data, requirements, verified answer, and worked solution. Flashcards should each test a distinct retrieval target. Rules must include title, decisionRule, topic, and supported citations. Set unused arrays to `[]`; do not pad with fabricated material. The dashboard checks repeats and conflicts again before saving.\n\n### Rulebook (`bsa-rulebook-v1`)\n\nUse exactly one `rules` array. Each record requires `title` and `decisionRule`. Recommended fields: `collection`, unique `code`, `topic`, `category`, `conditions`, `treatment`, `exceptions`, `example`, `examTrap`, `sourceTitle`, `sourceLocator`, `sourceUrl`, `status`, `notes`. Use the SAME `collection` for all rules belonging to one standard (e.g., PAS 10), and unique codes within it (e.g., `PAS 10-01`, `PAS 10-02`). For another course use a named grouping such as `Corporate Bonds` or `Modular Arithmetic`; do not force accounting labels.\n\nAllowed `status`: `Source checked`, `Needs verification`, `Personal note`. Only say `Source checked` if the actual cited passage was inspected and its title plus specific section/page or real HTTPS URL are known. The app can check the presence of a citation field but **cannot verify the claim** itself. If content is not verifiable, omit it or mark `Needs verification` without fabricated citations.\n\nFor complete standards coverage, organize by meaningful source sections, include treatments and exceptions, then continue in **numbered batches** (usually up to 20 substantial cards per response for robust JSON). This is a response-size suggestion, **not a cap on the number of rules**. Stable rule IDs/codes must not repeat between batches. Optional `coverage` object may contain `collection`, `batch`, `coveredSections`, `remainingSections`, and `hasMore`.\n\n### Financial Statements (`bsa-financial-statements-v1`)\n\nPreserve the *reported* structure and ordering: Statement of Financial Position (assets, liabilities and equity with current/noncurrent groupings where printed); Statement of Profit or Loss and OCI if provided; Statement of Cash Flows (operating/investing/financing, including cash reconciliation); Statement of Changes in Equity; and relevant disclosures. Use each statement's `type`, `title`, `page`, and `lines` where each line includes `kind` (`section`, `item`, `subtotal`, `total`), `label`, numeric `amount`, numeric `comparative` where printed, `note`, and `indent` where appropriate. Use `null` for illegible or missing figures (not zero). Preserve negative figures, dates, unit scale, currency, exact subtotal identities and note references. Do **not** fabricate a statement or infer amounts/standards that are absent from the source.\n\nDo not interpret a displayed reconciliation check as an audit or a statement that the financial report complies with a standard. The source PDF remains authoritative.\n\n## D. Student-focused output\n\nFor ordinary chat, use concise, friendly teaching—not machine JSON. Explain simply before introducing formal vocabulary. In practice mode, ask one question at a time and let the learner attempt it before showing the full answer unless they request it. Provide corrective feedback and a short teach-back/check when useful. Avoid imposing accounting tools or journal entries on Finance, History, Math, or other subjects where they are irrelevant.\n\n## E. Import workflow and safety\n\n1. Choose the **correct subject** in the dashboard.\n2. Attach the actual source material and this MD file to the AI; choose one relevant prompt from **Study Library → Import Center**.\n3. Generate valid JSON; locally check the JSON syntax and compare figures and wording against the original source.\n4. For study materials, go to **Study Library → Bulk import / Topic Packs**; for published financial statements go to **Financial Statements → Reports & import**.\n5. Review the dashboard's duplicate/conflict preview and manually inspect ambiguous variants. Save only when satisfied. Preserve backups before major imports.\n\nSee `BSA_AI_PROMPT.md` for the separate interactive tutoring behavior and `EXAMPLE-universal-rulebook.json` for the illustrative rulebook schema. **Do not import the example as academic content without replacing and verifying it.**\n"},
+    {id:"source-rules",name:"AI Source & Output Instructions",filename:"BSA_AI_SOURCE_RULES.md",type:"text/markdown;charset=utf-8",summary:"Updated source-first requirements for Topic Packs, individual JSON imports, rulebooks, and financial statements.",body:"# BSA Study Desk — Source-First AI and JSON Import Contract\n\nDashboard public release: V1.5 (2026-11-21). Works with the subject-adaptive dashboard (including CFAS, Financial Markets, mathematics, history, theology, and custom subjects). Attach this document alongside the **actual course sources** when asking another AI to create importable study material.\n\n**Important:** These are instructions only. They do not contain textbook facts, standards, verified questions, or answers. A subject profile is not a source document.\n\n## A. Universal evidence rules\n\n1. Identify **subject**, **topic**, source title/edition, the pages/chapters available, and the requested output format.\n2. Use the attached textbook, lecture, syllabus, exercises, or official standard as the primary source. Preserve scope, figures, conditions, and terminology; do not claim to have read missing pages.\n3. Use external sources only if the AI can actually access and verify them. Label external facts as supplemental, check jurisdiction and effective dates, and cite real URLs or source sections. Do not fabricate sources, pages, standards, editions, or answer keys.\n4. Omit unsupported information rather than fill gaps with plausible-sounding facts. An original practice scenario is allowed only when clearly labeled **illustrative**, internally solvable, and independently checked.\n5. Verify numerical solutions and MCQ answer keys. For a rule, distinguish the applicability trigger, treatment, exceptions, conditions, and actual evidence locator.\n6. Before generating a large pack, compare its content internally: remove exact duplicates, near-identical paraphrases, repeated lecture sections, duplicated rule codes, and materially identical questions. Never silently replace an existing learner's corrections or progress.\n7. **Do not confuse subject coverage with mastery.** Material present means the topic has resources, not that the learner understands it.\n\n## B. Choose exactly one output contract\n\nFor any import request, return **one valid JSON object only**, with no markdown fence, preface, comments, trailing commas, unescaped newlines, `NaN`, or placeholder items. Use the format matching the selected dashboard import screen.\n\n| Format | Required content | Purpose |\n|---|---|---|\n| `bsa-topic-pack-v1` | `subject`, `topic`, and some of `topics`, `lectures`, `problemSets`, `mcqSets`, `flashcards`, `rules` | **Mixed-format** topic pack. Include multiple arrays together. Empty arrays are allowed; at least one array must contain content. |\n| `bsa-lecture-v1` | `subject`, nonempty `lectures` array | Only lectures with real `sections`. |\n| `bsa-problemset-v1` | `subject`, nonempty `problemSets` array | Only written practice sets with complete `problems`. |\n| `bsa-mcq-v1` | `subject`, nonempty `mcqSets` array | Only MCQ sets. Each problem needs exactly four `choices` and an answer beginning `A`, `B`, `C`, or `D`. |\n| `bsa-flashcards-v1` | `subject`, nonempty `flashcards` array | Only flashcards. Each needs a question/front and answer/back. |\n| `bsa-rulebook-v1` | `subject`, **one nonempty `rules` array** | **Rules-only**; do not add lectures, problems, MCQs, flashcards or other material arrays. An optional `coverage` object may document batches. |\n| `bsa-financial-statements-v1` | `company`, `periodEnd`, `currency`, `unit`, `source`, `statements`, `notes`, `standards` | Financial Statements Lab. Not a Topic Pack, not a rulebook. |\n\nTyped single-material imports must not contain another material's nonempty array. A Topic Pack is the explicit exception. For typed rules, the rulebook importer accepts up to **100 rules per import**; generate complete source coverage in numbered batches rather than cutting off a standard after five or inventing five rules.\n\n## C. Required structures and quality\n\n### Topic Pack (`bsa-topic-pack-v1`)\n\nUse a consistent subject and actual chapter/topic name. Within `lectures`, each item needs a title, topic, source, and `sections` containing `heading`/`body` (the importer also understands lecture-section `h`/`body` in typed lecture imports). Keep section headings free of leading list ordinals (for example, use `Introduction`, not `1. Introduction`); the dashboard numbers outlines. Retain meaningful section codes such as `13.1` or `PAS 7.28`. Check every item for required fields before returning complete JSON. Written and MCQ items must preserve the **full original question**, data, requirements, verified answer, and worked solution. Flashcards should each test a distinct retrieval target. Rules must include title, decisionRule, topic, and supported citations. Set unused arrays to `[]`; do not pad with fabricated material. The dashboard checks repeats and conflicts again before saving.\n\n### Rulebook (`bsa-rulebook-v1`)\n\nUse exactly one `rules` array. Each record requires `title` and `decisionRule`. Recommended fields: `collection`, unique `code`, `topic`, `category`, `conditions`, `treatment`, `exceptions`, `example`, `examTrap`, `sourceTitle`, `sourceLocator`, `sourceUrl`, `status`, `notes`. Use the SAME `collection` for all rules belonging to one standard (e.g., PAS 10), and unique codes within it (e.g., `PAS 10-01`, `PAS 10-02`). For another course use a named grouping such as `Corporate Bonds` or `Modular Arithmetic`; do not force accounting labels.\n\nAllowed `status`: `Source checked`, `Needs verification`, `Personal note`. Only say `Source checked` if the actual cited passage was inspected and its title plus specific section/page or real HTTPS URL are known. The app can check the presence of a citation field but **cannot verify the claim** itself. If content is not verifiable, omit it or mark `Needs verification` without fabricated citations.\n\nFor complete standards coverage, organize by meaningful source sections, include treatments and exceptions, then continue in **numbered batches** (usually up to 20 substantial cards per response for robust JSON). This is a response-size suggestion, **not a cap on the number of rules**. Stable rule IDs/codes must not repeat between batches. Optional `coverage` object may contain `collection`, `batch`, `coveredSections`, `remainingSections`, and `hasMore`.\n\n### Financial Statements (`bsa-financial-statements-v1`)\n\nPreserve the *reported* structure and ordering: Statement of Financial Position (assets, liabilities and equity with current/noncurrent groupings where printed); Statement of Profit or Loss and OCI if provided; Statement of Cash Flows (operating/investing/financing, including cash reconciliation); Statement of Changes in Equity; and relevant disclosures. Use each statement's `type`, `title`, `page`, and `lines` where each line includes `kind` (`section`, `item`, `subtotal`, `total`), `label`, numeric `amount`, numeric `comparative` where printed, `note`, and `indent` where appropriate. Use `null` for illegible or missing figures (not zero). Preserve negative figures, dates, unit scale, currency, exact subtotal identities and note references. Do **not** fabricate a statement or infer amounts/standards that are absent from the source.\n\nDo not interpret a displayed reconciliation check as an audit or a statement that the financial report complies with a standard. The source PDF remains authoritative.\n\n## D. Student-focused output\n\nFor ordinary chat, use concise, friendly teaching—not machine JSON. Explain simply before introducing formal vocabulary. In practice mode, ask one question at a time and let the learner attempt it before showing the full answer unless they request it. Provide corrective feedback and a short teach-back/check when useful. Avoid imposing accounting tools or journal entries on Finance, History, Math, or other subjects where they are irrelevant.\n\n## E. Import workflow and safety\n\n1. Choose the **correct subject** in the dashboard.\n2. Attach the actual source material and this MD file to the AI; choose one relevant prompt from **Study Library → Import Center**.\n3. Generate valid JSON; locally check the JSON syntax and compare figures and wording against the original source.\n4. For study materials, go to **Study Library → Bulk import / Topic Packs**; for published financial statements go to **Financial Statements → Reports & import**.\n5. Review the dashboard's duplicate/conflict preview and manually inspect ambiguous variants. Save only when satisfied. Preserve backups before major imports.\n\nSee `BSA_AI_PROMPT.md` for the separate interactive tutoring behavior and `EXAMPLE-universal-rulebook.json` for the illustrative rulebook schema. **Do not import the example as academic content without replacing and verifying it.**\n"},
     {id:"tutor-prompt",name:"Adaptive AI Tutor Prompt",filename:"BSA_AI_PROMPT.md",type:"text/markdown;charset=utf-8",summary:"Subject-adaptive coaching, one-at-a-time retrieval, compact responses, and source fidelity.",body:"# BSA Study Desk — Adaptive AI Tutor Prompt\n\nDashboard public release: V1.0 (2026-11-21)\nPurpose: Reusable tutoring instructions for **any subject** in the dashboard. This is an instruction prompt, not a source of course facts or an automatically installed Gemini system prompt.\n\n## Role and scope\n\nYou are an accurate, patient learning coach in BSA Study Desk. Teach the **currently selected course and topic**. Never assume the course is CFAS, that every learner is solving journal entries, or that every topic requires accounting standards. The student's selected subject profile guides tool suggestions but can be overridden by the student's actual request, source, and syllabus.\n\nUse the materials the learner actually provides as the primary basis. Identify the textbook or document, covered section, exact problem, and applicable edition when visible. Do not pretend the dashboard has supplied files that are not actually in this AI conversation. Treat the student's question, saved notes, and attached problem as separate context; never assume an attached question is the current request if the learner has detached or replaced it.\n\n## Learning behavior\n\n1. **Explain simply first**, then give precise subject vocabulary and clearly defined technical terms. Prefer clear conversational English; use natural Taglish or simple Bislish only when helpful or requested. Avoid deep/formal Bisaya, unnecessary flourish, and patronizing language.\n2. **Guide before revealing** when the learner wants practice. Ask one question at a time; give the student a genuine chance to answer, then explain corrections. If the student explicitly asks for the full answer, provide it directly.\n3. **Show reasoning at an appropriate level**: formulas, units, intermediate steps, source-backed rules, or a short example. Verify arithmetic and the exact requirements; do not guess missing conditions.\n4. **Make mistakes useful**: identify the misconception, the relevant condition, why a tempting answer is wrong, and one short retry or comparison question.\n5. **Build durable recall**: retrieval practice, spaced review suggestions for weak concepts, and short teach-back opportunities. Do not equate checkbox completion with demonstrated mastery.\n6. **Keep replies readable in a small chat window**: give the direct answer first, use short paragraphs, and expand only when requested or when necessary to establish correctness. Avoid huge answer dumps, repeated headings, and unrelated actions.\n\n## Subject-adaptive defaults\n\n- **Accounting theory / CFAS:** recognition, measurement, presentation, disclosure, scope, conditions, exceptions, and cited standards only when relevant and verifiable.\n- **Financial accounting / accounting cycle:** journal entries, T-accounts, adjusted balances, trial balances, and financial statements only for questions that need them.\n- **Financial markets / finance:** instruments, yields, valuation, duration, risks, formula interpretation, and applications. Do not inject journal entries.\n- **Economics / mathematics / statistics:** decision logic, formulas, data interpretation, assumptions, and worked computations.\n- **History / theology / humanities:** source interpretation, timeline/causation, distinctions, oral recitation, and writing from the actual readings.\n- **Other subjects:** infer suitable practice from the syllabus, source, and learner's explicit goal. Do not force a predefined category.\n\n## Evidence and uncertainty\n\n- Distinguish **stated by provided source**, **independently verified supplementary information**, and **illustrative example**.\n- Never invent citations, book pages, figures, financial-statement amounts, standard text, rule effective dates, or answer keys.\n- When a source is incomplete or not accessible, say exactly what's missing. Do not claim an answer is source-verified without checking it.\n- For accounting or legal/regulatory standards, confirm jurisdiction, reporting period, adoption/effective date, and source when evidence is available; otherwise mark **Needs verification**.\n- A JSON import preview, AI answer, or a matching accounting equation is **not** proof that the underlying academic content is correct.\n\n## Mode selection\n\n- **Chat/teach/practice:** ordinary readable dialogue; no JSON unless requested.\n- **Import materials:** follow `BSA_AI_SOURCE_RULES.md` and the selected exact format. `bsa-topic-pack-v1` explicitly allows *multiple* study-material arrays. `bsa-rulebook-v1` is **rules-only** and must not include lecture, problem-set, MCQ, or flashcard arrays.\n- **Financial statement import:** follow `bsa-financial-statements-v1`, keep the original Statement of Financial Position, Profit or Loss/OCI, Cash Flows, Changes in Equity, and notes in their proper reported order and line-item hierarchy. Never substitute an unstructured list.\n\n## Default interaction\n\nStart with the learner's immediate question. If teaching is requested, teach one useful concept and ask one short retention question. If practice is requested, present one question without the answer, wait for the attempt, and then give corrective feedback. If an import is requested, produce only a valid object for the selected schema without unsupported filler.\n"},
     {id:"rulebook-example",name:"Universal Rulebook JSON Template",filename:"EXAMPLE-universal-rulebook.json",type:"application/json;charset=utf-8",summary:"Rules-only bsa-rulebook-v1 schema. Illustrative template\u2014replace and verify before import.",body:"{\n  \"format\": \"bsa-rulebook-v1\",\n  \"subject\": \"Example Subject — REPLACE BEFORE IMPORT\",\n  \"rules\": [\n    {\n      \"collection\": \"Example Collection — REPLACE\",\n      \"code\": \"EXAMPLE-01\",\n      \"title\": \"Illustrative rule schema — not a verified academic rule\",\n      \"topic\": \"Replace with the exact topic\",\n      \"category\": \"Reference rule\",\n      \"decisionRule\": \"Replace with the precise source-supported decision trigger.\",\n      \"conditions\": \"Replace with the conditions for applying the rule.\",\n      \"treatment\": \"Replace with the actual source-supported treatment.\",\n      \"exceptions\": \"Replace with real, verified exceptions, if any.\",\n      \"example\": \"Replace with a clearly labeled worked application and verify its answer.\",\n      \"examTrap\": \"Replace with a genuine misconception grounded in the lesson.\",\n      \"sourceTitle\": \"\",\n      \"sourceLocator\": \"\",\n      \"sourceUrl\": \"\",\n      \"status\": \"Needs verification\",\n      \"notes\": \"TEMPLATE ONLY. Do not import as learning content until every placeholder is replaced and checked against a real source.\"\n    }\n  ]\n}\n"}
   ];
@@ -3685,7 +3684,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const sections=[
       ['Study & reading',[['lectures','Lectures','lecture'],['ask','AI Tutor','ask'],['vault','Flashcards','cards'],['rules','Reference rules','book'],['workspace','Workspace','book']]],
       ['Advanced practice',[['accounting-lab','Accounting Lab','pset'],['accounting-cycle','Accounting Cycle','pset'],['mcq','Multiple-choice library','cards'],['psets','Problem Sets','pset'],['mistakes','Mistake Log','mistakes']]],
-      ['Planning, progress & extras',[['insights','Learning Progress','grade'],['calendar','Study Schedule','calendar'],['grades','Grades','grade'],['class','Classes and deadlines','subjects'],['knowledge','Knowledge Map','roadmap'],['life','Study Room','look'],['toolkit','Toolkit','book'],['safety','Data Safety','data']]]
+      ['Planning, progress & extras',[['insights','Learning Progress','grade'],['calendar','Study Schedule','calendar'],['grades','Grades','grade'],['class','Classes and deadlines','subjects'],['knowledge','Visual Studio','network'],['life','Study Room','look'],['toolkit','Toolkit','book'],['safety','Data Safety','data']]]
     ];
     return h(Modal,{title:'More tools',onClose},
       h('div',{className:'bsa3-more-intro'},h('p',null,'Your everyday work is in Today, Study, Practice and Library. Open a group below only when you need a specialized tool.'),
@@ -10213,6 +10212,35 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
     useEffect(()=>{if(init?.topic||init?.topicId)setTopic(init.topic||init.topicId)},[init?.topic,init?.topicId,subject.id]);
     const [query, setQuery] = useState("");
     const [edit, setEdit] = useState(null);
+    // A lecture is removed independently of its topic, cards, practice, rules or scores.
+    // Keep the deleted lecture in component state for a deliberate one-click Undo.
+    const [deleteId,setDeleteId] = useState(null);
+    const [recentlyDeleted,setRecentlyDeleted] = useState(null);
+    const deletionTarget = deleteId && lectures.find(l=>l.id===deleteId);
+    const deleteLecture = () => {
+      if (!deletionTarget || window.__BSA_SHARED_MODE__) {setDeleteId(null);return;}
+      const originalIndex=lectures.findIndex(l=>l.id===deleteId);
+      const original=clone(deletionTarget);
+      update(s=>{s.lectures=(s.lectures||[]).filter(l=>l.id!==deleteId)});
+      setRecentlyDeleted({lecture:original,index:originalIndex});
+      setDeleteId(null);setEdit(null);setOpen(null);
+      toast('Lecture removed. Use Undo below to restore it.');
+    };
+    const undoLectureDelete=()=>{
+      if(!recentlyDeleted)return;
+      const {lecture,index}=recentlyDeleted;
+      update(s=>{s.lectures=s.lectures||[];if(!s.lectures.some(l=>l.id===lecture.id))s.lectures.splice(Math.min(index,s.lectures.length),0,clone(lecture));});
+      setRecentlyDeleted(null);toast('Lecture restored, including its sections and key terms.');
+    };
+    const deleteDialog=deletionTarget&&!window.__BSA_SHARED_MODE__&&h(Modal,{
+      title:'Delete this lecture?',wide:false,onClose:()=>setDeleteId(null),
+      footer:h(React.Fragment,null,h('button',{className:'btn',onClick:()=>setDeleteId(null)},'Keep lecture'),h('button',{className:'btn danger',onClick:deleteLecture},'Delete lecture'))},
+      h('div',{className:'bsa15-delete-message'},h('strong',null,deletionTarget.title),
+        h('p',null,'This removes only the lecture and its sections from the current subject. It does not delete the topic, flashcards, problem sets, rules, scores, or other study material.'),
+        h('p',{className:'muted small'},'Undo will be available from the Lectures list until you leave this page. Export a backup for longer-term recovery.')));
+    const undoPanel=recentlyDeleted&&h('div',{className:'bsa15-undo-banner',role:'status'},
+      h(Icon,{name:'check',size:19}),h('span',null,'Lecture deleted · ',recentlyDeleted.lecture.title),
+      h('button',{className:'btn primary',onClick:undoLectureDelete},'Undo deletion'));
     // Keep reading and list scrolling independent. iPad Safari scrolls the
     // document, not necessarily the `.content` element.
     const lxLastListScroll = useRef(0);
@@ -10230,7 +10258,11 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
       requestAnimationFrame(() => window.scrollTo({top:lxLastListScroll.current,behavior:'instant'}));
     };
     const cur = open && lectures.find((x) => x.id === open);
-    if (cur) return h(React.Fragment, null, h(LxReader, { subject, l: cur, update, toast, go, jumpTo: init && init.sec, onBack: lxBackToList, onEdit: () => setEdit(cur) }), edit && h(LxEditor, { subject, item: edit === "new" ? null : edit, update, toast, onClose: () => setEdit(null), onDeleted: () => { setEdit(null); setOpen(null); } }));
+    if (cur) return h(React.Fragment, null,
+      h(LxReader, { subject, l: cur, update, toast, go, jumpTo: init && init.sec, onBack: lxBackToList,
+        onEdit: () => setEdit(cur),onDelete:()=>setDeleteId(cur.id) }),
+      edit && h(LxEditor, { subject, item: edit === "new" ? null : edit, update, toast, onClose: () => setEdit(null),
+        onDeleteRequest:id=>{setEdit(null);setDeleteId(id)},onDeleted: () => { setEdit(null); setOpen(null); } }),deleteDialog);
     const q = norm(query);
     const lectureId=l=>l.topicId||matchTopic(subject,l.topicText);
     const shown = lectures.filter((l) => (topic === "all" || (topic === "" ? !lectureId(l) : lectureId(l) === topic)) && (!q || norm(`${l.title} ${l.summary} ${l.sections.map((s) => s.h).join(" ")}`).includes(q)));
@@ -10239,11 +10271,21 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
     return h(
       "section",
       { className: "view" },
-      h("div", { className: "page-head" }, h("div", null, h("h1", { className: "page-title" }, "Lectures"), h("p", { className: "muted" }, "Read your saved lessons, review examples, and check your understanding one topic at a time.")), h("div", { className: "head-actions" }, h("button", { className: "btn", onClick: () => setEdit("new") }, h(Icon, { name: "plus", size: 16 }), " Write a lecture"), h("button", { className: "btn primary", onClick: () => go("library", { tab: "topics" }) }, "Topic gaps & import"))),
+      h("div", { className: "page-head" }, h("div", null, h("h1", { className: "page-title" }, "Lectures"), h("p", { className: "muted" }, "Read your saved lessons, review examples, and check your understanding one topic at a time.")), h("div", { className: "head-actions" }, h("button", { className: "btn", onClick: () => setEdit("new") }, h(Icon, { name: "plus", size: 16 }), " Write a lecture"), h('button',{className:'btn',onClick:()=>go('knowledge',{topicId:topic==='all'?'':topic})},h(Icon,{name:'network',size:16}),' Visualize'), h("button", { className: "btn primary", onClick: () => go("library", { tab: "topics" }) }, "Topic gaps & import"))),
       h(PsSampleCard, { subject, update, toast }),
       lectures.length > 0 && h("div", { className: "filters" }, h("input", { className: "search", type: "search", placeholder: "Search lectures", value: query, onChange: (e) => setQuery(e.target.value), "aria-label": "Search lectures" }), usedTopics.length > 0 && h("div", { className: "chip-scroll", role: "group", "aria-label": "Filter by topic" }, h("button", { className: `chip${topic === "all" ? " on" : ""}`, onClick: () => setTopic("all") }, "All topics"), usedTopics.map((t) => h("button", { key: t.id, className: `chip${topic === t.id ? " on" : ""}`, onClick: () => setTopic(t.id), title: t.title }, t.code || t.title.slice(0, 18))), lectures.some((l) => !l.topicId) && h("button", { className: `chip${topic === "" ? " on" : ""}`, onClick: () => setTopic("") }, "Unsorted"))),
-      !lectures.length ? h("div", { className: "empty big" }, h(Icon, { name: "lecture", size: 32 }), h("h2", null, "No lectures yet"), h("p", { className: "muted" }, "Open Topic Gaps to see what this subject needs, then import your source-based lecture JSON."), h("button", { className: "btn primary", onClick: () => go("library", { tab: "topics" }) }, "Find topic gaps & import")) : !shown.length ? h("div", { className: "empty" }, h("p", null, "No lectures match."), h("p", { className: "muted" }, "Clear the search or pick “All topics”.")) : groups.map((g) => h("div", { key: g.key, className: "ps-group" }, h("h2", { className: "ps-group-h" }, g.label, g.std && h("span", { className: "std" }, g.std)), h("div", { className: "lx-list" }, g.items.map((l) => h("button", { key: l.id, className: "lx-row", onClick: () => lxOpenLecture(l.id) }, h("span", { className: "lx-row-main" }, h("strong", null, l.title), h("span", { className: "muted small bsa13-lecture-meta", title: String(l.source||"") }, [l.source, `${l.sections.length} sections`, l.terms.length ? `${l.terms.length} key terms` : ""].filter(Boolean).join(", "))), l.done ? h("span", { className: "ps-st got" }, h(Icon, { name: "check", size: 14 }), " Studied") : h("span", { className: "chev-i" }, h(Icon, { name: "chevron", size: 16 }))))))),
-      edit && h(LxEditor, { subject, item: edit === "new" ? null : edit, update, toast, onClose: () => setEdit(null), onDeleted: () => setEdit(null) })
+      undoPanel,
+      !lectures.length ? h("div", { className: "empty big" }, h(Icon, { name: "lecture", size: 32 }), h("h2", null, "No lectures yet"), h("p", { className: "muted" }, "Open Topic Gaps to see what this subject needs, then import your source-based lecture JSON."), h("button", { className: "btn primary", onClick: () => go("library", { tab: "topics" }) }, "Find topic gaps & import")) : !shown.length ? h("div", { className: "empty" }, h("p", null, "No lectures match."), h("p", { className: "muted" }, "Clear the search or pick “All topics”.")) : groups.map((g) => h("div", { key: g.key, className: "ps-group" }, h("h2", { className: "ps-group-h" }, g.label, g.std && h("span", { className: "std" }, g.std)), h("div", { className: "lx-list bsa15-lecture-list" }, g.items.map((l) => h('article',{key:l.id,className:'bsa15-lecture-card'},
+        h('button',{className:'bsa15-lecture-open',type:'button',onClick:()=>lxOpenLecture(l.id)},
+          h('span',{className:'bsa15-lecture-icon'},h(Icon,{name:'lecture',size:21})),
+          h('span',{className:'bsa15-lecture-card-text'},h('strong',null,l.title),
+            h('small',null,[l.source,`${(l.sections||[]).length} sections`,(l.terms||[]).length?`${l.terms.length} key terms`:null].filter(Boolean).join(' · '))),
+          l.done&&h('span',{className:'bsa15-studied-label'},'Studied')),
+        !window.__BSA_SHARED_MODE__&&h('div',{className:'bsa15-lecture-card-actions'},
+          h('button',{className:'btn',type:'button','aria-label':'Edit lecture '+l.title,onClick:()=>setEdit(l)},'Manage'),
+          h('button',{className:'btn danger ghost',type:'button','aria-label':'Delete lecture '+l.title,onClick:()=>setDeleteId(l.id)},h(Icon,{name:'close',size:16}),' Delete'))))))),
+      edit && h(LxEditor, { subject, item: edit === "new" ? null : edit, update, toast, onClose: () => setEdit(null),
+        onDeleteRequest:id=>{setEdit(null);setDeleteId(id)},onDeleted: () => setEdit(null) }),deleteDialog
     );
   }
   function PsEmpty({ icon, title, text, go, pid }) {
@@ -10381,7 +10423,7 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
     return h('div',{className:'bsa41-annotated',onClick:activate,onKeyDown:e=>{if(e.key==='Enter'||e.key===' '){if(e.target.matches('.bsa41-mark')){e.preventDefault();activate(e)}}},
       dangerouslySetInnerHTML:{__html:result.html}});
   }
-  function LxReader({ subject, l, update, toast, go, onBack, onEdit, jumpTo }) {
+  function LxReader({ subject, l, update, toast, go, onBack, onEdit, onDelete, jumpTo }) {
     const sourceView = useMemo(() => lxSourcePresentation(l), [l]);
     useEffect(()=>{bsa181Recent("lectures",{open:l.id},subject.id,"Lecture · "+l.title)},[l.id,subject.id]);
     // cloze and addCloze are defined below, next to addCards.
@@ -10392,6 +10434,8 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
       if (el) requestAnimationFrame(() => el.scrollIntoView({ behavior: "smooth", block: "start" }));
     }, [jumpTo]);
     const [shown, setShown] = useState({});
+    const [tocExpanded,setTocExpanded]=useState(false);
+    const [tocQuery,setTocQuery]=useState('');
     const [readerMode,setReaderMode]=useState('read');
     const [recallText,setRecallText]=useState({});
     const [pdfStyle,setPdfStyle]=useState('complete');
@@ -10467,6 +10511,10 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
           h('option',{value:'complete'},'Complete lecture · all sections'),
           h('option',{value:'revision'},'Revision outline · selected key material'))),
       h("button", { className: "btn", onClick: () => gcPrint(`<div class="ps-print bsa-v177-print"><div class="pdf-kicker">BSA STUDY DESK / ${pdfStyle==='revision'?'REVISION OUTLINE':'COMPLETE LECTURE NOTES'}</div><h1>${psEsc(l.title)}</h1><p class="meta">${psEsc(subject.name||'')} · ${sourceView.sections.length} sections</p><div class="bsa-print-toc"><strong>Contents</strong><ol>${sourceView.sections.map((x,i)=>`<li>${psEsc(bsa13LectureHeading(x.h||'Section',i))}</li>`).join('')}</ol></div>${pdfStyle==='revision'?'<p><strong>Revision outline only:</strong> This summary omits full section explanations. Refer to the complete lecture for all details.</p>':''}${l.summary?psMdHtml(l.summary):''}${pdfStyle==='revision'?sourceView.sections.map((sec,i)=>`<section class="lecture-print-section lecture-short-section"><h2>${i+1}. ${psEsc(bsa13LectureHeading(sec.h||'Section',i))}</h2><p>${psEsc(bsaRevisionExcerpt(sec.body||""))}</p></section>`).join(''):sourceView.sections.map((sec,i)=>`<section class="lecture-print-section ${(sec.body||"").length<850 && !/\|\s*---/.test(sec.body||"")?"lecture-short-section":"lecture-long-section"}"><div class="lecture-print-eyebrow">SECTION ${String(i+1).padStart(2,"0")} / ${String(sourceView.sections.length).padStart(2,"0")}</div>${sec.h?`<h2>${psEsc(bsa13LectureHeading(sec.h,i))}</h2>`:""}${psMdHtml(sec.body||"")}</section>`).join("")}${l.terms.length?`<h2>Key terms</h2>${l.terms.map(t=>`<p><strong>${psEsc(t.t)}</strong>: ${psEsc(t.d)}</p>`).join("")}`:""}${l.checks.length?`<h2>Check yourself</h2>${l.checks.map((c,i)=>`<div><h3>${i+1}. ${psEsc(c.q)}</h3>${psMdHtml(c.a||"")}</div>`).join("")}`:""}${sourceView.references.length?`<section class="lecture-print-section"><h2>Sources & references</h2><ul>${sourceView.references.map(src=>`<li>${psEsc(src)}</li>`).join("")}</ul></section>`:""}</div>`) }, "Print / PDF"),
+      h('div',{className:'bsa15-reader-jump'},
+        h('button',{className:'btn primary',type:'button',onClick:()=>go('knowledge',{topicId:l.topicId||matchTopic(subject,l.topicText)||'',lectureId:l.id})},h(Icon,{name:'network',size:17}),' Visualize this lecture'),
+        !window.__BSA_SHARED_MODE__&&h('button',{className:'btn',type:'button',onClick:onEdit},'Edit lecture'),
+        !window.__BSA_SHARED_MODE__&&h('button',{className:'btn danger ghost',type:'button',onClick:onDelete},'Delete lecture')),
       h("header", { className: "lx-head" }, h("div", { className: "lx-reader-label" }, "Study notes / Lecture reader"), h("h1", { className: "page-title" }, l.title), h("p", { className: "muted" }, t && h("span", { className: "std" }, topicName(subject, t.id)), " ", [!t && l.topicText].filter(Boolean).join(". ")), h("div", { className: "lx-chapter-meta" }, h("span", null, `${sourceView.sections.length} sections`), l.terms.length>0 && h("span", null, `${l.terms.length} key terms`), l.checks.length>0 && h("span", null, `${l.checks.length} self-checks`))),
       h('div',{className:'bsa-lecture-toolbar panel'},
         h('div',{className:'bsa-lecture-progress'},h('strong',null,'Section review'),h('span',{className:'muted small'},sectionDone.length+' / '+sourceView.sections.length+' sections checked'),h('div',{className:'bsa-meter'},h('span',{style:{width:progress+'%'}}))),
@@ -10525,7 +10573,15 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
          ].map(([name,n,tab])=>h('button',{key:name,className:'bsa-hub-tile',onClick:()=>go(tab)},h('span',null,name),h('strong',null,n)))),
          h('p',{className:'muted small'},connected.due+' flashcard reviews due. Connections use existing topic IDs; unmatched imported materials are not assumed to belong to this topic.')),
       l.summary && h(PsMd, { text: l.summary, className: "lx-summary" }),
-      l.sections.length > 2 && h("nav", { className: "lx-toc", "aria-label": "Sections" }, h("ol", null, l.sections.map((s,i)=>({s,i})).filter(({s})=>s.h).map(({s,i}) => h("li", { key: s.id }, h("a", { href: `#${s.id}`, onClick: (e) => { e.preventDefault(); const el = document.getElementById(s.id); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); } }, bsa13LectureHeading(s.h,i)))))),
+      l.sections.length > 2 && h('nav',{className:'lx-toc bsa15-toc','aria-label':'In this lecture'},
+        h('div',{className:'bsa15-toc-head'},h('div',null,h('span',{className:'bsa15-kicker'},'IN THIS LECTURE'),h('strong',null,'Jump to a section'),h('small',null,`${l.sections.length} sections · Open any section to continue reading`)),
+          h('span',{className:'bsa15-toc-counter'},String(sectionDone.length)+' reviewed')),
+        l.sections.length>8&&h('label',{className:'bsa15-toc-filter'},h(Icon,{name:'search',size:17}),h('input',{type:'search',value:tocQuery,onChange:e=>{setTocQuery(e.target.value);setTocExpanded(true)},placeholder:'Find a section…','aria-label':'Filter lecture sections'})),
+        h('ol',{className:'bsa15-toc-list'},l.sections.map((sec,i)=>({sec,i})).filter(({sec})=>sec.h).filter(({sec})=>!tocQuery||norm(sec.h).includes(norm(tocQuery))).slice(0,tocExpanded?undefined:6).map(({sec,i})=>h('li',{key:sec.id||i},
+          h('a',{href:`#${sec.id}`,onClick:e=>{e.preventDefault();const el=document.getElementById(sec.id);if(el)el.scrollIntoView({behavior:'smooth',block:'start'})}},
+            h('span',{className:'bsa15-toc-ordinal'},String(i+1).padStart(2,'0')),h('span',null,bsa13LectureHeading(sec.h,i)),h(Icon,{name:'chevron',size:15}))))),
+        !tocQuery&&l.sections.length>6&&h('button',{type:'button',className:'bsa15-toc-more',onClick:()=>setTocExpanded(v=>!v)},tocExpanded?'Show fewer sections':'View all '+l.sections.length+' sections',h(Icon,{name:'chevron',size:15})),
+        tocQuery&&!l.sections.some(sec=>sec.h&&norm(sec.h).includes(norm(tocQuery)))&&h('p',{className:'muted small'},'No sections match this search.')),
       sourceView.sections.map((s,i) => h("section", { key: s.id, id: s.id, className: "lx-sec bsa-section" },
         h('div',{className:'bsa-sec-topline'},h("div", { className: "lx-sec-count" }, `SECTION ${String(i+1).padStart(2,"0")} / ${String(sourceView.sections.length).padStart(2,"0")}`),
         h('button',{className:'btn'+(sectionDone.includes(s.id||String(i))?' primary':''),onClick:()=>{const key=s.id||String(i),wasReviewed=sectionDone.includes(key);set(x=>{x.reviewedSections=Array.isArray(x.reviewedSections)?x.reviewedSections:[];x.reviewedSections=x.reviewedSections.includes(key)?x.reviewedSections.filter(z=>z!==key):[...x.reviewedSections,key];});if(!wasReviewed)grantActivityXp('lecture',subject.id+':'+l.id+':'+key,5,40);},'aria-pressed':sectionDone.includes(s.id||String(i))},sectionDone.includes(s.id||String(i))?'✓ Reviewed':'Mark reviewed')),
@@ -10552,7 +10608,7 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
       h("div", { className: "lx-foot panel", style: { marginTop: "-.4rem" } }, l.terms.length > 0 && h("button", { className: "btn", onClick: addCards }, `Make ${l.terms.length} flashcards`), cloze.length > 0 && h("button", { className: "btn", onClick: addCloze, title: "One card per bolded rule, with the rule blanked out" }, `Make ${cloze.length} cloze cards`), h("button", { className: "btn", onClick: () => go("ask", { focus: { kind: "lecture", id: l.id } }) }, h(Icon, { name: "ask", size: 16 }), " Ask about this lecture"), h("button", { className: "btn", onClick: () => go("nlm", { pid: "pset", topicId: l.topicId || "" }) }, "Problem set prompt for this topic"), h("button", { className: "btn ghost", onClick: async () => toast(await copyText(lxText(l)) ? "Lecture copied. Paste it into AI as a source" : "Couldn’t copy") }, "Copy as text"), h("button", { className: "btn ghost", onClick: onEdit }, "Edit"))
     );
   }
-  function LxEditor({ subject, item, update, toast, onClose, onDeleted }) {
+  function LxEditor({ subject, item, update, toast, onClose, onDeleted, onDeleteRequest }) {
     const toMd = (l) => l.sections.map((s) => (s.h ? `## ${s.h}\n` : "") + s.body).join("\n\n");
     const [f, setF] = useState(() => item ? { title: item.title, topicId: item.topicId || "", source: item.source || "", summary: item.summary || "", body: toMd(item), terms: item.terms.map((t) => `${t.t}: ${t.d}`).join("\n"), checks: item.checks.map((c) => `${c.q} | ${c.a}`).join("\n") } : { title: "", topicId: "", source: "", summary: "", body: "## General rules\n- \n\n## How to treat it\n- \n\n## Exceptions\n- \n\n## Common exam traps\n- ", terms: "", checks: "" });
     const [err, setErr] = useState("");
@@ -10581,6 +10637,7 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
       onClose();
     };
     const del = () => {
+      if (onDeleteRequest) {onDeleteRequest(item.id);return;}
       if (!window.confirm(`Delete the lecture “${item.title}”?`)) return;
       update((s) => { s.lectures = (s.lectures || []).filter((x) => x.id !== item.id); });
       toast("Lecture deleted");
@@ -13894,29 +13951,217 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
       !window.__BSA_SHARED_MODE__&&h(BSA38ExamCatchup,{subject,update,toast}));
   }
 
-  /* v192: topic-to-material map. Edges are created ONLY from real matching
-     topicId fields, not from guessed similarity between topic titles. */
-  function BSA192KnowledgeMap({subject,go}){
-    const [query,setQuery]=useState('');
-    const links=bsa181Links(subject);
-    const topics=(subject.topics||[]).filter(x=>x.kind!=='exam');
-    const [picked,setPicked]=useState('');
-    const matched=topics.filter(x=>(x.title||'').toLowerCase().includes(query.toLowerCase())||(x.code||'').toLowerCase().includes(query.toLowerCase()));
-    const focus=matched.find(x=>x.id===picked)||matched[0];
-    const connected=focus?links.find(x=>x.id===focus.id):null;
-    const related=connected?.related||[];
-    const sameTopicCount=topics.filter(x=>links.some(g=>g.id===x.id&&g.related.length)).length;
-    const weakFor=id=>(subject.mistakes||[]).filter(m=>m&&m.topicId===id&&m.status!=='Cleared').length;
-    const names={lectures:'Lectures',rules:'Rules & references',vault:'Flashcards',psets:'Problem sets',mcq:'MCQ library',mistakes:'Mistake log'};
-    return h('section',{className:'view bsa192-page'},h('div',{className:'page-head'},h('div',null,h('span',{className:'v2-eyebrow'},'YOUR KNOWLEDGE CONNECTIONS'),h('h1',{className:'page-title'},'Knowledge Map'),h('p',{className:'muted'},'Find the lectures, questions, rules and mistakes genuinely linked to each topic. No invented concept links.'))),
-      h('div',{className:'bsa192-stats'},h('span',null,topics.length+' topics'),h('span',null,sameTopicCount+' with linked materials'),h('button',{className:'btn',onClick:()=>go('roadmap')},'Edit your roadmap')),
-      h('div',{className:'bsa192-map'},h('aside',{className:'bsa192-topic-list'},h('label',null,'Find topic',h('input',{type:'search',placeholder:'Topic or code',value:query,onChange:e=>setQuery(e.target.value)})),
-        matched.length?matched.map(x=>{const rel=links.find(y=>y.id===x.id);return h('button',{type:'button',key:x.id,className:'bsa192-topic'+(focus?.id===x.id?' active':''),onClick:()=>setPicked(x.id)},h('strong',null,(x.code?x.code+' · ':'')+x.title),h('small',null,(rel?.related.length||0)+' linked resource groups · '+weakFor(x.id)+' open mistakes'))}):h('p',{className:'muted small'},'No matching topic.')),
-        h('div',{className:'bsa192-canvas'},focus?h('div',null,h('div',{className:'bsa192-center-node'},h('span',null,'TOPIC'),h('h2',null,(focus.code?focus.code+' · ':'')+focus.title),h('p',{className:'muted small'},weakFor(focus.id)+' saved unresolved mistakes for this topic'),h('button',{className:'btn',onClick:()=>go('roadmap',{open:focus.id})},'Open topic')),
-          h('div',{className:'bsa192-edges'},related.length?related.map(x=>h('button',{className:'bsa192-resource-node',key:x.type,onClick:()=>go(x.type,x.open?{open:x.open}:{})},h('strong',null,names[x.type]||x.type),h('small',null,x.label),h('span',{'aria-hidden':true},'↗'))):h('div',{className:'bsa192-empty'},'Nothing is linked to this topic yet. Add a lecture, flashcard, rule, question, or mistake with this topic selected.'))):
-          h('div',{className:'bsa192-empty'},'Add topics to your roadmap to start building the map.'))),
-      h('p',{className:'muted small'},'Connections are based only on matching saved topic IDs. This graph does not claim conceptual mastery or infer relationships without evidence.'));
+  /* V1.5 — Dynamic Visual Studio. Presentation-only: reads original subject
+     records and never writes a parallel course, topic, score or review ledger.
+     All visual claims come from saved source passages. */
+  function bsa15Clean(text){
+    return String(text||'').replace(/\r/g,'').replace(/\[([^\]]+)\]\([^)]*\)/g,'$1')
+      .replace(/\*\*|__|`|^[ \t]*#{1,6}\s*/gm,'').replace(/[ \t]+/g,' ').trim();
   }
+  function bsa15Excerpt(text,limit=290){
+    const clean=bsa15Clean(text).replace(/\|/g,' · ').replace(/\n+/g,' ').trim();
+    if(clean.length<=limit)return clean;
+    return clean.slice(0,limit).replace(/\s+\S*$/,'')+'…';
+  }
+  function bsa15LectureList(subject,topicId){
+    return (subject.lectures||[]).filter(l=>l.topicId===topicId||(!l.topicId&&l.topicText&&matchTopic(subject,l.topicText)===topicId));
+  }
+  function bsa15SectionList(lecture){
+    return (lecture?.sections||[]).map((s,i)=>({id:s.id||String(i),index:i,title:bsa13LectureHeading(s.h||'Section '+(i+1),i),body:s.body||''}));
+  }
+  function bsa15Process(sections){
+    for(const sec of sections){
+      const lines=String(sec.body||'').split('\n');let current=[];const groups=[];
+      const flush=()=>{if(current.length>=3)groups.push(current);current=[]};
+      for(const line of lines){const match=line.match(/^\s*(?:\d{1,2}[.)]|Step\s+\d{1,2}\s*[:.)-])\s+(.+)$/i);
+        if(match)current.push(bsa15Clean(match[1]));else if(line.trim())flush();}
+      flush();if(groups.length)return {steps:groups.sort((a,b)=>b.length-a.length)[0].slice(0,30),verified:true,section:sec};
+    }
+    return {steps:sections.map(s=>s.title),verified:false,section:null};
+  }
+  function bsa15ComparisonTable(sections){
+    for(const sec of sections){const lines=String(sec.body||'').split('\n');
+      for(let i=0;i<lines.length-2;i++){
+        const head=lines[i],sep=lines[i+1];
+        if(!head.includes('|')||!/^\s*\|?[\s|:\-]+\|?\s*$/.test(sep)||!/\-{3}/.test(sep))continue;
+        const split=line=>line.trim().replace(/^\|/,'').replace(/\|$/,'').split('|').map(x=>bsa15Clean(x.trim()));
+        const headers=split(head);if(headers.length<2||headers.length>6||headers.some(x=>!x))continue;
+        const rows=[];for(let j=i+2;j<lines.length&&rows.length<35;j++){
+          if(!lines[j].includes('|'))break;
+          const cells=split(lines[j]);if(cells.length===headers.length)rows.push(cells);
+        }
+        if(rows.length)return {headers,rows,section:sec};
+      }
+    }
+    return null;
+  }
+  function bsa15Timeline(sections){
+    // Treat only explicit dates/event context as chronology. A number such as
+    // a 2,050 futures index level must NOT become a fictitious year on the map.
+    const events=[],seen=new Set();
+    const dateCue=/(?:\b(?:in|on|during|by|since|from|around|circa|between|year|dated|established|founded|occurred|published|passed|enacted|born|died|signed|declared)\b.{0,34})|(\b(?:battle|revolution|treaty|election|constitution|occupation|war)\b.{0,22})/i;
+    for(const sec of sections){
+      for(const line of String(sec.body||'').split(/\n|(?<=[.!?])\s+(?=[A-Z])/)){
+        const clean=bsa15Clean(line).replace(/^[-*]\s*/,'');
+        if(clean.length<12||clean.length>420)continue;
+        const found=[];
+        for(const m of clean.matchAll(/\b(\d{1,4})\s*(BCE|BC|CE|AD)\b|\b(AD|CE)\s+(\d{1,4})\b/gi)){
+          const yr=Number(m[1]||m[4]),era=(m[2]||m[3]).toUpperCase();
+          if(yr>0&&yr<=2100)found.push({year:/BCE|BC/.test(era)?-yr:yr,label:String(yr)+' '+era});
+        }
+        if(!found.length && dateCue.test(clean)){
+          for(const m of clean.matchAll(/\b(1[0-9]{3}|20\d{2})\b/g)){
+            const i=m.index||0,context=clean.slice(Math.max(0,i-45),Math.min(clean.length,i+40));
+            if(dateCue.test(context))found.push({year:Number(m[1]),label:m[1]});
+          }
+        }
+        for(const date of found){
+          const key=date.label+':'+clean.toLowerCase();if(seen.has(key))continue;seen.add(key);
+          events.push({...date,text:clean,section:sec});
+          if(events.length>=80)break;
+        }
+        if(events.length>=80)break;
+      }
+      if(events.length>=80)break;
+    }
+    return events.sort((a,b)=>a.year-b.year);
+  }
+  function bsa15ProblemBlocks(problem){
+    const solution=String(problem?.solution||'').trim();if(!solution)return [];
+    const blocks=solution.split(/\n\s*\n/).map(x=>x.trim()).filter(Boolean);
+    if(blocks.length>1)return blocks.slice(0,60);
+    const lines=solution.split('\n').filter(Boolean);
+    if(lines.length>1)return lines.slice(0,60);
+    return [solution];
+  }
+  function BSA15VisualStudio({subject,go,init}){
+    const topics=studyTopics(subject);
+    const target=init?.topicId||init?.topic||'';
+    const [topicId,setTopicId]=useState(()=>topics.some(t=>t.id===target)?target:(topics[0]?.id||''));
+    const topic=topics.find(t=>t.id===topicId)||topics[0];
+    const lectures=topic?bsa15LectureList(subject,topic.id):[];
+    const wantedLecture=init?.lectureId||'';
+    const [lectureId,setLectureId]=useState(wantedLecture);
+    const lecture=lectures.find(l=>l.id===lectureId)||lectures[0]||null;
+    const sections=useMemo(()=>bsa15SectionList(lecture),[lecture]);
+    const [mode,setMode]=useState('map');
+    const [picked,setPicked]=useState(0);
+    const [query,setQuery]=useState('');
+    const [limit,setLimit]=useState(()=>typeof window!=='undefined'&&window.matchMedia&&window.matchMedia('(max-width:680px)').matches?5:7);
+    const [zoom,setZoom]=useState(1);
+    const [focus,setFocus]=useState(false);
+    const [mobileCanvas,setMobileCanvas]=useState(false);
+    const [showInfo,setShowInfo]=useState(true);
+    const [left,setLeft]=useState(0),[right,setRight]=useState(1);
+    const [problemKey,setProblemKey]=useState('');
+    const [revealed,setRevealed]=useState(0);
+    const [finalShown,setFinalShown]=useState(false);
+    const [draft,setDraft]=useState('');
+    const mapScrollRef=useRef(null);
+    const panMap=distance=>{if(mapScrollRef.current)mapScrollRef.current.scrollBy({left:distance,behavior:'smooth'})};
+    useEffect(()=>{if(target&&topics.some(t=>t.id===target))setTopicId(target)},[target,subject.id]);
+    useEffect(()=>{setPicked(0);setQuery('');setLimit(typeof window!=='undefined'&&window.matchMedia&&window.matchMedia('(max-width:680px)').matches?5:7);setZoom(1);setLectureId(wantedLecture);setRevealed(0);setFinalShown(false)},[topicId,subject.id]);
+    useEffect(()=>{if(wantedLecture)setLectureId(wantedLecture)},[wantedLecture]);
+    useEffect(()=>{setPicked(0);setLimit(typeof window!=='undefined'&&window.matchMedia&&window.matchMedia('(max-width:680px)').matches?5:7);setLeft(0);setRight(1);setRevealed(0);setFinalShown(false)},[lecture?.id]);
+    const sourceTerms=(lecture?.terms||[]).filter(x=>x&&x.t&&x.d);
+    const filtered=sections.map((sec,i)=>({...sec,sourceIndex:i})).filter(s=>!query||bsa15Clean(s.title+' '+s.body).toLowerCase().includes(query.toLowerCase()));
+    const visible=filtered.slice(0,limit);
+    const selected=sections[picked]||sections[0];
+    const related=selected?sourceTerms.filter(t=>String(t.t).length>=4&&String(selected.body||'').toLowerCase().includes(String(t.t).toLowerCase())).slice(0,5):[];
+    const data=bsaTopicConnections(subject,topic?.id||'');
+    const problems=(subject.psets||[]).flatMap(set=>(set.problems||[]).filter(p=>(p.topicId||set.topicId)===topic?.id).map(p=>({set,p})));
+    const activeProblem=problems.find(({p})=>p.id===problemKey)||problems[0];
+    const steps=bsa15ProblemBlocks(activeProblem?.p);
+    const process=bsa15Process(sections);
+    const table=bsa15ComparisonTable(sections);
+    const timeline=bsa15Timeline(sections);
+    const compareOptions=sourceTerms.length>=2?sourceTerms.map((t,i)=>({id:i,label:t.t,detail:t.d,type:'term'})):
+      sections.map((sec,i)=>({id:i,label:sec.title,detail:sec.body,type:'section'}));
+    const first=compareOptions[Math.min(left,Math.max(0,compareOptions.length-1))],second=compareOptions[Math.min(right,Math.max(0,compareOptions.length-1))];
+    const mapWidth=related.length?1120:810, mapHeight=Math.max(380,visible.length*78+74);
+    const rootY=Math.round(mapHeight/2),nodeY=i=>42+i*78;
+    const openSection=sec=>lecture&&go('lectures',{open:lecture.id,sec:sec.id});
+    const actionButtons=h('div',{className:'bsa15-source-actions'},
+      lecture&&h('button',{className:'btn',type:'button',onClick:()=>go('lectures',{open:lecture.id})},h(Icon,{name:'lecture',size:16}),' Open lecture'),
+      topic&&h('button',{className:'btn',type:'button',onClick:()=>go('roadmap',{open:topic.id})},'Topic roadmap'),
+      topic&&h('button',{className:'btn',type:'button',onClick:()=>go('library',{tab:'flow',topicId:topic.id})},'Smart Flow'),
+      topic&&h('button',{className:'btn',type:'button',onClick:()=>go('mcq',{topicId:topic.id})},'Practice topic'));
+    const modes=[['map','Mind map','network'],['flow','Flow / process','roadmap'],['compare','Compare','book'],['timeline','Timeline','calendar'],['steps','Solution stepper','pset']];
+    return h('section',{className:'view bsa15-studio','aria-label':'Dynamic Visual Studio'},
+      h('header',{className:'bsa15-hero'},h('div',null,h('span',{className:'bsa15-kicker'},'INTERACTIVE LEARNING · '+(subject.code||subject.name)),h('h1',null,'Visual Studio'),h('p',null,'Explore your own saved material as a living map, process, comparison, timeline or worked solution. Each view stays linked to its source.')),
+        h('div',{className:'bsa15-hero-art','aria-hidden':'true'},h('span',null,'◉'),h('span',null,'○'),h('span',null,'◇'))),
+      h('div',{className:'bsa15-pickers'},
+        h('label',null,'Topic',h('select',{value:topic?.id||'',onChange:e=>setTopicId(e.target.value),'aria-label':'Select a topic to visualize'},topics.length?topics.map(t=>h('option',{key:t.id,value:t.id},[t.code,t.title].filter(Boolean).join(' · '))):h('option',{value:''},'No topics yet'))),
+        h('label',null,'Lecture source',h('select',{value:lecture?.id||'',onChange:e=>setLectureId(e.target.value),'aria-label':'Select source lecture'},lectures.length?lectures.map(l=>h('option',{key:l.id,value:l.id},l.title)):h('option',{value:''},'No saved lecture')))),
+      h('nav',{className:'bsa15-modes',role:'group','aria-label':'Visual learning modes'},modes.map(([id,label,icon])=>h('button',{key:id,type:'button',className:mode===id?'on':'','aria-pressed':mode===id,onClick:()=>{setMode(id);setShowInfo(true)}},h(Icon,{name:icon,size:17}),h('span',null,label)))),
+      !topic?h('div',{className:'bsa15-empty panel'},'No topics exist yet. Add a topic in your roadmap or import a Topic Pack first.'):
+      h(React.Fragment,null,
+      h('div',{className:'bsa15-context'},h('div',null,h('strong',null,topic.title),h('span',null,lecture?`${sections.length} lecture sections · ${sourceTerms.length} terms · ${problems.length} problems`:`${problems.length} saved problems · no lecture for this topic`)),h('small',null,'Visual organization ≠ demonstrated mastery. Never invent missing connections.')),
+      mode==='map'&&h('div',{className:'bsa15-map-layout'},
+        h('div',{className:'bsa15-visual-panel'+(mobileCanvas?' bsa15-phone-canvas':' bsa15-phone-branches')},
+          h('div',{className:'bsa15-phone-view-switch',role:'group','aria-label':'Mobile mind map layout'},
+            h('button',{type:'button',className:!mobileCanvas?'on':'','aria-pressed':!mobileCanvas,onClick:()=>setMobileCanvas(false)},h(Icon,{name:'network',size:16}),'Branches'),
+            h('button',{type:'button',className:mobileCanvas?'on':'','aria-pressed':mobileCanvas,onClick:()=>setMobileCanvas(true)},h(Icon,{name:'roadmap',size:16}),'Canvas')),
+          h('div',{className:'bsa15-visual-toolbar'},h('label',{className:'bsa15-search'},h(Icon,{name:'search',size:16}),h('input',{type:'search',value:query,placeholder:'Find a concept…',onChange:e=>{setQuery(e.target.value);setLimit(7)},'aria-label':'Search visual nodes'})),
+            h('div',{className:'bsa15-zoom',role:'group','aria-label':'Map zoom'},h('button',{type:'button',onClick:()=>setZoom(z=>Math.max(.75,Math.round((z-.1)*100)/100)),'aria-label':'Zoom out'},'−'),h('span',null,Math.round(zoom*100)+'%'),h('button',{type:'button',onClick:()=>setZoom(z=>Math.min(1.25,Math.round((z+.1)*100)/100)),'aria-label':'Zoom in'},'+'),h('button',{type:'button',onClick:()=>setZoom(1),'aria-label':'Reset zoom'},'↺')),
+            h('button',{className:'bsa15-icon-btn',type:'button',onClick:()=>setFocus(v=>!v),'aria-pressed':focus},focus?'Exit focus':'Focus node'),
+            h('div',{className:'bsa15-pan-controls',role:'group','aria-label':'Pan across concept map'},
+              h('button',{type:'button',onClick:()=>panMap(-260),'aria-label':'Pan map left'},'←'),
+              h('button',{type:'button',onClick:()=>panMap(260),'aria-label':'Pan map right'},'→'))),
+          sections.length&&h('div',{className:'bsa15-mobile-tree','aria-label':'Expandable source-linked concept branches'},
+            h('div',{className:'bsa15-mobile-root'},h('small',null,'SELECTED TOPIC'),h('strong',null,topic.title),h('span',null,sections.length+' sections from saved lectures')),
+            h('div',{className:'bsa15-mobile-branches'},visible.map(sec=>h('button',{type:'button',key:sec.id,className:'bsa15-mobile-branch'+(picked===sec.sourceIndex?' is-picked':''),onClick:()=>{setPicked(sec.sourceIndex);setShowInfo(true)},'aria-pressed':picked===sec.sourceIndex},
+              h('span',{className:'bsa15-mobile-branch-num'},String(sec.index+1).padStart(2,'0')),
+              h('span',{className:'bsa15-mobile-branch-text'},h('strong',null,sec.title),h('small',null,bsa15Excerpt(sec.body,85))),
+              h(Icon,{name:'chevron',size:18}))))),
+          sections.length?h('div',{className:'bsa15-scroll-frame',ref:mapScrollRef,'aria-label':'Scrollable concept map'},
+            h('div',{className:'bsa15-zoom-space',style:{width:Math.round(mapWidth*zoom),height:Math.round(mapHeight*zoom)}},
+              h('div',{className:'bsa15-map-stage',style:{width:mapWidth,height:mapHeight,transform:`scale(${zoom})`,transformOrigin:'top left'}},
+                h('svg',{className:'bsa15-connections',viewBox:`0 0 ${mapWidth} ${mapHeight}`,width:mapWidth,height:mapHeight,'aria-hidden':'true'},
+                  visible.map((sec,i)=>h('path',{key:'line-'+sec.id,d:`M 264 ${rootY} C 333 ${rootY}, 328 ${nodeY(i)+30}, 400 ${nodeY(i)+30}`,stroke:'var(--accent)',strokeWidth:picked===sec.sourceIndex?3:1.5,opacity:focus&&picked!==sec.sourceIndex?.09:.44,fill:'none'})),
+                  related.map((term,i)=>h('path',{key:'term-'+i,d:`M 755 ${nodeY(visible.findIndex(s=>s.sourceIndex===picked))+30} C 790 ${nodeY(visible.findIndex(s=>s.sourceIndex===picked))+30}, 791 ${nodeY(i)+30}, 830 ${nodeY(i)+30}`,stroke:'var(--accent)',strokeWidth:1.5,opacity:.45,fill:'none'}))),
+                h('button',{className:'bsa15-root-node',type:'button',style:{top:rootY-51,left:24},onClick:()=>setFocus(false)},h('small',null,'SELECTED TOPIC'),h('strong',null,topic.title),h('span',null,sections.length+' sections · tap a branch')),
+                visible.map((sec,i)=>h('button',{type:'button',key:sec.id,className:'bsa15-map-node'+(picked===sec.sourceIndex?' is-picked':'')+(focus&&picked!==sec.sourceIndex?' is-faded':''),style:{left:401,top:nodeY(i),animationDelay:Math.min(i,14)*35+'ms'},onClick:()=>{setPicked(sec.sourceIndex);setShowInfo(true)},'aria-pressed':picked===sec.sourceIndex},
+                  h('span',{className:'bsa15-node-number'},String(sec.index+1).padStart(2,'0')),h('span',{className:'bsa15-node-title'},sec.title),h('span',{className:'bsa15-node-arrow'},'›'))),
+                related.map((term,i)=>h('button',{type:'button',key:term.t+'-'+i,className:'bsa15-term-node',style:{left:830,top:nodeY(i)},onClick:()=>setShowInfo(true)},h('small',null,'MENTIONED IN SECTION'),h('strong',null,term.t)))))):
+            h('div',{className:'bsa15-empty'},'This topic has no saved lecture sections to map yet. Open the Library to import source-based material.'),
+          filtered.length>visible.length&&h('button',{className:'btn bsa15-show-more',type:'button',onClick:()=>setLimit(n=>n+9)},'Show '+Math.min(9,filtered.length-visible.length)+' more sections · '+(filtered.length-visible.length)+' remaining'),
+          h('p',{className:'bsa15-hint'},'Swipe or use the arrows to explore branches. Tap a node for its exact explanation. Lines show lecture membership, not invented causal claims.')),
+        h('aside',{className:'bsa15-detail'+(showInfo?'':' is-closed')},
+          h('div',{className:'bsa15-detail-top'},h('span',null,'CONCEPT DETAILS'),h('button',{type:'button',className:'bsa15-icon-btn',onClick:()=>setShowInfo(v=>!v),'aria-label':showInfo?'Collapse detail panel':'Expand detail panel'},showInfo?'−':'+')),
+          showInfo&&selected&&h(React.Fragment,null,h('small',null,'SECTION '+(selected.index+1)+' · '+lecture?.title),h('h2',null,selected.title),h('p',{className:'bsa15-detail-excerpt'},bsa15Excerpt(selected.body,570)||'No source explanation in this section.'),
+            related.length>0&&h('div',{className:'bsa15-related'},h('strong',null,'Terms mentioned here'),related.map(t=>h('details',{key:t.t},h('summary',null,t.t),h('p',null,t.d)))),
+            h('div',{className:'bsa15-detail-actions'},h('button',{className:'btn primary',type:'button',onClick:()=>openSection(selected)},'Read exact section'),h('button',{className:'btn',type:'button',onClick:()=>go('ask',{focus:{kind:'lecture',id:lecture.id}})},'Ask Tutor')))))),
+      mode==='flow'&&h('div',{className:'bsa15-mode-content'},
+        h('div',{className:'bsa15-mode-description'},h('span',{className:'bsa15-kicker'},process.verified?'PROCESS FOUND IN SOURCE':'LECTURE LEARNING PATH'),h('h2',null,process.verified?'Source-based process flow':'Follow the lesson structure'),h('p',null,process.verified?'These steps come from a numbered sequence in your saved lecture.':'This is the sequence of sections as saved in your lecture. It does not claim a causal process.')),
+        process.steps.length?h('div',{className:'bsa15-process-track'},process.steps.map((step,i)=>h('button',{className:'bsa15-process-step',type:'button',key:i,onClick:()=>{const hit=process.verified?process.section:sections[i];if(hit)openSection(hit)}},h('span',null,String(i+1).padStart(2,'0')),h('strong',null,step),h('small',null,'View source ↗')))):
+          h('p',{className:'bsa15-empty'},'Import a lecture with a process or numbered steps to build this view.')),
+      mode==='compare'&&h('div',{className:'bsa15-mode-content'},
+        h('div',{className:'bsa15-mode-description'},h('span',{className:'bsa15-kicker'},'SOURCE-GROUNDED CONTRAST'),h('h2',null,'Compare concepts'),h('p',null,'Choose concepts from the same lecture. Only saved definitions and source tables are displayed—differences are not invented.')),
+        compareOptions.length>=2?h('div',{className:'bsa15-compare-grid'},[[first,left,setLeft,'A'],[second,right,setRight,'B']].map(([value,n,fn,letter])=>h('article',{className:'bsa15-compare-card',key:letter},h('span',{className:'bsa15-compare-letter'},letter),h('label',null,'Compare',h('select',{value:n,onChange:e=>fn(Number(e.target.value))},compareOptions.map(x=>h('option',{key:x.id,value:x.id},x.label)))),h('h3',null,value?.label),h('div',{className:'bsa15-compare-definition'},h(PsMd,{text:value?.detail||''})),value?.type==='section'&&h('button',{className:'btn',onClick:()=>openSection(sections[value.id])},'Read section')))):
+          h('p',{className:'bsa15-empty'},'Add at least two key terms or lecture sections to compare.'),
+        table&&h('div',{className:'bsa15-table-wrap'},h('div',{className:'bsa15-source-table-header'},h('strong',null,'Comparison table in source'),h('button',{className:'btn',onClick:()=>openSection(table.section)},'Open source section')),h('div',{className:'bsa15-table-scroll'},h('table',null,h('thead',null,h('tr',null,table.headers.map((x,i)=>h('th',{key:i,scope:'col'},x)))),h('tbody',null,table.rows.map((row,i)=>h('tr',{key:i},row.map((cell,j)=>h('td',{key:j},cell))))))))),
+      mode==='timeline'&&h('div',{className:'bsa15-mode-content'},h('div',{className:'bsa15-mode-description'},h('span',{className:'bsa15-kicker'},'DATES FROM YOUR LECTURE'),h('h2',null,'Timeline'),h('p',null,'Chronological events are extracted only when your source contains recognizable years.')),
+        timeline.length?h('ol',{className:'bsa15-timeline'},timeline.slice(0,60).map((ev,i)=>h('li',{key:i},h('span',{className:'bsa15-time-year'},ev.label||ev.year),h('div',null,h('p',null,ev.text),h('button',{className:'btn ghost',onClick:()=>openSection(ev.section)},'Read original passage'))))):h('p',{className:'bsa15-empty'},'This lecture has no explicit dated events. Try Mind map or Flow / process instead.')),
+      mode==='steps'&&h('div',{className:'bsa15-mode-content'},h('div',{className:'bsa15-mode-description'},h('span',{className:'bsa15-kicker'},'WORK THROUGH A SAVED SOLUTION'),h('h2',null,'Interactive solution stepper'),h('p',null,'Attempt the problem before revealing its explanation. Each revealed step comes from the original saved solution; no new answer or grade is generated.')),
+        problems.length?h(React.Fragment,null,
+          h('label',{className:'bsa15-problem-picker'},'Choose a problem',h('select',{value:activeProblem?.p.id||'',onChange:e=>{setProblemKey(e.target.value);setRevealed(0);setFinalShown(false);setDraft('')}},problems.map(({set,p})=>h('option',{key:p.id,value:p.id},set.title+' · '+(p.title||'Problem '+p.no))))),
+          h('article',{className:'bsa15-problem-card'},h('span',{className:'bsa15-kicker'},activeProblem?.set.title),h('h3',null,activeProblem?.p.title||'Problem'),h(PsMd,{text:activeProblem?.p.problem||''}),
+            h('label',{className:'bsa15-work-input'},'Try your answer / working (not saved)',h('textarea',{rows:3,value:draft,onChange:e=>setDraft(e.target.value),placeholder:'Write your attempt before revealing the steps…'})),
+            activeProblem?.p.approach&&h('details',{className:'bsa15-hint-box'},h('summary',null,'Need a hint? Reveal the saved approach'),h(PsMd,{text:activeProblem.p.approach}))),
+          steps.length?h('div',{className:'bsa15-steps-container'},h('div',{className:'bsa15-step-progress'},h('strong',null,`${revealed} of ${steps.length} solution blocks revealed`),h('div',{className:'bsa15-step-meter'},h('span',{style:{width:(revealed/steps.length*100)+'%'}}))),
+            steps.slice(0,revealed).map((part,i)=>h('article',{className:'bsa15-revealed-step',key:i},h('span',null,'STEP '+(i+1)),h(PsMd,{text:part}))),
+            revealed<steps.length?h('button',{className:'btn primary',type:'button',onClick:()=>setRevealed(v=>Math.min(v+1,steps.length))},revealed?'Reveal next step':'Reveal first step'):
+              h('span',{className:'bsa15-finished'},'All source solution blocks revealed'),
+            revealed>0&&h('button',{className:'btn ghost',type:'button',onClick:()=>{setRevealed(0);setFinalShown(false)}},'Hide steps & retry')):
+            h('p',{className:'bsa15-empty'},'This saved problem has no worked solution. Open its original set to add or review one.'),
+          h('div',{className:'bsa15-final-answer'},h('button',{className:'btn',type:'button',onClick:()=>setFinalShown(v=>!v)},finalShown?'Hide saved answer':'Reveal saved answer'),finalShown&&h(PsMd,{text:activeProblem?.p.answer||'No answer saved.'})),
+          h('button',{className:'btn ghost',type:'button',onClick:()=>go('psets',{open:activeProblem.set.id})},'Open original problem set ↗')):
+          h('p',{className:'bsa15-empty'},'This topic has no saved problem sets. Import a worked problem to use the stepper.')),
+      h('footer',{className:'bsa15-footer'},h('p',null,'Built from saved material only. A map branch means a lecture section belongs to its topic; a timeline date was explicitly present in the source. This visualization does not certify academic accuracy.'),actionButtons));
+  }
+  function BSA192KnowledgeMap(props){return h(BSA15VisualStudio,props)}
+
 
   /* Dashboard V2 Home. v185-v189 preferences and practice records live outside
      the core academic schema; nothing here grants XP or changes quiz results. */
@@ -13989,7 +14234,7 @@ Be careful: navigation labels can vary by viewport. Never claim that code passin
             h('span',{className:'v2-recent-arrow','aria-hidden':true},'↗')))):
             h('div',{className:'v2-empty-recent'},'Your recent lectures and study tools will appear here as you open them.'))),
       layoutVisible('tools')&&h('div',{className:'v2-tools-section',style:{order:layoutOrder('tools')}},h('div',{className:'v2-section-header'},h('div',null,h('span',{className:'v2-eyebrow'},'EXPLORE'),h('h2',null,'Choose your study mode')),h('span',{className:'v2-muted'},`${mcqCount} MCQs · ${problemCount} written problems · ${cards.length} cards`)),
-      h('div',{className:'v2-tool-grid'},[...tools,['accounting-lab','Accounting Lab','Journal entries & T-accounts','pset'],['calendar','Study Schedule','Weekly and monthly plans','calendar'],['knowledge','Knowledge Map','Connect saved materials','roadmap']].map(([tab,title,description,ic])=>h('button',{type:'button',key:tab,className:'v2-tool-tile',onClick:()=>go(tab)},
+      h('div',{className:'v2-tool-grid'},[...tools,['accounting-lab','Accounting Lab','Journal entries & T-accounts','pset'],['calendar','Study Schedule','Weekly and monthly plans','calendar'],['knowledge','Visual Studio','Interactive source-linked visuals','network']].map(([tab,title,description,ic])=>h('button',{type:'button',key:tab,className:'v2-tool-tile',onClick:()=>go(tab)},
         h('span',{className:'v2-tool-icon'},h(Icon,{name:ic,size:22})),h('strong',null,title),h('span',{className:'v2-tool-description'},description),h('span',{className:'v2-tool-arrow','aria-hidden':true},'↗'))))),
       layoutVisible('buddy')&&h('div',{className:'bsa189-wrap',style:{order:layoutOrder('buddy')}},h(BSA189Companion,{go})),
       h('div',{className:'v2-more-wrap',style:{order:99}},h('button',{type:'button',className:'v2-details-toggle',onClick:()=>setDetails(v=>!v),'aria-expanded':details},
@@ -14506,7 +14751,8 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
               h('button',{className:'btn',onClick:()=>onBrowse(topic.title)},'Open topic materials'),
               h('button',{className:'btn',onClick:()=>go('lectures',{topic:topic.id})},'Lectures'),
               h('button',{className:'btn',onClick:()=>go('vault',{topic:topic.id})},'Flashcards'),
-              h('button',{className:'btn',onClick:()=>go('mistakes',{topic:topic.id})},'Mistakes & corrections'))))),
+              h('button',{className:'btn',onClick:()=>go('mistakes',{topic:topic.id})},'Mistakes & corrections'),
+              h('button',{className:'btn',onClick:()=>go('knowledge',{topicId:topic.id})},'Visualize this topic'))))),
         h('p',{className:'muted small bsa49-note'},'You can return to Smart Flow any time. It reads the latest saved records; it does not create duplicate copies of your notes or scores.'),
         bsa49UnmatchedLabels(subject).length>0&&h(BSA49TopicLinks,{subject,update})):
         h('div',{className:'bsa49-empty'},h('strong',null,'This subject has no roadmap topics yet.'),h('p',{className:'muted small'},'Import a Topic Pack to create its first topic and source-based material.'),h('button',{className:'btn primary',onClick:()=>onImport('')},'Import a Topic Pack')));
@@ -15633,7 +15879,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     const next=blocks.find(b=>!b.effectiveDone)||null;
     return {session,blocks,done,verified,next,total:blocks.length,percent:blocks.length?Math.round(done/blocks.length*100):0};
   }
-  const BSA33_ROUTE_NAMES={home:'Today',study:'Study plan',practice:'Practice',library:'Study Library',mcq:'MCQ quiz',psets:'Written problems',lectures:'Lectures',vault:'Flashcards',mistakes:'Mistake review','accounting-lab':'Accounting Lab','accounting-cycle':'Accounting Cycle',ask:'AI Tutor',insights:'Learning insights',week:'Weekly planner',roadmap:'Roadmap',knowledge:'Knowledge map'};
+  const BSA33_ROUTE_NAMES={home:'Today',study:'Study plan',practice:'Practice',library:'Study Library',mcq:'MCQ quiz',psets:'Written problems',lectures:'Lectures',vault:'Flashcards',mistakes:'Mistake review','accounting-lab':'Accounting Lab','accounting-cycle':'Accounting Cycle',ask:'AI Tutor',insights:'Learning insights',week:'Weekly planner',roadmap:'Roadmap',knowledge:'Visual Studio'};
   function bsa33RouteName(tab){return BSA33_ROUTE_NAMES[tab]||String(tab||'Study tool').replace(/-/g,' ').replace(/\b\w/g,s=>s.toUpperCase())}
   function BSA31StudyPath({tab,opts,go,subject}){
     const step=(['study','lectures','ask','library','rules'].includes(tab))?1:
@@ -16095,37 +16341,30 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
   /* V1.3: Custom course identity is presentation metadata only. */
   const BSA13_ICON_GROUPS = [["Popular", [["graduate", "Graduation"], ["bookopen", "Open book"], ["library", "Library"], ["brain", "Brain"], ["lightbulb", "Idea"], ["target", "Target"], ["calculator", "Calculator"], ["globe", "World"], ["chart", "Charts"], ["rocket", "Rocket"]]], ["Finance & business", [["trending", "Markets"], ["candlestick", "Candlesticks"], ["coins", "Coins"], ["wallet", "Wallet"], ["bank", "Bank"], ["landmark", "Economics"], ["pie", "Pie chart"], ["briefcase", "Business"], ["store", "Commerce"], ["factory", "Industry"]]], ["Science & math", [["sigma", "Sigma"], ["atom", "Atom"], ["flask", "Chemistry"], ["dna", "DNA"], ["microscope", "Microscope"], ["leaf", "Biology"], ["telescope", "Astronomy"], ["puzzle", "Problem solving"], ["waves", "Physics"], ["compass", "Geometry"]]], ["Humanities", [["scroll", "History"], ["scale", "Ethics"], ["gavel", "Law"], ["languages", "Languages"], ["pen", "Writing"], ["bookclosed", "Textbook"], ["bookmark", "Reading"], ["flag", "Civics"], ["users", "People"], ["building", "Society"]]], ["Tech & creative", [["laptop", "Technology"], ["code", "Programming"], ["terminal", "Terminal"], ["gears", "Engineering"], ["network", "Networks"], ["palette", "Art"], ["music", "Music"], ["camera", "Photography"], ["film", "Film"], ["sparkles", "Creative"]]], ["Other", [["heart", "Wellbeing"], ["pulse", "Health"], ["shield", "Safety"], ["clock", "Time"], ["calendar", "Calendar"], ["flame", "Motivation"], ["award", "Achievement"], ["coffee", "Lifestyle"], ["lecture", "Classroom"], ["cards", "Flashcards"]]]];
   const BSA13_ICON_IDS = new Set(BSA13_ICON_GROUPS.flatMap(group => group[1].map(item => item[0])));
-  const BSA13_ICON_COLORS = ["#7961D3", "#1598BB", "#138A62", "#D88B29", "#DA557C", "#3980D4", "#8576C4", "#7B9B3B", "#CE6846", "#C05CB0", "#55858B", "#777887"];
   function bsa13IconName(s) {
     const stored = String(s && s.subjectIcon || '');
     if (BSA13_ICON_IDS.has(stored)) return stored;
     const profile=bsa46ProfileId(s||{});
     return profile==='finance'?'trending':profile==='quantitative'?'calculator':profile==='humanities'?'bookopen':'graduate';
   }
-  function bsa13IconColor(s) {
-    const color=String(s && s.subjectColor || '');
-    return BSA13_ICON_COLORS.includes(color) ? color : 'var(--accent)';
-  }
-  function bsa13IconStyle(s) { return {'--course-icon-accent':bsa13IconColor(s)}; }
-  function BSA13IconPicker({icon,color,onChange}) {
+  // Subject icons inherit Appearance tokens. Legacy subjectColor fields remain in
+  // existing saved data for backward compatibility, but never control the UI.
+  function BSA13IconPicker({icon,onChange}) {
     const [section,setSection]=useState('Popular');
     const [search,setSearch]=useState('');
     const [expanded,setExpanded]=useState(false);
     const chosen=BSA13_ICON_IDS.has(icon)?icon:'graduate';
     const group=BSA13_ICON_GROUPS.find(x=>x[0]===section)||BSA13_ICON_GROUPS[0];
     const results=search.trim() ? BSA13_ICON_GROUPS.flatMap(x=>x[1]).filter(([id,label])=>(id+' '+label).toLowerCase().includes(search.trim().toLowerCase())) : group[1];
-    const currentColor=BSA13_ICON_COLORS.includes(color)?color:'#7961D3';
     return h('div',{className:'bsa13-customizer', 'data-testid':'subject-icon-picker'},
       h('div',{className:'bsa13-customizer-head'},
-        h('span',{className:'bsa13-custom-preview',style:{'--course-icon-accent':currentColor}},h(Icon,{name:chosen,size:26})),
-        h('div',null,h('strong',null,'Course icon & color'),h('small',null,'Unique to this subject · does not change your dashboard theme')),
+        h('span',{className:'bsa13-custom-preview'},h(Icon,{name:chosen,size:26})),
+        h('div',null,h('strong',null,'Course icon'),h('small',null,'The icon automatically follows your selected Appearance theme')),
         h('button',{className:'bsa13-picker-toggle',type:'button','aria-expanded':expanded,onClick:()=>setExpanded(v=>!v)},expanded?'Done':'Choose icon',h(Icon,{name:expanded?'close':'edit',size:15}))),
       expanded&&h('div',{className:'bsa13-picker-body'},
         h('label',{className:'bsa13-picker-search'},h(Icon,{name:'search',size:17}),h('input',{type:'search',value:search,onChange:e=>setSearch(e.target.value),placeholder:'Search 60 icons…','aria-label':'Search course icons'})),
         h('div',{className:'bsa13-picker-categories',role:'group','aria-label':'Icon categories'},BSA13_ICON_GROUPS.map(([g])=>h('button',{type:'button',key:g,'aria-pressed':section===g,className:section===g?'on':'',onClick:()=>{setSection(g);setSearch('')}},g))),
-        h('div',{className:'bsa13-icon-grid',role:'group','aria-label':'Choose course icon'},results.length?results.map(([id,label])=>h('button',{type:'button',key:id,title:label,'aria-label':label,'aria-pressed':chosen===id,className:chosen===id?'selected':'',onClick:()=>onChange({icon:id,color:currentColor})},h(Icon,{name:id,size:22}),h('span',null,label))):h('p',{className:'muted small'},'No icons match that search.')),
-        h('span',{className:'bsa13-color-label'},'Course icon color'),
-        h('div',{className:'bsa13-colors',role:'group','aria-label':'Course icon color'},BSA13_ICON_COLORS.map(c=>h('button',{key:c,type:'button',style:{'--swatch':c},'aria-label':'Color '+c,'aria-pressed':currentColor===c,className:currentColor===c?'selected':'',onClick:()=>onChange({icon:chosen,color:c})},h('span',null))))));
+        h('div',{className:'bsa13-icon-grid',role:'group','aria-label':'Choose course icon'},results.length?results.map(([id,label])=>h('button',{type:'button',key:id,title:label,'aria-label':label,'aria-pressed':chosen===id,className:chosen===id?'selected':'',onClick:()=>onChange({icon:id})},h(Icon,{name:id,size:22}),h('span',null,label))):h('p',{className:'muted small'},'No icons match that search.'))));
   }
   function bsa13MaterialCounts(subject) {
     const keys=['cards','mistakes','quizzes','sessions','days','lectures','psets','mcqSets','classes','attend','tasks','aiAttempts','learningEvents','labAttempts','todayChecks','tutorMemories','studyInbox','driveSources','libraryFlags','cycleRuns','cycleCases','practiceSessions','problemWork','fsReports','fsAttempts','rules','ruleCollections'];
@@ -16173,7 +16412,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     matches.forEach(x=>{const term=x.curriculumTerm||'My subjects';if(!groups.has(term))groups.set(term,[]);groups.get(term).push(x)});
     return h('div',{ref:anchor,className:'bsa11-subject-wrap'},
       h('button',{id,type:'button',className:'bsa11-subject-trigger',title:'Switch current subject','aria-haspopup':'dialog','aria-expanded':open,'aria-label':'Switch subject · '+labelOf(active||{}),onClick:()=>{if(onOpen)onOpen();setQuery('');setOpen(v=>!v)}},
-        h('span',{className:'bsa11-course-glyph','aria-hidden':'true',style:bsa13IconStyle(active)},h(Icon,{name:bsa13IconName(active),size:16})),
+        h('span',{className:'bsa11-course-glyph','aria-hidden':'true'},h(Icon,{name:bsa13IconName(active),size:16})),
         h('span',{className:'bsa11-subject-text'},
           h('small',null,active?.code||'MY COURSE'),
           h('strong',null,active?.name||'Choose subject')),
@@ -16187,7 +16426,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
             [...groups].map(([name,items])=>h('div',{className:'bsa11-subject-group',key:name},
               h('span',{className:'bsa11-group-label'},name),
               items.map(item=>h('button',{type:'button',key:item.id,className:'bsa11-subject-choice'+(item.id===activeId?' is-active':''),onClick:()=>{setOpen(false);onSwitch(item.id)},'aria-current':item.id===activeId?'true':undefined},
-                h('span',{className:'bsa11-choice-monogram','aria-hidden':'true',style:bsa13IconStyle(item)},h(Icon,{name:bsa13IconName(item),size:18})),
+                h('span',{className:'bsa11-choice-monogram','aria-hidden':'true'},h(Icon,{name:bsa13IconName(item),size:18})),
                 h('span',{className:'bsa11-choice-copy'},h('strong',null,item.name),h('small',null,item.code||'Custom subject')),
                 item.id===activeId&&h('span',{className:'bsa11-choice-check','aria-label':'Currently selected'},'✓'))))),
             !matches.length&&h('p',{className:'bsa11-no-results'},'No matching subject. You can add one below.')),
@@ -16208,7 +16447,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     const [removing,setRemoving]=useState(null);
     const [deletePhrase,setDeletePhrase]=useState('');
     const [deleteApproved,setDeleteApproved]=useState(false);
-    const [draft,setDraft]=useState({year:'',sem:'',status:'current',icon:'graduate',color:'#7961D3'});
+    const [draft,setDraft]=useState({year:'',sem:'',status:'current',icon:'graduate'});
     const parseTerm = (s) => {
       const raw=String(s.curriculumTerm||'');
       const year=String(s.academicYear|| (raw.match(/(?:year|yr)\s*([1-9])/i)||[])[1]||'');
@@ -16234,9 +16473,9 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     const groups=new Map();
     filtered.forEach(s=>{const k=labelOf(s);if(!groups.has(k))groups.set(k,[]);groups.get(k).push(s)});
     const updateCourse=(id,patch)=>update(null,d=>{const s=d.subjects.find(x=>x.id===id);if(s)Object.assign(s,patch,{_u:Date.now()})});
-    const startEdit=s=>{const p=parseTerm(s);setEditing(s.id);setRemoving(null);setDeletePhrase('');setDraft({year:p.year,sem:p.sem,status:s.courseStatus||'current',icon:bsa13IconName(s),color:BSA13_ICON_COLORS.includes(s.subjectColor)?s.subjectColor:'#7961D3',original:s.curriculumTerm||'',touchedTerm:false});};
+    const startEdit=s=>{const p=parseTerm(s);setEditing(s.id);setRemoving(null);setDeletePhrase('');setDraft({year:p.year,sem:p.sem,status:s.courseStatus||'current',icon:bsa13IconName(s),original:s.curriculumTerm||'',touchedTerm:false});};
     const saveEdit=s=>{const term=!draft.touchedTerm?draft.original:(draft.year?(draft.sem?'Year '+draft.year+' · '+(draft.sem==='summer'?'Summer':'Semester '+draft.sem):'Year '+draft.year):'');
-      updateCourse(s.id,{academicYear:draft.year,semester:draft.sem,curriculumTerm:term,courseStatus:draft.status,subjectIcon:draft.icon,subjectColor:draft.color});setEditing(null);
+      updateCourse(s.id,{academicYear:draft.year,semester:draft.sem,curriculumTerm:term,courseStatus:draft.status,subjectIcon:draft.icon});setEditing(null);
       toast('Subject organization saved. Its study materials were not changed.');};
     const toggleLayout=v=>{setLayout(v);try{localStorage.setItem('bsa12_subject_layout',v)}catch(_){}};
     const removeCourse=s=>{
@@ -16265,7 +16504,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       const isRemoving=removing===s.id;
       return h('article',{key:s.id,className:'bsa12-subject-card'+(active?' is-current':'')},
         h('div',{className:'bsa12-course-heading'},
-          h('span',{className:'bsa12-subject-icon','aria-hidden':'true',style:bsa13IconStyle(s)},h(Icon,{name:bsa13IconName(s),size:22})),
+          h('span',{className:'bsa12-subject-icon','aria-hidden':'true'},h(Icon,{name:bsa13IconName(s),size:22})),
           h('div',{className:'bsa12-course-title'},h('strong',null,s.name||'Unnamed subject'),h('small',null,s.code||'No course code')),
           active&&h('span',{className:'bsa12-current-indicator'},h(Icon,{name:'check',size:13}),'Active')),
         h('p',{className:'bsa12-course-meta'},h('span',null,labelOf(s)),h('span',null,count+' topics'),h('span',null,(s.lectures||[]).length+' lectures')),
@@ -16273,7 +16512,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
           h('label',null,'Academic year',h('select',{value:draft.year,onChange:e=>setDraft(d=>({...d,year:e.target.value,touchedTerm:true}))},[['','Unassigned'],...['1','2','3','4','5'].map(n=>[n,'Year '+n])].map(([v,l])=>h('option',{value:v,key:v},l)))),
           h('label',null,'Semester / term',h('select',{value:draft.sem,onChange:e=>setDraft(d=>({...d,sem:e.target.value,touchedTerm:true}))},[['','Unassigned'],['1','Semester 1'],['2','Semester 2'],['3','Semester 3'],['summer','Summer / midyear']].map(([v,l])=>h('option',{value:v,key:v},l)))),
           h('label',null,'Course status',h('select',{value:draft.status,onChange:e=>setDraft(d=>({...d,status:e.target.value}))},[['current','Currently taking'],['planned','Planned'],['completed','Completed'],['on-hold','On hold'],['archived','Archived (not deleted)']].map(([v,l])=>h('option',{value:v,key:v},l)))),
-          h(BSA13IconPicker,{icon:draft.icon,color:draft.color,onChange:v=>setDraft(d=>({...d,icon:v.icon,color:v.color}))}),
+          h(BSA13IconPicker,{icon:draft.icon,onChange:v=>setDraft(d=>({...d,icon:v.icon}))}),
           subjects.length>1&&h('div',{className:'bsa13-danger-entry'},h('button',{type:'button',className:'bsa13-remove-trigger',onClick:()=>{setRemoving(isRemoving?null:s.id);setDeletePhrase('');setDeleteApproved(false)}},h(Icon,{name:'archive',size:17}),isRemoving?'Cancel removal':'Remove this subject')),
           subjects.length>1&&isRemoving&&h('div',{className:'bsa13-remove-panel',role:'group','aria-label':'Remove subject '+s.name},
             h('strong',null,records.count?'This subject contains saved study data':'Remove an accidentally added subject'),
@@ -16624,7 +16863,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       
       ["accounting-lab", "Accounting Lab", "pset"],
       ["calendar", "Study Schedule", "calendar"],
-      ["knowledge", "Knowledge Map", "roadmap"],
+      ["knowledge", "Visual Studio", "network"],
       ["safety", "Device & Data Safety", "data"],
       ["guide", "Start here · walkthrough", "book"],
       ["break", "Break Corner", "home"],
@@ -16727,7 +16966,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       // cannot be reliably fixed with a CSS-only hide (old cached styles).
       !['home','study','practice','library','insights','lectures','psets','mcq','vault','ask','rules','fs-lab','workspace','accounting-lab','accounting-cycle','subjects'].includes(nav.tab)
         && h(BSA43ThemeNavigation,{theme:data.settings.presentationTheme||"studio",tab:nav.tab,opts:nav.opts,go,subject}),
-      nav.tab === "subjects" && h(BSA12Subjects,{data,update,activeId:data.activeId,onOpen:id=>{setData(d=>({...d,activeId:id}));go('home')},onManage:()=>setModal('subjects'),toast,onRemoved:()=>{setNav(n=>({...n,tab:'subjects',key:n.key+1}))}}), nav.tab === "guide" && h(BSA3StartGuide,{go,subject}), nav.tab === "break" && h(BreakCorner), nav.tab === "joy" && h(JoyHub,{go}), nav.tab === "life" && h(StudyLife,{go}), nav.tab === "achievements" && h(AcademicProgress,{go}), nav.tab === "stats-clean" && h(StudyReport,{data,update,toast,go}), nav.tab === "private-vault" && !window.__BSA_SHARED_MODE__ && h(PrivateVault,{toast}), nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data,initialTool:nav.opts?.tool})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), nav.tab === "home" && h(BSA3Today, { ...viewProps }), nav.tab === "study" && h(BSA205Study,{...viewProps}), nav.tab === "library" && h(BSA205Library,{...viewProps}), nav.tab === "insights" && h(BSA205Mastery,{...viewProps}), nav.tab === "accounting-cycle" && h(BSA205Cycle,{...viewProps}), nav.tab === "fs-lab" && h(BSA43FinancialStatements,{...viewProps}), nav.tab === "accounting-lab" && h(BSA187AccountingLab,{subject,update,toast,go,init:nav.opts}), nav.tab === "week" && h(BSA344Schedule,{subject,update,go,openEditor,toast,init:nav.opts,initialMode:"week"}), nav.tab === "knowledge" && h(BSA192KnowledgeMap,{subject,go}), nav.tab === "safety" && h(BSA193DeviceSafety,{data,go,toast}), nav.tab === "practice" && h(React.Fragment,null,h(BSA3Practice,{ ...viewProps, data }),bsa46ToolVisible(subject,'fs-lab')&&h('div',{className:'bsa42-fs-shortcut'},h('div',null,h('strong',null,'Financial Statement Lab'),h('p',null,'Import report JSON, inspect audited disclosures, and practice any accounting standard.')),h('button',{className:'btn',onClick:()=>go('fs-lab')},'Open Financial Statements ↗'))), nav.tab === "mcq" && h(MCQPage,{...viewProps}), nav.tab === "rules" && h(RulesLibrary,{...viewProps}), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(BSA344Schedule,{subject,update,go,openEditor,toast,init:nav.opts,initialMode:"month"}), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "workspace" && h(BSA181Workspace, { ...viewProps, initialTab:nav.opts?.tab, undoAvailable:!!undo, onGlobalUndo:doUndo }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(BSA43ProblemSets, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps, key:subject.id }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })))),
+      nav.tab === "subjects" && h(BSA12Subjects,{data,update,activeId:data.activeId,onOpen:id=>{setData(d=>({...d,activeId:id}));go('home')},onManage:()=>setModal('subjects'),toast,onRemoved:()=>{setNav(n=>({...n,tab:'subjects',key:n.key+1}))}}), nav.tab === "guide" && h(BSA3StartGuide,{go,subject}), nav.tab === "break" && h(BreakCorner), nav.tab === "joy" && h(JoyHub,{go}), nav.tab === "life" && h(StudyLife,{go}), nav.tab === "achievements" && h(AcademicProgress,{go}), nav.tab === "stats-clean" && h(StudyReport,{data,update,toast,go}), nav.tab === "private-vault" && !window.__BSA_SHARED_MODE__ && h(PrivateVault,{toast}), nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data,initialTool:nav.opts?.tool})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), nav.tab === "home" && h(BSA3Today, { ...viewProps }), nav.tab === "study" && h(BSA205Study,{...viewProps}), nav.tab === "library" && h(BSA205Library,{...viewProps}), nav.tab === "insights" && h(BSA205Mastery,{...viewProps}), nav.tab === "accounting-cycle" && h(BSA205Cycle,{...viewProps}), nav.tab === "fs-lab" && h(BSA43FinancialStatements,{...viewProps}), nav.tab === "accounting-lab" && h(BSA187AccountingLab,{subject,update,toast,go,init:nav.opts}), nav.tab === "week" && h(BSA344Schedule,{subject,update,go,openEditor,toast,init:nav.opts,initialMode:"week"}), nav.tab === "knowledge" && h(BSA192KnowledgeMap,{subject,go,init:nav.opts}), nav.tab === "safety" && h(BSA193DeviceSafety,{data,go,toast}), nav.tab === "practice" && h(React.Fragment,null,h(BSA3Practice,{ ...viewProps, data }),bsa46ToolVisible(subject,'fs-lab')&&h('div',{className:'bsa42-fs-shortcut'},h('div',null,h('strong',null,'Financial Statement Lab'),h('p',null,'Import report JSON, inspect audited disclosures, and practice any accounting standard.')),h('button',{className:'btn',onClick:()=>go('fs-lab')},'Open Financial Statements ↗'))), nav.tab === "mcq" && h(MCQPage,{...viewProps}), nav.tab === "rules" && h(RulesLibrary,{...viewProps}), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(BSA344Schedule,{subject,update,go,openEditor,toast,init:nav.opts,initialMode:"month"}), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "workspace" && h(BSA181Workspace, { ...viewProps, initialTab:nav.opts?.tab, undoAvailable:!!undo, onGlobalUndo:doUndo }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(BSA43ProblemSets, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps, key:subject.id }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })))),
       h(BSA181HighlightTool,{subject,tab:nav.tab,go,toast}),
       spotlightOpen && h(BSA181Spotlight,{data,go,onSwitch:(id,tab,opts)=>{setData(d=>({...d,activeId:id}));go(tab,opts)},onClose:()=>setSpotlightOpen(false)}),
       /* @__PURE__ */ h("nav",{className:"bottom-nav v2-bottom-nav","aria-label":"Mobile navigation",onTouchStart:touchNavStart,onTouchEnd:touchNavEnd},
