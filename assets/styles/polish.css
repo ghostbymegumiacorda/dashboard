@@ -1624,3 +1624,418 @@ html[data-desk-theme="blueprint"] .content :is(.btn,button,input,textarea,select
 /* Respect dragged floating timer coordinates instead of forcing it back to
    bottom after a user moves it. */
 @media(max-width:899px){.focus-bar.bsa190-focus[style*="top:"]{bottom:auto!important;transform:none!important}}
+
+/* =======================================================================
+   V4.3 consolidated visual and usability patch — form, not color only.
+   Themes replace the navigation presentation and composition. Appearance
+   remains solely the color palette. All styles are scoped to theme IDs.
+   ======================================================================= */
+:where(.shell,.content,.view,.panel,.bsa43-fs-work,.bsa43-fs-columns,.bsa43-ps-index){min-width:0}
+.content :is(h1,h2,h3,p,small,strong,label,button,li,span){overflow-wrap:break-word}
+.content :is(button,select,input,textarea){max-width:100%;min-width:0;font-family:inherit}
+.content :is(.panel,.view,.ps-set,.bsa3-library-browser,.bsa43-fs-work){box-sizing:border-box}
+.content :is(.page-head,.lx-head,.bsa205-card-head,.ps-tools,.bsa43-ps-heading){min-width:0}
+.content :is(.btn,button){touch-action:manipulation}
+.content :is(table){font-variant-numeric:tabular-nums}
+/* Fix the glyph baseline and controls that broke into odd rows at iPad width. */
+.rail-nav .nav-group-links button{display:flex!important;align-items:center!important;justify-content:flex-start!important;min-width:0!important;gap:10px!important;text-align:left!important;line-height:1.35!important}
+.rail-nav .nav-group-links button>.ico,.nav-group-links button>svg{display:block!important;flex:0 0 18px!important;width:18px!important;height:18px!important;align-self:center!important;vertical-align:middle!important}
+.rail-nav .nav-group-links button>span:not(.n){min-width:0!important;flex:1 1 auto!important}
+.rail-nav .nav-group-links button .n{flex:0 0 auto!important;line-height:1.5!important}
+.rail-nav .nav-group-heading{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important}
+.rail-nav .nav-chevron{flex:0 0 auto!important}
+.workspace-topbar{min-width:0!important;display:flex!important;align-items:center!important;justify-content:space-between!important}
+.workspace-context{min-width:0!important;display:flex!important;align-items:center!important;flex-wrap:wrap!important;gap:5px 10px!important}
+.workspace-context strong,.workspace-subject{overflow-wrap:anywhere}
+.bsa-shortcut-menu{position:absolute!important;inset:auto auto auto 0!important;top:calc(100% + 7px)!important;width:230px!important;max-height:min(53dvh,430px)!important;overflow:auto!important;box-shadow:0 18px 40px #0002!important;border:1px solid var(--line)!important;border-radius:16px!important}
+.bsa-shortcut-menu button{width:100%;text-align:left;display:flex!important;align-items:center!important;gap:10px!important;white-space:normal!important}
+/* New first-class Problem Sets screen; never let a broken imported item
+   consume a whole route without a visible path back to its source. */
+.bsa43-ps-index{display:grid;gap:20px;align-content:start;max-width:1320px;margin:0 auto;padding-bottom:36px}
+.bsa43-ps-heading{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;padding:12px 4px}
+.bsa43-ps-heading h1{font:800 clamp(2rem,3.5vw,3rem)/1.1 var(--display,inherit);margin:8px 0;letter-spacing:-.05em;color:var(--text)}
+.bsa43-ps-heading p{max-width:64ch;margin:0;line-height:1.55}
+.bsa43-ps-count{display:grid;justify-items:end;gap:2px;flex:0 0 auto;padding:12px 17px;background:var(--accent-soft);border-radius:16px;color:var(--text)}
+.bsa43-ps-count strong{font-size:clamp(1.6rem,2.3vw,2rem);line-height:1;color:var(--accent)}
+.bsa43-ps-count span{font-size:.76rem;color:var(--muted)}
+.bsa43-ps-toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:end;padding:14px 18px;border:1px solid var(--line);border-radius:16px;background:var(--surface)}
+.bsa43-ps-toolbar label{display:grid;gap:7px;font-weight:700;font-size:.77rem;flex:1 1 165px;min-width:0}
+.bsa43-ps-toolbar label:first-child{flex:3 1 300px}
+.bsa43-ps-toolbar input,.bsa43-ps-toolbar select{min-height:41px;padding:9px 12px;border:1px solid var(--line);border-radius:11px;background:var(--surface-2);color:var(--text);font:inherit}
+.bsa43-ps-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,315px),1fr));gap:15px;align-items:stretch}
+.bsa43-ps-card{display:flex;flex-direction:column;gap:12px;min-width:0;min-height:198px;padding:22px;border:1px solid var(--line);border-radius:21px;background:var(--surface);box-shadow:0 6px 18px #0000000b}
+.bsa43-ps-card-top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:7px;color:var(--muted);font-weight:750;font-size:.68rem;letter-spacing:.06em;text-transform:uppercase}
+.bsa43-ps-card h2{font-size:clamp(1.1rem,1.8vw,1.4rem);line-height:1.2;letter-spacing:-.025em;margin:4px 0 0;color:var(--text)}
+.bsa43-ps-card>p{margin:0;line-height:1.5}
+.bsa43-ps-progress{display:flex;gap:10px;flex-wrap:wrap;font-size:.73rem;color:var(--muted);margin-top:auto}
+.bsa43-ps-card>.btn{align-self:flex-start;min-height:40px;padding-inline:15px}
+.bsa43-ps-card:hover{border-color:color-mix(in srgb,var(--accent) 40%,var(--line))}
+/* Financial Statements: responsive, document-oriented workspace. */
+.bsa43-fs-lab{max-width:1330px;width:100%;margin:0 auto;display:grid;gap:18px;padding-bottom:54px}
+.bsa43-fs-header{display:flex;align-items:end;justify-content:space-between;gap:16px;padding:12px 4px}
+.bsa43-fs-header h1{margin:8px 0;font:800 clamp(2rem,3.2vw,2.75rem)/1.12 var(--display,inherit);letter-spacing:-.045em}
+.bsa43-fs-header p{max-width:65ch;margin:0;line-height:1.55}
+.bsa43-fs-count{white-space:nowrap;flex:0 0 auto;color:var(--accent);font-weight:800;background:var(--accent-soft);border-radius:100px;padding:9px 14px}
+.bsa43-fs-tabs{display:flex;gap:6px;overflow-x:auto;overscroll-behavior-x:contain;max-width:100%;padding:6px;border-radius:14px;border:1px solid var(--line);background:var(--surface)}
+.bsa43-fs-tabs button{flex:1 0 auto;min-height:39px;border:0;border-radius:10px;padding:8px 12px;background:transparent;color:var(--muted);font-weight:750;cursor:pointer}
+.bsa43-fs-tabs button[aria-current],.bsa43-fs-tabs button.active,.bsa43-fs-tabs button[aria-selected=true]{background:var(--accent-soft);color:var(--accent)}
+.bsa43-fs-columns{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(270px,.85fr);gap:16px;align-items:start}
+.bsa43-fs-columns>.panel,.bsa43-fs-work>.panel{min-width:0;max-width:100%;padding:clamp(17px,2.5vw,27px);border-radius:18px;background:var(--surface);border:1px solid var(--line)}
+.bsa43-fs-columns :is(label){display:grid;min-width:0;gap:7px;line-height:1.4}
+.bsa43-fs-columns :is(input:not([type=checkbox]),textarea,select),.bsa43-fs-work select{box-sizing:border-box;width:100%;min-width:0;max-width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:11px;background:var(--surface-2);color:var(--text);font:inherit}
+.bsa43-fs-columns textarea{resize:vertical;line-height:1.55}
+.bsa43-fs-columns .btn{min-height:39px}
+.bsa43-fs-actions{display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin:8px 0}
+.bsa43-fs-error{color:var(--bad,#b33348);border:1px solid currentColor;padding:10px;border-radius:10px}
+.bsa43-fs-preview,.bsa43-fs-question,.bsa43-fs-model,.bsa43-fs-context{padding:15px;border:1px solid var(--line);border-radius:13px;background:var(--surface-2);min-width:0}
+.bsa43-fs-context{display:flex;gap:12px;flex-wrap:wrap;align-items:end}
+.bsa43-fs-context label{flex:1 1 240px}
+.bsa43-fs-statement{margin:16px 0;min-width:0}
+.bsa43-fs-table-wrap{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;border-radius:10px;border:1px solid var(--line)}
+.bsa43-fs-table-wrap table{width:100%;min-width:560px;border-collapse:collapse;font-size:.84rem}
+.bsa43-fs-table-wrap th,.bsa43-fs-table-wrap td{padding:11px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.bsa43-fs-table-wrap td:not(:first-child){font-variant-numeric:tabular-nums}
+.bsa43-fs-lab :is(h2,h3){line-height:1.25}
+.bsa43-fs-check{display:flex!important;flex-direction:row;align-items:flex-start;gap:10px;min-width:0}
+.bsa43-fs-check input{flex:0 0 auto;margin-top:3px}
+.bsa43-standard-chip{display:inline-flex;margin:4px;padding:7px 11px;border-radius:999px;background:var(--accent-soft);border:1px solid var(--line);color:var(--text)}
+/* Truly compact floating pill. Large panels never change the pill's box size. */
+.bsa4-dock{z-index:115!important;max-width:calc(100vw - 24px)!important;width:auto!important;touch-action:pan-x pan-y}
+.bsa4-dock.expanded{width:auto!important}
+.bsa4-dock-trigger{min-height:45px;max-width:175px;border-radius:999px!important;display:inline-flex!important;justify-content:center!important;white-space:nowrap!important;touch-action:none!important;user-select:none;-webkit-user-select:none;cursor:grab!important;box-shadow:0 8px 20px #0002!important}
+.bsa4-dock-trigger:active{cursor:grabbing!important}
+.bsa4-dock-panel{box-sizing:border-box!important;margin:0!important;border-radius:20px!important;padding:13px!important;overscroll-behavior:contain!important;overflow-y:auto!important;overflow-x:hidden!important;box-shadow:0 14px 40px #0003!important;animation:none!important}
+.bsa4-dock-header{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.bsa4-dock-header strong{flex:1 1 auto}
+.bsa4-dock-tabs{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:4px!important}
+.bsa4-dock-tabs .btn{min-width:0!important;padding:9px 3px!important;font-size:.75rem!important;line-height:1.1!important;white-space:normal!important}
+.bsa4-dock-body{gap:10px!important;min-width:0}
+.bsa4-dock-body .btn{max-width:100%;white-space:normal}
+.bsa4-appearance{border:1px solid var(--line);border-radius:12px;padding:8px 11px}
+.bsa4-appearance summary{font-size:.76rem!important;font-weight:700!important}
+.focus-bar.bsa190-focus{z-index:105!important;max-width:min(470px,calc(100vw - 24px))!important;gap:7px!important;padding:8px 11px!important}
+.focus-bar.bsa190-focus :is(button,.btn){min-height:34px!important;padding:5px 9px!important;font-size:.77rem!important}
+.focus-bar.bsa190-focus .focus-text{flex:1 1 110px;min-width:0}
+.bsa43-timer-hide{background:transparent!important;color:var(--muted)!important}
+.focus-bar.bsa190-focus.paused{border-style:dashed!important;opacity:.94}
+/* Lecture selection should never sit over the selected sentence or steal scrolling. */
+.bsa181-selection{position:fixed!important;inset:auto!important;left:50%!important;bottom:calc(16px + env(safe-area-inset-bottom,0px))!important;transform:translateX(-50%)!important;width:min(630px,calc(100vw - 24px))!important;max-width:calc(100vw - 24px)!important;max-height:none!important;display:flex!important;align-items:center!important;justify-content:center!important;flex-wrap:wrap!important;gap:7px!important;padding:8px 10px!important;border-radius:15px!important;box-shadow:0 9px 30px #0003!important;overflow:visible!important;z-index:160!important}
+.bsa181-selection>span{font-size:.72rem!important;flex:1 1 120px}
+.bsa181-selection :is(button,select){min-height:35px!important}
+.bsa41-note-editor{right:clamp(12px,2vw,32px)!important;top:clamp(68px,10vh,104px)!important;bottom:auto!important;width:min(360px,calc(100vw - 24px))!important;max-height:min(62dvh,480px)!important;padding:13px!important;overflow-y:auto!important;overscroll-behavior:contain;animation:none!important}
+.bsa41-annotated .bsa41-mark{border-radius:2px!important;padding:0!important;border-bottom:1.5px solid currentColor!important;cursor:pointer}
+/* iPad and smaller desktop widths: don't waste reading space on chrome. */
+@media (min-width:900px) and (max-width:1250px){
+  .content{padding-left:18px!important;padding-right:18px!important}
+  .workspace-topbar{min-height:52px!important;margin-bottom:14px!important}
+  .bsa-shortcut-menu{max-height:45dvh!important}
+  .bsa43-fs-columns{grid-template-columns:minmax(0,1fr)}
+  .bsa43-ps-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ps-tools{display:flex;flex-wrap:wrap;gap:9px}
+}
+@media(max-width:899px){
+  .bsa43-ps-heading,.bsa43-fs-header{align-items:start;flex-direction:column}
+  .bsa43-ps-count{justify-items:start}
+  .bsa43-fs-columns{grid-template-columns:minmax(0,1fr)}
+  .bsa43-ps-grid{grid-template-columns:minmax(0,1fr)}
+  .bsa43-ps-toolbar{padding:12px}
+  .bsa4-dock-panel{max-height:calc(100dvh - 145px)!important}
+  .bsa181-selection{bottom:calc(85px + env(safe-area-inset-bottom,0px))!important}
+  .bsa41-note-editor{top:auto!important;bottom:calc(92px + env(safe-area-inset-bottom,0px))!important;width:calc(100vw - 24px)!important;max-height:40dvh!important}
+  .focus-bar.bsa190-focus{bottom:calc(84px + env(safe-area-inset-bottom,0px))!important;gap:4px!important}
+  .focus-bar.bsa190-focus[style*="top:"]{bottom:auto!important;transform:none!important}
+}
+@media(max-width:420px){.bsa4-dock-tabs .btn{font-size:.69rem!important}.bsa43-fs-tabs{gap:2px;padding:4px}.bsa43-fs-tabs button{font-size:.74rem;padding:7px}.bsa43-ps-toolbar label{flex-basis:100%}}
+
+/* Shared theme navigation: different information architecture and geometry,
+   rather than a re-colored standard Learn→Practice strip. */
+.bsa43-chrome{min-width:0;margin:0 0 24px;display:flex;justify-content:space-between;align-items:center;gap:18px;padding:15px 18px;border:1px solid var(--line);background:var(--surface);color:var(--text)}
+.bsa43-chrome>div{min-width:0;display:grid;gap:3px}
+.bsa43-chrome>div>strong{line-height:1.08;font-size:clamp(1.35rem,2.5vw,2.2rem);font-family:var(--display,inherit);letter-spacing:-.035em}
+.bsa43-chrome>div :is(small,span){font-size:.67rem;letter-spacing:.1em;color:var(--muted);font-weight:760;text-transform:uppercase}
+.bsa43-chrome nav{display:flex;gap:5px;min-width:0;flex-wrap:wrap;align-items:center}
+.bsa43-chrome nav button{min-width:0;display:flex;align-items:center;justify-content:center;gap:7px;padding:10px 12px;line-height:1.2;border:1px solid transparent;background:transparent;color:var(--muted);font-weight:700;cursor:pointer;white-space:nowrap}
+.bsa43-chrome nav button .ico{width:17px!important;height:17px!important;flex:0 0 17px}
+.bsa43-chrome nav button.active{color:var(--accent);background:var(--accent-soft)}
+/* iOS: split-pane feel, app title, horizontal pill tab bar and grouped cards. */
+html[data-desk-theme="ios"] .bsa43-chrome-ios{flex-direction:column;align-items:stretch;gap:16px;border:0;border-radius:25px;padding:20px 22px;background:color-mix(in srgb,var(--surface) 92%,var(--accent) 8%);box-shadow:0 7px 26px #0000000e}
+html[data-desk-theme="ios"] .bsa43-ios-heading{gap:7px!important}
+html[data-desk-theme="ios"] .bsa43-ios-heading strong{font-size:clamp(2.1rem,4.1vw,3rem);font-weight:820}
+html[data-desk-theme="ios"] .bsa43-chrome-ios nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));background:var(--surface-2);padding:5px;border-radius:16px;gap:3px}
+html[data-desk-theme="ios"] .bsa43-chrome-ios nav button{flex-direction:column;gap:4px;padding:9px 3px;font-size:.71rem;border-radius:12px}
+html[data-desk-theme="ios"] .bsa43-chrome-ios nav button.active{background:var(--surface);box-shadow:0 1px 5px #0002;color:var(--text)}
+html[data-desk-theme="ios"] .content>.workspace-topbar{background:transparent!important;border-color:transparent!important}
+html[data-desk-theme="ios"] .rail{background:var(--surface-2)!important}
+html[data-desk-theme="ios"] .content :is(.bsa31-route-card,.bsa205-card,.bsa43-ps-card,.bsa43-fs-columns>.panel){border-radius:22px!important}
+/* Classic: spare professional toolbars, tight navigation, regular document grid. */
+html[data-desk-theme="classic"] .bsa43-chrome-classic{border-radius:3px;gap:14px;border-bottom:3px solid var(--text);background:var(--surface);box-shadow:none;padding:12px 16px}
+html[data-desk-theme="classic"] .bsa43-chrome-classic>div strong{font:750 1.5rem/1.1 Arial,sans-serif;letter-spacing:-.02em}
+html[data-desk-theme="classic"] .bsa43-chrome-classic nav button{border-radius:2px;border:1px solid var(--line);font-weight:650}
+html[data-desk-theme="classic"] .rail-nav .nav-group-links button{border-radius:2px!important}
+/* Arcade: two-part header, chunky quest route tiles and playful grid rhythm. */
+html[data-desk-theme="arcade"] .bsa43-chrome-arcade{border:2px solid var(--text);border-radius:10px;box-shadow:5px 5px 0 color-mix(in srgb,var(--text) 15%,transparent);padding:18px;background:var(--surface)}
+html[data-desk-theme="arcade"] .bsa43-arcade-title strong{font-size:clamp(1.65rem,3vw,2.6rem);letter-spacing:.03em}
+html[data-desk-theme="arcade"] .bsa43-chrome-arcade nav{gap:7px}
+html[data-desk-theme="arcade"] .bsa43-chrome-arcade nav button{border-radius:6px;border:2px solid var(--line);box-shadow:2px 2px 0 color-mix(in srgb,var(--text) 15%,transparent)}
+html[data-desk-theme="arcade"] .bsa43-chrome-arcade nav button.active{border-color:var(--accent)}
+/* Notebook: ruled paper with tabs; layout is a lined journal rather than cards. */
+html[data-desk-theme="notebook"] .bsa43-chrome-notebook{background:repeating-linear-gradient(to bottom,var(--surface) 0,var(--surface) 29px,color-mix(in srgb,var(--accent) 13%,var(--surface)) 30px);border-radius:4px;border-left:6px solid var(--accent);align-items:flex-end;box-shadow:2px 4px 0 var(--line)}
+html[data-desk-theme="notebook"] .bsa43-chrome-notebook nav button{border-bottom:3px solid var(--line);border-radius:3px 3px 0 0;background:var(--surface)}
+html[data-desk-theme="notebook"] .bsa43-chrome-notebook nav button.active{border-bottom-color:var(--accent)}
+/* Editorial: very large left headline, rule-separated text links. */
+html[data-desk-theme="editorial"] .bsa43-chrome-editorial{display:grid;grid-template-columns:minmax(0,1fr);gap:13px;padding:17px 4px;border:0;border-bottom:3px solid var(--text);border-radius:0;background:transparent}
+html[data-desk-theme="editorial"] .bsa43-chrome-editorial>div strong{font-size:clamp(2.2rem,5vw,4rem);font-weight:800}
+html[data-desk-theme="editorial"] .bsa43-chrome-editorial nav{border-top:1px solid var(--line);padding-top:10px;justify-content:space-between}
+html[data-desk-theme="editorial"] .bsa43-chrome-editorial nav button{font-size:.73rem;text-transform:uppercase;letter-spacing:.035em;border-radius:0;border-bottom:2px solid transparent}
+html[data-desk-theme="editorial"] .bsa43-chrome-editorial nav button.active{border-color:var(--accent);background:transparent}
+/* Glass: floating capsules and depth at the workspace level. */
+html[data-desk-theme="glass"] .bsa43-chrome-glass{border-radius:24px;border-color:color-mix(in srgb,var(--accent) 30%,var(--line));background:color-mix(in srgb,var(--surface) 83%,transparent);box-shadow:0 17px 35px #0000001b;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+html[data-desk-theme="glass"] .bsa43-chrome-glass nav{gap:9px}
+html[data-desk-theme="glass"] .bsa43-chrome-glass nav button{border-radius:100px;background:var(--surface);box-shadow:0 3px 10px #0001}
+/* Bento: header acts like a horizontal tile beside a 5-up tile grid. */
+html[data-desk-theme="bento"] .bsa43-chrome-bento{align-items:stretch;border:0;padding:0;background:transparent;gap:10px}
+html[data-desk-theme="bento"] .bsa43-chrome-bento>div{border:1px solid var(--line);background:var(--surface);padding:18px;flex:1 1 220px;border-radius:18px}
+html[data-desk-theme="bento"] .bsa43-chrome-bento nav{display:grid;grid-template-columns:repeat(5,minmax(70px,1fr));flex:2 1 400px;gap:7px}
+html[data-desk-theme="bento"] .bsa43-chrome-bento nav button{border-radius:18px;flex-direction:column;gap:6px;padding:12px 5px;background:var(--surface);border:1px solid var(--line)}
+html[data-desk-theme="bento"] .bsa43-chrome-bento nav button.active{background:var(--accent-soft);border-color:var(--accent)}
+/* Blueprint: technical grid and numbered steps. */
+html[data-desk-theme="blueprint"] .bsa43-chrome-blueprint{border:1px solid var(--accent);border-radius:0;background:var(--surface);box-shadow:4px 4px 0 color-mix(in srgb,var(--accent) 18%,transparent)}
+html[data-desk-theme="blueprint"] .bsa43-chrome-blueprint nav button{border:1px dashed var(--line);border-radius:0;letter-spacing:.025em;text-transform:uppercase;font-size:.72rem}
+html[data-desk-theme="blueprint"] .bsa43-chrome-blueprint nav button.active{border:1px solid var(--accent)}
+/* Focus: a single muted line and practical links, little vertical overhead. */
+html[data-desk-theme="focus"] .bsa43-chrome-focus{border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent;padding:8px 0 12px;gap:8px;box-shadow:none}
+html[data-desk-theme="focus"] .bsa43-chrome-focus>span{font-size:.83rem;color:var(--muted)}
+html[data-desk-theme="focus"] .bsa43-chrome-focus nav button{padding:7px;font-size:.77rem;border-radius:8px}
+/* Small mobile nav displays the same route context while preserving existing
+   fallback More menu; full desktop rail isn't repeated. */
+@media (max-width:1050px){.bsa43-chrome{flex-wrap:wrap}.bsa43-chrome nav{width:100%}.bsa43-chrome nav button{flex:1 1 auto}}
+@media (max-width:650px){
+ .bsa43-chrome{padding:12px;margin-bottom:14px;gap:9px}
+ .bsa43-chrome>div>strong{font-size:1.45rem}
+ .bsa43-chrome nav{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;width:100%;gap:3px}
+ .bsa43-chrome nav button{display:flex;flex-direction:column;gap:4px;min-height:46px;padding:6px 2px!important;white-space:normal;text-align:center;font-size:.61rem!important;line-height:1.15}
+ .bsa43-chrome nav button .ico{width:16px!important;height:16px!important}
+ html[data-desk-theme="ios"] .bsa43-chrome-ios{padding:15px}
+ html[data-desk-theme="bento"] .bsa43-chrome-bento{display:grid}
+ html[data-desk-theme="bento"] .bsa43-chrome-bento nav button{border-radius:10px}
+ html[data-desk-theme="editorial"] .bsa43-chrome-editorial>div strong{font-size:2.35rem}
+}
+@media(prefers-reduced-motion:reduce){.bsa43-chrome *, .bsa43-ps-card,.bsa4-dock-panel,.bsa4-dock-trigger{animation:none!important;transition:none!important}}
+
+/* V4.3 final touch fixes: Hide remains reachable even when timer minimized.
+   Compact floating interfaces must never trap an ongoing session. */
+.bsa190-focus.bsa190-collapsed>.bsa43-timer-hide{display:inline-flex!important;align-items:center;justify-content:center;min-height:32px!important}
+.bsa190-focus.bsa190-collapsed .bsa190-toggle{min-width:32px!important;min-height:32px!important}
+.bsa43-ps-index :is(h1,h2,p),.bsa43-fs-lab :is(h1,h2,h3,p,td,th){overflow-wrap:anywhere}
+.bsa43-ps-index .bsa43-ps-toolbar :is(input,select),.bsa43-fs-lab .bsa43-fs-columns :is(input,textarea,select){font-size:max(16px,1rem)}
+.bsa43-ps-index .bsa43-ps-card-top,.bsa43-ps-index .bsa43-ps-progress{align-items:center;line-height:1.45}
+@media(max-width:899px){.bsa43-fs-header h1,.bsa43-ps-heading h1{font-size:clamp(1.7rem,5vw,2.3rem)}.bsa43-fs-tabs button{white-space:nowrap}}
+/* Theme layouts affect the structure of study workspaces, not just color or radii.
+   Common data and navigation actions stay identical across presentations. */
+@media(min-width:1100px){
+ html[data-desk-theme="bento"] .bsa31-home{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,.78fr);align-items:start;gap:16px}
+ html[data-desk-theme="bento"] .bsa31-home>.bsa31-hero{grid-column:1;grid-row:1;height:100%;min-height:360px}
+ html[data-desk-theme="bento"] .bsa31-home>.bsa31-overview{grid-column:2;grid-row:1;margin:0}
+ html[data-desk-theme="bento"] .bsa31-route-cards{grid-template-columns:minmax(0,1fr);gap:7px}
+ html[data-desk-theme="bento"] .bsa31-route-card{min-height:0;padding:13px 16px;gap:4px}
+ html[data-desk-theme="bento"] .bsa31-route-card p{font-size:.78rem;margin:1px 0}
+ html[data-desk-theme="bento"] .bsa31-home>.bsa31-secondary-grid,
+ html[data-desk-theme="bento"] .bsa31-home>.bsa31-home-extras,
+ html[data-desk-theme="bento"] .bsa31-home>.bsa31-data-note{grid-column:1 / -1}
+ html[data-desk-theme="editorial"] .bsa31-route-cards{grid-template-columns:repeat(3,minmax(0,1fr))}
+ html[data-desk-theme="editorial"] .bsa31-route-card{min-height:190px;border-top:4px solid var(--text)!important}
+ html[data-desk-theme="ios"] .bsa31-secondary-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+}
+html[data-desk-theme="ios"] .bsa31-home .bsa31-hero{min-height:240px;box-shadow:none!important}
+html[data-desk-theme="ios"] .bsa31-home .bsa205-hero-orb{display:none!important}
+html[data-desk-theme="ios"] .bsa31-overview{gap:12px}
+html[data-desk-theme="ios"] .bsa31-route-card{min-height:170px!important;padding:18px!important}
+html[data-desk-theme="ios"] .bsa33-study-head{min-height:150px;padding:24px 28px;border-radius:25px}
+html[data-desk-theme="ios"] .bsa33-study-crest{display:none}
+html[data-desk-theme="classic"] .bsa31-home .bsa31-hero{min-height:230px;padding:26px!important;background:var(--surface)!important;border-bottom:3px solid var(--text)!important}
+html[data-desk-theme="classic"] .bsa31-hero:before,html[data-desk-theme="classic"] .bsa31-home .bsa205-hero-orb{display:none!important}
+html[data-desk-theme="classic"] .bsa31-route-card{min-height:174px!important;box-shadow:none!important;border-top:3px solid var(--line)!important}
+html[data-desk-theme="classic"] .bsa33-study-head{min-height:135px;border-radius:0;box-shadow:none}
+html[data-desk-theme="notebook"] .bsa31-overview-title{border-bottom:2px solid color-mix(in srgb,var(--accent) 45%,var(--line));padding-bottom:12px}
+html[data-desk-theme="notebook"] .bsa31-route-cards{gap:8px}
+html[data-desk-theme="notebook"] .bsa31-route-card{min-height:170px!important;background:repeating-linear-gradient(to bottom,var(--surface) 0,var(--surface) 28px,color-mix(in srgb,var(--accent) 9%,var(--surface)) 29px)!important}
+html[data-desk-theme="arcade"] .bsa31-route-card{border:2px solid var(--text)!important;min-height:208px!important}
+html[data-desk-theme="arcade"] .bsa31-route-card .bsa31-route-head{font-weight:900;text-transform:uppercase}
+html[data-desk-theme="blueprint"] .bsa31-route-card{border:1px dashed var(--accent)!important;box-shadow:3px 3px 0 color-mix(in srgb,var(--accent) 18%,transparent)!important}
+html[data-desk-theme="blueprint"] .bsa31-overview-title{border-left:4px solid var(--accent);padding-left:14px}
+html[data-desk-theme="focus"] .bsa31-route-card{min-height:150px!important;box-shadow:none!important}
+html[data-desk-theme="focus"] .bsa31-home .bsa205-hero-orb,html[data-desk-theme="focus"] .bsa31-hero:before{display:none!important}
+@media(max-width:900px){
+ html[data-desk-theme="bento"] .bsa31-home{display:grid;grid-template-columns:minmax(0,1fr)}
+ html[data-desk-theme="bento"] .bsa31-home>.bsa31-hero,
+ html[data-desk-theme="bento"] .bsa31-home>.bsa31-overview,
+ html[data-desk-theme="bento"] .bsa31-home>.bsa31-secondary-grid{grid-column:1;grid-row:auto}
+ html[data-desk-theme="ios"] .bsa31-secondary-grid{grid-template-columns:minmax(0,1fr)}
+}
+@media(prefers-reduced-motion:reduce){html[data-desk-theme="arcade"] .bsa31-route-card:hover,html[data-desk-theme="ios"] .bsa31-route-card:hover{transform:none!important}}
+
+/* ====================================================================
+   V4.4 · Tutor-first chat, collision-free controls and Topic Pack tools.
+   Appends after all earlier theme-specific overrides on purpose.
+   ==================================================================== */
+#root .content, #root .content>.view, #root .content>.view :is(.bsa205-card,.bsa44-importer,.bsa44-topics,.bsa44-topic-card){min-width:0}
+#root .content :is(.btn,.chip,.bsa4-ask-problem,.bsa205-head-action,.bsa205-primary-action,.bsa43-ps-card button,.bsa43-fs-actions button){box-sizing:border-box;max-width:100%;height:auto;min-height:38px;line-height:1.3;white-space:normal;overflow-wrap:anywhere;text-wrap:pretty;text-align:center}
+#root .content :is(.bsa4-context-actions,.ps-acts,.ai-acts,.bsa205-action-row,.bsa44-small-actions){display:flex;flex-wrap:wrap;align-items:center;gap:8px;min-width:0}
+#root .content :is(.bsa4-context-actions,.ps-acts,.ai-acts) > *{min-width:0}
+#root .content :is(.bsa4-ask-problem,.bsa4-mcq-help .btn){position:static!important;inset:auto!important;transform:none!important;display:inline-flex;align-items:center;justify-content:center;flex:0 1 auto;max-width:100%;padding:9px 13px!important;font-size:.82rem!important;line-height:1.4!important;overflow-wrap:anywhere;vertical-align:middle}
+#root .bsa4-mcq-help{min-width:0;display:flex;flex-wrap:wrap}
+
+/* Tutor: the conversation comes first; settings and attachments collapse. */
+#root>.shell>.content>.bsa44-tutor{display:flex!important;flex-direction:column!important;gap:10px!important;padding:0 clamp(4px,1vw,14px)!important;margin:0!important;max-width:100%!important;width:100%!important;min-width:0!important;height:auto!important;min-height:0!important;overflow:visible!important}
+.bsa44-tutor .ask-compact-head{display:flex!important;align-items:center;justify-content:space-between;gap:8px 14px;flex-wrap:wrap;padding:3px 0 8px!important;margin:0!important;min-width:0}
+.bsa44-tutor .ask-title-group{display:flex;align-items:baseline;gap:9px;min-width:0;flex-wrap:wrap}
+.bsa44-tutor .page-title{font-size:clamp(1.35rem,2.4vw,1.85rem)!important;line-height:1.13!important;letter-spacing:-.025em;margin:0!important}
+.bsa44-tutor .ask-help-text{color:var(--muted);font-size:.72rem;line-height:1.25}
+.bsa44-tutor .ask-header-actions{display:flex!important;align-items:center;gap:6px!important;margin:0!important;min-width:0;flex-wrap:wrap}
+.bsa44-tutor .ask-header-actions .btn{flex:0 0 auto;min-height:36px!important;padding:7px 10px!important;border-radius:11px;font-size:.77rem!important}
+.bsa44-tutor .ask-context-details{border:1px solid var(--line);background:var(--surface);border-radius:13px;margin:0!important;padding:0!important;min-width:0;overflow:hidden}
+.bsa44-tutor .ask-context-details>summary{cursor:pointer;display:flex!important;align-items:center;flex-wrap:wrap;gap:5px;padding:9px 13px!important;margin:0!important;min-height:39px;font-weight:700;color:var(--text);font-size:.8rem;line-height:1.35;overflow-wrap:anywhere}
+.bsa44-tutor .ask-context-hint{color:var(--muted);font-weight:500}
+.bsa44-tutor .ask-context-grid{padding:12px!important;display:grid!important;grid-template-columns:repeat(auto-fit,minmax(min(190px,100%),1fr))!important;gap:12px!important;min-width:0}
+.bsa44-tutor .ask-context-grid label{min-width:0;display:grid;gap:5px;font-size:.79rem}
+.bsa44-tutor .ask-context-grid :is(select,input,textarea){box-sizing:border-box;min-width:0;width:100%;max-width:100%;font-size:max(14px,1rem);min-height:39px}
+.bsa44-tutor .bsa197-tutor-memory{grid-column:1/-1;min-width:0;margin:0!important}
+.bsa44-tutor .bsa44-context-card{margin:0!important;padding:0!important;display:block!important;border-radius:13px;overflow:hidden;background:var(--surface);min-width:0}
+.bsa44-tutor .bsa44-context-card>summary{display:block;min-height:39px;line-height:1.4;padding:9px 13px;font-weight:750;cursor:pointer;font-size:.81rem;overflow-wrap:anywhere}
+.bsa44-tutor .bsa44-context-card> :not(summary){margin:9px 13px!important;max-width:calc(100% - 26px)}
+.bsa44-tutor .bsa44-context-card .bsa4-context-actions{margin:10px 13px!important}
+.bsa44-tutor .ai-log{box-sizing:border-box!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:14px!important;flex:0 0 auto!important;height:clamp(370px,62dvh,790px)!important;min-height:320px!important;max-height:calc(100dvh - 180px)!important;overflow-y:auto!important;overflow-x:hidden!important;scrollbar-gutter:stable;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scroll-behavior:auto!important;padding:clamp(12px,1.8vw,24px)!important;margin:0!important;background:var(--surface)!important;color:var(--text)!important;border:1px solid var(--line)!important;border-radius:18px!important;box-shadow:0 9px 32px #0000000d!important}
+.bsa44-tutor .ai-msg{box-sizing:border-box!important;flex:0 0 auto!important;display:block!important;width:fit-content!important;max-width:min(93%,980px)!important;min-width:0!important;align-self:flex-start!important;margin:0!important;padding:0!important;opacity:1!important;visibility:visible!important;position:relative!important;inset:auto!important;transform:none!important;color:var(--text)!important}
+.bsa44-tutor .ai-msg.me{align-self:flex-end!important;max-width:min(88%,780px)!important;color:var(--text)!important}
+.bsa44-tutor .ai-who{display:block!important;margin:0 0 5px!important;padding:0 6px!important;color:var(--muted)!important;font-size:.72rem!important;font-weight:800!important;line-height:1.3!important;opacity:1!important;visibility:visible!important}
+.bsa44-tutor .ai-msg.me .ai-who{text-align:right}
+.bsa44-tutor .ai-body{box-sizing:border-box!important;display:block!important;position:static!important;min-height:0!important;height:auto!important;max-height:none!important;overflow:visible!important;opacity:1!important;visibility:visible!important;color:var(--text)!important;background:var(--surface-2)!important;border:1px solid var(--line)!important;border-radius:15px!important;padding:clamp(13px,1.5vw,20px)!important;white-space:pre-wrap!important;overflow-wrap:anywhere!important;word-break:normal!important;font-size:clamp(.91rem,1.1vw,1.02rem)!important;line-height:1.66!important;text-align:left!important;text-shadow:none!important}
+.bsa44-tutor .ai-msg.me .ai-body{background:var(--accent-soft,var(--surface-2))!important;border-color:color-mix(in srgb,var(--accent) 27%,var(--line))!important}
+.bsa44-tutor .ai-body :is(p,li,blockquote,pre,code,strong,em,span,div,ol,ul,h1,h2,h3,h4,h5,h6){color:inherit;max-width:100%;text-shadow:none}
+.bsa44-tutor .ai-body :is(p,ul,ol,blockquote){margin-top:.3em;margin-bottom:.9em}
+.bsa44-tutor .ai-body :is(ul,ol){padding-left:1.3em}
+.bsa44-tutor .ai-body :is(pre,table){max-width:100%;overflow-x:auto;white-space:pre;display:block}
+.bsa44-tutor .ai-body pre{background:color-mix(in srgb,var(--bg) 90%,var(--surface));padding:12px;border-radius:9px}
+.bsa44-tutor .ai-body table{font-size:.87rem;white-space:normal}
+.bsa44-tutor .ai-body a{color:var(--accent)!important;text-decoration:underline}
+.bsa44-tutor .ai-body.err{border-color:var(--bad,var(--accent))!important}
+.bsa44-tutor .ai-acts{margin-top:12px!important;display:flex!important;flex-wrap:wrap!important;align-items:center;gap:7px}
+.bsa44-tutor .ai-acts .btn{min-height:31px!important;padding:5px 10px!important;font-size:.74rem!important}
+.bsa44-tutor .ask-welcome{display:flex!important;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:9px!important;flex:1 1 auto;margin:auto!important;padding:clamp(12px,3vw,28px)!important;min-width:0!important;min-height:0!important;max-width:100%!important}
+.bsa44-tutor .ask-welcome-icon{font-size:2.1rem!important;margin:0!important}
+.bsa44-tutor .ask-welcome h2{font-size:clamp(1.15rem,2vw,1.5rem)!important;margin:0!important}
+.bsa44-tutor .ask-welcome p{margin:0!important;line-height:1.5!important}
+.bsa44-tutor .ask-start-prompts{display:flex!important;gap:8px!important;flex-wrap:wrap!important;justify-content:center!important;max-width:100%}
+.bsa44-tutor .ask-start-prompts .btn{flex:0 1 auto;white-space:normal;font-size:.77rem!important;min-height:36px!important}
+.bsa44-tutor .ask-composer{box-sizing:border-box!important;display:block!important;position:relative!important;inset:auto!important;transform:none!important;margin:0!important;min-width:0!important;width:100%!important;max-width:100%!important;padding:11px!important;border:1px solid var(--line)!important;border-radius:16px!important;background:var(--surface)!important;box-shadow:0 5px 20px #0000000c!important;overflow:visible!important;z-index:1!important}
+.bsa44-tutor .ask-composer .ai-row{display:flex!important;align-items:flex-end!important;gap:9px!important;flex-wrap:nowrap!important;min-width:0!important;width:100%!important;margin:0!important}
+.bsa44-tutor .ask-composer textarea{box-sizing:border-box!important;min-width:0!important;width:100%!important;flex:1 1 0!important;margin:0!important;min-height:52px!important;max-height:180px!important;height:auto!important;line-height:1.55!important;resize:vertical!important;font-size:16px!important;padding:12px 14px!important;background:var(--bg)!important;color:var(--text)!important;border:1px solid var(--line)!important;border-radius:12px!important}
+.bsa44-tutor .ask-composer .ai-row>.btn{flex:0 0 auto!important;min-width:70px!important;max-width:96px!important;min-height:50px!important;margin:0!important;border-radius:11px!important;padding:10px!important}
+.bsa44-tutor .ask-prompts-details{margin-top:7px!important;display:block!important;font-size:.77rem;line-height:1.35;color:var(--muted);max-width:100%}
+.bsa44-tutor .ask-prompts-details summary{cursor:pointer!important;min-height:28px!important;max-width:100%;display:list-item!important}
+.bsa44-tutor .ai-chips{display:flex!important;flex-wrap:wrap!important;gap:7px!important;padding-top:7px}
+.bsa44-tutor .ai-chips .chip{min-height:34px!important;line-height:1.25!important}
+/* The floating Study Dock is redundant on the full Tutor screen and can cover chat text. */
+body:has(.bsa44-tutor) .bsa4-dock{display:none!important}
+
+/* Study Library: make key destinations visible without squeezing labels. */
+#root .bsa205-pagetabs.bsa3-library-main-tabs{display:flex!important;flex-wrap:nowrap!important;gap:6px!important;min-width:0!important;max-width:100%!important;overflow-x:auto!important;overflow-y:hidden!important;overscroll-behavior-x:contain;scrollbar-width:thin;padding:4px 2px 9px!important}
+#root .bsa205-pagetabs.bsa3-library-main-tabs button{flex:0 0 auto!important;min-width:0!important;max-width:none!important;padding:10px 14px!important;font-size:.82rem!important;line-height:1.2!important;white-space:nowrap!important;min-height:41px!important}
+.bsa44-importer,.bsa44-topics{min-width:0;color:var(--text);max-width:100%}
+.bsa44-importer :is(h2,h3),.bsa44-topics :is(h2,h3){line-height:1.24;letter-spacing:-.02em;color:var(--text)}
+.bsa44-import-intro,.bsa44-topic-summary{background:linear-gradient(125deg,color-mix(in srgb,var(--accent) 10%,var(--surface)),var(--surface) 67%);border:1px solid var(--line);border-radius:19px;padding:clamp(16px,2.4vw,27px);display:flex;align-items:center;justify-content:space-between;gap:17px;margin:8px 0 15px;min-width:0}
+.bsa44-import-intro>div,.bsa44-topic-summary>div{min-width:0}
+.bsa44-import-intro h2,.bsa44-topic-summary h2{font-size:clamp(1.2rem,2vw,1.6rem);margin:5px 0 8px}
+.bsa44-import-intro p,.bsa44-topic-summary p{font-size:.84rem;line-height:1.6;max-width:64ch;margin:0;color:var(--muted)}
+.bsa44-step-chip{flex:0 1 265px;max-width:100%;font-size:.75rem;line-height:1.5;text-align:center;white-space:normal;border:1px solid var(--line);border-radius:999px;padding:9px 12px;background:var(--surface-2);font-weight:750}
+.bsa44-import-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:14px;min-width:0;align-items:start}
+.bsa44-import-grid>.bsa205-card{min-width:0;margin:0!important;padding:clamp(15px,2vw,23px)!important;border-radius:18px!important}
+.bsa44-import-grid :is(textarea,input,select){max-width:100%;min-width:0;box-sizing:border-box}
+.bsa44-import-input{display:grid;gap:13px}
+.bsa44-file-select{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:145px;padding:15px;border:1.5px dashed color-mix(in srgb,var(--accent) 48%,var(--line));border-radius:15px;background:color-mix(in srgb,var(--accent) 5%,var(--surface));cursor:pointer;text-align:center;overflow:hidden}
+.bsa44-file-select>span{font-size:1.7rem;color:var(--accent);line-height:1}
+.bsa44-file-select>strong{font-size:.95rem}
+.bsa44-file-select>small{font-size:.72rem;color:var(--muted);line-height:1.5}
+.bsa44-file-select>input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.bsa44-file-select:focus-within{outline:3px solid var(--accent);outline-offset:2px}
+.bsa44-field{min-width:0;display:grid;gap:7px;font-size:.84rem;font-weight:750}
+.bsa44-field textarea{box-sizing:border-box;width:100%;font:500 .78rem/1.55 ui-monospace,SFMono-Regular,Consolas,monospace;min-height:190px;resize:vertical;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:13px;overflow-x:auto}
+.bsa44-small-actions{display:flex;gap:7px;flex-wrap:wrap}
+.bsa44-importer .muted.small{line-height:1.55}
+.bsa44-review-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.bsa44-review-head h3{margin:0;font-size:1.05rem}
+.bsa44-tick{display:flex!important;align-items:flex-start!important;gap:10px;line-height:1.5;min-width:0;font-size:.8rem;font-weight:560;cursor:pointer;padding:10px 0}
+.bsa44-tick input{flex:0 0 19px!important;width:19px!important;height:19px!important;min-height:19px!important;margin:1px 0 0!important;accent-color:var(--accent)}
+.bsa44-review-btn{display:block;width:100%;margin:8px 0 14px;min-height:43px!important;font-size:.86rem!important}
+.bsa44-feedback,.bsa44-result,.bsa44-unmatched{padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface-2);font-size:.8rem;line-height:1.55;overflow-wrap:anywhere}
+.bsa44-preview{min-width:0;border-top:1px solid var(--line);padding-top:12px;margin-top:12px}
+.bsa44-preview-numbers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.bsa44-preview-numbers>div{display:grid;gap:4px;border:1px solid var(--line);background:var(--surface-2);border-radius:10px;padding:10px;min-width:0}
+.bsa44-preview-numbers strong{font-size:clamp(1.12rem,1.8vw,1.4rem);font-variant-numeric:tabular-nums}
+.bsa44-preview-numbers span{font-size:.69rem;line-height:1.3;color:var(--muted)}
+.bsa44-preview-sub{color:var(--muted);font-size:.76rem;line-height:1.5}
+.bsa44-preview details{margin:11px 0;padding:11px 12px;border:1px solid var(--line);border-radius:11px;max-width:100%;overflow-wrap:anywhere}
+.bsa44-preview summary{cursor:pointer;font-size:.8rem;font-weight:750}
+.bsa44-issue-list{max-height:300px;overflow:auto}
+.bsa44-issue-list p{display:grid;gap:4px;font-size:.74rem;padding:9px 0;border-top:1px solid var(--line);overflow-wrap:anywhere}
+.bsa44-issue-list small{color:var(--muted);line-height:1.55}
+.bsa44-confirm{margin:9px 0;border-top:1px solid var(--line)}
+.bsa44-files{display:grid;gap:6px}
+.bsa44-file{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:.78rem;padding:7px 9px;border:1px solid var(--line);border-radius:9px;min-width:0}
+.bsa44-file span{min-width:0;overflow-wrap:anywhere}
+.bsa44-file button{flex:0 0 auto}
+.bsa44-coverage-number{display:flex;flex-direction:column;gap:4px;align-items:flex-end;min-width:125px}
+.bsa44-coverage-number strong{font-size:clamp(1.65rem,2.7vw,2.3rem);letter-spacing:-.05em;line-height:1.05;font-variant-numeric:tabular-nums}
+.bsa44-coverage-number small{color:var(--muted);font-size:.72rem;text-align:right;line-height:1.4}
+.bsa44-topic-tools{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:12px 0 14px}
+.bsa44-topic-tools input{flex:1 1 260px;min-width:0;min-height:43px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--text);font-size:16px;padding:10px 14px}
+.bsa44-topic-list{display:grid;gap:10px;min-width:0}
+.bsa44-topic-card{border:1px solid var(--line);background:var(--surface);border-radius:16px;min-width:0;overflow:hidden;transition:border-color .18s ease,box-shadow .18s ease}
+.bsa44-topic-card:hover{border-color:color-mix(in srgb,var(--accent) 40%,var(--line));box-shadow:0 7px 21px #0000000c}
+.bsa44-topic-main{display:grid;grid-template-columns:minmax(145px,1.05fr) minmax(220px,1.2fr) auto;align-items:center;gap:13px;padding:16px;min-width:0}
+.bsa44-topic-name{min-width:0}
+.bsa44-topic-name h3{font-size:.95rem;line-height:1.35;margin:4px 0 5px;overflow-wrap:anywhere}
+.bsa44-topic-name small{font-size:.69rem;line-height:1.46;color:var(--muted);overflow-wrap:anywhere}
+.bsa44-type-stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;min-width:0}
+.bsa44-type-stat{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px;padding:8px 3px;min-width:0}
+.bsa44-type-stat strong{font-size:1rem;line-height:1.2;font-variant-numeric:tabular-nums}
+.bsa44-type-stat span{font-size:.58rem;line-height:1.2;color:var(--muted);overflow-wrap:anywhere}
+.bsa44-type-stat.has-content{border-color:color-mix(in srgb,var(--accent) 28%,var(--line));background:color-mix(in srgb,var(--accent) 5%,var(--surface))}
+.bsa44-topic-actions{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:5px;min-width:0}
+.bsa44-topic-actions .btn{min-height:35px!important;padding:6px 9px!important;font-size:.73rem!important}
+.bsa44-status{font-size:.68rem;font-weight:800;color:var(--accent);line-height:1.3;white-space:nowrap}
+.bsa44-status.incomplete{color:var(--muted)}
+.bsa44-topic-details{border-top:1px solid var(--line);background:var(--surface-2);padding:14px 17px;display:grid;gap:9px;font-size:.83rem}
+.bsa44-topic-details :is(p,strong){margin:0}
+.bsa44-requirements{display:flex;align-items:center;flex-wrap:wrap;gap:8px 13px}
+.bsa44-requirements label{display:flex;align-items:center;gap:6px;min-height:30px;font-size:.79rem;line-height:1.35}
+.bsa44-requirements input{width:17px;height:17px;accent-color:var(--accent);flex:0 0 auto}
+.bsa44-topic-details>.btn{justify-self:start;margin-top:5px}
+@media(max-width:1120px){.bsa44-topic-main{grid-template-columns:minmax(160px,1fr) minmax(245px,1.1fr)}.bsa44-topic-actions{grid-column:1/-1;justify-content:flex-start}}
+@media(max-width:900px){.bsa44-import-grid{grid-template-columns:minmax(0,1fr)}.bsa44-tutor .ai-log{height:clamp(330px,58dvh,680px)!important}.bsa44-topic-main{grid-template-columns:minmax(0,1fr)}.bsa44-type-stats{max-width:720px}.bsa44-topic-actions{grid-column:auto}}
+@media(max-width:600px){
+  #root>.shell>.content>.bsa44-tutor{padding-inline:0!important;gap:7px!important}
+  .bsa44-tutor .ask-compact-head{gap:6px!important}
+  .bsa44-tutor .ask-help-text{display:none!important}
+  .bsa44-tutor .ask-header-actions .btn{padding:6px 8px!important;min-height:34px!important;font-size:.72rem!important}
+  .bsa44-tutor .ai-log{height:clamp(290px,58dvh,620px)!important;min-height:280px!important;max-height:calc(100dvh - 170px)!important;border-radius:13px!important;padding:12px!important;gap:13px!important;scrollbar-gutter:auto}
+  .bsa44-tutor .ai-msg,.bsa44-tutor .ai-msg.me{max-width:97%!important}
+  .bsa44-tutor .ai-body{padding:12px!important;font-size:.92rem!important;line-height:1.58!important;border-radius:12px!important}
+  .bsa44-tutor .ask-composer{padding:8px!important;border-radius:13px!important}
+  .bsa44-tutor .ask-composer textarea{min-height:47px!important;padding:10px 11px!important}
+  .bsa44-tutor .ask-composer .ai-row>.btn{min-width:61px!important;min-height:47px!important;padding:7px!important}
+  .bsa44-import-intro,.bsa44-topic-summary{flex-direction:column;align-items:stretch;padding:16px}
+  .bsa44-step-chip{flex:auto;align-self:flex-start}
+  .bsa44-coverage-number{align-items:flex-start}
+  .bsa44-coverage-number small{text-align:left}
+  .bsa44-preview-numbers{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .bsa44-topic-tools .btn{flex:1 1 100%}
+  .bsa44-topic-main{padding:12px}
+  .bsa44-type-stats{gap:4px}
+  .bsa44-type-stat{padding:7px 2px}
+  .bsa44-type-stat span{font-size:.54rem}
+  .bsa44-topic-actions{justify-content:flex-start}
+  .bsa44-topic-actions .btn{flex:1 1 auto}
+}
+@media(max-width:360px){.bsa44-tutor .ai-log{height:53dvh!important}.bsa44-tutor .ask-header-actions .btn{font-size:.67rem!important}.bsa44-type-stat span{font-size:.5rem}}
+@media(prefers-reduced-motion:reduce){.bsa44-topic-card,.bsa44-tutor *{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
