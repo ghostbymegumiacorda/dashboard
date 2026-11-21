@@ -3816,3 +3816,21 @@ body>.backdrop .bsa16-delete-dialog .modal-foot>.btn{min-width:0;white-space:nor
 @media(prefers-reduced-motion:reduce){
   #root .content[data-desk-page="mcq"] :is(.mcq-choice,.btn,.mcq-shell){transition:none!important;animation:none!important}
 }
+
+/* V2.6: one compact contextual return action; preserve the existing Tutor
+   layout, history panel, composer, colors, and mobile density rules. */
+.bsa26-return-link{max-width:190px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:0 1 auto}
+@media(max-width:760px){.ask-header-actions .bsa26-return-link{max-width:138px;min-height:38px}}
+
+/* V2.7 · Contextual reading: no Tutor layout changes. */
+#root .bsa181-selection .bsa27-ask-selection{min-height:36px;white-space:nowrap;border:1px solid var(--accent);background:var(--accent-soft);color:var(--text);font-weight:750}
+#root .bsa27-used-context{display:block;margin-top:7px;font-size:.72rem;color:var(--muted);font-weight:600}
+#root .lx-reader .bsa27-section-ask{margin-left:auto;display:inline-flex;align-items:center;gap:5px;min-height:34px;padding:5px 9px;font-size:.74rem;white-space:nowrap}
+#root .lx-reader .bsa-sec-topline{display:flex;flex-wrap:wrap;align-items:center;gap:7px}
+#root .lx-reader .bsa27-lecture-quicknav{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));right:calc(18px + env(safe-area-inset-right,0px));z-index:96;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+#root .lx-reader .bsa27-lecture-navbutton{pointer-events:auto;display:grid;place-items:center;width:42px;height:42px;min-width:42px;min-height:42px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--text);box-shadow:0 4px 19px #0004;font-size:20px;font-weight:750;cursor:pointer}
+#root .lx-reader .bsa27-lecture-navbutton:hover,#root .lx-reader .bsa27-lecture-navbutton:focus-visible{outline:2px solid var(--accent);outline-offset:2px;background:var(--accent-soft)}
+#root:has(.bsa181-selection) .lx-reader .bsa27-lecture-quicknav{bottom:calc(110px + env(safe-area-inset-bottom,0px))}
+@media(max-width:640px){#root .lx-reader .bsa27-lecture-quicknav{right:calc(10px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px))}#root .lx-reader .bsa27-lecture-navbutton{width:38px;height:38px;min-width:38px;min-height:38px;border-radius:11px}#root .lx-reader .bsa27-section-ask{font-size:.7rem!important;min-height:40px!important}#root:has(.bsa181-selection) .lx-reader .bsa27-lecture-quicknav{bottom:calc(142px + env(safe-area-inset-bottom,0px))}}
+@media print{#root .lx-reader .bsa27-lecture-quicknav,#root .lx-reader .bsa27-section-ask{display:none!important}}
+@media(prefers-reduced-motion:reduce){#root .lx-reader .bsa27-lecture-quicknav *{transition:none!important;animation:none!important}}
