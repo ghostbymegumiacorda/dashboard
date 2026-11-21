@@ -1439,3 +1439,188 @@ html[data-desk-theme="notebook"]:not([data-calm="on"]) .bsa31-home .bsa31-overvi
 html[data-desk-theme="glass"]:not([data-calm="on"]) .bsa31-home .bsa205-hero{animation:bsa41GlassEnter .35s ease-out both}
 html[data-desk-theme="editorial"]:not([data-calm="on"]) .bsa31-home .bsa205-hero{animation:bsa41EditorialEnter .27s ease-out both}
 @media(prefers-reduced-motion:reduce){html[data-desk-theme="notebook"] .bsa31-home .bsa31-overview,html[data-desk-theme="glass"] .bsa31-home .bsa205-hero,html[data-desk-theme="editorial"] .bsa31-home .bsa205-hero{animation:none!important;transform:none!important}}
+
+/* =======================================================================
+   V4.2 — cohesive theme presentations + accessibility and tablet fixes.
+   Themes alter UI composition and component language on *all* routes.
+   Appearance remains the independent color palette.
+   ======================================================================= */
+
+/* Full-dashboard surface matching: legacy tools must not retain a mismatched
+   light panel when the selected Appearance is dark. */
+html[data-desk-theme] .content :is(.lx-reader,.ps-set,.ai-wrap,.toolkit-panel,.bsa3-library-browser,.bsa3-question-row,.bsa205-card,.bsa3-question-pane,.bsa42-fs-lab,.bsa41-note-editor){color:var(--text);border-color:var(--line)}
+html[data-desk-theme] .content :is(input,select,textarea){color:var(--text);accent-color:var(--accent)}
+html[data-desk-theme] .content :is(.lx-sec,.lx-summary,.ai-body,.ai-log,.bsa205-page-head,.bsa3-topic-folder){border-color:var(--line)}
+html[data-desk-theme] .bsa4-dock-trigger{touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab;position:relative;z-index:2}
+html[data-desk-theme] .bsa4-dock-trigger:active{cursor:grabbing}
+html[data-desk-theme] .bsa4-dock{width:max-content;max-width:calc(100vw - 20px);will-change:auto;isolation:isolate}
+html[data-desk-theme] .bsa4-dock.expanded{width:max-content}
+html[data-desk-theme] .bsa4-dock-panel{position:absolute;bottom:calc(100% + 10px);right:0;width:min(365px,calc(100vw - 24px));margin:0;overflow:auto;max-height:min(65vh,540px);overscroll-behavior:contain}
+html[data-desk-theme] .bsa4-dock.dock-at-left .bsa4-dock-panel{right:auto;left:0}
+html[data-desk-theme] .bsa4-dock.dock-near-top .bsa4-dock-panel{bottom:auto;top:calc(100% + 10px)}
+html[data-desk-theme] .bsa4-dock .bsa4-dock-panel :is(button,input,select){touch-action:manipulation}
+@media(max-width:899px){html[data-desk-theme] .bsa4-dock-panel{max-height:48dvh}html[data-desk-theme] .bsa4-dock-trigger{min-height:44px}}
+@media(min-width:900px) and (max-width:1250px){
+  #root>.shell{grid-template-columns:minmax(190px,225px) minmax(0,1fr)!important}
+  #root>.shell>.content{min-width:0!important;padding-inline:clamp(12px,2vw,22px)!important}
+  .bsa3-library-browser,.bsa205-page,.bsa42-fs-lab{max-width:100%;min-width:0}
+  .bsa3-library-controls{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .bsa3-library-controls label:last-child{grid-column:1/-1}
+}
+/* Give the conversation more of the usable study canvas. */
+#root>.shell>.content>.ai-wrap{max-width:none!important;width:100%!important;min-height:0!important;gap:8px!important;padding-inline:clamp(10px,1.6vw,20px)!important}
+#root>.shell>.content>.ai-wrap>.ai-log{padding:clamp(12px,1.7vw,24px)!important;flex:1 1 auto!important;min-height:250px!important}
+.ai-wrap .ai-msg{max-width:min(95%,1120px)!important}
+.ai-wrap .ai-msg.me{max-width:min(89%,990px)!important}
+.ai-wrap .ai-body{line-height:1.62!important}
+@media(max-width:900px){.ai-wrap .ai-msg,.ai-wrap .ai-msg.me{max-width:100%!important}#root>.shell>.content>.ai-wrap>.ai-log{min-height:180px!important}}
+
+/* Lecture selection actions no longer obscure the selected paragraph or fight
+   the iOS copy/look-up system. Native selection itself is left untouched. */
+.bsa181-selection{
+  top:calc(80px + env(safe-area-inset-top,0px));bottom:auto!important;
+  left:auto!important;right:max(14px,env(safe-area-inset-right,0px))!important;
+  transform:none!important;z-index:5000;max-width:min(410px,calc(100vw - 24px));
+  border-radius:16px!important;padding:8px 10px!important;gap:7px!important;
+  flex-wrap:wrap;box-shadow:0 9px 30px #0003!important;backdrop-filter:none!important;
+}
+.bsa181-selection .btn{min-height:38px!important;padding:7px 12px!important}
+.bsa181-selection .bsa41-pick-label{flex:1 1 160px}
+.bsa181-selection .bsa41-pick-label select{min-width:110px;max-width:100%;font-size:14px}
+@media(max-width:899px){.bsa181-selection{top:calc(76px + env(safe-area-inset-top,0px));right:12px!important;max-width:calc(100vw - 24px);font-size:12px}}
+.bsa41-note-editor{right:clamp(12px,2vw,30px)!important;bottom:calc(96px + env(safe-area-inset-bottom,0px))!important;max-width:calc(100vw - 26px);max-height:min(63dvh,580px)!important;overflow:auto}
+.bsa41-highlight-toolbar{gap:10px!important}
+@media(max-width:899px){.bsa41-note-editor{bottom:calc(102px + env(safe-area-inset-bottom,0px))!important;max-height:50dvh!important}}
+
+/* iOS: system typographic rhythm, inset grouped lists and floating sheets. */
+html[data-desk-theme="ios"]{--bsa42-ios-round:26px}
+html[data-desk-theme="ios"] :is(body,button,input,select,textarea){font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif!important}
+html[data-desk-theme="ios"] .shell>.rail{background:color-mix(in srgb,var(--bg) 72%,var(--surface))!important;border-right:1px solid var(--line)!important;box-shadow:none!important}
+html[data-desk-theme="ios"] .rail-nav .nav-group-heading{font-size:.74rem!important;letter-spacing:.07em!important;font-weight:790!important;text-transform:uppercase}
+html[data-desk-theme="ios"] .rail-nav .nav-group-links button{border-radius:13px!important;min-height:43px!important;padding:11px 13px!important;transition:background-color .18s ease,transform .18s ease}
+html[data-desk-theme="ios"] .rail-nav button.on{background:color-mix(in srgb,var(--accent) 13%,var(--surface))!important;box-shadow:none!important}
+html[data-desk-theme="ios"] .workspace-topbar{border-radius:18px!important;background:color-mix(in srgb,var(--surface) 89%,var(--bg))!important;border:1px solid var(--line)!important;padding:12px 17px!important}
+html[data-desk-theme="ios"] .content{background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 5%,var(--bg)),var(--bg) 45%)!important}
+html[data-desk-theme="ios"] .content :is(.panel,.bsa205-card,.bsa31-route-card,.bsa205-hero,.bsa33-study-head,.bsa3-library-browser,.bsa3-question-pane,.bsa205-next-card,.bsa3-question-row,.ps-set,.ai-log,.ai-body,.lx-reader,.lx-sec,.toolkit-panel,.bsa42-fs-lab),
+html[data-desk-theme="ios"] .bsa4-dock-panel{border-radius:var(--bsa42-ios-round)!important;background:var(--surface)!important;box-shadow:0 7px 24px color-mix(in srgb,var(--text) 8%,transparent)!important;border:1px solid color-mix(in srgb,var(--line) 92%,transparent)!important}
+html[data-desk-theme="ios"] .content :is(.btn,.bsa205-head-action,.bsa3-topic-folder,.bsa205-primary-action,.bsa205-path,.bsa3-question-row button){border-radius:15px!important}
+html[data-desk-theme="ios"] .content :is(input,select,textarea){border-radius:13px!important;background:color-mix(in srgb,var(--bg) 65%,var(--surface))!important}
+html[data-desk-theme="ios"] .bottom-nav{background:color-mix(in srgb,var(--surface) 90%,var(--bg))!important;border-top:1px solid var(--line)!important;box-shadow:0 -8px 24px #0000000a!important;backdrop-filter:blur(18px)}
+html[data-desk-theme="ios"] .bottom-nav button{border-radius:14px!important}
+html[data-desk-theme="ios"] .bsa4-dock-trigger{border-radius:999px!important;box-shadow:0 8px 24px #0002!important;background:var(--surface)!important}
+html[data-desk-theme="ios"] .bsa41-note-editor{border-radius:23px!important}
+html[data-desk-theme="ios"] .content :is(.bsa205-hero h1,.page-title,.bsa205-page-head h1){font-weight:800!important;letter-spacing:-.045em!important}
+
+/* Classic: earlier study-desk language, stable rectangular panels, compact
+   information density and familiar clear boundaries. */
+html[data-desk-theme="classic"] .content{background:var(--bg)!important;background-image:none!important}
+html[data-desk-theme="classic"] .shell>.rail{background:var(--surface)!important;border-right:1px solid var(--line)!important;box-shadow:none!important}
+html[data-desk-theme="classic"] .workspace-topbar{border-radius:0!important;border-bottom:1px solid var(--line)!important;background:var(--surface)!important;box-shadow:none!important}
+html[data-desk-theme="classic"] .content :is(.panel,.bsa205-card,.bsa3-library-browser,.bsa3-question-row,.bsa205-hero,.bsa31-route-card,.lx-sec,.ps-set,.ai-log,.ai-body,.toolkit-panel,.bsa42-fs-lab),
+html[data-desk-theme="classic"] .bsa4-dock-panel{border-radius:9px!important;border:1px solid var(--line)!important;background:var(--surface)!important;box-shadow:0 2px 8px #0000000b!important}
+html[data-desk-theme="classic"] .content :is(button,.btn,select,input,textarea){border-radius:7px!important}
+html[data-desk-theme="classic"] .content :is(h1,h2,.page-title){letter-spacing:-.015em!important;font-weight:760!important}
+html[data-desk-theme="classic"] .rail-nav button{border-radius:6px!important}
+html[data-desk-theme="classic"] .content :is(.bsa205-path,.bsa31-route-card):hover{transform:none!important;box-shadow:0 2px 8px #0001!important}
+
+/* Arcade: squared-off, bold component composition with lively, short motion;
+   keeps text areas calm and uses no looping animation. */
+html[data-desk-theme="arcade"] .content{background-image:radial-gradient(circle at 0% 0%,color-mix(in srgb,var(--accent) 12%,transparent),transparent 35%),linear-gradient(transparent 96%,color-mix(in srgb,var(--accent) 4%,transparent) 100%)!important;background-size:auto,100% 32px!important}
+html[data-desk-theme="arcade"] .content :is(.panel,.bsa205-card,.bsa205-hero,.bsa3-library-browser,.bsa31-route-card,.bsa3-question-row,.lx-sec,.ps-set,.ai-body,.ai-log,.toolkit-panel,.bsa42-fs-lab),
+html[data-desk-theme="arcade"] .bsa4-dock-panel{border-radius:12px!important;border:2px solid color-mix(in srgb,var(--accent) 55%,var(--line))!important;box-shadow:5px 5px 0 color-mix(in srgb,var(--accent) 16%,transparent)!important}
+html[data-desk-theme="arcade"] .content :is(.btn,.bsa205-path,.bsa3-topic-folder){border-radius:8px!important;box-shadow:3px 3px 0 color-mix(in srgb,var(--accent) 14%,transparent)!important}
+html[data-desk-theme="arcade"] .rail-nav button.on{outline:2px solid color-mix(in srgb,var(--accent) 70%,var(--line));outline-offset:1px}
+html[data-desk-theme="arcade"] .content :is(h1,h2,.page-title){letter-spacing:-.055em!important;font-weight:900!important}
+html[data-desk-theme="arcade"] .bsa3-topic-folder:hover{transform:translate(-2px,-2px)!important}
+
+/* Previously released Themes now style specialized screens, not merely the
+   primary Today/Plan pages. */
+html[data-desk-theme="notebook"] .content :is(.lx-reader,.ps-set,.ai-log,.ai-body,.toolkit-panel,.bsa3-question-row,.bsa42-fs-lab){border-radius:8px!important;border-left:4px solid color-mix(in srgb,var(--accent) 65%,var(--line))!important;box-shadow:3px 4px 0 color-mix(in srgb,var(--accent) 11%,transparent)!important;background:var(--surface)!important}
+html[data-desk-theme="glass"] .content :is(.lx-reader,.ps-set,.ai-log,.ai-body,.toolkit-panel,.bsa3-question-row,.bsa42-fs-lab){border-radius:25px!important;background:color-mix(in srgb,var(--surface) 88%,transparent)!important;border:1px solid color-mix(in srgb,var(--accent) 28%,var(--line))!important;box-shadow:0 12px 35px #00000012!important}
+html[data-desk-theme="editorial"] .content :is(.lx-reader,.ps-set,.ai-log,.ai-body,.toolkit-panel,.bsa3-question-row,.bsa42-fs-lab){border-radius:2px!important;border:2px solid color-mix(in srgb,var(--text) 52%,var(--line))!important;box-shadow:5px 5px 0 color-mix(in srgb,var(--text) 14%,transparent)!important;background:var(--surface)!important}
+html[data-desk-theme="focus"] .content :is(.lx-reader,.ps-set,.ai-log,.ai-body,.toolkit-panel,.bsa3-question-row,.bsa42-fs-lab){border-radius:14px!important;border:1px solid var(--line)!important;box-shadow:none!important;background:var(--surface)!important}
+
+/* Preview designs are genuinely different, rather than color swaps. */
+.bsa41-preview-ios .bsa41-theme-mini{background:color-mix(in srgb,var(--bg) 70%,var(--surface));border-radius:24px}
+.bsa41-preview-ios .bsa41-mini-rail{width:20%;border-radius:12px 0 0 12px;background:color-mix(in srgb,var(--accent) 12%,var(--surface))}
+.bsa41-preview-ios .bsa41-mini-hero{left:27%;height:25px;top:11px;border-radius:18px;background:var(--surface);box-shadow:0 1px 4px #0002}
+.bsa41-preview-ios .bsa41-mini-card{top:44px;border-radius:15px;box-shadow:0 4px 8px #0001}
+.bsa41-preview-ios .bsa41-mini-card.one{left:27%;width:31%}
+.bsa41-preview-ios .bsa41-mini-card.two{right:10px;width:31%}
+.bsa41-preview-ios .bsa41-mini-accent{left:31%;top:20px;width:20%;height:3px;border-radius:99px}
+.bsa41-preview-classic .bsa41-theme-mini{background:var(--bg);border-radius:3px}
+.bsa41-preview-classic .bsa41-mini-rail{background:var(--surface);border-right:1px solid var(--line)}
+.bsa41-preview-classic .bsa41-mini-hero{height:19px;border-radius:3px;background:var(--surface);border:1px solid var(--line)}
+.bsa41-preview-classic .bsa41-mini-card{top:38px;border-radius:3px;background:var(--surface);box-shadow:0 1px 2px #0001}
+.bsa41-preview-classic .bsa41-mini-accent{top:17px;height:4px;width:21%}
+.bsa41-preview-arcade .bsa41-theme-mini{border-radius:5px;background:repeating-linear-gradient(0deg,var(--surface-2),var(--surface-2) 20px,color-mix(in srgb,var(--accent) 8%,var(--surface)) 22px)}
+.bsa41-preview-arcade .bsa41-mini-hero{border-radius:3px;box-shadow:3px 3px 0 var(--line)}
+.bsa41-preview-arcade .bsa41-mini-card{border-radius:2px;border:2px solid var(--accent);box-shadow:3px 3px 0 var(--line)}
+
+/* Financial statement activity integrates into Practice, not a separate landing page. */
+.bsa42-fs-shortcut{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:16px auto;padding:18px 20px;max-width:1260px;background:var(--surface);border:1px solid var(--line);border-radius:20px;color:var(--text)}
+.bsa42-fs-shortcut p{margin:5px 0 0;color:var(--muted)}
+.bsa42-fs-lab{width:100%;max-width:1330px;margin:auto}
+.bsa42-fs-grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(280px,1fr);gap:18px;align-items:start}
+.bsa42-fs-grid>.panel{min-width:0;padding:clamp(18px,2.4vw,29px);display:grid;gap:15px;background:var(--surface);border:1px solid var(--line);color:var(--text)}
+.bsa42-fs-grid label{display:grid;gap:7px;min-width:0}
+.bsa42-fs-grid :is(input,select){width:100%;min-width:0;padding:11px 12px;border-radius:11px;background:var(--surface-2);border:1px solid var(--line);color:var(--text);font:inherit}
+.bsa42-fs-row{border-bottom:1px solid var(--line);padding:10px 0 14px}.bsa42-fs-row span{font-weight:700}.bsa42-fs-row small{font-size:.84rem;line-height:1.5}
+.bsa42-fs-actions{display:flex;flex-wrap:wrap;gap:8px}
+.bsa42-fs-links{display:grid;gap:8px;min-width:0}
+.bsa42-fs-link{display:flex;align-items:center;justify-content:space-between;gap:9px;min-width:0;padding:10px;border-radius:10px;background:var(--surface-2);overflow-wrap:anywhere}
+.bsa42-fs-link a{min-width:0}.bsa42-correct{color:var(--good,#169965)}.bsa42-caution{color:var(--bad,#cf6e34)}
+@media(max-width:920px){.bsa42-fs-grid{grid-template-columns:1fr}}
+@media(max-width:560px){.bsa42-fs-shortcut{padding:14px}.bsa42-fs-link{flex-direction:column;align-items:stretch}}
+
+/* Theme animations are short, idle-free and off for accessibility. */
+@keyframes bsa42-sheet-enter{from{opacity:.72;transform:translateY(8px) scale(.995)}to{opacity:1;transform:translateY(0) scale(1)}}
+html[data-desk-theme="ios"]:not([data-calm="on"]) .content :is(.bsa205-hero,.bsa205-page-head,.bsa205-next-card){animation:bsa42-sheet-enter .24s cubic-bezier(.2,.8,.2,1) both}
+html[data-desk-theme="arcade"]:not([data-calm="on"]) .content :is(.bsa205-hero,.bsa205-page-head){animation:bsa42-sheet-enter .19s cubic-bezier(.17,.93,.43,1.08) both}
+@media(prefers-reduced-motion:reduce){html[data-desk-theme] .content *,html[data-desk-theme] .bsa4-dock *{animation-duration:0.01ms!important;transition-duration:0.01ms!important}}
+
+
+/* V4.2 stability pass: consistent responsive surfaces and real floating focus timer. */
+.focus-bar.bsa190-focus{z-index:165!important;bottom:17px;max-width:min(540px,calc(100vw - 24px));background:var(--surface)!important;border:1px solid var(--line)!important;color:var(--text)!important;box-shadow:0 11px 34px #0003!important}
+.focus-bar.bsa190-focus :is(button,.btn){min-height:38px;touch-action:manipulation}
+.focus-bar.bsa190-focus .bsa190-handle{touch-action:none;cursor:grab}
+.focus-bar.bsa190-focus .bsa190-handle:active{cursor:grabbing}
+@media(max-width:899px){.focus-bar.bsa190-focus{bottom:calc(82px + env(safe-area-inset-bottom,0px))!important;left:50%;transform:translateX(-50%);max-width:calc(100vw - 30px);gap:5px;padding:6px 8px;flex-wrap:wrap;justify-content:center}.focus-bar.bsa190-focus .btn{font-size:.77rem;padding:6px 9px!important}}
+@media(min-width:900px) and (max-width:1250px){.focus-bar.bsa190-focus{bottom:16px!important}}
+.bsa42-timer-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px}.bsa42-timer-actions small{flex:1 0 100%}
+/* Avoid anchoring a large note sheet across the active lecture passage. */
+.bsa41-note-editor{top:clamp(82px,12vh,130px)!important;bottom:auto!important;max-height:min(51dvh,450px)!important;overscroll-behavior:contain}
+@media(max-width:899px){.bsa41-note-editor{top:auto!important;bottom:calc(94px + env(safe-area-inset-bottom,0px))!important;max-height:min(40dvh,350px)!important;padding:12px!important}}
+.bsa181-selection{max-height:100px;overflow:auto}
+@media(max-width:899px){.bsa181-selection{top:auto!important;bottom:calc(94px + env(safe-area-inset-bottom,0px))!important;max-height:94px;left:12px!important;right:12px!important;width:auto!important}}
+/* Library/structured editor: never allow narrow tablet columns to push content outside the viewport. */
+.bsa3-library-browser :is(.bsa3-question-pane,.bsa3-question-list,.bsa3-question-row){max-width:100%;min-width:0}
+.bsa39-workspace{max-width:100%;min-width:0}.bsa39-work-head{flex-wrap:wrap;gap:10px}
+.bsa39-workspace .bsa39-table-wrap{max-width:100%;min-width:0;overflow-x:auto;overscroll-behavior-x:contain}
+.bsa39-workspace .bsa39-table{min-width:510px;width:100%;table-layout:fixed}
+.bsa39-workspace :is(input,textarea,select){color:var(--text);background:var(--surface-2);border-color:var(--line)}
+.bsa39-workspace .bsa39-table input{min-width:0;width:100%}
+@media(min-width:740px) and (max-width:1250px){.bsa3-library-controls{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.bsa3-library-controls label{min-width:0}.bsa3-library-controls label:last-child{grid-column:1/-1}}
+/* These Themes control surfaces, not merely the active Appearance color. */
+html[data-desk-theme="bento"] .content{background-image:radial-gradient(circle at 82% 2%,color-mix(in srgb,var(--accent) 8%,transparent),transparent 36%)!important}
+html[data-desk-theme="bento"] .content :is(.panel,.bsa205-card,.bsa3-library-browser,.bsa3-question-row,.bsa205-hero,.bsa31-route-card,.lx-sec,.ps-set,.ai-log,.ai-body,.toolkit-panel,.bsa42-fs-lab),html[data-desk-theme="bento"] .bsa4-dock-panel{border-radius:23px!important;border:1px solid var(--line)!important;background:var(--surface)!important;box-shadow:0 7px 26px #00000012!important}
+html[data-desk-theme="bento"] .content :is(.bsa205-home-paths,.bsa31-route-cards,.bsa205-stat-grid){gap:14px!important}
+html[data-desk-theme="bento"] .content :is(.btn,button,input,textarea,select){border-radius:13px}
+html[data-desk-theme="bento"] .rail{box-shadow:0 5px 30px #00000010!important}
+html[data-desk-theme="blueprint"] .content{background-image:linear-gradient(color-mix(in srgb,var(--accent) 6%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--accent) 6%,transparent) 1px,transparent 1px)!important;background-size:32px 32px!important}
+html[data-desk-theme="blueprint"] .content :is(.panel,.bsa205-card,.bsa3-library-browser,.bsa3-question-row,.bsa205-hero,.bsa31-route-card,.lx-sec,.ps-set,.ai-log,.ai-body,.toolkit-panel,.bsa42-fs-lab),html[data-desk-theme="blueprint"] .bsa4-dock-panel{border-radius:4px!important;border:1.5px solid color-mix(in srgb,var(--accent) 45%,var(--line))!important;background:var(--surface)!important;box-shadow:4px 4px 0 color-mix(in srgb,var(--accent) 11%,transparent)!important}
+html[data-desk-theme="blueprint"] .content :is(h1,h2,h3){letter-spacing:.015em!important;text-transform:none;font-weight:850!important}
+html[data-desk-theme="blueprint"] .content :is(.btn,button,input,textarea,select){border-radius:4px!important}
+.bsa41-preview-bento .bsa41-theme-mini{background:var(--bg);border-radius:17px}.bsa41-preview-bento .bsa41-mini-card{border-radius:13px;box-shadow:0 3px 8px #0001}.bsa41-preview-bento .bsa41-mini-hero{border-radius:19px}
+.bsa41-preview-blueprint .bsa41-theme-mini{border-radius:2px;background:repeating-linear-gradient(0deg,var(--bg),var(--bg) 13px,color-mix(in srgb,var(--accent) 12%,var(--bg)) 14px)}.bsa41-preview-blueprint .bsa41-mini-card{border-radius:2px;border:1px solid var(--accent);box-shadow:3px 3px 0 var(--line)}.bsa41-preview-blueprint .bsa41-mini-hero{border-radius:2px}
+@media(prefers-reduced-motion:reduce){.focus-bar.bsa190-focus *,html[data-desk-theme] .bsa41-note-editor{animation:none!important;transition:none!important}}
+
+/* iPad shortcut menu: a compact overlay with a clear size limit and no
+   accidental full-height panel covering the study workspace. */
+.bsa-shortcut-menu{max-height:min(62dvh,520px);overflow-y:auto;overscroll-behavior:contain;width:min(240px,calc(100vw - 24px));padding:6px!important;z-index:180!important}
+.bsa-shortcut-menu button{min-height:38px;padding:8px 10px!important;gap:8px!important;font-size:.9rem!important}
+.bsa-shortcut-menu .bsa-shortcut-title{padding:6px 9px!important}
+@media(min-width:900px) and (max-width:1250px){.bsa-shortcut-menu{max-height:50dvh;max-width:220px}}
+/* Respect dragged floating timer coordinates instead of forcing it back to
+   bottom after a user moves it. */
+@media(max-width:899px){.focus-bar.bsa190-focus[style*="top:"]{bottom:auto!important;transform:none!important}}
