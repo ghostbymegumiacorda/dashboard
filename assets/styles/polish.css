@@ -4229,3 +4229,95 @@ body:has(>.backdrop) #bsa216-scroll-layer .bsa216-scroll-rail{display:none!impor
 
 #bsa216-scroll-layer{position:static!important;pointer-events:none}
 #bsa216-scroll-layer .bsa216-scroll-rail{pointer-events:auto;z-index:202}
+
+/* V2.17: only the most recently mounted timer is visible if older code left
+   an orphaned portal; this does not mutate any saved focus session. */
+#bsa213-focus-layer > .bsa212-float:not(:last-child){display:none!important}
+
+
+/* V2.18 - Focus clarity and cross-device compatibility. No data-format changes. */
+#bsa213-focus-layer{font-family:inherit;color:var(--text,#192f28);}
+#bsa213-focus-layer .bsa212-float{
+  width:212px;max-width:calc(100vw - 24px);
+  border-radius:16px;border:1px solid color-mix(in srgb,var(--accent,#167652) 22%,var(--line,#d9e7de));
+  background:var(--surface,#fff);box-shadow:0 10px 24px rgba(12,37,27,.13),0 2px 6px rgba(12,37,27,.06);
+  z-index:120!important;contain:layout style;
+}
+#bsa213-focus-layer .bsa212-float.expanded{width:min(340px,calc(100vw - 24px));z-index:215!important;box-shadow:0 18px 52px rgba(9,32,23,.22),0 4px 12px rgba(9,32,23,.1)}
+#bsa213-focus-layer .bsa212-float-top{min-height:58px;gap:6px;padding:6px 9px}
+#bsa213-focus-layer .bsa212-float-grip{flex-basis:25px;font-size:18px;color:var(--muted,#5d7369)}
+#bsa213-focus-layer .bsa212-float-digits{font-size:1rem;line-height:1.2;letter-spacing:-.02em}
+#bsa213-focus-layer .bsa212-float-summary>span{font-size:.72rem;line-height:1.4}
+#bsa213-focus-layer .bsa212-float-expand{flex-basis:31px;min-width:31px;min-height:34px;border-radius:10px}
+#bsa213-focus-layer .bsa212-float-body{padding:14px 16px 15px;gap:12px;max-height:min(560px,calc(100dvh - 105px));overflow:auto}
+#bsa213-focus-layer .bsa212-float-phase{font-size:1rem;line-height:1.35;letter-spacing:-.01em}
+#bsa213-focus-layer .bsa212-float-body>p{font-size:.8rem;line-height:1.55}
+#bsa213-focus-layer .bsa212-float-meter{height:7px}
+#bsa213-focus-layer .bsa212-float-meta{font-size:.73rem;line-height:1.5;gap:7px}
+#bsa213-focus-layer .bsa212-float-actions{gap:8px}
+#bsa213-focus-layer .bsa212-float-actions>button{font-size:.78rem;min-height:42px;line-height:1.35;padding:9px 11px;border-radius:11px;white-space:normal}
+#bsa213-focus-layer .bsa212-float-actions>button:focus-visible{outline-offset:1px}
+#bsa213-focus-layer .bsa212-float-notice{padding:11px 12px;font-size:.79rem;line-height:1.5}
+#bsa213-focus-layer .bsa214-floating-end>button{font-size:.78rem;min-height:42px;line-height:1.4;padding:9px 10px}
+#bsa213-focus-layer .bsa212-float-footnote{font-size:.72rem!important;line-height:1.5!important}
+#bsa213-focus-layer .bsa212-float-reset{font-size:.73rem;padding:5px;min-height:30px}
+#root .bsa214-standing-grid{gap:11px}
+#root .bsa214-standing-grid>div{gap:6px;padding:15px;min-height:74px}
+#root .bsa214-standing-grid strong{display:block;font-size:1.35rem;line-height:1.1}
+#root .bsa214-standing-grid small{display:block;font-size:.77rem;line-height:1.42;overflow-wrap:anywhere}
+#root .bsa214-standing-pending{font-size:.82rem;line-height:1.5}
+#root .bsa214-standing>small{font-size:.75rem;line-height:1.55}
+#root .bsa214-foundation-head h3{font-size:1.15rem}
+#root .bsa214-foundation-head p{font-size:.82rem;line-height:1.55}
+#root .bsa214-foundation-content>label{font-size:.86rem;line-height:1.5;gap:9px}
+#root .bsa214-foundation-content :is(textarea,select){font-size:.89rem;line-height:1.55;min-height:46px}
+#root .bsa214-foundation-prompt strong{font-size:.94rem;line-height:1.55}
+#root .bsa214-foundation-prompt small{font-size:.75rem}
+#root .bsa214-foundation-source>summary{font-size:.82rem}
+#root .bsa214-foundation-content>small{font-size:.76rem}
+@media(max-width:760px){
+  #root .bsa214-standing-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #root .bsa214-standing{padding:15px}
+  #root .bsa214-foundation{padding:15px}
+  #bsa213-focus-layer .bsa212-float{right:10px;bottom:calc(94px + env(safe-area-inset-bottom,0px))}
+  #bsa213-focus-layer .bsa212-float.expanded{width:min(340px,calc(100vw - 20px))}
+}
+@media(max-width:380px){
+  #root .bsa214-standing-grid>div{padding:12px}
+  #bsa213-focus-layer .bsa212-float.expanded{width:calc(100vw - 16px);right:8px}
+}
+@media(prefers-reduced-motion:reduce){
+  #bsa213-focus-layer .bsa212-float,
+  #bsa213-focus-layer .bsa212-float *{animation:none!important;transition:none!important}
+}
+@media print{#bsa213-focus-layer{display:none!important}}
+
+/* V2.19: low-profile viewport navigation at bottom-left, including long nested panes. */
+#bsa216-scroll-layer .bsa216-scroll-rail{
+  top:auto!important;right:auto!important;left:calc(12px + env(safe-area-inset-left,0px))!important;
+  bottom:calc(14px + env(safe-area-inset-bottom,0px))!important;
+  transform:none!important;width:38px!important;gap:3px!important;padding:4px!important;
+  border-radius:13px!important;opacity:.76;z-index:202;
+  box-shadow:0 4px 17px rgba(0,0,0,.12);
+}
+#bsa216-scroll-layer .bsa216-scroll-rail button{min-width:29px!important;min-height:36px!important;font-size:19px!important;touch-action:manipulation}
+@media(max-width:760px){#bsa216-scroll-layer .bsa216-scroll-rail{
+  bottom:calc(90px + env(safe-area-inset-bottom,0px))!important;
+  left:calc(8px + env(safe-area-inset-left,0px))!important;
+  width:35px!important;opacity:.82;
+}}
+@media(hover:none){#bsa216-scroll-layer .bsa216-scroll-rail{opacity:.85}}
+
+/* V2.20: align to the content edge on desktop, clear mobile controls and overlays. */
+#bsa216-scroll-layer .bsa216-scroll-rail{
+ left:calc(var(--bsa220-scroll-edge,12px) + env(safe-area-inset-left,0px))!important;
+ bottom:calc(16px + env(safe-area-inset-bottom,0px))!important;
+ opacity:.82;z-index:101;touch-action:manipulation;
+}
+#bsa216-scroll-layer .bsa216-scroll-rail button{min-height:42px!important;min-width:30px!important}
+@media(max-width:760px){#bsa216-scroll-layer .bsa216-scroll-rail{
+ bottom:calc(100px + env(safe-area-inset-bottom,0px))!important;
+}}
+body:has(> .backdrop) #bsa216-scroll-layer .bsa216-scroll-rail,
+body:has(> .bsa344-modal-backdrop) #bsa216-scroll-layer .bsa216-scroll-rail,
+body.modal-open #bsa216-scroll-layer .bsa216-scroll-rail{display:none!important}
