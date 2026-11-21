@@ -3834,3 +3834,12 @@ body>.backdrop .bsa16-delete-dialog .modal-foot>.btn{min-width:0;white-space:nor
 @media(max-width:640px){#root .lx-reader .bsa27-lecture-quicknav{right:calc(10px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px))}#root .lx-reader .bsa27-lecture-navbutton{width:38px;height:38px;min-width:38px;min-height:38px;border-radius:11px}#root .lx-reader .bsa27-section-ask{font-size:.7rem!important;min-height:40px!important}#root:has(.bsa181-selection) .lx-reader .bsa27-lecture-quicknav{bottom:calc(142px + env(safe-area-inset-bottom,0px))}}
 @media print{#root .lx-reader .bsa27-lecture-quicknav,#root .lx-reader .bsa27-section-ask{display:none!important}}
 @media(prefers-reduced-motion:reduce){#root .lx-reader .bsa27-lecture-quicknav *{transition:none!important;animation:none!important}}
+
+/* V2.8: compact, optional understanding checkpoint in the existing MCQ feedback. */
+.bsa28-understanding{margin:12px 0;padding:12px 14px;border:1px solid var(--line, #393c4b);border-radius:12px;background:var(--surface, #101114)}
+.bsa28-understanding summary{cursor:pointer;font-weight:700;list-style:revert}
+.bsa28-understanding p{margin:10px 0}
+.bsa28-understanding textarea{display:block;box-sizing:border-box;width:100%;min-height:76px;resize:vertical;margin:8px 0 10px;padding:11px;border:1px solid var(--line, #393c4b);border-radius:10px;background:var(--bg, #0c0c0e);color:var(--text, #eee);font:inherit}
+.bsa28-understanding-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.bsa28-understanding-actions .muted{flex:1 1 260px}
+@media(max-width:600px){.bsa28-understanding-actions .btn{width:100%}}
