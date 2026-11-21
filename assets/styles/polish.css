@@ -3843,3 +3843,55 @@ body>.backdrop .bsa16-delete-dialog .modal-foot>.btn{min-width:0;white-space:nor
 .bsa28-understanding-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
 .bsa28-understanding-actions .muted{flex:1 1 260px}
 @media(max-width:600px){.bsa28-understanding-actions .btn{width:100%}}
+
+/* V2.9 · Lecture-based typed recall. Scoped to Practice; Tutor unchanged. */
+.bsa29-cloze{max-width:1100px;margin-inline:auto;min-width:0}
+.bsa29-cloze .page-head{margin-bottom:.65rem}
+.bsa29-cloze .bsa29-setup,.bsa29-cloze .bsa29-question,.bsa29-cloze .bsa29-summary{padding:clamp(1rem,2vw,1.6rem);border-radius:20px;min-width:0}
+.bsa29-cloze .bsa29-resume{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;padding:.9rem 1rem;border:1px solid var(--line,#b0b7c5);border-radius:14px;margin:.7rem 0}
+.bsa29-cloze .bsa29-resume p{margin:.3rem 0 0}
+.bsa29-cloze label{display:grid;gap:.5rem;font-weight:600;min-width:0}
+.bsa29-cloze select,.bsa29-cloze input{width:100%;max-width:100%;min-height:44px;padding:.7rem .85rem;border-radius:12px;border:1px solid var(--line,#b0b7c5);background:var(--surface,#fff);color:inherit;font:inherit}
+.bsa29-cloze .grid-2{gap:1rem;margin:.8rem 0 1rem}
+.bsa29-cloze .row-center{display:flex;align-items:center;flex-wrap:wrap;gap:.65rem;margin:.8rem 0}
+.bsa29-cloze .bsa29-progress{display:flex;justify-content:space-between;gap:1rem;align-items:center;flex-wrap:wrap}
+.bsa29-cloze .bsa29-question-text{font-size:clamp(1.08rem,2.2vw,1.4rem);font-weight:650;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere;margin:1.1rem 0 1.3rem}
+.bsa29-cloze .bsa29-feedback{border:1px solid var(--line,#b0b7c5);border-radius:14px;padding:1rem;margin-top:.8rem}
+.bsa29-cloze .bsa29-feedback p{margin:.45rem 0}
+.bsa29-cloze .btn{min-height:40px}
+.bsa31-practice-tile.cloze .bsa31-practice-icon{background:rgba(89,139,211,.13)}
+@media(max-width:660px){.bsa29-cloze .bsa29-setup,.bsa29-cloze .bsa29-question,.bsa29-cloze .bsa29-summary{padding:1rem}.bsa29-cloze .grid-2{grid-template-columns:minmax(0,1fr)}.bsa29-cloze .bsa29-resume{display:block}}
+
+/* V2.9 · Compact MCQ setup & accessible keyboard-help presentation. */
+.bsa197-quiz .bsa29-mcq-style,.bsa197-quiz .bsa29-mcq-insights{border:1px solid var(--line,#c4cada);border-radius:14px;margin:.65rem 0;background:transparent;overflow:visible}
+.bsa197-quiz :is(.bsa29-mcq-style,.bsa29-mcq-insights)>summary{display:flex;align-items:center;flex-wrap:wrap;gap:.5rem;cursor:pointer;list-style:none;min-height:48px;padding:.7rem 1rem}
+.bsa197-quiz :is(.bsa29-mcq-style,.bsa29-mcq-insights)>summary::-webkit-details-marker{display:none}
+.bsa197-quiz :is(.bsa29-mcq-style,.bsa29-mcq-insights)>summary:before{content:'▸';font-size:.8rem;color:var(--muted,#7e8494);transition:transform .16s}
+.bsa197-quiz :is(.bsa29-mcq-style,.bsa29-mcq-insights)[open]>summary:before{transform:rotate(90deg)}
+.bsa197-quiz :is(.bsa29-mcq-style,.bsa29-mcq-insights)>summary small{margin-left:auto;font-size:.75rem}
+.bsa197-quiz .bsa29-current-mode{font-size:.82rem;padding:.24rem .7rem;border-radius:100px;background:rgba(120,125,180,.13);font-weight:650}
+.bsa197-quiz .bsa29-mcq-style fieldset{margin:.2rem .95rem .85rem}
+.bsa197-quiz .bsa29-mcq-insights .bsa197-memory-grid{margin:.3rem .95rem .7rem}
+.bsa197-quiz .bsa29-mcq-insights>p{margin:.4rem .95rem 1rem}
+.bsa197-quiz .bsa29-mcq-key-hint{font-size:.72rem;opacity:.7;white-space:nowrap}
+.bsa197-quiz .bsa29-mcq-tutor-note{font-size:.8rem;flex:0 0 100%;margin-top:-.25rem}
+.bsa197-quiz .bsa29-mcq-tutor-note summary{cursor:pointer;opacity:.75}
+.bsa197-quiz .bsa29-mcq-tutor-note small{display:block;margin:.35rem 0 0;line-height:1.5}
+.bsa197-quiz .bsa-v156-setup-head{margin-bottom:.5rem}
+.bsa197-quiz .bsa-v156-setup .grid-2{row-gap:.75rem}
+.bsa197-quiz .bsa-v156-setup .step-actions{margin-top:1rem}
+.bsa197-quiz .bsa197-question-meta{display:flex;align-items:center;gap:.5rem .85rem;flex-wrap:wrap}
+.bsa197-quiz :is(.bsa29-mcq-style,.bsa29-mcq-insights)>summary:focus-visible{outline:2px solid currentColor;outline-offset:2px;border-radius:12px}
+@media(max-width:720px){.bsa197-quiz .bsa29-mcq-key-hint{white-space:normal;font-size:.68rem}.bsa197-quiz :is(.bsa29-mcq-style,.bsa29-mcq-insights)>summary{gap:.35rem}.bsa197-quiz .bsa29-mcq-insights .bsa197-memory-grid{margin-inline:.55rem}}
+@media(prefers-reduced-motion:reduce){.bsa197-quiz :is(.bsa29-mcq-style,.bsa29-mcq-insights)>summary:before{transition:none}}
+
+/* V2.10 — non-intrusive guidance for exhausted Unseen-only practice and
+   the optional, global Tutor teaching-preferences panel. */
+.bsa210-empty-mode{margin:.65rem 0 0;padding:.85rem 1rem;border:1px solid var(--border,rgba(134,155,211,.25));border-radius:14px;background:var(--surface-soft,rgba(123,145,210,.045));line-height:1.5}
+.bsa210-empty-mode strong{display:block;margin-bottom:.2rem}
+.bsa210-empty-mode p{margin:.3rem 0 .75rem}
+.bsa210-empty-mode .bsa197-row{display:flex;flex-wrap:wrap;gap:.5rem}
+.ask-context-details .bsa210-tutor-preferences{margin:.65rem 0;border:1px solid var(--border,rgba(134,155,211,.25));border-radius:12px;padding:.6rem .8rem}
+.ask-context-details .bsa210-tutor-preferences>summary{cursor:pointer;font-weight:650;list-style-position:inside}
+.ask-context-details .bsa210-tutor-preferences textarea{display:block;width:100%;box-sizing:border-box;max-width:100%;min-height:5.2rem;resize:vertical;margin-top:.5rem;font:inherit;line-height:1.45}
+.ask-context-details .bsa210-tutor-preferences .row-end{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:.65rem;margin-top:.4rem}
