@@ -1062,9 +1062,9 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         }
       };
       document.addEventListener("keydown", onKey);
-      // V4.6.5: only an actually mounted dialog may lock the page scroll.
-      // Multiple dialog portals can briefly coexist during transitions; count
-      // the mounted dialogs instead of assuming a single modal owns the lock.
+      // V4.6.8: dialog marker only. Fixed backdrop blocks background taps;
+      // DO NOT lock html/body scrolling (caused iPad/Android one-finger freezes).
+      // Count mounted dialogs so nested dialogs cannot leave a stale marker.
       document.body.dataset.bsaModalCount = String((Number(document.body.dataset.bsaModalCount) || 0) + 1);
       document.body.classList.add("modal-open");
       return () => {
@@ -3627,7 +3627,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     ];
     return h(Modal,{title:'More tools',onClose},
       h('div',{className:'bsa3-more-intro'},h('p',null,'Your everyday work is in Today, Study, Practice and Library. Open a group below only when you need a specialized tool.'),
-        h('small',{className:'bsa47-mobile-build'},'Dashboard build V4.6.7'),
+        h('small',{className:'bsa47-mobile-build'},'Dashboard build V4.6.8'),
         h('button',{className:'btn primary',onClick:()=>go('guide')},'Show me where to start')),
       h('div',{className:'bsa3-more-settings'},
         [['subjects','Switch subjects','subjects'],['data','Back up or restore','data'],['look','Change appearance','look']].map(([route,title,icon])=>h('button',{className:'btn',key:route,onClick:()=>onPick(route)},h(Icon,{name:icon,size:17}),title))),
@@ -4687,7 +4687,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const previousTimer=useRef(null);
     useEffect(()=>{const key=t&&(t.startedAt||t.start);if(key&&previousTimer.current&&key!==previousTimer.current)showTimer();previousTimer.current=key||null},[t&&(t.startedAt||t.start)]);
     const dragging=useRef(null);
-    const beginDrag=e=>{if(e.button!==0&&e.pointerType==='mouse')return;const r=e.currentTarget.parentElement.getBoundingClientRect();dragging.current={px:e.clientX,py:e.clientY,x:r.left,y:r.top};try{e.currentTarget.setPointerCapture(e.pointerId)}catch(_){}e.preventDefault()};
+    const beginDrag=e=>{if(e.pointerType==='touch'||(e.button!==0&&e.pointerType==='mouse'))return;const r=e.currentTarget.parentElement.getBoundingClientRect();dragging.current={px:e.clientX,py:e.clientY,x:r.left,y:r.top};try{e.currentTarget.setPointerCapture(e.pointerId)}catch(_){}e.preventDefault()};
     const moveDrag=e=>{const d=dragging.current;if(!d)return;const r=e.currentTarget.getBoundingClientRect(),w=Math.min(window.innerWidth-16,r.width),height=Math.min(window.innerHeight-16,r.height);setFloating({x:Math.max(8,Math.min(window.innerWidth-w-8,d.x+e.clientX-d.px)),y:Math.max(8,Math.min(window.innerHeight-height-8,d.y+e.clientY-d.py))})};
     const keyDrag=e=>{if(!['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Home'].includes(e.key))return;e.preventDefault();if(e.key==='Home'){setFloating(null);return}const r=e.currentTarget.parentElement.getBoundingClientRect();const dx=e.key==='ArrowLeft'?-20:e.key==='ArrowRight'?20:0,dy=e.key==='ArrowUp'?-20:e.key==='ArrowDown'?20:0;setFloating({x:Math.max(8,Math.min(window.innerWidth-r.width-8,r.left+dx)),y:Math.max(8,Math.min(window.innerHeight-r.height-8,r.top+dy))})};
     const endDrag=()=>{dragging.current=null};
@@ -15687,7 +15687,10 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       top:below?Math.min(pillY+55,window.innerHeight-195)+'px':'auto',
       ...(below?{}:{bottom:Math.max(14,window.innerHeight-pillY+12)+'px'}),
       maxHeight:(below?Math.max(155,window.innerHeight-pillY-73):Math.max(160,pillY-24))+'px'};
-    const startDock=e=>{if(e.button!==undefined&&e.button!==0)return;
+    const startDock=e=>{
+      // V4.6.8: NEVER capture a finger used for page scrolling. Mouse/pen and
+      // keyboard still move the dock; touch simply taps to open/close.
+      if(e.pointerType==='touch'||(e.button!==undefined&&e.button!==0))return;
       const parent=e.currentTarget.closest('.bsa4-dock');if(!parent)return;
       const rect=parent.getBoundingClientRect();drag.current={id:e.pointerId,x:e.clientX,y:e.clientY,left:rect.left,top:rect.top,moved:false};
       e.currentTarget.setPointerCapture?.(e.pointerId)};
@@ -16195,7 +16198,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
         h('div',{className:'bsa47-palettes'},
           h('div',{className:'bsa47-palette-heading'},h('strong',null,'Quick colors'),h('button',{type:'button',onClick:()=>setModal('look')},'All colors')),
           h(ThemeDots,{settings:data.settings,setSettings})),
-        h(SyncBadge,{onOpen:openSync}),h('small',{className:'bsa47-build-tag',title:'Installed dashboard build'},'V4.6.7'))), /* @__PURE__ */ React.createElement("header", { className: "mobilebar" }, /* @__PURE__ */ h("div",{className:"bsa-shortcut-anchor mobile"},React.createElement("button", { className: "brand-mark mobile-home-button", type: "button", onClick: () => setShortcutsOpen(v=>!v), title: "Open quick shortcuts", "aria-label": "Open quick shortcuts", "aria-expanded":shortcutsOpen,"aria-haspopup":"menu" }, "Σ"),shortcutMenu()), subjectPicker("subj-m"), h("button",{className:"icon-btn",onClick:()=>setSpotlightOpen(true),"aria-label":"Search dashboard"},"⌕"), !window.__BSA_SHARED_MODE__&&h('button',{type:'button',className:'icon-btn bsa48-mobile-ai',onClick:()=>go('nlm',{}),'aria-label':'Open AI Prompt Builder',title:'AI Prompt Builder'},'✦'), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal(syncAlert ? "sync" : "data"), "aria-label": syncAlert ? "Import, export and sync (needs attention)" : "Import and export", "data-sync": syncAlert }, /* @__PURE__ */ React.createElement(Icon, { name: "data" })), /* @__PURE__ */ h('button',{className:'icon-btn',onClick:()=>go('guide'),'aria-label':'Guided walkthrough',title:'Guided walkthrough'},'?'),h('button',{className:'icon-btn bsa46-mobile-settings',onClick:()=>setSidebarEdit(true),'aria-label':'Subject profile and workspace settings',title:'Workspace settings'},'⚙')), /* @__PURE__ */ React.createElement("main", { className: "content bsa33-content", "data-desk-page": nav.tab },
+        h(SyncBadge,{onOpen:openSync}),h('small',{className:'bsa47-build-tag',title:'Installed dashboard build'},'V4.6.8'))), /* @__PURE__ */ React.createElement("header", { className: "mobilebar" }, /* @__PURE__ */ h("div",{className:"bsa-shortcut-anchor mobile"},React.createElement("button", { className: "brand-mark mobile-home-button", type: "button", onClick: () => setShortcutsOpen(v=>!v), title: "Open quick shortcuts", "aria-label": "Open quick shortcuts", "aria-expanded":shortcutsOpen,"aria-haspopup":"menu" }, "Σ"),shortcutMenu()), subjectPicker("subj-m"), h("button",{className:"icon-btn",onClick:()=>setSpotlightOpen(true),"aria-label":"Search dashboard"},"⌕"), !window.__BSA_SHARED_MODE__&&h('button',{type:'button',className:'icon-btn bsa48-mobile-ai',onClick:()=>go('nlm',{}),'aria-label':'Open AI Prompt Builder',title:'AI Prompt Builder'},'✦'), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal(syncAlert ? "sync" : "data"), "aria-label": syncAlert ? "Import, export and sync (needs attention)" : "Import and export", "data-sync": syncAlert }, /* @__PURE__ */ React.createElement(Icon, { name: "data" })), /* @__PURE__ */ h('button',{className:'icon-btn',onClick:()=>go('guide'),'aria-label':'Guided walkthrough',title:'Guided walkthrough'},'?'),h('button',{className:'icon-btn bsa46-mobile-settings',onClick:()=>setSidebarEdit(true),'aria-label':'Subject profile and workspace settings',title:'Workspace settings'},'⚙')), /* @__PURE__ */ React.createElement("main", { className: "content bsa33-content", "data-desk-page": nav.tab },
       storeFull&&h('div',{className:'bsa48-save-failure',role:'alert'},h('strong',null,'Changes are not saving on this device.'),h('span',null,'The browser refused a local write. Export a full backup and review storage before further editing.'),h('button',{type:'button',className:'btn',onClick:()=>setModal({data:'export'})},'Open backup')),
       h("div",{className:"workspace-topbar v2-topbar"},
         h("div",{className:"workspace-context"},h("span",{className:"workspace-eyebrow"},"STUDY SPACE  /"),h("strong",null,(tabs.find(t=>t[0]===nav.tab)||[null,"Today"])[1]),h("span",{className:"workspace-subject"},subject.code||subject.name)),
