@@ -2652,3 +2652,321 @@ body>.backdrop .modal-body>.tabs>button{flex:0 0 auto!important;white-space:nowr
  border-radius:18px 18px 0 0;}
 }
 @media(prefers-reduced-motion:reduce){body>.backdrop>.modal{animation:none!important;}}
+
+
+/* V4.6.5 — Restore touch and wheel scrolling on iPad and smaller screens.
+   The main page uses ONE document scrollbar; only the rail and real dialogs
+   have independent scroll regions. Older modal-open classes must not freeze
+   the document after their dialog has been dismissed. */
+html { overflow-y:auto!important; }
+html:has(> body > .backdrop){overflow-y:hidden!important;}
+body:not(:has(> .backdrop)) {
+  height:auto!important;max-height:none!important;
+  overflow-y:visible!important;overscroll-behavior-y:auto!important;
+}
+body.modal-open:not(:has(> .backdrop)) {
+  overflow-y:visible!important;overscroll-behavior-y:auto!important;
+}
+body:has(> .backdrop) {
+  overflow-y:hidden!important;overscroll-behavior-y:none!important;
+}
+#root>.shell {height:auto!important;max-height:none!important;min-height:100dvh!important;overflow:visible!important;}
+#root>.shell>.content {
+  height:auto!important;max-height:none!important;
+  min-height:0!important;overflow-y:visible!important;
+}
+@media(max-width:899px) {
+  #root>.shell>.content{padding-bottom:calc(116px + env(safe-area-inset-bottom,0px))!important;}
+}
+
+/* V4.6.6 – mobile More tools: use theme tokens, never the obsolete --panel fallback.
+   On dark skins --panel is not set: fallback #fff made group labels unreadable. */
+body > .backdrop .bsa3-more-groups .bsa3-tool-group {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  min-width: 0;
+  transition: border-color .16s ease;
+}
+body > .backdrop .bsa3-more-groups .bsa3-tool-group[open] {
+  background: var(--surface-2);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+}
+body > .backdrop .bsa3-more-groups .bsa3-tool-group > summary {
+  color: var(--text);
+  background: transparent;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  row-gap: 3px;
+  min-height: 34px;
+  line-height: 1.4;
+  padding: 2px 0;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+body > .backdrop .bsa3-more-groups .bsa3-tool-group > summary::-webkit-details-marker { display: none; }
+body > .backdrop .bsa3-more-groups .bsa3-tool-group > summary > strong {
+  color: var(--text);
+  flex: 1 1 145px;
+  font-size: .9rem;
+  font-weight: 750;
+}
+body > .backdrop .bsa3-more-groups .bsa3-tool-group > summary > span {
+  color: var(--muted);
+  flex: 0 0 auto;
+  font-size: .78rem;
+  font-weight: 650;
+}
+body > .backdrop .bsa3-more-groups .bsa3-tool-group > summary::after {
+  content: '⌄';
+  display: inline-block;
+  font-size: 1.08rem;
+  line-height: 1;
+  color: var(--muted);
+  transition: transform .16s ease;
+}
+body > .backdrop .bsa3-more-groups .bsa3-tool-group[open] > summary::after { transform: rotate(180deg); }
+body > .backdrop .bsa3-more-groups .bsa3-tool-group > summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: 7px;
+}
+body > .backdrop .bsa3-more-groups .bsa3-tool-group .bsa205-more-grid { margin-top: 12px; }
+body > .backdrop .bsa3-more-groups .bsa3-tool-group .bsa205-more-grid > button {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--text);
+  min-width: 0;
+  min-height: 44px;
+  line-height: 1.35;
+  white-space: normal;
+}
+body > .backdrop .bsa3-more-groups .bsa3-tool-group .bsa205-more-grid > button:hover,
+body > .backdrop .bsa3-more-groups .bsa3-tool-group .bsa205-more-grid > button:focus-visible {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+@media (max-width: 560px) {
+  body > .backdrop .bsa3-more-groups { margin-top: 13px; gap: 8px; }
+  body > .backdrop .bsa3-more-groups .bsa3-tool-group { padding: 10px 13px; }
+  body > .backdrop .bsa3-more-groups .bsa3-tool-group .bsa205-more-grid { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body > .backdrop .bsa3-more-groups .bsa3-tool-group,
+  body > .backdrop .bsa3-more-groups .bsa3-tool-group > summary::after { transition: none; }
+}
+
+/* V4.6.7 — Real adaptive rail + iPad document scrolling.
+   This section is deliberately last so theme presentations cannot force a
+   full-width rail or re-lock the study material viewport. */
+@media (min-width: 900px) {
+  #root > .shell {
+    max-width: none !important;
+    width: 100% !important;
+    min-height: 100dvh !important;
+    height: auto !important;
+    overflow: visible !important;
+    align-items: start !important;
+  }
+  #root > .shell > .content {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    min-height: 100dvh !important;
+    height: auto !important;
+    overflow-x: clip !important;
+    overflow-y: visible !important;
+    touch-action: pan-y !important;
+  }
+  #root > .shell > .rail {
+    position: sticky !important;
+    top: 0 !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    touch-action: pan-y !important;
+  }
+  #root .rail .rail-nav-wrap.bsa46-rail-nav {
+    overflow-y: auto !important;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y !important;
+  }
+  #root .rail .bsa47-rail-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    min-width: 0;
+    flex: 0 0 auto;
+  }
+  #root .rail .bsa47-rail-header > .bsa-shortcut-anchor {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+  #root .rail .bsa47-rail-header .brand {
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    font-size: .85rem !important;
+  }
+  #root .rail .bsa47-rail-header .brand > span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  #root .rail .bsa47-rail-toggle {
+    display: grid !important;
+    flex: 0 0 36px !important;
+    width: 36px !important;
+    height: 38px !important;
+    place-items: center;
+    color: var(--text) !important;
+    background: var(--surface-2) !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 11px !important;
+    cursor: pointer;
+    padding: 0 !important;
+    font: inherit;
+    font-size: 1rem;
+    transition: background .15s ease;
+  }
+  #root .rail .bsa47-rail-toggle:hover,
+  #root .rail .bsa47-rail-toggle:focus-visible {
+    background: var(--accent-soft) !important;
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  #root > .shell.bsa47-rail-collapsed {
+    --rail: 72px !important;
+    grid-template-columns: 72px minmax(0,1fr) !important;
+  }
+  #root > .shell.bsa47-rail-collapsed > .rail {
+    width: 72px !important;
+    max-width: 72px !important;
+    padding: 10px 7px 12px !important;
+    gap: 8px !important;
+  }
+  #root > .shell.bsa47-rail-collapsed .bsa47-rail-header {
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+  }
+  #root > .shell.bsa47-rail-collapsed .bsa47-rail-header > .bsa-shortcut-anchor {
+    flex: none;
+    width: 48px;
+  }
+  #root > .shell.bsa47-rail-collapsed .bsa47-rail-header .brand {
+    width: 48px !important;
+    height: 44px !important;
+    padding: 3px !important;
+    justify-content: center !important;
+  }
+  #root > .shell.bsa47-rail-collapsed .bsa47-rail-header .brand > span:last-child {
+    display: none !important;
+  }
+  #root > .shell.bsa47-rail-collapsed .bsa47-rail-toggle {
+    flex: 0 0 36px !important;
+    width: 44px !important;
+  }
+  #root > .shell.bsa47-rail-collapsed .rail-subject,
+  #root > .shell.bsa47-rail-collapsed .bsa46-profile-row,
+  #root > .shell.bsa47-rail-collapsed .bsa46-nav-search,
+  #root > .shell.bsa47-rail-collapsed .bsa48-builder-cta,
+  #root > .shell.bsa47-rail-collapsed .bsa46-section-label,
+  #root > .shell.bsa47-rail-collapsed .nav-group,
+  #root > .shell.bsa47-rail-collapsed .bsa47-palettes,
+  #root > .shell.bsa47-rail-collapsed .save-note,
+  #root > .shell.bsa47-rail-collapsed .bsa47-utility-button > span:last-child,
+  #root > .shell.bsa47-rail-collapsed .bsa47-restore-shortcuts {
+    display: none !important;
+  }
+  #root > .shell.bsa47-rail-collapsed .bsa46-rail-nav {
+    padding: 4px 0 !important;
+    gap: 5px !important;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  #root > .shell.bsa47-rail-collapsed .bsa46-rail-nav > .rail-nav {
+    gap: 5px !important;
+  }
+  #root > .shell.bsa47-rail-collapsed .bsa45-pinned-block {
+    display: grid !important;
+    justify-items: center;
+    gap: 6px;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+  }
+  #root > .shell.bsa47-rail-collapsed .bsa45-pin-link {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 48px !important;
+    min-width: 0 !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    padding: 8px !important;
+    margin: 0 !important;
+  }
+  #root > .shell.bsa47-rail-collapsed .bsa45-pin-link > span,
+  #root > .shell.bsa47-rail-collapsed .bsa45-pin-link > .n { display: none !important; }
+  #root > .shell.bsa47-rail-collapsed .bsa45-pin-link .ico { margin: 0 !important; }
+  #root > .shell.bsa47-rail-collapsed .bsa47-utility-rail {
+    padding: 8px 0 0 !important;
+    gap: 5px !important;
+  }
+  #root > .shell.bsa47-rail-collapsed .bsa47-utility-actions {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    justify-items: center;
+    gap: 5px !important;
+  }
+  #root > .shell.bsa47-rail-collapsed .bsa47-utility-button {
+    width: 45px !important;
+    min-width: 45px !important;
+    height: 43px !important;
+    min-height: 43px !important;
+    padding: 7px !important;
+    justify-content: center !important;
+  }
+  #root .rail .bsa47-build-tag {
+    display: block;
+    color: var(--muted);
+    font-size: .65rem;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    padding: 2px 0 0;
+  }
+  #root > .shell.bsa47-rail-collapsed .bsa47-build-tag {font-size: .58rem;}
+}
+@media (max-width: 899px) {
+  #root .bsa47-rail-toggle { display: none !important; }
+}
+/* Never prevent iPad Safari document movement after a dialog has closed. */
+@media (min-width: 900px) and (hover: none) {
+  html:not(:has(body > .backdrop)),
+  html:not(:has(body > .backdrop)) body { overflow-y: auto !important; }
+  #root > .shell > .content { -webkit-overflow-scrolling: touch; }
+}
+/* Compact brand shortcuts must open over the content, not be cut off at 72px. */
+@media (min-width:900px) {
+  #root > .shell.bsa47-rail-collapsed .bsa-shortcut-menu {
+    position:fixed!important;
+    top:12px!important;
+    left:80px!important;
+    width:min(260px,calc(100vw - 92px))!important;
+    max-height:min(70dvh,460px)!important;
+    z-index:200100!important;
+    background:var(--surface)!important;
+    color:var(--text)!important;
+    box-shadow:0 14px 42px rgba(0,0,0,.34)!important;
+  }
+}
+
+/* Mobile update check: expose build identity inside More tools without relying on sidebar. */
+body > .backdrop .bsa47-mobile-build {display:block;margin:-2px 0 12px;color:var(--muted);font-weight:700;font-size:.73rem;letter-spacing:.025em;}
