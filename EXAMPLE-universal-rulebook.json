@@ -1,24 +1,24 @@
 {
   "format": "bsa-rulebook-v1",
-  "subject": "Example Subject",
+  "subject": "Example Subject — REPLACE BEFORE IMPORT",
   "rules": [
     {
-      "collection": "Chapter 1 Reference",
-      "code": "R1",
-      "title": "Illustrative classification principle",
-      "topic": "Topic 1",
-      "category": "General",
-      "decisionRule": "Use an authoritative source to define this rule before relying on it.",
-      "conditions": "When relevant criteria from your actual source are met.",
-      "treatment": "Apply the exact steps stated in your reference.",
-      "exceptions": "Record only verified exceptions.",
-      "example": "Replace with a source-checked application.",
-      "examTrap": "Confusing examples with the actual decision rule.",
+      "collection": "Example Collection — REPLACE",
+      "code": "EXAMPLE-01",
+      "title": "Illustrative rule schema — not a verified academic rule",
+      "topic": "Replace with the exact topic",
+      "category": "Reference rule",
+      "decisionRule": "Replace with the precise source-supported decision trigger.",
+      "conditions": "Replace with the conditions for applying the rule.",
+      "treatment": "Replace with the actual source-supported treatment.",
+      "exceptions": "Replace with real, verified exceptions, if any.",
+      "example": "Replace with a clearly labeled worked application and verify its answer.",
+      "examTrap": "Replace with a genuine misconception grounded in the lesson.",
       "sourceTitle": "",
       "sourceLocator": "",
       "sourceUrl": "",
       "status": "Needs verification",
-      "notes": ""
+      "notes": "TEMPLATE ONLY. Do not import as learning content until every placeholder is replaced and checked against a real source."
     }
   ]
 }

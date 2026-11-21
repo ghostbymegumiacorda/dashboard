@@ -1,103 +1,65 @@
-# BSA Study Desk — AI Source & Import Contract (v169)
+# BSA Study Desk — Source-First AI and JSON Import Contract
 
-This is a reusable **instruction source**. Upload it to your AI tool along with the actual textbook chapters, syllabus, slides, handouts, and any official standards you want considered. The instructions here cannot supply facts from missing source documents.
+Version: V4.6.1 (2026-11-21). Works with the subject-adaptive dashboard (including CFAS, Financial Markets, mathematics, history, theology, and custom subjects). Attach this document alongside the **actual course sources** when asking another AI to create importable study material.
 
-## 1. Task scope and evidence
-- Follow the material type in the user's latest request: **lecture**, **problem set**, **MCQ set**, **flashcards**, **reference/rule cards**, or **interactive tutoring**. Never substitute one type for another.
-- Read the provided course name, topic, chapter, and coverage. Don't wander into adjacent chapters unless a prerequisite is essential; label it as a prerequisite.
-- Prefer the user's uploaded course materials for course expectations. Flag chapters or pages you cannot access; do not claim complete coverage from incomplete books.
-- For factual gaps, use **external sources only when you can actually access and verify them**. Prioritize official standard setters and regulators, current official legislation, primary scientific research or credible academic sources. Cross-check effective dates and jurisdiction.
-- Cite actual titles and page/section or working URLs. Never fabricate a source, author, page number, quotation, standard number or publication date. When you cannot browse, explicitly state the limitation.
-- Distinguish **from provided materials**, **supplemental verified source**, and **illustrative practice example**. Numerical scenarios may be invented only when clearly labelled and independently solved.
-- For Philippine accounting, check current **FSRSC** pronouncements, relevant PIC guidance, and IFRS Foundation originals, distinguishing effective dates and local adoption. Official directories: https://www.pfsrsc.org/government-organization-our-standards and https://www.ifrs.org/issued-standards/list-of-standards/. Do not treat summaries as full authoritative standard text.
+**Important:** These are instructions only. They do not contain textbook facts, standards, verified questions, or answers. A subject profile is not a source document.
 
-## 2. Accuracy and teaching quality
-- Begin with simple words, then precise technical terminology. Include recognition triggers, exceptions, and what changes the correct treatment.
-- Keep self-contained calculation problems with amounts, dates, units, assumptions, and requirements; verify all computations and journal entries.
-- For MCQs give exactly four independent plausible options, one defensible answer, and explain why each distractor is wrong. Avoid duplicated questions and answer-length hints.
-- When the source doesn't support a requested fact, skip that item; never create a convincing unsupported answer.
-- For active recall, ask one question at a time and do not reveal the answer before the learner attempts it.
+## A. Universal evidence rules
 
-## 3. Strict importable JSON
-- The response for any importable prompt is **one JSON object only** (no introduction, no Markdown code fence, no trailing commas, no comments, no ellipses, and no placeholders).
-- Use only the requested top-level array, plus `format` and `subject`. Never mix `lectures` with `problemSets`, `mcqSets`, `flashcards`, or `rules`.
-- Use `\n` for newlines inside JSON strings; escape double quotes. Before sending, parse your own output as JSON and check that every required field exists.
-- Import via BSA Study Desk → Import & export → Import → paste → **Check data** → preview → Import. No data should be saved before the user confirms.
+1. Identify **subject**, **topic**, source title/edition, the pages/chapters available, and the requested output format.
+2. Use the attached textbook, lecture, syllabus, exercises, or official standard as the primary source. Preserve scope, figures, conditions, and terminology; do not claim to have read missing pages.
+3. Use external sources only if the AI can actually access and verify them. Label external facts as supplemental, check jurisdiction and effective dates, and cite real URLs or source sections. Do not fabricate sources, pages, standards, editions, or answer keys.
+4. Omit unsupported information rather than fill gaps with plausible-sounding facts. An original practice scenario is allowed only when clearly labeled **illustrative**, internally solvable, and independently checked.
+5. Verify numerical solutions and MCQ answer keys. For a rule, distinguish the applicability trigger, treatment, exceptions, conditions, and actual evidence locator.
+6. Before generating a large pack, compare its content internally: remove exact duplicates, near-identical paraphrases, repeated lecture sections, duplicated rule codes, and materially identical questions. Never silently replace an existing learner's corrections or progress.
+7. **Do not confuse subject coverage with mastery.** Material present means the topic has resources, not that the learner understands it.
 
-Supported material labels:
+## B. Choose exactly one output contract
 
-| format | expected array | location |
+For any import request, return **one valid JSON object only**, with no markdown fence, preface, comments, trailing commas, unescaped newlines, `NaN`, or placeholder items. Use the format matching the selected dashboard import screen.
+
+| Format | Required content | Purpose |
 |---|---|---|
-| `bsa-lecture-v1` | `lectures` (objects with `sections`) | Lectures |
-| `bsa-problemset-v1` | `problemSets` (objects with `problems`) | Problem Sets |
-| `bsa-mcq-v1` | `mcqSets` (problems with 4 choices each) | MCQ Library |
-| `bsa-flashcards-v1` | `flashcards` (question/answer) | Concept Vault |
-| `bsa-rulebook-v1` | `rules` (title/decisionRule) | Rules & references |
+| `bsa-topic-pack-v1` | `subject`, `topic`, and some of `topics`, `lectures`, `problemSets`, `mcqSets`, `flashcards`, `rules` | **Mixed-format** topic pack. Include multiple arrays together. Empty arrays are allowed; at least one array must contain content. |
+| `bsa-lecture-v1` | `subject`, nonempty `lectures` array | Only lectures with real `sections`. |
+| `bsa-problemset-v1` | `subject`, nonempty `problemSets` array | Only written practice sets with complete `problems`. |
+| `bsa-mcq-v1` | `subject`, nonempty `mcqSets` array | Only MCQ sets. Each problem needs exactly four `choices` and an answer beginning `A`, `B`, `C`, or `D`. |
+| `bsa-flashcards-v1` | `subject`, nonempty `flashcards` array | Only flashcards. Each needs a question/front and answer/back. |
+| `bsa-rulebook-v1` | `subject`, **one nonempty `rules` array** | **Rules-only**; do not add lectures, problems, MCQs, flashcards or other material arrays. An optional `coverage` object may document batches. |
+| `bsa-financial-statements-v1` | `company`, `periodEnd`, `currency`, `unit`, `source`, `statements`, `notes`, `standards` | Financial Statements Lab. Not a Topic Pack, not a rulebook. |
 
-## Group rules into one searchable library
-- Every rule in one standard must have the **same `collection`** value: for example, `"collection": "PAS 7"`. Do NOT create 36 different collections for 36 clauses.
-- Give individual cards distinct `code` values such as `PAS 7-01`, `PAS 7-02`, etc. The dashboard also groups previously imported `PAS 7-01` style codes automatically, with no reimport needed.
-- Separate collections for PAS 7, PAS 10, PFRS 15, or a named module in any other subject. Do not mix unrelated standards into the same JSON collection.
-- `collection` is optional for backward compatibility, but strongly recommended for all new rulebook exports.
-- A provided source citation does **not** mean the dashboard independently verified it; check effective dates and the exact cited passage.
+Typed single-material imports must not contain another material's nonempty array. A Topic Pack is the explicit exception. For typed rules, the rulebook importer accepts up to **100 rules per import**; generate complete source coverage in numbered batches rather than cutting off a standard after five or inventing five rules.
 
-## 4. Example of one importable universal rule card
+## C. Required structures and quality
 
-The following is **illustrative data only**, not accounting guidance. Replace it with exact sourced subject content.
+### Topic Pack (`bsa-topic-pack-v1`)
 
-```json
-{
-  "format": "bsa-rulebook-v1",
-  "subject": "My Subject",
-  "rules": [
-    {
-      "collection": "Chapter 1 Reference",
-      "code": "R1",
-      "title": "Example classification rule",
-      "topic": "My chapter",
-      "category": "Definitions",
-      "decisionRule": "Replace with the accurately sourced decision rule.",
-      "conditions": "State when it applies.",
-      "treatment": "Describe how to use it.",
-      "exceptions": "State supported exceptions.",
-      "example": "Provide an illustrative worked situation.",
-      "examTrap": "A common source-backed confusion.",
-      "sourceTitle": "A real source title",
-      "sourceLocator": "Actual page or section",
-      "sourceUrl": "",
-      "status": "Needs verification",
-      "notes": ""
-    }
-  ]
-}
-```
+Use a consistent subject and actual chapter/topic name. Within `lectures`, each item needs a title, topic, source, and `sections` containing `heading`/`body` (the importer also understands lecture-section `h`/`body` in typed lecture imports). Written and MCQ items must preserve the **full original question**, data, requirements, verified answer, and worked solution. Flashcards should each test a distinct retrieval target. Rules must include title, decisionRule, topic, and supported citations. Set unused arrays to `[]`; do not pad with fabricated material. The dashboard checks repeats and conflicts again before saving.
 
-Other courses can use the same format for formulas, historical rules, legal principles, grammar conventions, experimental procedures, or research methods.
+### Rulebook (`bsa-rulebook-v1`)
 
-## 5. User-facing output
-- Interactive tutoring: conversational responses, one question at a time, not JSON.
-- Importable material: only one schema-valid JSON object. Put any source limitations into supported source text fields or omit unsupported items.
-- If a new request contradicts these rules, ask whether the user intends a different output type rather than silently switching.
+Use exactly one `rules` array. Each record requires `title` and `decisionRule`. Recommended fields: `collection`, unique `code`, `topic`, `category`, `conditions`, `treatment`, `exceptions`, `example`, `examTrap`, `sourceTitle`, `sourceLocator`, `sourceUrl`, `status`, `notes`. Use the SAME `collection` for all rules belonging to one standard (e.g., PAS 10), and unique codes within it (e.g., `PAS 10-01`, `PAS 10-02`). For another course use a named grouping such as `Corporate Bonds` or `Modular Arithmetic`; do not force accounting labels.
 
+Allowed `status`: `Source checked`, `Needs verification`, `Personal note`. Only say `Source checked` if the actual cited passage was inspected and its title plus specific section/page or real HTTPS URL are known. The app can check the presence of a citation field but **cannot verify the claim** itself. If content is not verifiable, omit it or mark `Needs verification` without fabricated citations.
 
-## v172 — source-complete rulebooks and separate PDF workflow
-- A rulebook has **no default five-rule limit**. Cover every substantive sourced rule in the selected scope, one standard/collection at a time.
-- For extensive standards, produce sequential JSON batches (normally 20 substantial rules at a time) with stable unique codes and `coverage` metadata. Batches are an output-size safeguard, **not** a limit on coverage.
-- Do not split synonymous statements into 36 needlessly repetitive cards. Give a rule only if it supports a distinct decision, exception, application or treatment.
-- Rules and lectures have no question difficulty setting. Difficulty and item counts apply only to practice material when specified.
-- A selected local PDF must be uploaded **separately** to the AI chat. The dashboard does not silently send PDF contents or OCR scanned pages, and PDF files are not valid rulebook JSON.
-- Keep a downloaded copy of valuable PDF sources: they are stored only in this device's IndexedDB, not GitHub, shared publishing, or normal JSON backups.
+For complete standards coverage, organize by meaningful source sections, include treatments and exceptions, then continue in **numbered batches** (usually up to 20 substantial cards per response for robust JSON). This is a response-size suggestion, **not a cap on the number of rules**. Stable rule IDs/codes must not repeat between batches. Optional `coverage` object may contain `collection`, `batch`, `coveredSections`, `remainingSections`, and `hasMore`.
 
+### Financial Statements (`bsa-financial-statements-v1`)
 
-## v175: Copy-ready imported JSON and lecture citations
-- When asked for dashboard-importable JSON, return exactly **one `json` fenced code block** and nothing else. Use the chat's **Copy code** button: it copies the raw JSON without the fence. If the AI interface has no copy-code button, return only one raw JSON object.
-- Ensure valid JSON syntax, including escaped newlines inside quoted strings, before sending. Never mix lectures, rule cards, MCQs, flashcards, and problem sets into one typed import response.
-- For **lectures**, cite the provided reference in each lecture object's **`source`** field. Do not put repeated `SOURCE:` or `REFERENCES:` lines at the start of each section. Explain concepts in `sections[].body`; keep `problems` exclusively in problem-set or MCQ formats.
-- For rulebook cards, source references still belong on each individual rule (`sourceTitle` and `sourceLocator`/`sourceUrl`), because rules may have different authorities.
+Preserve the *reported* structure and ordering: Statement of Financial Position (assets, liabilities and equity with current/noncurrent groupings where printed); Statement of Profit or Loss and OCI if provided; Statement of Cash Flows (operating/investing/financing, including cash reconciliation); Statement of Changes in Equity; and relevant disclosures. Use each statement's `type`, `title`, `page`, and `lines` where each line includes `kind` (`section`, `item`, `subtotal`, `total`), `label`, numeric `amount`, numeric `comparative` where printed, `note`, and `indent` where appropriate. Use `null` for illegible or missing figures (not zero). Preserve negative figures, dates, unit scale, currency, exact subtotal identities and note references. Do **not** fabricate a statement or infer amounts/standards that are absent from the source.
 
-## v176: Lecture readability and print/PDF pagination
-- Treat a lecture as a guided chapter, not a single long essay. Every major topic should have a clear section heading and explanatory paragraphs.
-- In `sections[].body`, use Markdown only when it improves learning: **bold** essential rules, `##` meaningful subheadings, ordered steps, concise bullets, `>` worked illustrations and Markdown tables for genuine comparisons or calculations.
-- Put full worked computations, journal entries and distinctions in properly separated blocks. Include a concrete example after difficult rules, and add relevant questions and checked answers to `checks` without turning the lecture into a problem set.
-- Do not add a repeated source line in every section; keep genuine citations in the lecture-level `source` field.
-- For print/PDF, keep illustrations, tables, headings and their first explanations together when practical. Avoid enormous tables or giant uninterrupted sections that cannot fit on a page. Do not delete important material just to shorten the output.
+Do not interpret a displayed reconciliation check as an audit or a statement that the financial report complies with a standard. The source PDF remains authoritative.
+
+## D. Student-focused output
+
+For ordinary chat, use concise, friendly teaching—not machine JSON. Explain simply before introducing formal vocabulary. In practice mode, ask one question at a time and let the learner attempt it before showing the full answer unless they request it. Provide corrective feedback and a short teach-back/check when useful. Avoid imposing accounting tools or journal entries on Finance, History, Math, or other subjects where they are irrelevant.
+
+## E. Import workflow and safety
+
+1. Choose the **correct subject** in the dashboard.
+2. Attach the actual source material and this MD file to the AI; choose one relevant prompt from **Study Library → Import Center**.
+3. Generate valid JSON; locally check the JSON syntax and compare figures and wording against the original source.
+4. For study materials, go to **Study Library → Bulk import / Topic Packs**; for published financial statements go to **Financial Statements → Reports & import**.
+5. Review the dashboard's duplicate/conflict preview and manually inspect ambiguous variants. Save only when satisfied. Preserve backups before major imports.
+
+See `BSA_AI_PROMPT.md` for the separate interactive tutoring behavior and `EXAMPLE-universal-rulebook.json` for the illustrative rulebook schema. **Do not import the example as academic content without replacing and verifying it.**
