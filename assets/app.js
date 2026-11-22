@@ -30,7 +30,7 @@ THE SOFTWARE.
   if (window.__BSA_DESK_APP_LOADED__) return;
   window.__BSA_DESK_APP_LOADED__ = true;
   // User-facing release label only. Do not use for storage schemas or caches.
-  const BSA_RELEASE_LABEL = "V2.26";
+  const BSA_RELEASE_LABEL = "V2.27";
   const S = (t, p = null, s = false) => ({ t, p, s });
   const CFAS_TOPICS = [
     {
@@ -4081,17 +4081,18 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     ];
     return /* @__PURE__ */ React.createElement(Modal, { title: "Quick add", onClose }, /* @__PURE__ */ React.createElement("div", { className: "big-options" }, items.map(([k, ic, l, d]) => /* @__PURE__ */ React.createElement("button", { key: k, className: "big-option", onClick: () => onPick(k) }, /* @__PURE__ */ React.createElement(Icon, { name: ic, size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, l), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, d))))));
   }
-  /* V2.26: Every reachable tool has a named destination, including FS Lab.
-     Shared students see only permitted study routes; private owner tools stay private. */
+  /* V2.27: One shared-route allowlist for local tool discovery. Owner-only
+     tools never appear in the published classmate's More menu or Search. */
+  const BSA227_SHARED_ROUTES=new Set(['home','subjects','study','practice','library','insights','lectures','rules','vault','psets','mcq','mistakes','accounting-lab','toolkit','fs-lab']);
   function MoreSheet({onPick,onClose,go}){
     const [filter,setFilter]=useState('');
     const shared=!!window.__BSA_SHARED_MODE__;
-    const allowedShared=new Set(['home','subjects','study','practice','library','insights','lectures','rules','vault','psets','mcq','mistakes','accounting-lab','toolkit','fs-lab']);
+    const allowedShared=BSA227_SHARED_ROUTES;
     const sections=[
-      ['Study materials',[['lectures','Lectures','lecture'],['ask','AI Tutor','ask'],['vault','Flashcards','cards'],['rules','Reference rules','book'],['workspace','Study Workspace','book'],['library','Study Library','book']]],
+      ['Study materials',[['lectures','Lectures','lecture'],['ask','AI Tutor','ask'],['vault','Flashcards','cards'],['rules','Reference rules','book'],['workspace','Study Workspace','book'],['library','Find materials · Study Library','book'],['nlm','AI Prompt Builder','look']]],
       ['Practice & applications',[['fs-lab','Financial Statements Lab','book'],['accounting-lab','Accounting Lab','pset'],['accounting-cycle','Accounting Cycle','pset'],['mcq','Multiple-choice library','cards'],['psets','Problem Sets','pset'],['mistakes','Mistake Log','mistakes'],['practice','Practice','bolt']]],
       ['Planning & progress',[['study','Plan & Learn','lecture'],['insights','Learning Progress','grade'],['calendar','Study Schedule','calendar'],['grades','Grades','grade'],['class','Classes & deadlines','subjects'],['knowledge','Visual Studio','network'],['stats-clean','Study Report','grade'],['roadmap','Roadmap','roadmap'],['curriculum','Curriculum','book'],['achievements','Achievements','grade']]],
-      ['Other tools',[['toolkit','Study Toolkit','book'],['guide','Guided walkthrough','book'],['subjects','Switch subjects','subjects'],['safety','Data Safety','data'],['life','Study Room','look'],['break','Break Corner','home'],['howto','How-To Corner','book'],['personalize','Personalization','look']]]
+      ['Other tools',[['toolkit','Study Toolkit','book'],['guide','Guided walkthrough','book'],['subjects','Switch subjects','subjects'],['sidebar-settings','Customize sidebar','look'],['themes','Themes','look'],['safety','Data Safety','data'],['life','Study Room','look'],['break','Break Corner','home'],['joy','Break activities','look'],['howto','How-To Corner','book'],['personalize','Personalization','look'],['private-vault','Private Vault','data']]]
     ];
     const q=filter.trim().toLocaleLowerCase();
     const matched=sections.map(([label,links])=>[label,links.filter(([route,title])=>(!shared||allowedShared.has(route))&&(!q||(title+' '+label+' '+route).toLocaleLowerCase().includes(q)))]).filter(([,links])=>links.length);
@@ -14788,11 +14789,16 @@ ${c.kindHint}` }
       tab==='recent'&&h(React.Fragment,null,h('h3',null,'Continue where you left off'),h('div',{className:'bsa181-list'},(d.recent||[]).filter(x=>x.subjectId===subject.id).slice(0,8).map(x=>h('button',{className:'bsa181-resume',key:x.tab+x.open+x.at,onClick:()=>go(x.tab,x.open?{open:x.open}:{})},h('span',null,x.label),h('small',{className:'muted'},new Date(x.at).toLocaleString()),'→'))),h('h3',null,'Undo Center'),h('p',{className:'muted'},'Restore recently removed highlights and captures, or reverse an eligible recent dashboard change while its Undo window remains active.'),undoAvailable&&h('button',{className:'btn primary',onClick:onGlobalUndo},'Undo recent dashboard change'),h('button',{className:'btn',disabled:!(d.undo||[]).length,onClick:()=>notify(bsa181Restore(),'Last removed item restored')},'Undo last removal'),h('p',{className:'muted small'},(d.undo||[]).length+' recoverable workspace changes stored locally'))
     );
   }
-  function BSA181Spotlight({data,go,onClose,onSwitch}){
+  function BSA181Spotlight({data,go,onClose,onSwitch,tools=[]}){
     const [query,setQuery]=useState('');const ref=useRef(null);
     useEffect(()=>{if(ref.current)ref.current.focus();const onKey=e=>{if(e.key==='Escape')onClose()};window.addEventListener('keydown',onKey);return()=>window.removeEventListener('keydown',onKey)},[]);
     const q=query.toLowerCase().trim();const results=[];const add=(label,tab,opts={},subjectId='')=>{if(!q||label.toLowerCase().includes(q))results.push({label,tab,opts,subjectId})};
-    [['workspace','Study Workspace'],['fs-lab','Financial Statement Lab · PFRS 18 and audited reports'],['lectures','Lectures'],['rules','Rules & references'],['mcq','MCQ library'],['vault','Flashcards'],['mistakes','Mistake Log'],['practice','Practice'],['toolkit','Study Toolkit'],['stats-clean','Study Report']].forEach(([tab,name])=>add(name,tab));
+    // Match every named destination, even when not pinned, not recommended
+    // for the subject, or explicitly hidden from sidebar shortcuts.
+    const alias={'library':'find materials missing materials import sources','fs-lab':'financial statements report lab audit','vault':'flashcards','ask':'AI Tutor Gemini','nlm':'AI Prompt Builder JSON','home':'Today dashboard','study':'Plan & Learn session'};
+    tools.filter(([id])=>!window.__BSA_SHARED_MODE__||BSA227_SHARED_ROUTES.has(id)).forEach(([id,label])=>{
+      if(!q||[label,id,alias[id]||''].join(' ').toLowerCase().includes(q))results.push({label:label+' · Tool',tab:id,opts:{},subjectId:''});
+    });
     (data.subjects||[]).forEach(s=>{(s.lectures||[]).forEach(x=>add(s.name+' · Lecture: '+x.title,'lectures',{open:x.id},s.id));(s.rules||[]).forEach(x=>add(s.name+' · Rule: '+(x.code||'')+' '+x.title,'rules',{},s.id));(s.topics||[]).forEach(x=>add(s.name+' · '+(x.title||x.name),'roadmap',{open:x.id},s.id));(s.psets||[]).forEach(x=>add(s.name+' · Problem set: '+x.title,'psets',{open:x.id},s.id))});
     return h('div',{className:'bsa181-spotlight-back',role:'presentation',onMouseDown:e=>{if(e.target===e.currentTarget)onClose()}},h('div',{className:'bsa181-spotlight',role:'dialog','aria-modal':'true','aria-label':'Spotlight Search'},h('div',{className:'bsa181-spotlight-top'},h('span',null,'⌕'),h('input',{ref,value:query,onChange:e=>setQuery(e.target.value),placeholder:'Search tools, lectures, rules, and topics…','aria-label':'Search all study materials'}),h('button',{className:'btn ghost',onClick:onClose},'Esc')),h('div',{className:'bsa181-spotlight-results'},results.slice(0,40).map((x,i)=>h('button',{key:i,onClick:()=>{if(x.subjectId&&x.subjectId!==data.activeId){onClose();onSwitch(x.subjectId,x.tab,x.opts);return;}onClose();go(x.tab,x.opts)}},x.label,' ↗')),results.length===0&&h('p',{className:'muted'},'No matching items.')),
       h('div',{className:'bsa181-spotlight-footer'},'Results are from your saved study materials on this device · Ctrl/⌘ + K')));
@@ -18851,7 +18857,9 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     const profile=bsa46Profile(subject);
     const selected=subject?.studyConfig?.profile||'auto';
     const search=find.trim().toLocaleLowerCase();
-    const toolList=tabs.filter(t=>t[0]!=='subjects'&&(!search||(t[1]+' '+t[0]).toLocaleLowerCase().includes(search)));
+    const toolList=tabs.filter(t=>t[0]!=='subjects'&&
+      (!window.__BSA_SHARED_MODE__||BSA227_SHARED_ROUTES.has(t[0]))&&
+      (!search||(t[1]+' '+t[0]).toLocaleLowerCase().includes(search)));
     const pinned=toolList.filter(t=>sidebarPrefs.pinned.includes(t[0]));
     const others=toolList.filter(t=>!sidebarPrefs.pinned.includes(t[0]));
     const opts=[['auto','Automatic suggestion'],...Object.entries(BSA46_PROFILES).map(([id,x])=>[id,x.label])];
@@ -18873,12 +18881,12 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
             h('div',{className:'bsa46-special-list'},BSA46_SPECIAL_TOOLS.map(id=>{const tab=tabs.find(t=>t[0]===id),choice=subject?.studyConfig?.tools?.[id]||'auto';return h('label',{key:id,className:'bsa46-special-item'},h('span',null,h('strong',null,tab?.[1]||id),h('small',null,choice==='auto'?(bsa46ToolVisible(subject,id)?'Recommended or saved work found':'Not suggested for this subject'):'Manual override')),h('select',{value:choice,'aria-label':'Visibility of '+(tab?.[1]||id),onChange:e=>setSubjectTool(id,e.target.value)},[['auto','Automatic'],['show','Always show'],['hide','Hide from sidebar']].map(([v,l])=>h('option',{key:v,value:v},l))))})),
             h('button',{className:'btn ghost',type:'button',onClick:resetSubject},'Restore recommended tools')))),
       panel==='sidebar'&&h('div',{className:'bsa46-settings-body',role:'tabpanel'},
-        h('div',{className:'bsa211-editor-heading'},h('div',null,h('h3',null,'Your quick access'),h('p',{className:'muted small'},'Pin up to six tools, hide optional items, and move pinned shortcuts up or down.')),h('span',{className:'bsa211-pin-count'},sidebarPrefs.pinned.length+' / 6 pinned')),
+        h('div',{className:'bsa211-editor-heading'},h('div',null,h('h3',null,'Shortcuts and all tools'),h('p',{className:'muted small'},'Pin up to six favorites. Unpinning a tool never removes it from its sidebar section or Search. The Visible toggle separately hides it from the sidebar.')),h('span',{className:'bsa211-pin-count'},sidebarPrefs.pinned.length+' / 6 pinned')),
         h('input',{type:'search',value:find,onChange:e=>setFind(e.target.value),placeholder:'Search the tools…','aria-label':'Search sidebar settings'}),
         search?h('div',{className:'bsa46-editor-grid'},toolList.length?toolList.map(toolItem):h('p',{className:'muted'},'No matching tools.')):
           h('div',{className:'bsa211-shortcut-groups'},
             h('details',{className:'bsa211-settings-fold',open:undefined,defaultOpen:true},h('summary',null,h('span',null,'Pinned shortcuts'),h('small',null,pinned.length+' shown · click to collapse')),h('div',{className:'bsa211-fold-body bsa46-editor-grid'},pinned.length?pinned.map(toolItem):h('p',{className:'muted'},'Pin any tool below to add it here.'))),
-            h('details',{className:'bsa211-settings-fold'},h('summary',null,h('span',null,'Other tools'),h('small',null,others.length+' available · click to expand')),h('div',{className:'bsa211-fold-body bsa46-editor-grid'},others.map(toolItem)))),
+            h('details',{className:'bsa211-settings-fold'},h('summary',null,h('span',null,'All other tools'),h('small',null,others.length+' available · click to expand')),h('div',{className:'bsa211-fold-body bsa46-editor-grid'},others.map(toolItem)))),
         h('div',{className:'bsa46-settings-actions'},h('button',{className:'btn',onClick:reset,type:'button'},'Restore shortcut defaults'))),
       panel==='appearance'&&h('div',{className:'bsa46-settings-body',role:'tabpanel'},
         h('h3',null,'Appearance'),h('p',{className:'muted small'},'Colors and themes are independent from your academic records.'),
@@ -19349,7 +19357,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     const touchNavStart=e=>{const x=e.touches?.[0];if(x)bottomSwipe.current={x:x.clientX,y:x.clientY,tab:nav.tab}};
     const touchNavEnd=e=>{const start=bottomSwipe.current;bottomSwipe.current=null;const end=e.changedTouches?.[0];if(!start||!end)return;const dx=end.clientX-start.x,dy=end.clientY-start.y;if(Math.abs(dx)<65||Math.abs(dy)>35)return;const ix=swipeTabs.indexOf(start.tab);if(ix<0)return;const target=swipeTabs[ix+(dx<0?1:-1)];if(target)go(target)};
     // v3.8.1: organize by learner intent, not the subject that originally created a tool.
-    const [collapsedNav, setCollapsedNav] = useState({"Study materials":true,"Practice & questions":true,"Progress & planning":true,"Other tools":true});
+    const [collapsedNav, setCollapsedNav] = useState({"Main workflow":false,"Study materials":true,"Practice & questions":true,"Progress & planning":true,"Other tools":true,"Personal & extras":true});
     const [sidebarPrefs,setSidebarPrefs]=useState(()=>{try{const x=JSON.parse(localStorage.getItem('bsa45-sidebar-prefs')||'null');const old=['home','study','practice','library','ask','guide'];const pins=Array.isArray(x?.pinned)?x.pinned:old;return {pinned:(JSON.stringify(pins)===JSON.stringify(old)?BSA46_MAIN_DEFAULT:pins).slice(0,6),hidden:Array.isArray(x?.hidden)?x.hidden:[]}}catch(_){return {pinned:BSA46_MAIN_DEFAULT.slice(),hidden:[]}}});
     // Persist only the rail presentation, never academic records. On iPad-size
     // desktop layouts use a compact rail by default; the learner can expand it.
@@ -19501,6 +19509,8 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
         setModal({ nlm: opts });
         return;
       }
+      if (tab === "sidebar-settings") {setSidebarEdit(true);return;}
+      if (tab === "themes" || tab === "look") {setModal(tab);return;}
       if(tab==='ask'&&nav.tab!=='ask'){
         const origin=bsa26ReturnFor(nav.tab,nav.opts||{},opts?.focus,dataRef.current.activeId);
         if(origin)opts={...opts,returnTo:bsa26SafeReturn(opts.returnTo)||origin};
@@ -19702,7 +19712,13 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       ["accounting-cycle", "Accounting Cycle", "pset"],
       ["fs-lab", "Financial Statements Lab", "book"],
       ["workspace", "Study Workspace", "book"],
-      
+      ["nlm", "AI Prompt Builder", "look"],
+      ["data", "Import, Export & Backup", "data"],
+      ["themes", "Themes", "look"],
+      ["look", "Appearance", "look"],
+      ["sidebar-settings", "Customize sidebar", "look"],
+      ["private-vault", "Private Vault", "data"],
+      ["joy", "Break activities", "look"],
       ["accounting-lab", "Accounting Lab", "pset"],
       ["calendar", "Study Schedule", "calendar"],
       ["knowledge", "Visual Studio", "network"],
@@ -19726,27 +19742,42 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       ["toolkit", "Study Toolkit", "book"],
       ["life", "Study Room", "look"], ["personalize", "Personalization Corner", "look"], ["howto", "How-To Corner", "book"]
     ];
-    // v3.8.1: one destination per tool, grouped by task. In particular,
-    // Problem Sets and MCQs are *not* accounting-only tools.
+    // V2.27: Shortcuts are duplicates of destinations, not their only entry point.
+    // Every route must belong to exactly one permanent sidebar section. New
+    // routes automatically appear under Other features rather than vanishing.
     const navGroups = [
-      {name:"Study materials",items:["lectures","rules","vault","workspace"]},
+      {name:"Main workflow",items:["home","study","practice","library","ask"]},
+      {name:"Study materials",items:["lectures","rules","vault","workspace","nlm"]},
       {name:"Practice & questions",items:["mcq","psets","accounting-lab","accounting-cycle","fs-lab"]},
       {name:"Progress & planning",items:["mistakes","insights","knowledge","stats-clean","achievements","calendar","class","grades","roadmap","curriculum"]},
-      {name:"Other tools",items:["guide","toolkit","safety","howto","life","break","personalize"]}
+      {name:"Other tools",items:["guide","toolkit","safety","data","sidebar-settings","themes","look","howto","life","break","personalize","joy"]},
+      {name:"Personal & extras",items:["private-vault"]}
     ];
+    const sidebarGroupedIds=new Set(navGroups.flatMap(group=>group.items));
+    const sidebarUnmapped=tabs.filter(t=>t[0]!=='subjects' &&
+      (!window.__BSA_SHARED_MODE__||BSA227_SHARED_ROUTES.has(t[0])) &&
+      !sidebarGroupedIds.has(t[0]));
+    if(sidebarUnmapped.length)navGroups.push({name:"Other features",items:sidebarUnmapped.map(t=>t[0])});
     // When a shortcut or deep link opens a tool, reveal its sidebar group.
     // Users can still collapse that group themselves afterward.
     useEffect(()=>{
       const group=navGroups.find(g=>g.items.includes(nav.tab));
       if(group)setCollapsedNav(prev=>prev[group.name]?{...prev,[group.name]:false}:prev);
     },[nav.tab]);
-    const navAliases={"fs-lab":"financial statements audit reports JSON PDF import source evidence standard IFRS PFRS 18 PAS analysis",psets:"written problems problem sets worksheets",mcq:"quiz questions multiple choice mcq",vault:"flashcards recall",ask:"tutor gemini ai",calendar:"weekly planner month exam schedule",mistakes:"wrong answers review queue",insights:"analytics progress",library:"find browse organize library",study:"learn session plan",practice:"solve test exercises",workspace:"notes notebook"};
+    const navAliases={"fs-lab":"financial statements audit reports JSON PDF import source evidence standard IFRS PFRS 18 PAS analysis",psets:"written problems problem sets worksheets",mcq:"quiz questions multiple choice mcq",vault:"flashcards recall",ask:"tutor gemini ai",calendar:"weekly planner month exam schedule",mistakes:"wrong answers review queue",insights:"analytics progress",library:"library find materials missing materials topics import study library browse organize",study:"learn session plan",practice:"solve test exercises",workspace:"notes notebook",nlm:"ai prompt builder studio generate source JSON",home:"today dashboard",guide:"walkthrough start here"};
     const navNeedle=navSearch.trim().toLocaleLowerCase();
-    const pinnedVisible=sidebarPrefs.pinned.filter(id=>!sidebarPrefs.hidden.includes(id)&&bsa46ToolVisible(subject,id)&&tabs.some(t=>t[0]===id));
+    const pinnedVisible=sidebarPrefs.pinned.filter(id=>(!window.__BSA_SHARED_MODE__||BSA227_SHARED_ROUTES.has(id))&&
+      !sidebarPrefs.hidden.includes(id)&&bsa46ToolVisible(subject,id)&&tabs.some(t=>t[0]===id));
     const restoreCoreShortcuts=()=>saveSidebar(v=>({...v,pinned:BSA46_MAIN_DEFAULT.slice(),hidden:v.hidden.filter(x=>!BSA46_MAIN_DEFAULT.includes(x))}));
     const filteredNavGroups = navGroups.map(group=>({
       ...group,
-      tabs:tabs.filter(t=>group.items.includes(t[0]) && (navNeedle||!sidebarPrefs.pinned.includes(t[0])) && (navNeedle||bsa46ToolVisible(subject,t[0])||t[0]===nav.tab) && (!sidebarPrefs.hidden.includes(t[0])||t[0]===nav.tab||!!navNeedle) && (!navNeedle || [t[1],group.name,navAliases[t[0]]||"",(DESK_FEATURE_GUIDE.find(f=>f.id===t[0])||{}).desc||""].join(" ").toLocaleLowerCase().includes(navNeedle)))
+      tabs:tabs.filter(t=>group.items.includes(t[0]) &&
+        // Unpinning NEVER removes the route from its main section.
+        (!sidebarPrefs.hidden.includes(t[0])||t[0]===nav.tab||!!navNeedle) &&
+        // An optional subject profile only affects recommendations. Explicit
+        // per-subject Hide is honored outside search.
+        (subject?.studyConfig?.tools?.[t[0]]!=='hide'||t[0]===nav.tab||!!navNeedle) &&
+        (!navNeedle || [t[1],t[0],group.name,navAliases[t[0]]||"",(DESK_FEATURE_GUIDE.find(f=>f.id===t[0])||{}).desc||""].join(" ").toLocaleLowerCase().includes(navNeedle)))
     })).filter(group=>group.tabs.length);
     const jumpLinks = [
       ["home","StudyFlow","home"], ["howto","How-To","book"], ["practice","Practice","bolt"],
@@ -19822,7 +19853,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
         && h(BSA43ThemeNavigation,{theme:data.settings.presentationTheme||"studio",tab:nav.tab,opts:nav.opts,go,subject}),
       nav.tab === "subjects" && h(BSA12Subjects,{data,update,activeId:data.activeId,onOpen:id=>{setData(d=>({...d,activeId:id}));go('home')},onManage:()=>setModal('subjects'),toast,onRemoved:()=>{setNav(n=>({...n,tab:'subjects',key:n.key+1}))}}), nav.tab === "guide" && h(BSA3StartGuide,{go,subject}), nav.tab === "break" && h(BreakCorner), nav.tab === "joy" && h(JoyHub,{go}), nav.tab === "life" && h(StudyLife,{go}), nav.tab === "achievements" && h(AcademicProgress,{go}), nav.tab === "stats-clean" && h(StudyReport,{data,update,toast,go}), nav.tab === "private-vault" && !window.__BSA_SHARED_MODE__ && h(PrivateVault,{toast}), nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data,initialTool:nav.opts?.tool})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), nav.tab === "home" && h(BSA3Today, { ...viewProps }), nav.tab === "study" && h(BSA205Study,{...viewProps}), nav.tab === "library" && h(BSA205Library,{...viewProps}), nav.tab === "insights" && h(BSA205Mastery,{...viewProps}), nav.tab === "accounting-cycle" && h(BSA205Cycle,{...viewProps}), nav.tab === "fs-lab" && h(BSA43FinancialStatements,{...viewProps}), nav.tab === "accounting-lab" && h(BSA187AccountingLab,{subject,update,toast,go,init:nav.opts}), nav.tab === "week" && h(BSA344Schedule,{subject,update,go,openEditor,toast,init:nav.opts,initialMode:"week"}), nav.tab === "knowledge" && h(BSA192KnowledgeMap,{subject,go,init:nav.opts}), nav.tab === "safety" && h(BSA193DeviceSafety,{data,go,toast}), nav.tab === "practice" && h(React.Fragment,null,h(BSA3Practice,{ ...viewProps, data }),bsa46ToolVisible(subject,'fs-lab')&&h('div',{className:'bsa42-fs-shortcut'},h('div',null,h('strong',null,'Financial Statement Lab'),h('p',null,'Import report JSON, inspect audited disclosures, and practice any accounting standard.')),h('button',{className:'btn',onClick:()=>go('fs-lab')},'Open Financial Statements ↗'))), nav.tab === "mcq" && h(MCQPage,{...viewProps}), nav.tab === "rules" && h(RulesLibrary,{...viewProps}), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(BSA344Schedule,{subject,update,go,openEditor,toast,init:nav.opts,initialMode:"month"}), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "workspace" && h(BSA181Workspace, { ...viewProps, initialTab:nav.opts?.tab, undoAvailable:!!undo, onGlobalUndo:doUndo }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(BSA43ProblemSets, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps, key:subject.id }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })))),
       h(BSA181HighlightTool,{subject,tab:nav.tab,go,toast}),
-      spotlightOpen && h(BSA181Spotlight,{data,go,onSwitch:(id,tab,opts)=>{setData(d=>({...d,activeId:id}));go(tab,opts)},onClose:()=>setSpotlightOpen(false)}),
+      spotlightOpen && h(BSA181Spotlight,{data,go,tools:tabs,onSwitch:(id,tab,opts)=>{setData(d=>({...d,activeId:id}));go(tab,opts)},onClose:()=>setSpotlightOpen(false)}),
       /* @__PURE__ */ h("nav",{className:"bottom-nav v2-bottom-nav","aria-label":"Mobile navigation",onTouchStart:touchNavStart,onTouchEnd:touchNavEnd},
         [["home","Today","home"],["study","Learn","lecture"],["practice","Practice","bolt"],["library","Library","book"]].map(([k,l,ic])=>h("button",{type:"button",key:k,className:nav.tab===k?"on":"","aria-current":nav.tab===k?"page":undefined,onClick:()=>go(k)},h(Icon,{name:ic}),h("span",null,l))),
         h("button",{type:"button",onClick:()=>setModal("more"),className:"v2-more-mobile"+(!["home","study","practice","library"].includes(nav.tab)?" on":""),"aria-label":"More tools"},h(Icon,{name:"more"}),h("span",null,"More"))), /* @__PURE__ */ React.createElement("div", { className: `toast${msg ? " show" : ""}`, role: "status", "aria-live": "polite" }, msg), h(FocusBar, { data, update, toast, visuallySuppressed:bsa212Guided(bsa33Journey(subject).session) }), h(BSA212FloatingFocus,{key:subject.id,subject,update,go,toast,nav}), h(BSA216ScrollRail,{route:nav.tab+':'+nav.key}), h(BSA4StudyDock,{key:subject.id,subject,data,settings:data.settings,setSettings,onSwitch:(id,tab)=>{setData(d=>({...d,activeId:id}));go(tab||'insights')},go,navTab:nav.tab}), modal === "quick" && /* @__PURE__ */ React.createElement(QuickAdd, { onClose: () => setModal(null), onPick: (k) => {
