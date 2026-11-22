@@ -30,7 +30,7 @@ THE SOFTWARE.
   if (window.__BSA_DESK_APP_LOADED__) return;
   window.__BSA_DESK_APP_LOADED__ = true;
   // User-facing release label only. Do not use for storage schemas or caches.
-  const BSA_RELEASE_LABEL = "V2.39";
+  const BSA_RELEASE_LABEL = "V2.40";
   const S = (t, p = null, s = false) => ({ t, p, s });
   const CFAS_TOPICS = [
     {
@@ -11306,7 +11306,7 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
     return (cut||clean.slice(0,max))+'… (excerpt; full text is in the complete lecture)';
   }
 
-  const BSA41_HIGHLIGHT_TYPES={key:{label:'Key concept',color:'yellow'},example:{label:'Example',color:'blue'},confusing:{label:'Need to revisit',color:'pink'},rule:{label:'Important rule',color:'green'}};
+  const BSA41_HIGHLIGHT_TYPES={key:{label:'Key concept',color:'yellow'},example:{label:'Example',color:'blue'},confusing:{label:'Need to revisit',color:'pink'},rule:{label:'Important rule',color:'green'},insight:{label:'Personal insight',color:'purple'}};
   function bsa41LectureHighlights(subjectId,sourceId){return (bsa181Read().highlights||[]).filter(x=>x.subjectId===subjectId&&x.tab==='lectures'&&x.sourceId===sourceId)}
   function bsa41UpdateHighlight(id,patch){const d=bsa181Read();let edited=false;d.highlights=d.highlights.map(x=>{if(x.id!==id)return x;edited=true;return {...x,...patch,modified:Date.now()}});return edited&&bsa181Write(d)}
 
@@ -11484,6 +11484,89 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
     const [prefs,setPrefs]=useState(()=>({size:18,width:760,spacing:1.75,follow:true,rate:1,voice:'',...bsa236ReadStored(BSA236_READER_PREF,{})}));
     const [position,setPosition]=useState(()=>Math.min(Math.max(0,Number(bsa236ReadStored(key,{}).section)||0),Math.max(0,sourceView.sections.length-1)));
     const [tocOpen,setTocOpen]=useState(false);
+    // V2.40: Reading Mode uses the same source-anchored highlights as the
+    // standard lecture view. These stay in the existing workspace namespace
+    // (owner and shared browsers are isolated) and never change mastery.
+    const [hlRevision,setHlRevision]=useState(0);
+    const [hlSelection,setHlSelection]=useState(null);
+    const [hlKind,setHlKind]=useState('key');
+    const [hlPanel,setHlPanel]=useState(false);
+    const [hlEditing,setHlEditing]=useState('');
+    const [hlNote,setHlNote]=useState('');
+    const [hlNotice,setHlNotice]=useState('');
+    const [showHighlights,setShowHighlights]=useState(true);
+    const hlTouchTimer=useRef([]);
+    useEffect(()=>{const listener=()=>setHlRevision(n=>n+1);window.addEventListener('bsa181-changed',listener);return()=>window.removeEventListener('bsa181-changed',listener)},[]);
+    const lectureHighlights=useMemo(()=>bsa41LectureHighlights(subject.id,lecture.id),[subject.id,lecture.id,hlRevision]);
+    const highlightsBySection=useMemo(()=>{
+      const m=new Map();sourceView.sections.forEach((sec,i)=>m.set(sec.id||String(i),[]));
+      for(const x of lectureHighlights){if(m.has(x.sectionId))m.get(x.sectionId).push(x)}
+      return m;
+    },[lectureHighlights,sourceView.sections]);
+    const selectedHighlight=lectureHighlights.find(x=>x.id===hlEditing);
+    const editHighlight=id=>{
+      const item=bsa181Read().highlights.find(x=>x.id===id&&x.subjectId===subject.id&&x.sourceId===lecture.id);
+      if(!item)return;setHlEditing(id);setHlNote(item.note||'');setHlSelection(null);setHlNotice('');
+    };
+    // Get the selected text ONLY if both endpoints are in one lecture section.
+    // For multi-node markdown selections, existing context anchors restore the
+    // exact passage without altering the imported source body.
+    const captureHighlight=()=>{
+      const selection=window.getSelection?.();
+      if(!selection||selection.isCollapsed||!selection.rangeCount)return;
+      const range=selection.getRangeAt(0),start=range.startContainer,end=range.endContainer;
+      const startEl=start.nodeType===1?start:start.parentElement;
+      const prose=startEl?.closest?.('.bsa236-prose');
+      if(!prose||!prose.contains(end)||!scroller.current?.contains(prose))return;
+      const section=prose.closest('[data-audio-section]');
+      const index=Number(section?.getAttribute('data-audio-section'));
+      if(!Number.isInteger(index)||index<0||index>=sourceView.sections.length)return;
+      const selected=bsa181Text(selection.toString());
+      if(!selected||selected.length<2)return;
+      const sec=sourceView.sections[index];
+      let before='',after='';
+      try{
+        const prior=range.cloneRange();prior.selectNodeContents(prose);prior.setEnd(start,range.startOffset);
+        const following=range.cloneRange();following.selectNodeContents(prose);following.setStart(end,range.endOffset);
+        before=bsa181Text(prior.toString()).slice(-48);after=bsa181Text(following.toString()).slice(0,48);
+      }catch(_){}
+      setHlSelection({text:selected,tab:'lectures',page:'Lecture',subjectId:subject.id,
+        sourceId:lecture.id,sectionId:sec.id||String(index),sectionTitle:sec.h||'Section '+(index+1),
+        sourceTitle:lecture.title,before,after});
+      setHlNotice('');
+    };
+    useEffect(()=>{
+      const onTouch=()=>{for(const t of hlTouchTimer.current)clearTimeout(t);
+        hlTouchTimer.current=[setTimeout(captureHighlight,180),setTimeout(captureHighlight,460)];};
+      let selectionTimer=0;
+      const onSelection=()=>{if(window.getSelection?.()?.isCollapsed)return;
+        // Never rerender the markdown while native iPad selection handles are
+        // still being dragged. Only sample after selection has settled.
+        clearTimeout(selectionTimer);
+        selectionTimer=setTimeout(captureHighlight,320);};
+      document.addEventListener('selectionchange',onSelection);
+      scroller.current?.addEventListener('touchend',onTouch,{passive:true});
+      const pane=scroller.current;
+      return()=>{document.removeEventListener('selectionchange',onSelection);pane?.removeEventListener('touchend',onTouch);
+        clearTimeout(selectionTimer);hlTouchTimer.current.forEach(clearTimeout);hlTouchTimer.current=[]};
+    },[subject.id,lecture.id,sourceView.sections]);
+    const saveHighlight=(andNote=false)=>{
+      if(!hlSelection){setHlNotice('Select a passage in the lecture first.');return;}
+      if(hlSelection.text.length>1800){setHlNotice('Select a shorter passage (up to 1,800 characters).');return;}
+      const saved=bsa181Add('highlights',{...hlSelection,kind:hlKind});
+      if(saved==='duplicate'){
+        const old=bsa41LectureHighlights(subject.id,lecture.id).find(x=>x.text===hlSelection.text&&(!x.sectionId||x.sectionId===hlSelection.sectionId));
+        setHlNotice('This passage is already highlighted.');
+        if(andNote&&old)editHighlight(old.id);
+      }else if(saved){setHlNotice('Highlight saved to this device.');if(andNote)editHighlight(saved);}
+      else setHlNotice('Could not save highlight. Check available device storage.');
+      if(saved){setHlSelection(null);try{window.getSelection()?.removeAllRanges()}catch(_){}}
+    };
+    const jumpHighlight=x=>{
+      const index=sourceView.sections.findIndex((sec,i)=>(sec.id||String(i))===x.sectionId);
+      if(index<0){setHlNotice('This section is no longer in this lecture. The saved note has not been deleted.');return;}
+      jump(index);setHlPanel(false);
+    };
     const [voices,setVoices]=useState(()=>bsa236Speech.voices());
     const speech=bsa236UseSpeech();
     const scroller=useRef(null),lastReadSection=useRef(position),scrollFrame=useRef(0),ignoreReadScrollUntil=useRef(0);
@@ -11518,6 +11601,7 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
         h('div',{className:'bsa236-reader-heading'},h('small',null,mode==='listen'?'LISTEN MODE':'READING MODE',' · ',subject.code||subject.name),h('strong',null,lecture.title)),
         h('div',{className:'bsa236-reader-actions'},
           h('button',{type:'button',onClick:()=>setTocOpen(v=>!v),'aria-expanded':tocOpen},'Sections'),
+          h('button',{type:'button',onClick:()=>{setHlPanel(v=>!v);setHlSelection(null)},'aria-expanded':hlPanel,'aria-label':'Open lecture highlights and notes'},'Highlights · '+lectureHighlights.length),
           h('button',{type:'button',onClick:()=>updatePrefs({size:Math.max(14,prefs.size-1)}),'aria-label':'Decrease text size'},'A−'),
           h('button',{type:'button',onClick:()=>updatePrefs({size:Math.min(26,prefs.size+1)}),'aria-label':'Increase text size'},'A+'),
           h('button',{type:'button',onClick:safeClose,className:'bsa236-close'},'Close ×'))),
@@ -11548,17 +11632,61 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
             h('div',{className:'bsa236-reader-appearance'},
               h('label',null,'Reading width',h('select',{value:prefs.width,onChange:e=>updatePrefs({width:Number(e.target.value)})},[620,760,900].map(n=>h('option',{value:n,key:n},n===620?'Narrow':n===760?'Comfortable':'Wide')))),
               h('label',null,'Line spacing',h('select',{value:prefs.spacing,onChange:e=>updatePrefs({spacing:Number(e.target.value)})},[1.5,1.75,2].map(n=>h('option',{value:n,key:n},n+'×'))))),
+            h('div',{className:'bsa240-highlight-hint'},
+              h('span',null,'Highlight while you read: select a word or passage, choose a color, then save.'),
+              h('button',{type:'button',onClick:()=>setHlPanel(v=>!v)},lectureHighlights.length+' saved highlights'),
+              h('button',{type:'button',onClick:()=>setShowHighlights(v=>!v),'aria-pressed':showHighlights},showHighlights?'Hide colors':'Show colors')),
+            hlSelection&&h('div',{className:'bsa240-selection-tools',role:'region','aria-label':'Selected lecture text'},
+              h('div',{className:'bsa240-selection-quote'},'Selected: “'+hlSelection.text.slice(0,130)+(hlSelection.text.length>130?'…':'')+'”'),
+              h('div',{className:'bsa240-color-picker',role:'group','aria-label':'Highlight color'},
+                Object.entries(BSA41_HIGHLIGHT_TYPES).map(([kind,item])=>h('button',{key:kind,type:'button',
+                  className:'bsa240-color bsa240-color-'+kind+(hlKind===kind?' is-active':''),
+                  onClick:()=>setHlKind(kind),'aria-label':item.color+' highlight: '+item.label,
+                  'aria-pressed':hlKind===kind,title:item.label},'●'))),
+              h('div',{className:'bsa240-selection-actions'},
+                h('button',{type:'button',className:'bsa236-primary',onClick:()=>saveHighlight(false)},'Highlight'),
+                h('button',{type:'button',onClick:()=>saveHighlight(true)},'Highlight + note'),
+                h('button',{type:'button',onClick:()=>{setHlSelection(null);try{window.getSelection()?.removeAllRanges()}catch(_){}}},'Cancel'))),
+            hlNotice&&h('p',{className:'bsa240-highlight-status',role:'status'},hlNotice),
+            hlPanel&&h('section',{className:'bsa240-highlights-panel','aria-label':'Saved highlights for this lecture'},
+              h('div',{className:'bsa240-highlights-header'},h('h2',null,'My highlights & notes'),
+                h('div',{className:'bsa240-highlights-header-actions'},
+                  h('button',{type:'button',onClick:()=>{const n=bsa41ExportNotes(subject.id);setHlNotice('Exported '+n+' subject highlights as a separate JSON backup.')}},'Export'),
+                  h('button',{type:'button',onClick:()=>setHlPanel(false)},'Close'))),
+              h('p',null,'Saved privately on this device, separately from regular academic backups. Use Export for long-term backup. Highlighting does not count as mastery.'),
+              lectureHighlights.length===0?h('p',{className:'bsa240-empty-highlights'},'No highlights yet. Select text in a section below to begin.'):
+              h('div',{className:'bsa240-highlights-list'},lectureHighlights.map(x=>h('article',{key:x.id,className:'bsa240-highlight-card'},
+                h('div',{className:'bsa240-highlight-card-copy'},
+                  h('span',{className:'bsa41-kind bsa41-kind-'+(x.kind||'key')},(BSA41_HIGHLIGHT_TYPES[x.kind]||BSA41_HIGHLIGHT_TYPES.key).label),
+                  h('blockquote',null,x.text),x.note&&h('p',null,x.note)),
+                h('div',{className:'bsa240-highlight-card-actions'},
+                  h('button',{type:'button',onClick:()=>jumpHighlight(x)},'Go to passage'),
+                  h('button',{type:'button',onClick:()=>editHighlight(x.id)},'Edit note'),
+                  h('button',{type:'button',onClick:()=>{if(bsa181Remove('highlights',x.id))setHlNotice('Highlight removed. You can restore it from Workspace → Undo.');else setHlNotice('Could not remove this highlight.')}},'Remove')))))),
             sourceView.sections.map((s,i)=>h('article',{key:s.id||i,'data-audio-section':i,className:'bsa236-reader-section'+(i===active?' active':''),id:'bsa236-section-'+i,onClick:()=>{if(mode==='read'&&i!==position){setPosition(i);bsa236PutStored(key,{section:i,chunk:0,at:Date.now()})}}},
               h('small',null,'SECTION '+String(i+1).padStart(2,'0')+' / '+String(sourceView.sections.length).padStart(2,'0')),
               h('h2',null,bsa13LectureHeading(s.h||'Section',i)),
-              h('div',{className:'bsa236-prose'},h(PsMd,{text:s.body||''})),
+              h('div',{className:'bsa236-prose',onMouseUp:captureHighlight,onKeyUp:captureHighlight},
+                h(BSA41MarkedText,{text:s.body||'',highlights:showHighlights?(highlightsBySection.get(s.id||String(i))||[]):[],onOpen:editHighlight})),
               h('button',{type:'button',className:'bsa236-explain-button',onClick:async()=>{
                 const label='Explain this lecture section to a complete beginner, define all assumed terms, walk through the cause and effect step by step, and label any supplemental context separately from the source. Do not invent textbook citations.\n\nLecture: '+lecture.title+'\nSection: '+String(s.h||'Section '+(i+1))+'\n\n'+String(s.body||'').slice(0,12000);
                 const ok=await copyText(label);toast?.(ok?'Beginner explanation prompt copied. Paste into Tutor with your course source.':'Copy unavailable. Select and copy the text manually.');
               }},'✧ Copy beginner explanation prompt'))),
             (lecture.terms||[]).length>0&&h('section',{className:'bsa236-reader-section'},h('h2',null,'Key terms'),h('dl',null,(lecture.terms||[]).map((term,i)=>h('div',{key:i},h('dt',null,term.t),h('dd',null,term.d))))),
             sourceView.references.length>0&&h('section',{className:'bsa236-reader-section'},h('h2',null,'Sources & references'),h('ul',null,sourceView.references.map((ref,i)=>h('li',{key:i},ref)))),
-            h('p',{className:'bsa236-reader-end'},'You reached the end of this lecture. Reading or listening is not automatically recorded as demonstrated mastery.')))),
+            h('p',{className:'bsa236-reader-end'},'You reached the end of this lecture. Reading, listening, and highlighting are not automatically recorded as demonstrated mastery.')))),
+      selectedHighlight&&h('div',{className:'bsa240-note-backdrop',role:'presentation',onMouseDown:e=>{if(e.target===e.currentTarget)setHlEditing('')}},
+        h('section',{className:'bsa240-note-editor',role:'dialog','aria-modal':'true','aria-label':'Edit lecture highlight'},
+          h('div',{className:'bsa240-note-head'},h('h2',null,'Highlight & note'),h('button',{type:'button',onClick:()=>setHlEditing(''),'aria-label':'Close annotation editor'},'×')),
+          h('blockquote',null,selectedHighlight.text),
+          h('label',null,'Personal note',h('textarea',{rows:4,maxLength:4000,value:hlNote,
+            onChange:e=>setHlNote(e.target.value),placeholder:'My explanation, question, or memory cue…'})),
+          h('div',{className:'bsa240-note-actions'},
+            h('button',{type:'button',className:'bsa236-primary',onClick:()=>{if(bsa41UpdateHighlight(selectedHighlight.id,{note:hlNote})){
+              setHlNotice('Annotation saved.');setHlEditing('')}else setHlNotice('Unable to save annotation. Check device storage.')}},'Save note'),
+            h('button',{type:'button',onClick:()=>setHlEditing('')},'Cancel'),
+            h('button',{type:'button',onClick:()=>{if(bsa181Remove('highlights',selectedHighlight.id)){
+              setHlNotice('Highlight removed.');setHlEditing('')}else setHlNotice('Unable to remove highlight.')}},'Remove highlight')))),
       h('nav',{className:'bsa238-section-rail','aria-label':'Navigate lecture sections'},
         h('button',{type:'button',disabled:active<=0,onClick:()=>sectionNav(-1),title:'Previous lecture section','aria-label':'Previous lecture section'},'↑'),
         h('span',{role:'status','aria-live':'polite'},(active+1)+' / '+sourceView.sections.length),
@@ -19535,13 +19663,23 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       const sound=()=>setNoiseRevision(v=>v+1);
       window.addEventListener('bsa228:break-changed',changed);
       window.addEventListener('bsa228:noise-changed',sound);
-      const i=setInterval(()=>{setDay(d=>d===today()?d:today());if(bsa228Break.running)setBreakNow(Date.now());},1000);
+      const i=setInterval(()=>{setDay(d=>d===today()?d:today());if(bsa228Break.running)setBreakNow(Date.now());},bsa228Break.running?1000:60000);
       return()=>{clearInterval(i);window.removeEventListener('bsa228:break-changed',changed);window.removeEventListener('bsa228:noise-changed',sound);};
-    },[]);
-    const savePrefs=(patch)=>setPrefs(prev=>{const next={...prev,...patch};bsa228WriteJson(BSA228_ROUTINE_PREF,next);return next;});
+    },[breakRevision]);
+    const savePrefs=(patch)=>setPrefs(prev=>{
+      // The persistent music player and routine settings share one device-local
+      // preference record. Never overwrite a newer volume/source choice from
+      // the player with stale settings held by this component.
+      const saved=bsa228ReadJson(BSA228_ROUTINE_PREF,{});
+      const next={...prev,...saved,...patch};
+      bsa228WriteJson(BSA228_ROUTINE_PREF,next);
+      return next;
+    });
     const key=bsa228RoutineKey(subject.id,day),done=Array.isArray(checks[key])?checks[key]:[];
     const changeStep=id=>setChecks(old=>{
-      const next={...old},set=new Set(done);
+      // Read the latest state, not the 'done' array from an earlier render:
+      // rapid taps and React batching must not silently lose checkmarks.
+      const next={...old},set=new Set(Array.isArray(old[key])?old[key]:[]);
       if(set.has(id))set.delete(id);else set.add(id);
       next[key]=Array.from(set);
       const keys=Object.keys(next).sort().reverse();
@@ -19557,9 +19695,20 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       const p=bsa197Pool(mcqDedicatedPool(subject),subject.learningEvents||[]);
       return p.filter(q=>q._recall.due).length;
     },[subject]);
+    const dueTotal=cards+dueMcq+mist+probs;
+    // Habits are explicitly self-reported; they do not influence mastery.
+    const daysTried=useMemo(()=>{
+      let count=0;
+      for(let i=0;i<7;i++){
+        const d=new Date();d.setDate(d.getDate()-i);
+        const date=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+        if((checks[bsa228RoutineKey(subject.id,date)]||[]).length)count++;
+      }
+      return count;
+    },[checks,subject.id,day]);
     const timer=useTimer();
     const focusRunning=!!timer&&timer.running&&timer.subjectId===subject.id&&timer.phase!=='break';
-    const guided=bsa33Journey(subject).session;
+    const guided=useMemo(()=>bsa33Journey(subject).session,[subject]);
     const guidedBusy=!!(guided&&bsa212Guided(guided)&&!guided.focusSaved&&!guided.focusEnded&&!guided.focusWaiting);
     const restDisabled=focusRunning||guidedBusy;
     const breakSeconds=bsa228BreakRemaining(bsa228Break,breakNow);
@@ -19586,7 +19735,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       startTimer({mins:prefs.focus,subjectId:subject.id,label:'Daily focus block'});
       go('study');
     };
-    return h('section',{className:'view bsa228-page bsa235-routine-page',style:{display:'block',width:'100%',maxWidth:'1160px',minWidth:0,gridColumn:'1 / -1',flex:'1 1 100%',marginInline:'auto'}},
+    return h('section',{className:'view bsa228-page bsa235-routine-page',style:{display:'block',width:'100%',maxWidth:'1160px',minWidth:0,gridColumn:'1 / -1',flex:'0 0 auto',marginInline:'auto'}},
       h('header',{className:'bsa228-hero'},
         h('span',{className:'bsa228-eyebrow'},'MY DAILY ROUTINE · '+(subject.code||subject.name)),
         h('h1',null,'Study with a clear routine.'),
@@ -19594,6 +19743,15 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
         h('div',{className:'bsa228-hero-facts'},
           h('span',null,'◷ ',prefs.focus,' min focus'),h('span',null,'☕ ',prefs.breakMinutes,' min break'),
           h('span',null,done.length,' of ',BSA228_STEPS.length,' steps tried'))),
+      h('section',{className:'bsa240-priority','aria-label':'Next recommended study action'},
+        h('div',{className:'bsa240-priority-copy'},
+          h('span',{className:'bsa228-eyebrow'},'YOUR NEXT SMALL STEP'),
+          h('strong',null,dueTotal>0?'Start with due reviews':guided?'Continue your saved study plan':'One focused study block'),
+          h('small',null,dueTotal>0?dueTotal+' due items across flashcards, MCQs and retests. Do a little before learning something new.':
+            guided?'Your unfinished study plan is saved under this subject.':'Pick one topic, retrieve what you know, then attempt a question.'),
+          h('small',{className:'bsa240-habit-note'},daysTried+' of the last 7 days include a self-reported routine check-in. No streak penalty.')),
+        h('button',{type:'button',className:'btn primary',onClick:()=>dueTotal>0?goReview():guided?go('study'):startFocus()},
+          dueTotal>0?'Review due items ↗':guided?'Open my study plan ↗':'Begin a focus block ↗')),
       h('div',{className:'bsa228-grid'},
         h('section',{className:'bsa228-card bsa228-checks'},
           h('div',{className:'bsa228-section-heading'},h('div',null,h('span',{className:'bsa228-eyebrow'},label.toUpperCase()+' · DAILY CHECKLIST'),h('h2',null,'Today’s study checklist')),h('span',{className:'bsa228-counter'},done.length+'/4')),
@@ -19632,17 +19790,19 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       const timer=setInterval(tick,5*60*1000);
       return ()=>clearInterval(timer);
     },[]);
-    const review=buildReview(subject,settings?.newPerDay||10,settings?.maxPerDay||0);
-    const due=(review.due||[]).length+(review.mist||[]).length+(review.prob||[]).length;
+    const review=useMemo(()=>buildReview(subject,settings?.newPerDay||10,settings?.maxPerDay||0),
+      [subject,settings?.newPerDay,settings?.maxPerDay]);
+    const dueMcq=useMemo(()=>bsa197Pool(mcqDedicatedPool(subject),subject.learningEvents||[]).filter(q=>q._recall.due).length,[subject]);
+    const due=(review.due||[]).length+(review.mist||[]).length+(review.prob||[]).length+dueMcq;
     const mistakes=(subject.mistakes||[]).filter(x=>x.status!=='Cleared').length;
     const inbox=(subject.studyInbox||[]).filter(x=>x.status==='new').length;
-    const written=(subject.psets||[]).reduce((n,set)=>n+psSafeProblems(set).filter(p=>!bsa198StoredKeyValid(p)).length,0);
+    const written=useMemo(()=>(subject.psets||[]).reduce((n,set)=>n+psSafeProblems(set).filter(p=>!bsa198StoredKeyValid(p)).length,0),[subject.psets]);
     const recent=bsa181Read().recent.filter(x=>x.subjectId===subject.id&&!['home','guide'].includes(x.tab)).slice(0,2);
     const journey=bsa33Journey(subject);
     const next=journey.next?{title:'Continue your active study plan',description:(journey.done)+' of '+journey.total+' tasks finished · Next: '+journey.next.title,route:journey.next.route,opts:journey.next.opts||{},label:'Continue: '+journey.next.title}:
       journey.session?{title:'Finish with a teach-back',description:'All tasks are checked off. Explain the topic from memory and file your plan.',route:'study',label:'Reflect & finish'}:
+      due?{title:'Your spaced review is ready',description:due+' eligible review items are waiting, including due MCQs.',route:'practice',opts:{start:'review'},label:'Start due reviews'}:
       mistakes?{title:'Revisit your saved mistakes',description:mistakes+' unresolved question'+(mistakes===1?'':'s')+' to learn from.',route:'mistakes',label:'Open mistake review'}:
-      due?{title:'Your spaced review is ready',description:due+' review items are waiting.',route:'practice',opts:{start:'review'},label:'Start due reviews'}:
       inbox?{title:'Sort your new materials',description:inbox+' item'+(inbox===1?'':'s')+' need a topic or destination.',route:'library',opts:{tab:'inbox'},label:'Open Study Inbox'}:
       {title:'Plan a focused study session',description:'Choose a realistic session, then follow its saved study blocks.',route:'study',label:'Build a study plan'};
     const steps=[
@@ -20914,7 +21074,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       React.createElement('button',{className:'btn',onClick:()=>bsaDownloadSafeDiagnostics(this.state.error)},'Download safe error report'),
       React.createElement('details',null,React.createElement('summary',null,'Technical details'),React.createElement('pre',null,String(this.state.error&&this.state.error.message||'Unknown render error'))));}
   }
-  if(window.__BSA_TEST__)window.__BSA18_TEST_HOOKS__={BSA212FloatingFocus,bsa234ShowGuided,bsa234HideGuided,bsa234GuidedMayShow,bsa224MarkGuidedHidden,bsa229Source,bsa229YouTubeEmbedUrl,bsa229MusicUrl,BSA232PersistentMusic,BSA229FocusMusic,BSA229YouTubePlayer,bsa197QuizKey,bsa197History,bsa197Recall,bsa197Pool,bsa197Pick,bsa228BreakRemaining,bsa228RoutineKey,BSA228StudyRoutine,bsa228BreakAction,bsa228NoiseStart,bsa228NoiseStop,schedule,buildReview,smartTopicStats,bsaAdaptiveSignals,bsaReadinessReport,bsa34LearningSnapshot,bsaUpsertMistake,learningEvidence,learningCapture,AcademicCommandCenter,bsa197LoadDraft,bsa197SaveDraft,bsa197DeleteDraft,bsa18SaveWritten,bsa18LoadWritten,bsa18DeleteWritten,bsa18LatestPractice,bsa18ReadTutorChat,bsa25PracticeHealth,bsa26TutorName,bsa26TopicMatch,bsa26SafeAction,bsa26TutorCapabilityContext,bsa26LocalStudyPlan,BSA26_COPILOT_FEATURES,bsa26SafeReturn,bsa26ReturnFor,bsa26FsDraft,bsa4TutorDraft,bsa27SelectionFocus,bsa27DefaultTutorQuestion,gemSourceSystem,bsa212ModePlan,bsa213QuickPlan,bsa213ReadScope,bsa213Words,bsa213McqScope,bsa213WrittenMinutes,bsa214Archive,bsa214RecentClosed,bsa214HistoryLabel,bsa214AdaptProposal,bsa214TopicStanding,bsa214FoundationSources,mcqDedicatedPool,studyTopics,bsa34TopicMatch,bsa213McqEstimate,bsa214Pack,bsa214Unpack,bsa214MainGet,bsa214MainSet,bsa49TopicParts,bsa49ResolveTopic,bsa49UnmatchedLabels,BSA49TopicLinks,bsa215TopicChapter,bsa215UniqueChapterMatch,bsa215LinkSafety,bsa44Plan,bsa44ParseOne,normTopic,bsa49CanonicalizePack,bsa214BackupGet,bsaBackupPreview,loadLocal,bsa212Allocate,bsa212PhaseElapsed,bsa212PhaseGoal,bsa212Action,bsa28SourceHistory,bsa28NewTopicRequest,bsa210TutorCore,bsa28ReadReflections,bsa28WriteReflections,bsa29Meaningful,bsa213ClozeQuality,bsa29Candidates,bsa29Pool,bsa29Exact,bsa29ReadDraft,bsa29SaveDraft,bsa210DuplicateSignal,bsa210MaterialPair,bsa210AnswerMeaning,bsa44Prepare,BSA29ClozePractice,psMathSegments,psMathHtml,psS,psInlineHtml,MultipleChoiceQuiz,MCQPage,PsWrittenDrill,MockExam,AskView,App};
+  if(window.__BSA_TEST__)window.__BSA18_TEST_HOOKS__={bsa41DecorateHtml,bsa41Locate,bsa41LectureHighlights,bsa181Add,bsa181Remove,bsa181Read,bsa236LectureKey,BSA236LectureMode,BSA41MarkedText,BSA212FloatingFocus,bsa234ShowGuided,bsa234HideGuided,bsa234GuidedMayShow,bsa224MarkGuidedHidden,bsa229Source,bsa229YouTubeEmbedUrl,bsa229MusicUrl,BSA232PersistentMusic,BSA229FocusMusic,BSA229YouTubePlayer,bsa197QuizKey,bsa197History,bsa197Recall,bsa197Pool,bsa197Pick,bsa228BreakRemaining,bsa228RoutineKey,BSA228StudyRoutine,bsa228BreakAction,bsa228NoiseStart,bsa228NoiseStop,schedule,buildReview,smartTopicStats,bsaAdaptiveSignals,bsaReadinessReport,bsa34LearningSnapshot,bsaUpsertMistake,learningEvidence,learningCapture,AcademicCommandCenter,bsa197LoadDraft,bsa197SaveDraft,bsa197DeleteDraft,bsa18SaveWritten,bsa18LoadWritten,bsa18DeleteWritten,bsa18LatestPractice,bsa18ReadTutorChat,bsa25PracticeHealth,bsa26TutorName,bsa26TopicMatch,bsa26SafeAction,bsa26TutorCapabilityContext,bsa26LocalStudyPlan,BSA26_COPILOT_FEATURES,bsa26SafeReturn,bsa26ReturnFor,bsa26FsDraft,bsa4TutorDraft,bsa27SelectionFocus,bsa27DefaultTutorQuestion,gemSourceSystem,bsa212ModePlan,bsa213QuickPlan,bsa213ReadScope,bsa213Words,bsa213McqScope,bsa213WrittenMinutes,bsa214Archive,bsa214RecentClosed,bsa214HistoryLabel,bsa214AdaptProposal,bsa214TopicStanding,bsa214FoundationSources,mcqDedicatedPool,studyTopics,bsa34TopicMatch,bsa213McqEstimate,bsa214Pack,bsa214Unpack,bsa214MainGet,bsa214MainSet,bsa49TopicParts,bsa49ResolveTopic,bsa49UnmatchedLabels,BSA49TopicLinks,bsa215TopicChapter,bsa215UniqueChapterMatch,bsa215LinkSafety,bsa44Plan,bsa44ParseOne,normTopic,bsa49CanonicalizePack,bsa214BackupGet,bsaBackupPreview,loadLocal,bsa212Allocate,bsa212PhaseElapsed,bsa212PhaseGoal,bsa212Action,bsa28SourceHistory,bsa28NewTopicRequest,bsa210TutorCore,bsa28ReadReflections,bsa28WriteReflections,bsa29Meaningful,bsa213ClozeQuality,bsa29Candidates,bsa29Pool,bsa29Exact,bsa29ReadDraft,bsa29SaveDraft,bsa210DuplicateSignal,bsa210MaterialPair,bsa210AnswerMeaning,bsa44Prepare,BSA29ClozePractice,psMathSegments,psMathHtml,psS,psInlineHtml,MultipleChoiceQuiz,MCQPage,PsWrittenDrill,MockExam,AskView,App};
   // v167: Owner app mounts only after this browser has been approved.
   // Shared student dashboards mount normally; the owner authorization script is never exported.
   let bsaOwnerMounted=false;
