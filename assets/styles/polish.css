@@ -4795,3 +4795,146 @@ body>.backdrop .bsa45-sidebar-modal .bsa211-shortcut-groups{padding-bottom:18px}
 @media print{.bsa236-reader,.bsa236-audio-dock{display:none!important}}
 
 .bsa236-reader .bsa236-explain-button{margin-top:14px;font-size:.78rem;background:color-mix(in srgb,var(--accent,#21865d) 8%,var(--surface,#fff));border-color:color-mix(in srgb,var(--accent,#21865d) 32%,var(--line,#ccd7cd))}
+
+
+/* V2.37 -- iPad/full-shell Study Routine repair. Persistent music is now a
+   stable child of main.content, not a sibling competing with the outer grid.
+   Layout is based on available workspace width, not the device's full width. */
+#root main.content.bsa235-routine-layout {
+  container: routine-workspace / inline-size;
+  min-inline-size: 0 !important;
+  overflow: visible !important;
+}
+#root main.content.bsa235-routine-layout > .bsa235-routine-page {
+  inline-size: 100% !important;
+  max-inline-size: 1120px !important;
+  min-inline-size: 0 !important;
+  margin-inline: auto !important;
+}
+#root main.content.bsa235-routine-layout .bsa228-grid {
+  display: grid !important;
+  grid-template-columns: minmax(0,1.08fr) minmax(0,.92fr) !important;
+  grid-template-areas: 'checks break' 'schedule schedule' !important;
+  align-items: start !important;
+  gap: 16px !important;
+}
+#root main.content.bsa235-routine-layout .bsa228-card {
+  inline-size: 100% !important;
+  min-inline-size: 0 !important;
+  max-inline-size: none !important;
+  align-self: start !important;
+}
+/* A media player displayed on Study Routine follows the session cards, never
+   floats into the header or becomes an implicit grid area. */
+#root main.content.bsa235-routine-layout > #bsa232-media-player:not(.bsa232-away) {
+  display: grid !important;
+  position: relative !important;
+  grid-area: auto !important;
+  inline-size: 100% !important;
+  max-inline-size: 1120px !important;
+  margin: 18px auto 0 !important;
+  clear: both !important;
+  float: none !important;
+}
+/* Container query responds to the space left after the sidebar on iPad. */
+@container routine-workspace (max-width: 920px) {
+  #root main.content.bsa235-routine-layout .bsa228-grid {
+    grid-template-columns: minmax(0,1fr) !important;
+    grid-template-areas: 'checks' 'break' 'schedule' !important;
+    gap: 14px !important;
+  }
+}
+/* Fallback for engines without container queries, including older mobile WebKit. */
+@supports not (container-type: inline-size) {
+  @media (max-width: 1350px) {
+    #root main.content.bsa235-routine-layout .bsa228-grid {
+      grid-template-columns: minmax(0,1fr) !important;
+      grid-template-areas: 'checks' 'break' 'schedule' !important;
+    }
+  }
+}
+@media (max-width: 700px) {
+  #root main.content.bsa235-routine-layout .bsa228-hero {
+    padding: 18px 15px !important;
+  }
+  #root main.content.bsa235-routine-layout .bsa228-grid {
+    grid-template-columns: minmax(0,1fr) !important;
+    grid-template-areas: 'checks' 'break' 'schedule' !important;
+    gap: 12px !important;
+  }
+  #root main.content.bsa235-routine-layout .bsa228-hero h1 {
+    font-size: clamp(1.7rem, 6.6vw, 2.2rem) !important;
+  }
+  #root main.content.bsa235-routine-layout .bsa228-presets {
+    flex-wrap: wrap !important;
+  }
+}
+
+
+/* V2.38 — Section navigation is chapter-based, not page scrolling. */
+.bsa238-section-rail{position:fixed;z-index:5010;right:clamp(10px,2vw,22px);bottom:calc(18px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;align-items:center;gap:5px;padding:6px;border:1px solid var(--line,#cddbd2);border-radius:16px;background:var(--surface,#fff);color:var(--text,#123);box-shadow:0 8px 25px rgba(0,0,0,.15)}
+.bsa238-section-rail button{display:flex;align-items:center;justify-content:center;width:40px;height:39px;padding:4px;font-size:1.35rem;font-weight:800;border-radius:10px;cursor:pointer}
+.bsa238-section-rail button:disabled{opacity:.35;cursor:not-allowed}
+.bsa238-section-rail span{font-size:.65rem;font-weight:800;font-variant-numeric:tabular-nums;color:var(--muted,#667)}
+.bsa238-toc-header{display:flex;align-items:center;justify-content:space-between;gap:7px;margin-bottom:7px}
+.bsa238-toc-header button{padding:6px 9px;min-height:32px;font-size:.7rem;flex:none}
+.bsa236-reader-page{padding-right:52px!important}
+@media(max-width:690px){.bsa238-section-rail{right:6px;bottom:calc(14px + env(safe-area-inset-bottom,0px))}.bsa238-section-rail button{width:34px;height:38px}.bsa236-reader-page{padding-right:38px!important}}
+
+/* V2.38 — Media is never an overlay over study content. A desktop media rail
+   reserves the screen space; narrower screens show a small player in normal
+   document flow, above the lesson. The YouTube iframe remains >= 200 x 200. */
+#root .bsa232-away{
+  position:relative!important;inset:auto!important;top:auto!important;right:auto!important;bottom:auto!important;left:auto!important;
+  float:none!important;clear:both!important;z-index:2!important;
+  width:238px!important;min-width:238px!important;max-width:100%!important;
+  max-height:none!important;overflow:visible!important;
+  margin:6px 0 14px auto!important;padding:6px!important;
+  box-shadow:0 3px 12px rgba(0,0,0,.08)!important;border-radius:12px!important;
+}
+#root .bsa232-away.bsa234-mini{width:238px!important;min-width:238px!important;padding:6px!important}
+#root .bsa232-away .bsa232-quickbar{display:flex!important;align-items:center!important;flex-wrap:wrap!important;gap:5px!important}
+#root .bsa232-away .bsa232-quick-label{display:none!important}
+#root .bsa232-away .bsa232-quickbar .bsa234-mini-toggle,
+#root .bsa232-away .bsa232-quickbar .bsa233-music-hide,
+#root .bsa232-away .bsa232-quickbar .bsa234-open-music{display:none!important}
+#root .bsa232-away .bsa232-quickbar .bsa232-return,
+#root .bsa232-away .bsa232-quickbar .bsa232-stop{display:inline-flex!important;flex:1 1 auto;min-width:0;padding:5px!important;min-height:30px!important;font-size:.67rem!important}
+#root .bsa232-away .bsa229-player-card{padding:0!important;margin:0!important;gap:0!important;min-width:0!important}
+#root .bsa232-away .bsa229-player-heading{display:none!important}
+#root .bsa232-away .bsa229-youtube-player,
+#root .bsa232-away .bsa229-youtube-player iframe{
+  display:block!important;width:100%!important;height:200px!important;min-height:200px!important;
+  opacity:1!important;visibility:visible!important;border:0!important;
+}
+#root .bsa232-away .bsa229-streaming{margin-top:5px!important}
+#root .bsa232-away.bsa232-idle,
+#root .bsa232-away.bsa233-hidden{display:none!important}
+/* On the routine page, the full music workspace appears after the routine cards. */
+#root main.content.bsa235-routine-layout{display:flex!important;flex-direction:column!important;align-items:stretch!important}
+#root main.content.bsa235-routine-layout>.workspace-topbar{order:0}
+#root main.content.bsa235-routine-layout>.bsa235-routine-page{order:1}
+#root main.content.bsa235-routine-layout>#bsa232-media-player:not(.bsa232-away){order:2!important}
+@media(min-width:1120px){
+  html.bsa238-media-active #root>.shell>.content:not(.bsa235-routine-layout){padding-right:264px!important;box-sizing:border-box!important}
+  html.bsa238-media-active #root .bsa232-away{position:fixed!important;inset:100px 12px auto auto!important;z-index:30!important;margin:0!important;max-height:calc(100dvh - 125px)!important;overflow-y:auto!important}
+}
+@media(max-width:1119px){
+  #root main.content:not(.bsa235-routine-layout)>.bsa232-away{align-self:flex-end!important}
+}
+@media(max-width:420px){
+  #root .bsa232-away{width:235px!important;min-width:0!important}
+  #root .bsa232-away.bsa234-mini{width:235px!important;min-width:0!important}
+}
+/* Mobile lecture sections stay open as a compact in-flow panel, never as a
+   modal drawer covering the text after choosing a heading. */
+@media(max-width:690px){
+  .bsa236-reader-layout{flex-direction:column!important;min-height:0!important}
+  .bsa236-reader-toc{position:relative!important;inset:auto!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;
+    display:flex!important;flex-direction:column!important;flex:0 0 auto!important;max-height:min(205px,31dvh)!important;
+    width:100%!important;min-width:0!important;overflow:auto!important;padding:10px 14px!important;
+    z-index:2!important;box-shadow:none!important;border-right:0!important;border-bottom:1px solid var(--line,#ccd7cd)!important}
+  .bsa236-reader-toc button{min-height:37px!important;padding:8px 10px!important}
+  .bsa236-reader-scroll{flex:1 1 auto!important;min-height:0!important}
+  .bsa238-toc-header{position:sticky!important;top:-10px!important;background:var(--surface,#fff)!important;z-index:2!important;padding-bottom:4px!important}
+}
