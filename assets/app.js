@@ -30,7 +30,7 @@ THE SOFTWARE.
   if (window.__BSA_DESK_APP_LOADED__) return;
   window.__BSA_DESK_APP_LOADED__ = true;
   // User-facing release label only. Do not use for storage schemas or caches.
-  const BSA_RELEASE_LABEL = "V2.38";
+  const BSA_RELEASE_LABEL = "V2.39";
   const S = (t, p = null, s = false) => ({ t, p, s });
   const CFAS_TOPICS = [
     {
@@ -19243,7 +19243,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     },[source.id,source.kind]);
     return h('div',{className:'bsa234-spotify-holder',ref:holder,'aria-label':'Spotify official embedded player'});
   }
-  function BSA229FocusMusic({prefs,savePrefs,compact=false,onReturn,dockHidden=false,onHide,dockMini=false,onMini}){
+  function BSA229FocusMusic({prefs,savePrefs,compact=false,onReturn,dockHidden=false,onHide,dockMini=false,onMini,mediaPosition=null,onMediaDragStart,onMediaDragMove,onMediaDragEnd,onMediaKeyDown,onMediaReset}){
     const [mode,setMode]=useState(()=>{try{const x=localStorage.getItem(BSA229_MODE_KEY);return ['noise','youtube','spotify'].includes(x)?x:'noise';}catch(_){return'noise';}});
     const [links,setLinks]=useState(()=>{
       const raw=bsa228ReadJson(BSA229_LINK_KEY,[]);
@@ -19370,9 +19370,11 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       onHide?.();
     };
     const returnToMusic=()=>{returnScroll.current=true;onReturn?.();};
-    return h('section',{id:'bsa232-media-player',className:'bsa228-card bsa228-sound-card bsa229-music'+(compact?' bsa232-away':'')+(compact&&dockMini?' bsa234-mini':'')+(compact&&!playbackActive?' bsa232-idle':'')+(compact&&dockHidden?' bsa233-hidden':'')+(playingEmbedded?' bsa232-streaming-active':'')},
+    return h('section',{id:'bsa232-media-player',className:'bsa228-card bsa228-sound-card bsa229-music'+(compact?' bsa232-away':'')+(compact&&dockMini?' bsa234-mini':'')+(compact&&!playbackActive?' bsa232-idle':'')+(compact&&dockHidden?' bsa233-hidden':'')+(playingEmbedded?' bsa232-streaming-active':''),'data-bsa239-floating':compact&&!!mediaPosition?'true':undefined,style:compact&&mediaPosition?{'--bsa239-x':mediaPosition.x+'px','--bsa239-y':mediaPosition.y+'px'}:undefined},
       compact&&h('div',{className:'bsa232-quickbar'},
         h('span',{className:'bsa232-quick-label'},dockHasSound?'♫ Music playing':'♫ Focus Music'),
+        !dockHidden&&h('button',{type:'button',className:'bsa239-drag-handle',title:'Drag to reposition the music player; arrow keys also move it',onPointerDown:onMediaDragStart,onPointerMove:onMediaDragMove,onPointerUp:onMediaDragEnd,onPointerCancel:onMediaDragEnd,onKeyDown:onMediaKeyDown,'aria-label':'Move music player; drag or use arrow keys'},'⠿ Move'),
+        !dockHidden&&mediaPosition&&h('button',{type:'button',className:'bsa239-reset-position',onClick:onMediaReset,title:'Return music player to the reserved area','aria-label':'Reset music player position'},'Reset'),
         !dockHidden&&h('button',{type:'button',className:'bsa232-return',onClick:returnToMusic,'aria-label':'Go to Study Routine music controls'},'Open music'),
         !dockHidden&&playingEmbedded&&h('button',{type:'button',className:'bsa234-mini-toggle',onClick:onMini,'aria-label':dockMini?'Expand the visible music player':'Minimize the visible music player'},dockMini?'Large view':'Mini video'),
         !dockHidden&&h('button',{type:'button',className:'bsa233-music-hide',onClick:hideDock,disabled:!!(selected?.provider==='youtube'&&selected.kind!=='external'&&!ytController),'aria-label':selected?.provider==='youtube'?'Hide and pause YouTube Music':'Hide music controls; playback may depend on provider'},selected?.provider==='youtube'?'Hide & pause':'Hide player'),
@@ -19423,10 +19425,79 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
   // V2.32 -- A single, route-independent media owner. Switching dashboard
   // sections must not destroy the iframe/WebAudio source and restart music.
   // The player is always the same React component at a stable App tree position.
+  // V2.39: one persistent mini-player that can be relocated without remounting
+  // the YouTube/Spotify iframe. Moving is restricted to the dedicated handle;
+  // scrolling the rest of the page retains its normal touch behaviour.
   function BSA232PersistentMusic({routineOpen,go}){
     const [dockHidden,setDockHidden]=useState(false);
     const [dockMini,setDockMini]=useState(true);
     useEffect(()=>{if(routineOpen)setDockHidden(false)},[routineOpen]);
+    const positionKey=window.__BSA_SHARED_MODE__?'bsa_shared_v239_media_position':'bsa_owner_v239_media_position';
+    const [mediaPosition,setMediaPosition]=useState(()=>{
+      try{
+        const p=JSON.parse(localStorage.getItem(positionKey)||'null');
+        return p&&Number.isFinite(p.x)&&Number.isFinite(p.y)?{x:p.x,y:p.y}:null;
+      }catch(_){return null}
+    });
+    const mediaDrag=useRef(null);
+    const clampPosition=(x,y,node)=>{
+      const r=node?.getBoundingClientRect();
+      const w=r?.width||238,h=r?.height||250;
+      const vp=window.visualViewport;
+      const width=vp?.width||window.innerWidth,height=vp?.height||window.innerHeight;
+      const ox=vp?.offsetLeft||0,oy=vp?.offsetTop||0;
+      const mobile=window.matchMedia?.('(max-width:899px)').matches;
+      const bottomPad=mobile?Math.min(86,Math.max(8,height-h-16)):12;
+      return {x:Math.round(Math.max(ox+8,Math.min(ox+width-w-8,x))),
+        y:Math.round(Math.max(oy+8,Math.min(oy+height-h-bottomPad,y)))};
+    };
+    const saveMediaPosition=p=>{
+      setMediaPosition(p);
+      try{if(p)localStorage.setItem(positionKey,JSON.stringify(p));else localStorage.removeItem(positionKey)}catch(_){}
+    };
+    const beginMediaDrag=e=>{
+      if(routineOpen||e.button!==0)return;
+      const node=e.currentTarget.closest('#bsa232-media-player');if(!node)return;
+      const rect=node.getBoundingClientRect();
+      mediaDrag.current={id:e.pointerId,x:rect.left,y:rect.top,px:e.clientX,py:e.clientY,node,last:clampPosition(rect.left,rect.top,node)};
+      node.dataset.bsa239Floating='true';
+      node.style.setProperty('--bsa239-x',rect.left+'px');node.style.setProperty('--bsa239-y',rect.top+'px');
+      e.currentTarget.setPointerCapture?.(e.pointerId);
+      e.preventDefault();
+    };
+    const moveMediaDrag=e=>{
+      const d=mediaDrag.current;if(!d||d.id!==e.pointerId)return;
+      const p=clampPosition(d.x+e.clientX-d.px,d.y+e.clientY-d.py,d.node);d.last=p;
+      d.node.style.setProperty('--bsa239-x',p.x+'px');d.node.style.setProperty('--bsa239-y',p.y+'px');
+      e.preventDefault();
+    };
+    const endMediaDrag=e=>{
+      const d=mediaDrag.current;if(!d||d.id!==e.pointerId)return;
+      mediaDrag.current=null;saveMediaPosition(d.last);
+      e.preventDefault();
+    };
+    const keyMediaDrag=e=>{
+      if(routineOpen||!['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Home'].includes(e.key))return;
+      e.preventDefault();
+      if(e.key==='Home'){saveMediaPosition(null);return}
+      const node=e.currentTarget.closest('#bsa232-media-player');if(!node)return;
+      const rect=node.getBoundingClientRect();
+      const delta=e.shiftKey?60:24;
+      const p=clampPosition(rect.left+(e.key==='ArrowRight'?delta:e.key==='ArrowLeft'?-delta:0),rect.top+(e.key==='ArrowDown'?delta:e.key==='ArrowUp'?-delta:0),node);
+      saveMediaPosition(p);
+    };
+    useEffect(()=>{
+      if(!mediaPosition)return;
+      const onResize=()=>{
+        const node=document.querySelector('#bsa232-media-player.bsa232-away');
+        if(!node)return;
+        const p=clampPosition(mediaPosition.x,mediaPosition.y,node);
+        if(p.x!==mediaPosition.x||p.y!==mediaPosition.y)saveMediaPosition(p);
+      };
+      onResize();window.addEventListener('resize',onResize,{passive:true});
+      window.visualViewport?.addEventListener('resize',onResize,{passive:true});
+      return()=>{window.removeEventListener('resize',onResize);window.visualViewport?.removeEventListener('resize',onResize)};
+    },[mediaPosition?.x,mediaPosition?.y,routineOpen]);
     const [prefs,setPrefs]=useState(()=>{
       const raw=bsa228ReadJson(BSA228_ROUTINE_PREF,{});
       return {kind:['brown','pink','white'].includes(raw.kind)?raw.kind:'brown',
@@ -19439,6 +19510,8 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       return next;
     });
     return h(BSA229FocusMusic,{prefs,savePrefs,compact:!routineOpen,dockHidden,dockMini,
+      mediaPosition:!routineOpen?mediaPosition:null,onMediaDragStart:beginMediaDrag,onMediaDragMove:moveMediaDrag,
+      onMediaDragEnd:endMediaDrag,onMediaKeyDown:keyMediaDrag,onMediaReset:()=>saveMediaPosition(null),
       onMini:()=>setDockMini(v=>!v),onHide:()=>setDockHidden(true),
       onReturn:()=>{setDockHidden(false);go('routine')}});
   }
