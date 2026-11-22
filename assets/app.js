@@ -30,7 +30,7 @@ THE SOFTWARE.
   if (window.__BSA_DESK_APP_LOADED__) return;
   window.__BSA_DESK_APP_LOADED__ = true;
   // User-facing release label only. Do not use for storage schemas or caches.
-  const BSA_RELEASE_LABEL = "V2.33";
+  const BSA_RELEASE_LABEL = "V2.34";
   const S = (t, p = null, s = false) => ({ t, p, s });
   const CFAS_TOPICS = [
     {
@@ -5169,12 +5169,10 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const t = useTimer();
     const focusActive=useRef({id:null,ms:0,last:Date.now()});
     const [floating,setFloating]=useState(null),[compact,setCompact]=useState(true),
-      [timerHidden,setTimerHidden]=useState(()=>{try{return localStorage.getItem('bsa43-timer-hidden')==='1'}catch(_){return false}});
+      [timerHidden,setTimerHidden]=useState(true);
     const showTimer=()=>{setTimerHidden(false);try{localStorage.removeItem('bsa43-timer-hidden')}catch(_){}};
     const hideTimer=()=>{setTimerHidden(true);try{localStorage.setItem('bsa43-timer-hidden','1')}catch(_){}};
     useEffect(()=>{window.addEventListener('bsa:show-timer',showTimer);window.addEventListener('bsa:hide-timer',hideTimer);return()=>{window.removeEventListener('bsa:show-timer',showTimer);window.removeEventListener('bsa:hide-timer',hideTimer)}},[]);
-    const previousTimer=useRef(null);
-    useEffect(()=>{const key=t&&(t.startedAt||t.start);if(key&&previousTimer.current&&key!==previousTimer.current)showTimer();previousTimer.current=key||null},[t&&(t.startedAt||t.start)]);
     const dragging=useRef(null);
     const beginDrag=e=>{if(e.pointerType==='touch'||(e.button!==0&&e.pointerType==='mouse'))return;const r=e.currentTarget.parentElement.getBoundingClientRect();dragging.current={px:e.clientX,py:e.clientY,x:r.left,y:r.top};try{e.currentTarget.setPointerCapture(e.pointerId)}catch(_){}e.preventDefault()};
     const moveDrag=e=>{const d=dragging.current;if(!d)return;const r=e.currentTarget.getBoundingClientRect(),w=Math.min(window.innerWidth-16,r.width),height=Math.min(window.innerHeight-16,r.height);setFloating({x:Math.max(8,Math.min(window.innerWidth-w-8,d.x+e.clientX-d.px)),y:Math.max(8,Math.min(window.innerHeight-height-8,d.y+e.clientY-d.py))})};
@@ -17956,9 +17954,28 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
      flow; this is only a display latch, not a second academic record store. */
   const bsa224GuidedHidden=new Map();
   const bsa224Key=(subjectId,sessionId)=>String(subjectId||'')+'::'+String(sessionId||'');
+  // A session in storage is NOT permission to display an overlay. An explicit
+  // Start, Resume, or Show timer click grants visibility for the current page
+  // lifetime. Reloads, subject changes and rerenders cannot re-enable it.
+  const bsa234VisibleGuided=new Set();
+  function bsa234ShowGuided(subjectId,sessionId){
+    if(!subjectId||!sessionId)return;
+    bsa224ReleaseGuidedHidden(subjectId,sessionId);
+    bsa234VisibleGuided.add(bsa224Key(subjectId,sessionId));
+    window.dispatchEvent(new CustomEvent('bsa234:guided-visibility',{detail:{subjectId,sessionId,visible:true}}));
+  }
+  function bsa234HideGuided(subjectId,sessionId){
+    if(!subjectId||!sessionId)return;
+    bsa234VisibleGuided.delete(bsa224Key(subjectId,sessionId));
+    window.dispatchEvent(new CustomEvent('bsa234:guided-visibility',{detail:{subjectId,sessionId,visible:false}}));
+  }
+  function bsa234GuidedMayShow(subjectId,sessionId){
+    return bsa234VisibleGuided.has(bsa224Key(subjectId,sessionId));
+  }
   function bsa224MarkGuidedHidden(subjectId,sessionId,reason){
     if(!subjectId||!sessionId)return;
     bsa224GuidedHidden.set(bsa224Key(subjectId,sessionId),reason||'save');
+    bsa234HideGuided(subjectId,sessionId);
     // Immediately remove the panel from the hit-testing and visual tree.
     // This also catches older duplicate DOM panels while their React commit
     // waits for a large lecture/question-bank render.
@@ -18016,6 +18033,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       if(timerState?.running){toast('Pause or finish your separate Pomodoro timer first to avoid running two study clocks.');return}
       const createdAt=Date.now();const newSession={id:uid('session205'),createdAt,lastAt:createdAt,budget:sessionMinutes,focusId,focusLabel:bsa34TopicTitle(subject,focusId),blocks:proposal.map(b=>({...b,done:false})),archived:false,focusMode,focusPhaseIndex:0,focusPhaseElapsedMs:0,focusPhaseStartedAt:createdAt,focusWaiting:false,focusSaved:false,focusEnded:false,timerStartedAt:createdAt,timerElapsedMs:0,timerPaused:false};
       update(s=>{s.practiceSessions=[...(s.practiceSessions||[]),newSession]});
+      bsa234ShowGuided(subject.id,newSession.id);
       setReflection('');setReflectOpen(false);toast('Guided focus started. Your floating phase timer follows you; drag its grip to reposition.');
     };
     const enableGuided=id=>{
@@ -18053,8 +18071,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
         x.lastAt=now;
       },null,{subjectId:subject.id,sessionId:id});
       if(action==='start'&&bsa212Guided(active)){
-        bsa224ReleaseGuidedHidden(subject.id,id);
-        window.dispatchEvent(new Event('bsa214:show-focus-timer'));
+        bsa234ShowGuided(subject.id,id);
       }
       if(action==='save'&&bsa212Guided(active)){
         bsa224MarkGuidedHidden(subject.id,id,'save');
@@ -18136,7 +18153,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
           h('button',{className:'bsa33-text-button bsa214-end-button',type:'button',onClick:()=>archive(active.id)},'End & Save session')),
         h('p',{className:'bsa214-end-note'},'End & Save closes this plan and frees the timer for another topic. Save & Leave only pauses this same session for later.'),
         h('div',{className:'bsa214-session-small-actions'},
-          bsa212Guided(active)&&h('button',{className:'btn',type:'button',onClick:()=>active.focusSaved?bsa211TimerAction(active.id,'start'):window.dispatchEvent(new Event('bsa214:show-focus-timer'))},active.focusSaved?'▶ Resume saved session':'◷ Show floating timer'),
+          bsa212Guided(active)&&h('button',{className:'btn',type:'button',onClick:()=>active.focusSaved?bsa211TimerAction(active.id,'start'):bsa234ShowGuided(subject.id,active.id)},active.focusSaved?'▶ Resume saved session':'◷ Show floating timer'),
           h('button',{className:'btn',type:'button',onClick:()=>{bsa211TimerAction(active.id,'save');window.dispatchEvent(new Event('bsa:hide-timer'));toast('Session saved. Resume to show its timer again.');}},'Save & leave'),
           h('button',{className:'btn',type:'button',onClick:()=>setReflectOpen(v=>!v)},reflectOpen?'Hide reflection':'Finish & reflect (optional)'),
           h('button',{className:'btn',type:'button',onClick:()=>{setFoundationOpen(true);requestAnimationFrame(()=>document.getElementById('bsa214-foundation')?.scrollIntoView({behavior:'smooth',block:'start'}))}},'Check understanding')),
@@ -18308,15 +18325,24 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     const session=bsa212Guided(active)?active:null;
     const [now,setNow]=useState(()=>Date.now());
     const [expanded,setExpanded]=useState(false);
-    const [quiet,setQuiet]=useState(false);
+    const [visibilityRevision,setVisibilityRevision]=useState(0);
     const [closingId,setClosingId]=useState('');
-    useEffect(()=>{setClosingId('');setExpanded(false);setQuiet(false)},[subject.id,session?.id]);
+    useEffect(()=>{setClosingId('');setExpanded(false)},[subject.id,session?.id]);
     useEffect(()=>{setExpanded(false)},[nav?.tab,nav?.key]);
     useEffect(()=>{const close=e=>{if(e.detail?.subjectId===subject.id)setClosingId(e.detail.id)};
       window.addEventListener('bsa223:closed-guided',close);
       return()=>window.removeEventListener('bsa223:closed-guided',close);
     },[subject.id]);
-    useEffect(()=>{const show=()=>{setQuiet(false);setExpanded(true);setPos(null);try{localStorage.removeItem('bsa212-floating-pos')}catch(_){}};window.addEventListener('bsa214:show-focus-timer',show);return()=>window.removeEventListener('bsa214:show-focus-timer',show)},[]);
+    useEffect(()=>{
+      const sync=e=>{
+        if(String(e.detail?.subjectId)!==String(subject.id))return;
+        if(String(e.detail?.sessionId)!==String(session?.id))return;
+        setVisibilityRevision(n=>n+1);
+        if(e.detail?.visible)setExpanded(true);
+      };
+      window.addEventListener('bsa234:guided-visibility',sync);
+      return()=>window.removeEventListener('bsa234:guided-visibility',sync);
+    },[subject.id,session?.id]);
     const [pos,setPos]=useState(()=>{try{const p=JSON.parse(localStorage.getItem('bsa212-floating-pos')||'null');return p&&Number.isFinite(p.x)&&Number.isFinite(p.y)?p:null}catch(_){return null}});
     const drag=useRef(null);
     useEffect(()=>{if(!session)return;setNow(Date.now());
@@ -18370,7 +18396,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       const r=e.currentTarget.closest('.bsa212-float').getBoundingClientRect();const x=r.left+(e.key==='ArrowRight'?24:e.key==='ArrowLeft'?-24:0),y=r.top+(e.key==='ArrowDown'?24:e.key==='ArrowUp'?-24:0);
       const next=constrain(x,y,r.width,r.height);setPos(next);try{localStorage.setItem('bsa212-floating-pos',JSON.stringify(next))}catch(_){}};
     useEffect(()=>{if(!pos)return;const onResize=()=>setPos(p=>{if(!p)return p;const w=Math.min(expanded?320:240,window.innerWidth-16),h=expanded?330:68;const next=constrain(p.x,p.y,w,h);if(next.x===p.x&&next.y===p.y)return p;try{localStorage.setItem('bsa212-floating-pos',JSON.stringify(next))}catch(_){}return next;});onResize();window.addEventListener('resize',onResize);window.addEventListener('orientationchange',onResize);return()=>{window.removeEventListener('resize',onResize);window.removeEventListener('orientationchange',onResize)}},[!!pos,expanded]);
-    if(!session||session.focusSaved||session.archived||closingId===session.id||bsa224GuidedIsHidden(subject.id,session.id))return null;
+    if(!session||session.focusSaved||session.archived||closingId===session.id||bsa224GuidedIsHidden(subject.id,session.id)||!bsa234GuidedMayShow(subject.id,session.id))return null;
     const index=bsa212PhaseIndex(session),block=session.blocks[index]||{},waiting=!!session.focusWaiting,ended=!!session.focusEnded;
     const remaining=Math.max(0,bsa212PhaseGoal(session)-bsa212PhaseElapsed(session,now));
     const running=Number(session.focusPhaseStartedAt)>0;
@@ -18382,8 +18408,6 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     // dashboard panel; avoids repeated compositor paints during scrolling.
     let layer=document.getElementById('bsa213-focus-layer');
     if(!layer){layer=document.createElement('div');layer.id='bsa213-focus-layer';document.body.appendChild(layer);}
-    if(quiet)return ReactDOM.createPortal(
-      h('button',{type:'button',className:'bsa233-timer-return',onClick:()=>{setQuiet(false);go('study')},'aria-label':'Return to study session timer',title:'Return to study session'},'◷ Back to session'),layer);
     return ReactDOM.createPortal(h('aside',{className:'bsa212-float'+(expanded?' expanded':'')+(waiting?' is-due':'')+(session.focusSaved?' is-saved':''),'data-dragged':pos?'yes':'no',style:pos?{left:pos.x+'px',top:pos.y+'px',right:'auto',bottom:'auto'}:undefined,role:'region','aria-label':'Floating guided study timer','data-bsa-guided-focus':'v224','data-bsa-guided-session':String(session.id),'data-bsa-guided-subject':String(subject.id),
       onPointerMove:move,onPointerUp:end,onPointerCancel:end},
       h('div',{className:'bsa212-float-top'},
@@ -18391,7 +18415,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
         h('button',{className:'bsa212-float-summary',type:'button',onClick:()=>setExpanded(v=>!v),'aria-expanded':expanded},
           h('strong',{className:'bsa212-float-digits'},ended?'Done':waiting?'Time up':bsa211Clock(remaining)),
           h('span',null,waiting?(session.focusSaved?'Saved · choose next':'Choose what’s next'):ended?'Wrap up session':(index+1)+'/'+session.blocks.length+' · '+(running?'Focus':session.focusSaved?'Saved':'Paused'))),
-        h('button',{className:'bsa233-timer-hide',type:'button',onClick:()=>{setExpanded(false);setQuiet(true)},title:'Hide timer without ending the session','aria-label':'Hide timer and keep study session'},'Hide'),
+        h('button',{className:'bsa233-timer-hide',type:'button',onClick:()=>{bsa234HideGuided(subject.id,session.id);setExpanded(false)},title:'Hide timer without ending the session','aria-label':'Hide timer and keep study session'},'Hide'),
         h('button',{className:'bsa212-float-expand',type:'button',onClick:()=>setExpanded(v=>!v),'aria-label':expanded?'Minimize focus timer':'Show focus timer options'},expanded?'−':'⌄')),
       expanded&&h('div',{className:'bsa212-float-body'},
         h('strong',{className:'bsa212-float-phase'},block.title||'Study activity'),
@@ -18965,7 +18989,57 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     useEffect(()=>{if(!player.current)return;try{player.current.setLoop(!!repeat);}catch(_){}},[repeat,source.id]);
     return h('div',{className:'bsa229-youtube-player',ref:holder,'aria-label':'Visible official YouTube video or playlist player'});
   }
-  function BSA229FocusMusic({prefs,savePrefs,compact=false,onReturn,dockHidden=false,onHide}){
+  /* Spotify's official iframe API can report real pause/play state; a
+     blocked API falls back to the ordinary Spotify embed without fabricating
+     a playing status. The dashboard does not request account credentials. */
+  let bsa234SpotifyApiPromise=null;
+  function bsa234SpotifyApi(){
+    if(window.__BSA234_SPOTIFY_API__)return Promise.resolve(window.__BSA234_SPOTIFY_API__);
+    if(bsa234SpotifyApiPromise)return bsa234SpotifyApiPromise;
+    bsa234SpotifyApiPromise=new Promise((resolve,reject)=>{
+      let settled=false;
+      const finish=(api,error)=>{if(settled)return;settled=true;clearTimeout(timeout);if(api){window.__BSA234_SPOTIFY_API__=api;resolve(api)}else reject(error||new Error('Spotify player unavailable'));};
+      const prior=window.onSpotifyIframeApiReady;
+      window.onSpotifyIframeApiReady=api=>{try{if(typeof prior==='function')prior(api)}catch(_){}finish(api)};
+      const timeout=setTimeout(()=>finish(null,new Error('Spotify embed controls unavailable')),12000);
+      let script=document.querySelector('script[data-bsa234-spotify]');
+      if(!script){script=document.createElement('script');script.src='https://open.spotify.com/embed/iframe-api/v1';script.async=true;script.dataset.bsa234Spotify='1';document.head.appendChild(script)}
+      script.addEventListener('error',()=>finish(null,new Error('Spotify controls blocked')), {once:true});
+    }).catch(e=>{bsa234SpotifyApiPromise=null;throw e;});
+    return bsa234SpotifyApiPromise;
+  }
+  function BSA234SpotifyPlayer({source,onState}){
+    const holder=useRef(null),ctl=useRef(null);
+    useEffect(()=>{
+      let live=true;
+      onState({playing:false});
+      const fallback=()=>{
+        if(!live||!holder.current)return;
+        const iframe=document.createElement('iframe');iframe.className='bsa229-spotify-frame';
+        iframe.src='https://open.spotify.com/embed/'+source.kind+'/'+encodeURIComponent(source.id);
+        iframe.title='Spotify official '+source.kind+' player';
+        iframe.setAttribute('allow','autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture');
+        iframe.referrerPolicy='strict-origin-when-cross-origin';
+        holder.current.replaceChildren(iframe);
+      };
+      bsa234SpotifyApi().then(api=>{
+        if(!live||!holder.current)return;
+        try{api.createController(holder.current,{url:source.url,width:'100%',height:'160'},controller=>{
+          if(!live){try{controller.destroy()}catch(_){}return}
+          ctl.current=controller;
+          controller.addListener('playback_update',event=>{
+            if(!live)return;
+            const x=event?.data||{};
+            onState({playing:!!x.playingURI&&!x.isPaused&&!x.isBuffering});
+          });
+          controller.addListener('playback_started',()=>{if(live)onState({playing:true})});
+        })}catch(_){fallback()}
+      }).catch(()=>fallback());
+      return()=>{live=false;onState({playing:false});try{ctl.current?.destroy()}catch(_){}ctl.current=null;try{holder.current?.replaceChildren()}catch(_){}};
+    },[source.id,source.kind]);
+    return h('div',{className:'bsa234-spotify-holder',ref:holder,'aria-label':'Spotify official embedded player'});
+  }
+  function BSA229FocusMusic({prefs,savePrefs,compact=false,onReturn,dockHidden=false,onHide,dockMini=false,onMini}){
     const [mode,setMode]=useState(()=>{try{const x=localStorage.getItem(BSA229_MODE_KEY);return ['noise','youtube','spotify'].includes(x)?x:'noise';}catch(_){return'noise';}});
     const [links,setLinks]=useState(()=>{
       const raw=bsa228ReadJson(BSA229_LINK_KEY,[]);
@@ -18973,6 +19047,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     });
     const [url,setUrl]=useState(''),[title,setTitle]=useState(''),[feedback,setFeedback]=useState('');
     const [active,setActive]=useState(null),[ytController,setYtController]=useState(null),[ytState,setYtState]=useState({});
+    const [spotifyState,setSpotifyState]=useState({playing:false});
     const [shuffle,setShuffle]=useState(false),[repeat,setRepeat]=useState(false);
     const [sourceShuffled,setSourceShuffled]=useState(false),[sourceOrder,setSourceOrder]=useState([]);
     const [noiseRevision,setNoiseRevision]=useState(0);
@@ -18990,7 +19065,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       window.addEventListener('bsa229:stop-media',onStopMedia);
       return()=>{window.removeEventListener('bsa228:noise-changed',onNoise);window.removeEventListener('bsa229:stop-media',onStopMedia);};
     },[]);
-    const pickMode=v=>{setMode(v);setActive(null);setFeedback('');setYtController(null);try{localStorage.setItem(BSA229_MODE_KEY,v);}catch(_){}};
+    const pickMode=v=>{setMode(v);setActive(null);setYtState({playing:false});setSpotifyState({playing:false});setFeedback('');setYtController(null);try{localStorage.setItem(BSA229_MODE_KEY,v);}catch(_){}};
     const providerLinks=links.filter(x=>x.provider===mode);
     const sourceKey=x=>x.provider+':'+x.kind+':'+x.id;
     const orderedSources=sourceShuffled?providerLinks.slice().sort((a,b)=>{const ia=sourceOrder.indexOf(sourceKey(a)),ib=sourceOrder.indexOf(sourceKey(b));return (ia<0?999:ia)-(ib<0?999:ib);}):providerLinks;
@@ -19011,7 +19086,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     };
     const playSource=item=>{
       bsa228NoiseStop();
-      setActive(item);setYtController(null);setYtState({});setFeedback('');
+      setActive(item);setYtController(null);setYtState({});setSpotifyState({playing:false});setFeedback('');
     };
     const removeSource=item=>{
       if(selected?.provider===item.provider&&selected?.kind===item.kind&&selected?.id===item.id){setActive(null);setYtController(null);}
@@ -19048,25 +19123,40 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
         h('summary',null,'YouTube track queue · '+ytState.queue.length),
         h('div',{className:'bsa229-queue-items'},ytState.queue.slice(0,150).map((videoId,i)=>h('button',{key:videoId+'-'+i,type:'button',className:i===ytState.index?'now':'',onClick:()=>ytController?.playVideoAt?.(i)},
           h('span',null,'#'+(i+1)),h('span',null,videoId),i===ytState.index?h('strong',null,'Playing'):null)))));
+    const playbackActive=mode==='noise'?!!bsa228Noise:
+      mode==='youtube'?!!(selected?.provider==='youtube'&&ytState.playing):
+      mode==='spotify'?!!(selected?.provider==='spotify'&&spotifyState.playing):false;
+    useEffect(()=>{
+      window.__BSA234_MUSIC_PLAYING__=playbackActive;
+      window.dispatchEvent(new CustomEvent('bsa234:music-playback',{detail:{playing:playbackActive,provider:mode}}));
+    },[playbackActive,mode]);
+    useEffect(()=>{
+      const open=()=>{returnScroll.current=true;};
+      window.addEventListener('bsa234:open-music',open);
+      return()=>window.removeEventListener('bsa234:open-music',open);
+    },[]);
     const playingEmbedded=!!selected&&selected.kind!=='external'&&selected.provider===mode;
     const dockHasSound=playingEmbedded||!!bsa228Noise;
-    const stopDock=()=>{bsa228NoiseStop();setActive(null);setYtController(null);};
+    const stopDock=()=>{bsa228NoiseStop();setActive(null);setYtController(null);setYtState({playing:false});setSpotifyState({playing:false});};
     const hideDock=()=>{
-      // Hidden YouTube playback is not supported: pause a working player, or
-      // close an embed whose playback state cannot be controlled reliably.
+      // YouTube explicitly forbids hidden background playback. A hidden
+      // YouTube embed must be PAUSED; do not unmount or silently discard it.
+      // If the API cannot pause reliably, keep the visible player available.
       if(selected?.provider==='youtube'&&selected.kind!=='external'){
-        if(ytController?.pauseVideo){try{ytController.pauseVideo()}catch(_){setActive(null)}}
-        else setActive(null);
+        if(!ytController?.pauseVideo){setFeedback('YouTube controls are not ready. Keep the visible mini-player or open in YouTube Music.');return;}
+        try{ytController.pauseVideo();}catch(_){setFeedback('Could not pause YouTube safely. Use Stop or Open in YouTube Music.');return;}
       }
       onHide?.();
     };
     const returnToMusic=()=>{returnScroll.current=true;onReturn?.();};
-    return h('section',{id:'bsa232-media-player',className:'bsa228-card bsa228-sound-card bsa229-music'+(compact?' bsa232-away':'')+(compact&&!dockHasSound?' bsa232-idle':'')+(compact&&dockHidden?' bsa233-hidden':'')+(playingEmbedded?' bsa232-streaming-active':'')},
+    return h('section',{id:'bsa232-media-player',className:'bsa228-card bsa228-sound-card bsa229-music'+(compact?' bsa232-away':'')+(compact&&dockMini?' bsa234-mini':'')+(compact&&!dockHasSound?' bsa232-idle':'')+(compact&&dockHidden?' bsa233-hidden':'')+(playingEmbedded?' bsa232-streaming-active':'')},
       compact&&h('div',{className:'bsa232-quickbar'},
         h('span',{className:'bsa232-quick-label'},dockHasSound?'♫ Focus music':'♫ Study Routine'),
-        h('button',{type:'button',className:'bsa232-return',onClick:returnToMusic,'aria-label':'Return to Study Routine and music controls'},dockHidden?'♫ Back to music':'↩ Back to routine'),
-        !dockHidden&&h('button',{type:'button',className:'bsa233-music-hide',onClick:hideDock,'aria-label':'Hide music dock; keep routine and playlists saved'},'Hide'),
-        !dockHidden&&dockHasSound&&h('button',{type:'button',className:'bsa232-stop',onClick:stopDock,'aria-label':'Stop music and close player'},'■ Stop')),
+        !dockHidden&&h('button',{type:'button',className:'bsa232-return',onClick:returnToMusic,'aria-label':'Go to Study Routine music controls'},'↩ Routine'),
+        !dockHidden&&playingEmbedded&&h('button',{type:'button',className:'bsa234-mini-toggle',onClick:onMini,'aria-label':dockMini?'Expand the visible music player':'Minimize the visible music player'},dockMini?'Expand':'Mini'),
+        !dockHidden&&h('button',{type:'button',className:'bsa233-music-hide',onClick:hideDock,disabled:!!(selected?.provider==='youtube'&&selected.kind!=='external'&&!ytController),'aria-label':selected?.provider==='youtube'?'Hide and pause YouTube Music':'Hide music controls; playback may depend on provider'},selected?.provider==='youtube'?'Hide & pause':'Hide'),
+        !dockHidden&&dockHasSound&&h('button',{type:'button',className:'bsa232-stop',onClick:stopDock,'aria-label':'Stop music and close player'},'■ Stop'),
+        selected?.provider==='youtube'&&selected.kind!=='external'&&h('a',{className:'bsa234-open-music',href:bsa229MusicUrl(selected),target:'_blank',rel:'noopener noreferrer','aria-label':'Open this playlist in YouTube Music'},'Open in YouTube Music ↗')),
       h('div',{className:'bsa228-section-heading'},h('div',null,h('span',{className:'bsa228-eyebrow'},'FOCUS MUSIC'),h('h2',null,'Sounds & playlists')),h('span',{className:'bsa228-state'},bsa228Noise?'Noise playing':active?'Player open':'Ready')),
       h('div',{className:'bsa229-tabs',role:'tablist','aria-label':'Focus music source'},[['noise','Ambient'],['youtube','YouTube Music'],['spotify','Spotify']].map(([k,label])=>h('button',{type:'button',key:k,role:'tab','aria-selected':mode===k,className:mode===k?'on':'',onClick:()=>pickMode(k)},label))),
       mode==='noise'?h('div',{className:'bsa229-noise'},
@@ -19091,7 +19181,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
         selected?.provider===mode&&h('div',{className:'bsa229-player-card'},
           h('div',{className:'bsa229-player-heading'},h('strong',null,selected.title),h('button',{type:'button',onClick:()=>{setActive(null);setYtController(null);},'aria-label':'Close embedded music player'},'Close player ×')),
           mode==='youtube'?(selected.kind==='external'?h('p',{className:'bsa229-feedback',role:'status'},selected.reason||'This YouTube Music link cannot be embedded. Open it directly in YouTube Music.'):h(BSA229YouTubePlayer,{key:selected.kind+selected.id,source:selected,shuffle,repeat,onReady:setYtController,onState:setYtState,onError:setFeedback}))
-            :h('iframe',{className:'bsa229-spotify-frame',key:selected.kind+selected.id,src:'https://open.spotify.com/embed/'+selected.kind+'/'+encodeURIComponent(selected.id),allow:'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture',loading:'eager',title:'Spotify official '+selected.kind+' player',referrerPolicy:'strict-origin-when-cross-origin'}),
+            :h(BSA234SpotifyPlayer,{key:selected.kind+selected.id,source:selected,onState:setSpotifyState}),
           youtubeControls,
           h('div',{className:'bsa229-transport'},
             h('button',{type:'button',disabled:providerLinks.length<2,onClick:()=>nextSource(-1)},'← Previous source'),
@@ -19109,6 +19199,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
   // The player is always the same React component at a stable App tree position.
   function BSA232PersistentMusic({routineOpen,go}){
     const [dockHidden,setDockHidden]=useState(false);
+    const [dockMini,setDockMini]=useState(true);
     useEffect(()=>{if(routineOpen)setDockHidden(false)},[routineOpen]);
     const [prefs,setPrefs]=useState(()=>{
       const raw=bsa228ReadJson(BSA228_ROUTINE_PREF,{});
@@ -19121,8 +19212,9 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       bsa228WriteJson(BSA228_ROUTINE_PREF,{...current,...patch});
       return next;
     });
-    return h(BSA229FocusMusic,{prefs,savePrefs,compact:!routineOpen,dockHidden,
-      onHide:()=>setDockHidden(true),onReturn:()=>{setDockHidden(false);go('routine')}});
+    return h(BSA229FocusMusic,{prefs,savePrefs,compact:!routineOpen,dockHidden,dockMini,
+      onMini:()=>setDockMini(v=>!v),onHide:()=>setDockHidden(true),
+      onReturn:()=>{setDockHidden(false);go('routine')}});
   }
   function BSA228StudyRoutine({subject,go,toast}){
     const [prefs,setPrefs]=useState(()=>{
@@ -19194,7 +19286,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       startTimer({mins:prefs.focus,subjectId:subject.id,label:'Daily focus block'});
       go('study');
     };
-    return h('section',{className:'view bsa228-page'},
+    return h('section',{className:'view bsa228-page',style:{width:'100%',maxWidth:'1160px',minWidth:0,gridColumn:'1 / -1',flex:'1 1 100%'}},
       h('header',{className:'bsa228-hero'},
         h('span',{className:'bsa228-eyebrow'},'STUDY ROUTINE  ·  '+(subject.code||subject.name)),
         h('h1',null,'Small sessions. Stronger recall.'),
@@ -19846,6 +19938,12 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     const [data, setData] = useState(() => loadLocal() || buildDefault());
     const [nav, setNav] = useState({ tab: "home", opts: {}, key: 0 });
     const [practiceRevision,setPracticeRevision]=useState(0);
+    const [musicPlaying,setMusicPlaying]=useState(()=>!!window.__BSA234_MUSIC_PLAYING__);
+    useEffect(()=>{
+      const updateMusic=e=>setMusicPlaying(!!e?.detail?.playing);
+      window.addEventListener('bsa234:music-playback',updateMusic);
+      return()=>window.removeEventListener('bsa234:music-playback',updateMusic);
+    },[]);
     useEffect(()=>{const refresh=()=>setPracticeRevision(v=>v+1);window.addEventListener('bsa18:practice-changed',refresh);window.addEventListener('storage',refresh);window.addEventListener('pageshow',refresh);return()=>{window.removeEventListener('bsa18:practice-changed',refresh);window.removeEventListener('storage',refresh);window.removeEventListener('pageshow',refresh);}},[]);
     useEffect(()=>{const handler=e=>{if(e.detail==='joy')setNav(v=>({tab:'joy',opts:{},key:v.key+1}))};window.addEventListener('bsa-life-navigation',handler);return()=>window.removeEventListener('bsa-life-navigation',handler)},[]);
     const [modal, setModal] = useState(null);
@@ -20360,11 +20458,11 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
           h('div',{className:'bsa47-palettes'},
             h('div',{className:'bsa47-palette-heading'},h('strong',null,'Quick colors'),h('button',{type:'button',onClick:()=>setModal('look')},'All colors')),
             h(ThemeDots,{settings:data.settings,setSettings}))),
-        h(SyncBadge,{onOpen:openSync}),h('small',{className:'bsa47-build-tag',title:'Installed dashboard build'},BSA_RELEASE_LABEL))), /* @__PURE__ */ React.createElement("header", { className: "mobilebar" }, /* @__PURE__ */ h("div",{className:"bsa-shortcut-anchor mobile"},React.createElement("button", { className: "brand-mark mobile-home-button", type: "button", onClick: () => setShortcutsOpen(v=>!v), title: "Open quick shortcuts", "aria-label": "Open quick shortcuts", "aria-expanded":shortcutsOpen,"aria-haspopup":"menu" }, "Σ"),shortcutMenu()), subjectsButton("subj-m",true), h("button",{className:"icon-btn",onClick:()=>setSpotlightOpen(true),"aria-label":"Search dashboard"},h(Icon,{name:"search",size:19})), !window.__BSA_SHARED_MODE__&&h('button',{type:'button',className:'icon-btn bsa48-mobile-ai',onClick:()=>go('nlm',{}),'aria-label':'Open AI Prompt Builder',title:'AI Prompt Builder'},h(Icon,{name:'sparkles',size:19})), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal(syncAlert ? "sync" : "data"), "aria-label": syncAlert ? "Import, export and sync (needs attention)" : "Import and export", "data-sync": syncAlert }, /* @__PURE__ */ React.createElement(Icon, { name: "data" })), /* @__PURE__ */ h('button',{className:'icon-btn',onClick:()=>go('guide'),'aria-label':'Guided walkthrough',title:'Guided walkthrough'},'?'),h('button',{className:'icon-btn bsa46-mobile-settings',onClick:()=>setSidebarEdit(true),'aria-label':'Subject profile and workspace settings',title:'Workspace settings'},h(Icon,{name:'settings',size:19}))), /* @__PURE__ */ React.createElement("main", { className: "content bsa33-content", "data-desk-page": nav.tab },
+        h(SyncBadge,{onOpen:openSync}),h('small',{className:'bsa47-build-tag',title:'Installed dashboard build'},BSA_RELEASE_LABEL))), /* @__PURE__ */ React.createElement("header", { className: "mobilebar" }, /* @__PURE__ */ h("div",{className:"bsa-shortcut-anchor mobile"},React.createElement("button", { className: "brand-mark mobile-home-button", type: "button", onClick: () => setShortcutsOpen(v=>!v), title: "Open quick shortcuts", "aria-label": "Open quick shortcuts", "aria-expanded":shortcutsOpen,"aria-haspopup":"menu" }, "Σ"),shortcutMenu()), subjectsButton("subj-m",true), musicPlaying&&nav.tab!=="routine"&&h("button",{type:"button",className:"icon-btn bsa234-music-mobile",title:"Return to playing music",onClick:()=>{window.dispatchEvent(new Event("bsa234:open-music"));go("routine")},"aria-label":"Return to playing music"},"♫"), h("button",{className:"icon-btn",onClick:()=>setSpotlightOpen(true),"aria-label":"Search dashboard"},h(Icon,{name:"search",size:19})), !window.__BSA_SHARED_MODE__&&h('button',{type:'button',className:'icon-btn bsa48-mobile-ai',onClick:()=>go('nlm',{}),'aria-label':'Open AI Prompt Builder',title:'AI Prompt Builder'},h(Icon,{name:'sparkles',size:19})), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal(syncAlert ? "sync" : "data"), "aria-label": syncAlert ? "Import, export and sync (needs attention)" : "Import and export", "data-sync": syncAlert }, /* @__PURE__ */ React.createElement(Icon, { name: "data" })), /* @__PURE__ */ h('button',{className:'icon-btn',onClick:()=>go('guide'),'aria-label':'Guided walkthrough',title:'Guided walkthrough'},'?'),h('button',{className:'icon-btn bsa46-mobile-settings',onClick:()=>setSidebarEdit(true),'aria-label':'Subject profile and workspace settings',title:'Workspace settings'},h(Icon,{name:'settings',size:19}))), /* @__PURE__ */ React.createElement("main", { className: "content bsa33-content", "data-desk-page": nav.tab },
       storeFull&&h('div',{className:'bsa48-save-failure',role:'alert'},h('strong',null,'Changes are not saving on this device.'),h('span',null,'The browser refused a local write. Export a full backup and review storage before further editing.'),h('button',{type:'button',className:'btn',onClick:()=>setModal({data:'export'})},'Open backup')),
       h("div",{className:"workspace-topbar v2-topbar"},
         h("div",{className:"workspace-context"},h("span",{className:"workspace-eyebrow"},"STUDY SPACE  /"),h("strong",null,(tabs.find(t=>t[0]===nav.tab)||[null,"Today"])[1]),h("span",{className:"workspace-subject"},subject.code||subject.name)),
-        h("div",{className:"workspace-actions v2-top-actions"},h('button',{className:'bsa45-top-guide',onClick:()=>go('guide')},h(Icon,{name:'sparkles',size:16}),'Start here'),bsa212Guided(bsa33Journey(subject).session)&&h('button',{className:'bsa214-show-timer-top',type:'button',onClick:()=>{const current=bsa33Journey(subject).session;if(current?.focusSaved){bsa224ReleaseGuidedHidden(subject.id,current.id);update(s=>{const x=(s.practiceSessions||[]).find(r=>r.id===current.id);if(x)bsa221ResumeSavedSession(x,Date.now());},null,{subjectId:subject.id,sessionId:current.id});}window.dispatchEvent(new Event('bsa214:show-focus-timer'));}},bsa33Journey(subject).session.focusSaved?'▶ Resume session':'◷ Show timer'),h('button',{className:'bsa45-top-dock',onClick:()=>{const hidden=localStorage.getItem('bsa45_dock_hidden')!=='1';window.dispatchEvent(new CustomEvent('bsa45:dock-visibility',{detail:{hidden}}));toast(hidden?'Study Dock hidden':'Study Dock visible');}},'Dock'),h("button",{className:"v2-top-search",onClick:()=>setSpotlightOpen(true),title:"Search · Ctrl/⌘ + K","aria-label":"Search all study materials"},h(Icon,{name:"search",size:16}),"Search",h("kbd",null,"⌘ K")))),
+        h("div",{className:"workspace-actions v2-top-actions"},h('button',{className:'bsa45-top-guide',onClick:()=>go('guide')},h(Icon,{name:'sparkles',size:16}),'Start here'),musicPlaying&&nav.tab!=='routine'&&h('button',{type:'button',className:'bsa234-music-return',onClick:()=>{window.dispatchEvent(new Event('bsa234:open-music'));go('routine')},title:'Return to playing music','aria-label':'Return to playing music'},'♫ Music'),bsa212Guided(bsa33Journey(subject).session)&&h('button',{className:'bsa214-show-timer-top',type:'button',onClick:()=>{const current=bsa33Journey(subject).session;if(current?.focusSaved){update(s=>{const x=(s.practiceSessions||[]).find(r=>r.id===current.id);if(x)bsa221ResumeSavedSession(x,Date.now());},null,{subjectId:subject.id,sessionId:current.id});}if(current?.id)bsa234ShowGuided(subject.id,current.id);}},bsa33Journey(subject).session.focusSaved?'▶ Resume session':'◷ Show timer'),h('button',{className:'bsa45-top-dock',onClick:()=>{const hidden=localStorage.getItem('bsa45_dock_hidden')!=='1';window.dispatchEvent(new CustomEvent('bsa45:dock-visibility',{detail:{hidden}}));toast(hidden?'Study Dock hidden':'Study Dock visible');}},'Dock'),h("button",{className:"v2-top-search",onClick:()=>setSpotlightOpen(true),title:"Search · Ctrl/⌘ + K","aria-label":"Search all study materials"},h(Icon,{name:"search",size:16}),"Search",h("kbd",null,"⌘ K")))),
       pendingPractice && !(nav.tab==='mcq'&&quizRunning) && !(nav.tab==='mcq'&&pendingPractice.kind==='mcq'&&nav.opts?.resume&&data.activeId===pendingPractice.subjectId) && !(nav.tab==='psets'&&pendingPractice.kind==='written'&&nav.opts?.open===pendingPractice.setId&&data.activeId===pendingPractice.subjectId) &&
         h('div',{className:'bsa18-resume-strip',role:'region','aria-label':'Resume unfinished practice'},
           h('span',{className:'bsa18-resume-icon','aria-hidden':'true'},'↩'),
@@ -20511,7 +20609,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       React.createElement('button',{className:'btn',onClick:()=>bsaDownloadSafeDiagnostics(this.state.error)},'Download safe error report'),
       React.createElement('details',null,React.createElement('summary',null,'Technical details'),React.createElement('pre',null,String(this.state.error&&this.state.error.message||'Unknown render error'))));}
   }
-  if(window.__BSA_TEST__)window.__BSA18_TEST_HOOKS__={bsa229Source,bsa229YouTubeEmbedUrl,bsa229MusicUrl,BSA232PersistentMusic,BSA229FocusMusic,BSA229YouTubePlayer,bsa197QuizKey,bsa197History,bsa197Recall,bsa197Pool,bsa197Pick,bsa228BreakRemaining,bsa228RoutineKey,BSA228StudyRoutine,bsa228BreakAction,bsa228NoiseStart,bsa228NoiseStop,schedule,buildReview,smartTopicStats,bsaAdaptiveSignals,bsaReadinessReport,bsa34LearningSnapshot,bsaUpsertMistake,learningEvidence,learningCapture,AcademicCommandCenter,bsa197LoadDraft,bsa197SaveDraft,bsa197DeleteDraft,bsa18SaveWritten,bsa18LoadWritten,bsa18DeleteWritten,bsa18LatestPractice,bsa18ReadTutorChat,bsa25PracticeHealth,bsa26TutorName,bsa26TopicMatch,bsa26SafeAction,bsa26TutorCapabilityContext,bsa26LocalStudyPlan,BSA26_COPILOT_FEATURES,bsa26SafeReturn,bsa26ReturnFor,bsa26FsDraft,bsa4TutorDraft,bsa27SelectionFocus,bsa27DefaultTutorQuestion,gemSourceSystem,bsa212ModePlan,bsa213QuickPlan,bsa213ReadScope,bsa213Words,bsa213McqScope,bsa213WrittenMinutes,bsa214Archive,bsa214RecentClosed,bsa214HistoryLabel,bsa214AdaptProposal,bsa214TopicStanding,bsa214FoundationSources,mcqDedicatedPool,studyTopics,bsa34TopicMatch,bsa213McqEstimate,bsa214Pack,bsa214Unpack,bsa214MainGet,bsa214MainSet,bsa49TopicParts,bsa49ResolveTopic,bsa49UnmatchedLabels,BSA49TopicLinks,bsa215TopicChapter,bsa215UniqueChapterMatch,bsa215LinkSafety,bsa44Plan,bsa44ParseOne,normTopic,bsa49CanonicalizePack,bsa214BackupGet,bsaBackupPreview,loadLocal,bsa212Allocate,bsa212PhaseElapsed,bsa212PhaseGoal,bsa212Action,bsa28SourceHistory,bsa28NewTopicRequest,bsa210TutorCore,bsa28ReadReflections,bsa28WriteReflections,bsa29Meaningful,bsa213ClozeQuality,bsa29Candidates,bsa29Pool,bsa29Exact,bsa29ReadDraft,bsa29SaveDraft,bsa210DuplicateSignal,bsa210MaterialPair,bsa210AnswerMeaning,bsa44Prepare,BSA29ClozePractice,psMathSegments,psMathHtml,psS,psInlineHtml,MultipleChoiceQuiz,MCQPage,PsWrittenDrill,MockExam,AskView,App};
+  if(window.__BSA_TEST__)window.__BSA18_TEST_HOOKS__={BSA212FloatingFocus,bsa234ShowGuided,bsa234HideGuided,bsa234GuidedMayShow,bsa224MarkGuidedHidden,bsa229Source,bsa229YouTubeEmbedUrl,bsa229MusicUrl,BSA232PersistentMusic,BSA229FocusMusic,BSA229YouTubePlayer,bsa197QuizKey,bsa197History,bsa197Recall,bsa197Pool,bsa197Pick,bsa228BreakRemaining,bsa228RoutineKey,BSA228StudyRoutine,bsa228BreakAction,bsa228NoiseStart,bsa228NoiseStop,schedule,buildReview,smartTopicStats,bsaAdaptiveSignals,bsaReadinessReport,bsa34LearningSnapshot,bsaUpsertMistake,learningEvidence,learningCapture,AcademicCommandCenter,bsa197LoadDraft,bsa197SaveDraft,bsa197DeleteDraft,bsa18SaveWritten,bsa18LoadWritten,bsa18DeleteWritten,bsa18LatestPractice,bsa18ReadTutorChat,bsa25PracticeHealth,bsa26TutorName,bsa26TopicMatch,bsa26SafeAction,bsa26TutorCapabilityContext,bsa26LocalStudyPlan,BSA26_COPILOT_FEATURES,bsa26SafeReturn,bsa26ReturnFor,bsa26FsDraft,bsa4TutorDraft,bsa27SelectionFocus,bsa27DefaultTutorQuestion,gemSourceSystem,bsa212ModePlan,bsa213QuickPlan,bsa213ReadScope,bsa213Words,bsa213McqScope,bsa213WrittenMinutes,bsa214Archive,bsa214RecentClosed,bsa214HistoryLabel,bsa214AdaptProposal,bsa214TopicStanding,bsa214FoundationSources,mcqDedicatedPool,studyTopics,bsa34TopicMatch,bsa213McqEstimate,bsa214Pack,bsa214Unpack,bsa214MainGet,bsa214MainSet,bsa49TopicParts,bsa49ResolveTopic,bsa49UnmatchedLabels,BSA49TopicLinks,bsa215TopicChapter,bsa215UniqueChapterMatch,bsa215LinkSafety,bsa44Plan,bsa44ParseOne,normTopic,bsa49CanonicalizePack,bsa214BackupGet,bsaBackupPreview,loadLocal,bsa212Allocate,bsa212PhaseElapsed,bsa212PhaseGoal,bsa212Action,bsa28SourceHistory,bsa28NewTopicRequest,bsa210TutorCore,bsa28ReadReflections,bsa28WriteReflections,bsa29Meaningful,bsa213ClozeQuality,bsa29Candidates,bsa29Pool,bsa29Exact,bsa29ReadDraft,bsa29SaveDraft,bsa210DuplicateSignal,bsa210MaterialPair,bsa210AnswerMeaning,bsa44Prepare,BSA29ClozePractice,psMathSegments,psMathHtml,psS,psInlineHtml,MultipleChoiceQuiz,MCQPage,PsWrittenDrill,MockExam,AskView,App};
   // v167: Owner app mounts only after this browser has been approved.
   // Shared student dashboards mount normally; the owner authorization script is never exported.
   let bsaOwnerMounted=false;
