@@ -30,7 +30,7 @@ THE SOFTWARE.
   if (window.__BSA_DESK_APP_LOADED__) return;
   window.__BSA_DESK_APP_LOADED__ = true;
   // User-facing release label only. Do not use for storage schemas or caches.
-  const BSA_RELEASE_LABEL = "V2.34";
+  const BSA_RELEASE_LABEL = "V2.35";
   const S = (t, p = null, s = false) => ({ t, p, s });
   const CFAS_TOPICS = [
     {
@@ -12462,7 +12462,7 @@ ${c.kindHint}` }
     ['rules','Rules & References','Saved accounting rules and source-backed standards','rules pas pfrs reference standards'],
     ['workspace','Study Workspace','Scratchpad, notebook, handwritten notes and working space','scratchpad notes notebook workspace'],
     ['toolkit','Study Toolkit','Focus timer, T-account ledger, journal, trial balance, 10-column worksheet, handwriting and calculators','toolkit calculator timer pomodoro ledger worksheet handwriting'],
-    ['routine','Study Routine','Daily review habit, break timer, ambient noise, YouTube and Spotify playlists','daily routine habits break timer pomodoro white noise pink noise brown noise discipline focus music spotify youtube youtube music playlist queue shuffle repeat'],
+    ['routine','Study Routine & Music','Daily review habit, break timer, ambient noise, YouTube and Spotify playlists','daily routine habits break timer pomodoro white noise pink noise brown noise discipline focus music spotify youtube youtube music playlist queue shuffle repeat'],
     ['safety','Device & Data Safety','Backup, restore, sync diagnostics, local study data checks and device safety','backup restore security data sync safety'],
     ['curriculum','Curriculum','Four-year curriculum map, courses and prerequisites','curriculum prospectus courses degree'],
     ['stats-clean','Study Report','Reflect on actual learning progress and next actions','report study report weekly progress'],
@@ -18872,6 +18872,16 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
   */
   const BSA229_LINK_KEY='bsa229_owner_media_links_v1';
   const BSA229_MODE_KEY='bsa229_owner_media_mode_v1';
+  function bsa235MediaLabel(source,name){
+    const label=String(name||'').trim();
+    const provider=source.provider==='spotify'?'Spotify':source.music?'YouTube Music':'YouTube';
+    const kind=({video:'Song',track:'Track',playlist:'Playlist',album:'Album',show:'Podcast',episode:'Episode',external:'Link'})[source.kind]||'Link';
+    const defaultName=/^(?:YouTube(?: Music)?|Spotify)\s+(?:video|song|track|playlist|album|show|episode|external|link)$/i;
+    if(label&&!defaultName.test(label))return label;
+    // Different unnamed playlists must still be distinguishable.
+    return provider+' '+kind+' · '+String(source.id||'').slice(-7);
+  }
+  function bsa235MediaKind(source){return ({video:'Song',track:'Track',playlist:'Playlist',album:'Album',show:'Podcast',episode:'Episode',external:'External link'})[source.kind]||'Link';}
   function bsa229Source(raw){
     let u;try{u=new URL(String(raw||'').trim());}catch(_){throw new Error('Paste a complete YouTube Music, YouTube, or Spotify link.');}
     if(u.protocol!=='https:')throw new Error('Only HTTPS YouTube Music, YouTube, or Spotify links are supported.');
@@ -18972,7 +18982,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
           }catch(_){}onReady(e.target);},
           onStateChange(e){if(!live)return;let queue=[],index=-1;
             try{queue=e.target.getPlaylist()||[];index=e.target.getPlaylistIndex();}catch(_){}
-            onState({playing:e.data===1,queue,index});
+            let title='';try{title=e.target.getVideoData?.()?.title||'';}catch(_){}onState({playing:e.data===1,queue,index,title:String(title).slice(0,150)});
           },
           onError(e){if(live){const reason=e.data===2?'YouTube rejected the video or playlist ID':
             [100,101,150,153].includes(e.data)?'YouTube does not allow this item to play in an embedded player':
@@ -19043,9 +19053,10 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     const [mode,setMode]=useState(()=>{try{const x=localStorage.getItem(BSA229_MODE_KEY);return ['noise','youtube','spotify'].includes(x)?x:'noise';}catch(_){return'noise';}});
     const [links,setLinks]=useState(()=>{
       const raw=bsa228ReadJson(BSA229_LINK_KEY,[]);
-      return Array.isArray(raw)?raw.map(x=>{try{const src=bsa229Source(x?.url);return {...src,title:String(x?.title||src.provider+' '+src.kind).slice(0,90),addedAt:Number(x?.addedAt)||0};}catch(_){return null;}}).filter(Boolean).slice(0,30):[];
+      return Array.isArray(raw)?raw.map(x=>{try{const src=bsa229Source(x?.url);return {...src,title:bsa235MediaLabel(src,x?.title).slice(0,90),addedAt:Number(x?.addedAt)||0};}catch(_){return null;}}).filter(Boolean).slice(0,30):[];
     });
     const [url,setUrl]=useState(''),[title,setTitle]=useState(''),[feedback,setFeedback]=useState('');
+    const [editingKey,setEditingKey]=useState(''),[editName,setEditName]=useState('');
     const [active,setActive]=useState(null),[ytController,setYtController]=useState(null),[ytState,setYtState]=useState({});
     const [spotifyState,setSpotifyState]=useState({playing:false});
     const [shuffle,setShuffle]=useState(false),[repeat,setRepeat]=useState(false);
@@ -19076,13 +19087,19 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       e?.preventDefault?.();
       try{
         const src=bsa229Source(url);
-        if(links.some(x=>x.provider===src.provider&&x.kind===src.kind&&x.id===src.id)){pickMode(src.provider);setFeedback('Already in your saved sources.');return;}
-        const item={...src,title:title.trim().slice(0,90)||((src.provider==='youtube'?(src.music?'YouTube Music':'YouTube'):'Spotify')+' '+src.kind),addedAt:Date.now()};
+        if(links.some(x=>x.provider===src.provider&&x.kind===src.kind&&x.id===src.id)){pickMode(src.provider);setFeedback('This music link is already saved.');return;}
+        const item={...src,title:bsa235MediaLabel(src,title).slice(0,90),addedAt:Date.now()};
         if(links.length>=30){setFeedback('Maximum 30 saved links. Remove an older source first.');return;}
         const next=[...links,item];if(!persist(next))return;
-        setUrl('');setTitle('');setFeedback('Saved on this device. Tap Play source to open its player.');
+        setUrl('');setTitle('');setFeedback('Saved. Choose Play to listen.');
         setMode(item.provider);try{localStorage.setItem(BSA229_MODE_KEY,item.provider);}catch(_){}
       }catch(error){setFeedback(error.message||'Invalid playlist link.');}
+    };
+    const renameSource=item=>{
+      const clean=editName.trim().slice(0,90);
+      if(!clean){setFeedback('Enter a name for this playlist or track.');return;}
+      const next=links.map(x=>sourceKey(x)===sourceKey(item)?{...x,title:clean}:x);
+      if(persist(next)){setEditingKey('');setEditName('');setFeedback('Name updated.');}
     };
     const playSource=item=>{
       bsa228NoiseStop();
@@ -19111,6 +19128,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     };
     const canYt=!!ytController&&selected?.provider==='youtube';
     const youtubeControls=selected?.provider==='youtube'&&selected.kind!=='external'&&h('div',{className:'bsa229-yt-controls'},
+      ytState.title&&h('p',{className:'bsa235-now-playing'},h('span',null,'Now playing'),h('strong',null,ytState.title)),
       h('div',{className:'bsa229-transport'},
         h('button',{type:'button',disabled:!canYt||selected.kind!=='playlist',onClick:()=>ytController?.previousVideo?.(),'aria-label':'Previous YouTube track'},'⏮ Previous'),
         h('button',{type:'button',disabled:!canYt,onClick:()=>{const state=ytController?.getPlayerState?.();state===1?ytController.pauseVideo():ytController.playVideo();}},'Play / pause'),
@@ -19118,11 +19136,11 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       selected.kind==='playlist'&&h('div',{className:'bsa229-transport'},
         h('button',{type:'button',className:shuffle?'active':'',onClick:()=>setShuffle(v=>!v),'aria-pressed':shuffle},'⇄ Shuffle ',shuffle?'on':'off'),
         h('button',{type:'button',className:repeat?'active':'',onClick:()=>setRepeat(v=>!v),'aria-pressed':repeat},'↻ Repeat ',repeat?'on':'off'),
-        h('span',{className:'bsa229-track-index'},Array.isArray(ytState.queue)&&ytState.queue.length?('Track '+(ytState.index+1)+' / '+ytState.queue.length):'Open player to load queue')),
+        h('span',{className:'bsa229-track-index'},Array.isArray(ytState.queue)&&ytState.queue.length?('Track '+(ytState.index+1)+' of '+ytState.queue.length):'Load playlist to view tracks')),
       selected.kind==='playlist'&&Array.isArray(ytState.queue)&&ytState.queue.length>0&&h('details',{className:'bsa229-track-list'},
-        h('summary',null,'YouTube track queue · '+ytState.queue.length),
+        h('summary',null,'Playlist queue · '+ytState.queue.length+' tracks'),
         h('div',{className:'bsa229-queue-items'},ytState.queue.slice(0,150).map((videoId,i)=>h('button',{key:videoId+'-'+i,type:'button',className:i===ytState.index?'now':'',onClick:()=>ytController?.playVideoAt?.(i)},
-          h('span',null,'#'+(i+1)),h('span',null,videoId),i===ytState.index?h('strong',null,'Playing'):null)))));
+          h('span',null,String(i+1).padStart(2,'0')),h('span',null,i===ytState.index&&ytState.title?ytState.title:'Track '+(i+1)),i===ytState.index?h('strong',null,'Playing'):null)))));
     const playbackActive=mode==='noise'?!!bsa228Noise:
       mode==='youtube'?!!(selected?.provider==='youtube'&&ytState.playing):
       mode==='spotify'?!!(selected?.provider==='spotify'&&spotifyState.playing):false;
@@ -19149,16 +19167,16 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       onHide?.();
     };
     const returnToMusic=()=>{returnScroll.current=true;onReturn?.();};
-    return h('section',{id:'bsa232-media-player',className:'bsa228-card bsa228-sound-card bsa229-music'+(compact?' bsa232-away':'')+(compact&&dockMini?' bsa234-mini':'')+(compact&&!dockHasSound?' bsa232-idle':'')+(compact&&dockHidden?' bsa233-hidden':'')+(playingEmbedded?' bsa232-streaming-active':'')},
+    return h('section',{id:'bsa232-media-player',className:'bsa228-card bsa228-sound-card bsa229-music'+(compact?' bsa232-away':'')+(compact&&dockMini?' bsa234-mini':'')+(compact&&!playbackActive?' bsa232-idle':'')+(compact&&dockHidden?' bsa233-hidden':'')+(playingEmbedded?' bsa232-streaming-active':'')},
       compact&&h('div',{className:'bsa232-quickbar'},
-        h('span',{className:'bsa232-quick-label'},dockHasSound?'♫ Focus music':'♫ Study Routine'),
-        !dockHidden&&h('button',{type:'button',className:'bsa232-return',onClick:returnToMusic,'aria-label':'Go to Study Routine music controls'},'↩ Routine'),
-        !dockHidden&&playingEmbedded&&h('button',{type:'button',className:'bsa234-mini-toggle',onClick:onMini,'aria-label':dockMini?'Expand the visible music player':'Minimize the visible music player'},dockMini?'Expand':'Mini'),
-        !dockHidden&&h('button',{type:'button',className:'bsa233-music-hide',onClick:hideDock,disabled:!!(selected?.provider==='youtube'&&selected.kind!=='external'&&!ytController),'aria-label':selected?.provider==='youtube'?'Hide and pause YouTube Music':'Hide music controls; playback may depend on provider'},selected?.provider==='youtube'?'Hide & pause':'Hide'),
+        h('span',{className:'bsa232-quick-label'},dockHasSound?'♫ Music playing':'♫ Focus Music'),
+        !dockHidden&&h('button',{type:'button',className:'bsa232-return',onClick:returnToMusic,'aria-label':'Go to Study Routine music controls'},'Open music'),
+        !dockHidden&&playingEmbedded&&h('button',{type:'button',className:'bsa234-mini-toggle',onClick:onMini,'aria-label':dockMini?'Expand the visible music player':'Minimize the visible music player'},dockMini?'Large view':'Mini video'),
+        !dockHidden&&h('button',{type:'button',className:'bsa233-music-hide',onClick:hideDock,disabled:!!(selected?.provider==='youtube'&&selected.kind!=='external'&&!ytController),'aria-label':selected?.provider==='youtube'?'Hide and pause YouTube Music':'Hide music controls; playback may depend on provider'},selected?.provider==='youtube'?'Hide & pause':'Hide player'),
         !dockHidden&&dockHasSound&&h('button',{type:'button',className:'bsa232-stop',onClick:stopDock,'aria-label':'Stop music and close player'},'■ Stop'),
         selected?.provider==='youtube'&&selected.kind!=='external'&&h('a',{className:'bsa234-open-music',href:bsa229MusicUrl(selected),target:'_blank',rel:'noopener noreferrer','aria-label':'Open this playlist in YouTube Music'},'Open in YouTube Music ↗')),
-      h('div',{className:'bsa228-section-heading'},h('div',null,h('span',{className:'bsa228-eyebrow'},'FOCUS MUSIC'),h('h2',null,'Sounds & playlists')),h('span',{className:'bsa228-state'},bsa228Noise?'Noise playing':active?'Player open':'Ready')),
-      h('div',{className:'bsa229-tabs',role:'tablist','aria-label':'Focus music source'},[['noise','Ambient'],['youtube','YouTube Music'],['spotify','Spotify']].map(([k,label])=>h('button',{type:'button',key:k,role:'tab','aria-selected':mode===k,className:mode===k?'on':'',onClick:()=>pickMode(k)},label))),
+      h('div',{className:'bsa228-section-heading'},h('div',null,h('span',{className:'bsa228-eyebrow'},'FOCUS MUSIC'),h('h2',null,'Focus Music')),h('span',{className:'bsa228-state'},bsa228Noise?'Noise playing':active?'Player open':'Ready')),
+      h('div',{className:'bsa229-tabs',role:'tablist','aria-label':'Focus music source'},[['noise','Ambient sounds'],['youtube','YouTube Music'],['spotify','Spotify']].map(([k,label])=>h('button',{type:'button',key:k,role:'tab','aria-selected':mode===k,className:mode===k?'on':'',onClick:()=>pickMode(k)},label))),
       mode==='noise'?h('div',{className:'bsa229-noise'},
         h('p',{className:'bsa228-help'},'Three locally generated sounds; no internet connection needed.'),
         h('div',{className:'bsa228-presets','aria-label':'Sound type'},[['brown','Brown · soft'],['pink','Pink · balanced'],['white','White · crisp']].map(([id,label])=>h('button',{key:id,type:'button',className:prefs.kind===id?'selected':'','aria-pressed':prefs.kind===id,onClick:()=>{savePrefs({kind:id});if(bsa228Noise)bsa228NoiseStart(id,prefs.volume).catch(e=>setFeedback(e.message));}},label))),
@@ -19169,12 +19187,17 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
         h('p',{className:'bsa228-help'},mode==='youtube'?'Paste a YouTube Music song or playlist URL. Supported links play in the visible YouTube player; Music-only albums and radio mixes open directly in YouTube Music.':'Paste Spotify playlist, album, or track links. Full songs may require signing in to Spotify. The embed does not expose song shuffle or your Spotify queue; use Open in Spotify for those controls.'),
         h('form',{className:'bsa229-add-form',onSubmit:addSource},
           h('input',{type:'url',placeholder:'Paste YouTube Music, YouTube, or Spotify link',value:url,onChange:e=>setUrl(e.target.value),required:true,'aria-label':'YouTube or Spotify URL'}),
-          h('input',{type:'text',placeholder:'Optional playlist name',value:title,maxLength:90,onChange:e=>setTitle(e.target.value),'aria-label':'Optional playlist name'}),
+          h('input',{type:'text',placeholder:'Give it a name (optional)',value:title,maxLength:90,onChange:e=>setTitle(e.target.value),'aria-label':'Name this playlist or track'}),
           h('button',{className:'btn primary',type:'submit'},'+ Save link')),
-        h('div',{className:'bsa229-saved-head'},h('strong',null,'Saved sources · '+providerLinks.length),h('button',{type:'button',className:sourceShuffled?'active':'',disabled:providerLinks.length<2,onClick:toggleSourceShuffle,'aria-pressed':sourceShuffled},'⇄ Shuffle saved links ',sourceShuffled?'on':'off')), 
-        !providerLinks.length?h('p',{className:'bsa228-help'},'No saved '+(mode==='spotify'?'Spotify':'YouTube Music')+' links yet. Add one above.'):h('div',{className:'bsa229-saved-list'},orderedSources.map((item,i)=>h('div',{className:'bsa229-source'+(selected?.id===item.id&&selected?.kind===item.kind?' selected':''),key:item.provider+'-'+item.kind+'-'+item.id},
+        h('div',{className:'bsa229-saved-head'},h('strong',null,'My music · '+providerLinks.length),h('button',{type:'button',className:sourceShuffled?'active':'',disabled:providerLinks.length<2,onClick:toggleSourceShuffle,'aria-pressed':sourceShuffled},'⇄ Shuffle my list ',sourceShuffled?'on':'off')), 
+        !providerLinks.length?h('p',{className:'bsa228-help'},'No '+(mode==='spotify'?'Spotify':'YouTube Music')+' music saved yet. Paste a link above.'):h('div',{className:'bsa229-saved-list'},orderedSources.map((item,i)=>h('div',{className:'bsa229-source'+(selected?.id===item.id&&selected?.kind===item.kind?' selected':''),key:item.provider+'-'+item.kind+'-'+item.id},
           h('button',{type:'button',className:'bsa229-source-open',onClick:()=>playSource(item),'aria-label':(item.kind==='external'?'View details for ':'Play ')+item.title},item.kind==='external'?'↗':'▶'),
-          h('div',{className:'bsa229-source-copy'},h('strong',null,item.title),h('small',null,item.provider==='spotify'?'Spotify':item.music?'YouTube Music':'YouTube',' · ',item.kind)),
+          h('div',{className:'bsa229-source-copy'},
+            editingKey===sourceKey(item)?h('form',{className:'bsa235-rename-form',onSubmit:e=>{e.preventDefault();renameSource(item);}},
+              h('input',{type:'text',value:editName,maxLength:90,onChange:e=>setEditName(e.target.value),'aria-label':'Rename '+bsa235MediaKind(item),autoFocus:true}),
+              h('button',{type:'submit'},'Save'),h('button',{type:'button',onClick:()=>setEditingKey('')},'Cancel')):h('strong',null,item.title),
+            h('small',null,item.provider==='spotify'?'Spotify':item.music?'YouTube Music':'YouTube',' · ',bsa235MediaKind(item))),
+          h('button',{type:'button',className:'bsa235-rename-btn',title:'Rename this saved music link',onClick:()=>{setEditingKey(sourceKey(item));setEditName(item.title);},'aria-label':'Rename '+item.title},'Rename'),
           h('button',{type:'button',title:'Move source up',disabled:sourceShuffled||i===0,onClick:()=>shiftSource(item,-1),'aria-label':'Move '+item.title+' up'},'↑'),
           h('button',{type:'button',title:'Move source down',disabled:sourceShuffled||i===providerLinks.length-1,onClick:()=>shiftSource(item,1),'aria-label':'Move '+item.title+' down'},'↓'),
           h('button',{type:'button',title:'Remove saved source',onClick:()=>removeSource(item),'aria-label':'Remove '+item.title},'×')))),
@@ -19184,8 +19207,8 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
             :h(BSA234SpotifyPlayer,{key:selected.kind+selected.id,source:selected,onState:setSpotifyState}),
           youtubeControls,
           h('div',{className:'bsa229-transport'},
-            h('button',{type:'button',disabled:providerLinks.length<2,onClick:()=>nextSource(-1)},'← Previous source'),
-            h('button',{type:'button',disabled:providerLinks.length<2,onClick:()=>nextSource(1)},'Next source →'),
+            h('button',{type:'button',disabled:providerLinks.length<2,onClick:()=>nextSource(-1)},'← Previous saved link'),
+            h('button',{type:'button',disabled:providerLinks.length<2,onClick:()=>nextSource(1)},'Next saved link →'),
             mode==='youtube'?h('a',{href:bsa229MusicUrl(selected),target:'_blank',rel:'noopener noreferrer'},'Open in YouTube Music ↗'):null,
             mode==='spotify'?h('a',{className:'bsa232-open-spotify',href:selected.url,target:'_blank',rel:'noopener noreferrer','aria-label':'Open selected music in Spotify for sign-in and track shuffle'},'Open in Spotify · shuffle songs ↗'):h('a',{href:selected.url,target:'_blank',rel:'noopener noreferrer'},'Open original link ↗')),
           h('p',{className:'bsa228-help'},mode==='spotify'?'Playlist shuffle and track queue are controlled inside Spotify, not by Shuffle saved links. For full songs, sign in to Spotify and use Open in Spotify. This is Spotify’s playback restriction, not a dashboard error.':'Previous/next source switches saved playlist links. YouTube playlist track shuffle is available through the player controls when supported. The visible player remains in the compact dock as you study.')),
@@ -19286,17 +19309,17 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       startTimer({mins:prefs.focus,subjectId:subject.id,label:'Daily focus block'});
       go('study');
     };
-    return h('section',{className:'view bsa228-page',style:{width:'100%',maxWidth:'1160px',minWidth:0,gridColumn:'1 / -1',flex:'1 1 100%'}},
+    return h('section',{className:'view bsa228-page bsa235-routine-page',style:{display:'block',width:'100%',maxWidth:'1160px',minWidth:0,gridColumn:'1 / -1',flex:'1 1 100%',marginInline:'auto'}},
       h('header',{className:'bsa228-hero'},
-        h('span',{className:'bsa228-eyebrow'},'STUDY ROUTINE  ·  '+(subject.code||subject.name)),
-        h('h1',null,'Small sessions. Stronger recall.'),
-        h('p',null,'A calm routine you can actually repeat: retrieve → focus → break → explain. Missed a day? Simply restart. No streak penalties.'),
+        h('span',{className:'bsa228-eyebrow'},'MY DAILY ROUTINE · '+(subject.code||subject.name)),
+        h('h1',null,'Study with a clear routine.'),
+        h('p',null,'Review what matters, focus on one topic, take a break, and explain what you learned. You can start fresh any day.'),
         h('div',{className:'bsa228-hero-facts'},
           h('span',null,'◷ ',prefs.focus,' min focus'),h('span',null,'☕ ',prefs.breakMinutes,' min break'),
           h('span',null,done.length,' of ',BSA228_STEPS.length,' steps tried'))),
       h('div',{className:'bsa228-grid'},
         h('section',{className:'bsa228-card bsa228-checks'},
-          h('div',{className:'bsa228-section-heading'},h('div',null,h('span',{className:'bsa228-eyebrow'},label.toUpperCase()+' · GENTLE ACCOUNTABILITY'),h('h2',null,'Your daily four-step loop')),h('span',{className:'bsa228-counter'},done.length+'/4')),
+          h('div',{className:'bsa228-section-heading'},h('div',null,h('span',{className:'bsa228-eyebrow'},label.toUpperCase()+' · DAILY CHECKLIST'),h('h2',null,'Today’s study checklist')),h('span',{className:'bsa228-counter'},done.length+'/4')),
           h('p',{className:'bsa228-help'},'Check steps yourself after actually trying them. These checks are habits, not exam grades or verified mastery.'),
           h('div',{className:'bsa228-check-list'},BSA228_STEPS.map(([id,title,detail],i)=>h('label',{key:id,className:'bsa228-check-row'+(done.includes(id)?' done':'')},
             h('input',{type:'checkbox',checked:done.includes(id),onChange:()=>changeStep(id),'aria-label':title}),
@@ -19307,7 +19330,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
             h('button',{className:'btn',type:'button',onClick:startFocus},guided?'Open my study plan ↗':focusRunning?'Open active focus ↗':'Start '+prefs.focus+'-min focus ↗')),
           h('p',{className:'bsa228-help'},cards+' flashcards · '+dueMcq+' MCQs · '+mist+' mistakes · '+probs+' problem retests ready for review')),
         h('section',{className:'bsa228-card bsa228-break-card'},
-          h('div',{className:'bsa228-section-heading'},h('div',null,h('span',{className:'bsa228-eyebrow'},'RECOVERY MODE'),h('h2',null,'Break timer')),
+          h('div',{className:'bsa228-section-heading'},h('div',null,h('span',{className:'bsa228-eyebrow'},'SHORT REST'),h('h2',null,'Break timer')),
             h('span',{className:'bsa228-state'},bsa228Break.running?'Running':breakActive?'Paused':bsa228Break.done?'Completed':'Ready')),
           h('div',{className:'bsa228-clock',role:'timer','aria-label':'Break time remaining'},String(Math.floor(remaining/60)).padStart(2,'0'),':',String(remaining%60).padStart(2,'0')),
           h('div',{className:'bsa228-presets','aria-label':'Break length'},[5,10,15].map(m=>h('button',{key:m,type:'button',className:prefs.breakMinutes===m?'selected':'',onClick:()=>savePrefs({breakMinutes:m}),'aria-pressed':prefs.breakMinutes===m},m+' min'))),
@@ -19317,7 +19340,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
           restDisabled&&!breakActive&&h('p',{className:'bsa228-help'},'Pause or save your current focus session before starting a separate break countdown.'),
           h('p',{className:'bsa228-help'},'The break counts real clock time, even if you visit another dashboard page. It never adds study minutes or mastery points.')),
         h('section',{className:'bsa228-card bsa228-schedule-card'},
-          h('div',{className:'bsa228-section-heading'},h('div',null,h('span',{className:'bsa228-eyebrow'},'MAKE IT REPEATABLE'),h('h2',null,'Pick a regular start time'))),
+          h('div',{className:'bsa228-section-heading'},h('div',null,h('span',{className:'bsa228-eyebrow'},'ROUTINE SETTINGS'),h('h2',null,'Choose your study time'))),
           h('label',{className:'bsa228-time-field'},'My usual time',h('input',{type:'time',value:prefs.plannedTime,onChange:e=>savePrefs({plannedTime:e.target.value}),'aria-label':'Preferred daily study start time'})),
           h('div',{className:'bsa228-presets','aria-label':'Focus block length'},[15,25,40].map(m=>h('button',{key:m,type:'button',className:prefs.focus===m?'selected':'',onClick:()=>savePrefs({focus:m}),'aria-pressed':prefs.focus===m},m+' min focus'))),
           h('p',{className:'bsa228-help'},'Your plan is saved only on this device. It is not a push notification or an alarm. Treat the time as a cue, not a punishment.'),
@@ -20458,7 +20481,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
           h('div',{className:'bsa47-palettes'},
             h('div',{className:'bsa47-palette-heading'},h('strong',null,'Quick colors'),h('button',{type:'button',onClick:()=>setModal('look')},'All colors')),
             h(ThemeDots,{settings:data.settings,setSettings}))),
-        h(SyncBadge,{onOpen:openSync}),h('small',{className:'bsa47-build-tag',title:'Installed dashboard build'},BSA_RELEASE_LABEL))), /* @__PURE__ */ React.createElement("header", { className: "mobilebar" }, /* @__PURE__ */ h("div",{className:"bsa-shortcut-anchor mobile"},React.createElement("button", { className: "brand-mark mobile-home-button", type: "button", onClick: () => setShortcutsOpen(v=>!v), title: "Open quick shortcuts", "aria-label": "Open quick shortcuts", "aria-expanded":shortcutsOpen,"aria-haspopup":"menu" }, "Σ"),shortcutMenu()), subjectsButton("subj-m",true), musicPlaying&&nav.tab!=="routine"&&h("button",{type:"button",className:"icon-btn bsa234-music-mobile",title:"Return to playing music",onClick:()=>{window.dispatchEvent(new Event("bsa234:open-music"));go("routine")},"aria-label":"Return to playing music"},"♫"), h("button",{className:"icon-btn",onClick:()=>setSpotlightOpen(true),"aria-label":"Search dashboard"},h(Icon,{name:"search",size:19})), !window.__BSA_SHARED_MODE__&&h('button',{type:'button',className:'icon-btn bsa48-mobile-ai',onClick:()=>go('nlm',{}),'aria-label':'Open AI Prompt Builder',title:'AI Prompt Builder'},h(Icon,{name:'sparkles',size:19})), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal(syncAlert ? "sync" : "data"), "aria-label": syncAlert ? "Import, export and sync (needs attention)" : "Import and export", "data-sync": syncAlert }, /* @__PURE__ */ React.createElement(Icon, { name: "data" })), /* @__PURE__ */ h('button',{className:'icon-btn',onClick:()=>go('guide'),'aria-label':'Guided walkthrough',title:'Guided walkthrough'},'?'),h('button',{className:'icon-btn bsa46-mobile-settings',onClick:()=>setSidebarEdit(true),'aria-label':'Subject profile and workspace settings',title:'Workspace settings'},h(Icon,{name:'settings',size:19}))), /* @__PURE__ */ React.createElement("main", { className: "content bsa33-content", "data-desk-page": nav.tab },
+        h(SyncBadge,{onOpen:openSync}),h('small',{className:'bsa47-build-tag',title:'Installed dashboard build'},BSA_RELEASE_LABEL))), /* @__PURE__ */ React.createElement("header", { className: "mobilebar" }, /* @__PURE__ */ h("div",{className:"bsa-shortcut-anchor mobile"},React.createElement("button", { className: "brand-mark mobile-home-button", type: "button", onClick: () => setShortcutsOpen(v=>!v), title: "Open quick shortcuts", "aria-label": "Open quick shortcuts", "aria-expanded":shortcutsOpen,"aria-haspopup":"menu" }, "Σ"),shortcutMenu()), subjectsButton("subj-m",true), musicPlaying&&nav.tab!=="routine"&&h("button",{type:"button",className:"icon-btn bsa234-music-mobile",title:"Return to playing music",onClick:()=>{window.dispatchEvent(new Event("bsa234:open-music"));go("routine")},"aria-label":"Return to playing music"},"♫"), h("button",{className:"icon-btn",onClick:()=>setSpotlightOpen(true),"aria-label":"Search dashboard"},h(Icon,{name:"search",size:19})), !window.__BSA_SHARED_MODE__&&h('button',{type:'button',className:'icon-btn bsa48-mobile-ai',onClick:()=>go('nlm',{}),'aria-label':'Open AI Prompt Builder',title:'AI Prompt Builder'},h(Icon,{name:'sparkles',size:19})), /* @__PURE__ */ React.createElement("button", { className: "icon-btn", onClick: () => setModal(syncAlert ? "sync" : "data"), "aria-label": syncAlert ? "Import, export and sync (needs attention)" : "Import and export", "data-sync": syncAlert }, /* @__PURE__ */ React.createElement(Icon, { name: "data" })), /* @__PURE__ */ h('button',{className:'icon-btn',onClick:()=>go('guide'),'aria-label':'Guided walkthrough',title:'Guided walkthrough'},'?'),h('button',{className:'icon-btn bsa46-mobile-settings',onClick:()=>setSidebarEdit(true),'aria-label':'Subject profile and workspace settings',title:'Workspace settings'},h(Icon,{name:'settings',size:19}))), /* @__PURE__ */ React.createElement("main", { className: "content bsa33-content"+(nav.tab==="routine"?" bsa235-routine-layout":""), "data-desk-page": nav.tab, style:nav.tab==="routine"?{display:"block",width:"100%",minWidth:0,boxSizing:"border-box"}:undefined },
       storeFull&&h('div',{className:'bsa48-save-failure',role:'alert'},h('strong',null,'Changes are not saving on this device.'),h('span',null,'The browser refused a local write. Export a full backup and review storage before further editing.'),h('button',{type:'button',className:'btn',onClick:()=>setModal({data:'export'})},'Open backup')),
       h("div",{className:"workspace-topbar v2-topbar"},
         h("div",{className:"workspace-context"},h("span",{className:"workspace-eyebrow"},"STUDY SPACE  /"),h("strong",null,(tabs.find(t=>t[0]===nav.tab)||[null,"Today"])[1]),h("span",{className:"workspace-subject"},subject.code||subject.name)),
