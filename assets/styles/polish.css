@@ -4480,3 +4480,11 @@ body>.backdrop .bsa226-no-results{font-size:.83rem;padding:15px;}
   html body #root>.shell>aside.rail{display:none!important;visibility:hidden!important;}
   body>.backdrop .bsa226-more-groups .bsa3-tool-group .bsa205-more-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;}
 }
+
+/* V2.27 — Keep sidebar editing legible on iPad and narrow laptop screens.
+   Pinned links and All tools are intentionally separate destinations. */
+body>.backdrop .bsa45-sidebar-modal .bsa46-settings-footer{background:var(--surface);box-shadow:0 -10px 20px -18px rgba(0,0,0,.25)}
+body>.backdrop .bsa45-sidebar-modal .bsa211-shortcut-groups{padding-bottom:18px}
+#root .bsa46-shortcuts{padding-bottom:8px;border-bottom:1px solid var(--line)}
+#root .bsa46-nav-search input{min-width:0}
+@media(max-width:950px){body>.backdrop .bsa45-sidebar-modal .bsa46-editor-grid{grid-template-columns:minmax(0,1fr)}}
