@@ -4938,3 +4938,65 @@ body>.backdrop .bsa45-sidebar-modal .bsa211-shortcut-groups{padding-bottom:18px}
   .bsa236-reader-scroll{flex:1 1 auto!important;min-height:0!important}
   .bsa238-toc-header{position:sticky!important;top:-10px!important;background:var(--surface,#fff)!important;z-index:2!important;padding-bottom:4px!important}
 }
+
+
+/* V2.39 — iPad Study Routine scroll and music player interactions.
+   iPad's two-pane shell must have one real vertical scroller: content.
+   The older V2.37 rule accidentally set overflow:visible, defeating it. */
+@supports (-webkit-touch-callout: none) {
+  @media (min-width:900px) {
+    #root > .shell > main.content.bsa235-routine-layout {
+      height:100dvh!important;max-height:100dvh!important;min-height:0!important;
+      overflow-y:auto!important;overflow-x:hidden!important;
+      -webkit-overflow-scrolling:touch!important;touch-action:pan-y!important;
+      overscroll-behavior-y:contain!important;
+    }
+    #root > .shell > main.content.bsa235-routine-layout > .bsa235-routine-page {
+      padding-bottom:calc(95px + env(safe-area-inset-bottom,0px))!important;
+    }
+  }
+}
+/* The whole page still scrolls normally on non-iPad browsers and smaller phones. */
+@media (max-width:899px){
+  #root > .shell > main.content.bsa235-routine-layout{touch-action:pan-y!important;}
+}
+/* Default player stays in the reserved content flow. It becomes a floating
+   panel only after an intentional drag via the handle. */
+#root #bsa232-media-player.bsa232-away[data-bsa239-floating="true"]{
+  position:fixed!important;left:var(--bsa239-x,12px)!important;top:var(--bsa239-y,12px)!important;
+  right:auto!important;bottom:auto!important;
+  width:238px!important;min-width:238px!important;max-width:calc(100vw - 16px)!important;
+  z-index:210!important;margin:0!important;
+  max-height:calc(100dvh - 16px)!important;overflow:auto!important;
+  box-shadow:0 10px 32px rgba(0,0,0,.23)!important;
+}
+#root #bsa232-media-player.bsa232-away .bsa239-drag-handle,
+#root #bsa232-media-player.bsa232-away .bsa239-reset-position{
+  display:inline-flex!important;align-items:center;justify-content:center;
+  min-height:31px!important;padding:4px 8px!important;border-radius:9px;
+  border:1px solid var(--line)!important;background:var(--surface-2)!important;
+  color:var(--text)!important;font-size:.69rem!important;font-weight:750!important;
+}
+#root #bsa232-media-player.bsa232-away .bsa239-drag-handle{
+  cursor:grab!important;touch-action:none!important;-webkit-user-select:none!important;user-select:none!important;
+}
+#root #bsa232-media-player.bsa232-away .bsa239-drag-handle:active{cursor:grabbing!important}
+#root #bsa232-media-player.bsa232-away .bsa232-quickbar{gap:4px!important}
+#root #bsa232-media-player.bsa232-away .bsa232-quickbar .bsa232-return,
+#root #bsa232-media-player.bsa232-away .bsa232-quickbar .bsa232-stop{flex:1 1 80px!important}
+#root #bsa232-media-player.bsa232-away[data-bsa239-floating="true"] .bsa229-youtube-player,
+#root #bsa232-media-player.bsa232-away[data-bsa239-floating="true"] .bsa229-youtube-player iframe{
+  min-height:200px!important;height:200px!important;
+}
+@media(max-width:420px){
+  #root #bsa232-media-player.bsa232-away[data-bsa239-floating="true"]{
+    width:min(238px,calc(100vw - 16px))!important;min-width:0!important;
+  }
+}
+@media(prefers-reduced-motion:reduce){#root #bsa232-media-player.bsa232-away[data-bsa239-floating="true"]{transition:none!important}}
+/* Guard against historic desktop media-rail rules expanding the compact
+   player to the full viewport width when music becomes active. */
+#root #bsa232-media-player.bsa232-away{
+  width:238px!important;min-width:0!important;max-width:min(238px,calc(100vw - 16px))!important;
+  box-sizing:border-box!important;
+}
