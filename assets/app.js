@@ -30,7 +30,7 @@ THE SOFTWARE.
   if (window.__BSA_DESK_APP_LOADED__) return;
   window.__BSA_DESK_APP_LOADED__ = true;
   // User-facing release label only. Do not use for storage schemas or caches.
-  const BSA_RELEASE_LABEL = "V2.29";
+  const BSA_RELEASE_LABEL = "V2.32";
   const S = (t, p = null, s = false) => ({ t, p, s });
   const CFAS_TOPICS = [
     {
@@ -4083,7 +4083,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
   }
   /* V2.27: One shared-route allowlist for local tool discovery. Owner-only
      tools never appear in the published classmate's More menu or Search. */
-  const BSA227_SHARED_ROUTES=new Set(['home','subjects','study','practice','library','insights','lectures','rules','vault','psets','mcq','mistakes','accounting-lab','toolkit','fs-lab']);
+  const BSA227_SHARED_ROUTES=new Set(['home','subjects','study','practice','library','insights','lectures','rules','vault','psets','mcq','mistakes','accounting-lab','toolkit','fs-lab','routine']);
   function MoreSheet({onPick,onClose,go}){
     const [filter,setFilter]=useState('');
     const shared=!!window.__BSA_SHARED_MODE__;
@@ -13494,13 +13494,13 @@ ${c.kindHint}` }
       replaceOnce('function markDirty() {','function markDirty() { if(window.__BSA_SHARED_MODE__)return;','Owner sync writes');
       // Do not allow shared users to navigate to owner settings, data export,
       // account controls, teaching tools or other private screens.
-      const sharedTabs='["home","subjects","study","practice","library","insights","lectures","rules","vault","psets","mcq","mistakes","accounting-lab","toolkit","fs-lab"]';
+      const sharedTabs='["home","subjects","study","practice","library","insights","lectures","rules","vault","psets","mcq","mistakes","accounting-lab","toolkit","fs-lab","routine"]';
       replaceOnce('    const go = (tab, opts = {}) => {','    const go = (tab, opts = {}) => { if(window.__BSA_SHARED_MODE__ && !'+sharedTabs+'.includes(tab))return;','Shared navigation boundary');
       replaceOnce('    const openEditor = (type, item = null, defaults = {}) => {','    const openEditor = (type, item = null, defaults = {}) => { if(window.__BSA_SHARED_MODE__ && !["mistake","quiz"].includes(type))return;','Shared editing boundary');
       replaceOnce('    const shortcutItems = [["home","Today","home"],["subjects","My Subjects","subjects"],["study","Learn & plan","lecture"],["practice","Practice","bolt"],["library","Library","library"],["insights","Progress","chart"]];',
-        '    const shortcutItems = window.__BSA_SHARED_MODE__ ? [["home","Today","home"],["subjects","My Subjects","subjects"],["study","Learn","lecture"],["practice","Practice","bolt"],["library","Library","library"],["insights","Progress","chart"]] : [["home","Today","home"],["subjects","My Subjects","subjects"],["study","Learn & plan","lecture"],["practice","Practice","bolt"],["library","Library","library"],["insights","Progress","chart"]];',
+        '    const shortcutItems = window.__BSA_SHARED_MODE__ ? [["home","Today","home"],["subjects","My Subjects","subjects"],["study","Learn","lecture"],["practice","Practice","bolt"],["routine","Study Routine","calendar"],["library","Library","library"],["insights","Progress","chart"]] : [["home","Today","home"],["subjects","My Subjects","subjects"],["study","Learn & plan","lecture"],["practice","Practice","bolt"],["library","Library","library"],["insights","Progress","chart"]];',
         'Shared shortcuts');
-      replaceOnce('    const navGroups = [','    const navGroups = window.__BSA_SHARED_MODE__ ? [\n      {name:"Your study flow",items:["home","study","practice","library"]},\n      {name:"Study materials",items:["lectures","rules","vault"]},\n      {name:"Practice & questions",items:["mcq","psets","accounting-lab","fs-lab"]},\n      {name:"Review & progress",items:["mistakes","insights"]},\n      {name:"More tools",items:["toolkit"]}\n    ] : [','Shared navigation groups');
+      replaceOnce('    const navGroups = [','    const navGroups = window.__BSA_SHARED_MODE__ ? [\n      {name:"Your study flow",items:["home","study","practice","routine","library"]},\n      {name:"Study materials",items:["lectures","rules","vault"]},\n      {name:"Practice & questions",items:["mcq","psets","accounting-lab","fs-lab"]},\n      {name:"Review & progress",items:["mistakes","insights"]},\n      {name:"More tools",items:["toolkit"]}\n    ] : [','Shared navigation groups');
       replaceOnce('const [tool,setTool]=useState(initialTool||"notes");','const [tool,setTool]=useState(window.__BSA_SHARED_MODE__ ? "foundation" : (initialTool||"notes"));','Student toolkit default');
       // Only show the published subjects. Never permit editing the source list.
       // Keep student progress local and isolated from the owner document.
@@ -13515,7 +13515,7 @@ ${c.kindHint}` }
       replaceOnce('(modal === "data" || modal === "sync" || modal && modal.data) && /* @__PURE__ */ React.createElement(DataModal,',
         '!window.__BSA_SHARED_MODE__ && (modal === "data" || modal === "sync" || modal && modal.data) && /* @__PURE__ */ React.createElement(DataModal,','Import/export/sync modal');
       app=app.replaceAll('Welcome back, John Angel 👋','Welcome to Study Desk 👋').replaceAll('John Angel','Student');
-      const boot="window.__BSA_SHARED_MODE__=true;\nwindow.__BSA_PUBLISHED__=__SNAPSHOT__;\n(function(){\n const raw=window.localStorage;\n const prefix=\"bsa_shared_student_v144:\";\n const mainKey=\"bsa-study-dashboard:v1\";\n const progressKeys=[\"conf\",\"due\",\"last\",\"interval\",\"ease\",\"reps\",\"streak\",\"seen\",\"rating\",\"lastReviewed\",\"nextReview\",\"attempts\",\"lastAttempt\",\"st\",\"done\",\"srs\"];\n const copy=x=>JSON.parse(JSON.stringify(x));\n const read=()=>{try{return JSON.parse(raw.getItem(prefix+mainKey)||\"null\")}catch(_){return null}};\n function mergePublished(){\n   const old=read(), published=window.__BSA_PUBLISHED__;\n   if(!published||!Array.isArray(published.subjects))return old;\n   const doc=copy(published);\n   if(!old||!Array.isArray(old.subjects))return doc;\n   for(const sub of doc.subjects){\n      const prev=old.subjects.find(v=>v.id===sub.id);if(!prev)continue;\n      for(const topic of sub.topics||[]){\n        const before=(prev.topics||[]).find(v=>v.id===topic.id);\n        if(before){topic.done=!!before.done;topic.status=before.status||topic.status;\n          for(const part of topic.sub||[]){const oldPart=(before.sub||[]).find(v=>v.id===part.id);\n            if(oldPart){part.done=!!oldPart.done;part.s=!!oldPart.s;}}\n        }\n      }\n      for(const kind of [\"cards\",\"lectures\"]){\n       for(const item of sub[kind]||[]){\n        const before=(prev[kind]||[]).find(v=>v.id===item.id);\n        if(before)for(const key of progressKeys)if(Object.prototype.hasOwnProperty.call(before,key))item[key]=before[key];\n       }\n      }\n      for(const set of [...(sub.psets||[]),...(sub.mcqSets||[])]){\n       const oldSet=[...(prev.psets||[]),...(prev.mcqSets||[])].find(v=>v.id===set.id);if(!oldSet)continue;\n       for(const pr of set.problems||[]){\n        const oldPr=(oldSet.problems||[]).find(v=>v.id===pr.id);if(!oldPr)continue;\n        for(const key of progressKeys)if(Object.prototype.hasOwnProperty.call(oldPr,key))pr[key]=oldPr[key];\n       }\n      }\n      for(const rule of sub.rules||[]){const previous=(prev.rules||[]).find(x=>x.id===rule.id);if(previous){rule.notes=previous.notes||'';rule.bookmarked=!!previous.bookmarked;rule.ruleReviewConfidence=previous.ruleReviewConfidence||'';rule.ruleReviewCount=Number(previous.ruleReviewCount)||0;rule.ruleReviewedAt=previous.ruleReviewedAt||'';}}\n      // Learner-created flashcards (e.g. from corrected mistakes) stay personal.\n      const publishedCardIds=new Set((sub.cards||[]).map(x=>x.id));\n      for(const personal of prev.cards||[]){\n        if(!publishedCardIds.has(personal.id)&&personal.id){sub.cards.push(copy(personal));publishedCardIds.add(personal.id);}\n      }\n      // These are the STUDENT'S records, not the publisher's data.\n      for(const key of [\"mistakes\",\"sessions\",\"quizzes\",\"learningEvents\",\"days\",\"aiAttempts\",\"fsAttempts\",\"labAttempts\",\"practiceSessions\",\"foundationChecks\",\"problemWork\"]){if(Array.isArray(prev[key]))sub[key]=copy(prev[key]);}\n   }\n   if(old.activeId&&doc.subjects.some(v=>v.id===old.activeId))doc.activeId=old.activeId;\n   if(old.settings&&typeof old.settings===\"object\")doc.settings={...doc.settings,...old.settings};\n   return doc;\n }\n window.__BSA_RESTORE_CONTENT__=doc=>{\n   const published=window.__BSA_PUBLISHED__;\n   if(!published||!Array.isArray(published.subjects))return doc;\n   const old=read();\n   try{raw.setItem(prefix+mainKey,JSON.stringify(doc));return mergePublished();}\n   finally{try{if(old)raw.setItem(prefix+mainKey,JSON.stringify(old));else raw.removeItem(prefix+mainKey)}catch(_){}}\n };\n window.__BSA_RESET_STUDENT_PROGRESS__=()=>{\n   if(!window.confirm('Reset YOUR study progress on this device? This clears local attempts, session history and quiz drafts, but does not remove published study materials or affect anyone else.'))return false;\n   for(let i=raw.length-1;i>=0;i--){\n     const k=raw.key(i);\n     if(k&&k.startsWith(prefix)&&(k===prefix+mainKey||/mcq_draft|written_session|practice|learning|focus|review/i.test(k.slice(prefix.length))))raw.removeItem(k);\n   }\n   location.reload();return true;\n };\n window.__BSA_SHARED_STORAGE__={\n   getItem(key){key=String(key);if(key===mainKey){const v=mergePublished();return v?JSON.stringify(v):null;}return raw.getItem(prefix+key)},\n   setItem(key,value){raw.setItem(prefix+String(key),String(value))},\n   removeItem(key){raw.removeItem(prefix+String(key))},\n   clear(){for(let i=raw.length-1;i>=0;i--){const k=raw.key(i);if(k&&k.startsWith(prefix))raw.removeItem(k)}},\n   key(i){let out=[];for(let n=0;n<raw.length;n++){const k=raw.key(n);if(k&&k.startsWith(prefix))out.push(k.slice(prefix.length));}return out[i]||null},\n   get length(){let count=0;for(let n=0;n<raw.length;n++)if((raw.key(n)||\"\").startsWith(prefix))count++;return count;}\n };\n})();".replace('__SNAPSHOT__',JSON.stringify(snapshot).replace(/</g,'\\u003c'));
+      const boot="window.__BSA_SHARED_MODE__=true;\nwindow.__BSA_PUBLISHED__=__SNAPSHOT__;\n(function(){\n const raw=window.localStorage;\n const prefix=\"bsa_shared_student_v144:\";\n const mainKey=\"bsa-study-dashboard:v1\";\n const progressKeys=[\"conf\",\"due\",\"last\",\"interval\",\"ease\",\"reps\",\"streak\",\"seen\",\"rating\",\"lastReviewed\",\"nextReview\",\"attempts\",\"lastAttempt\",\"st\",\"done\",\"srs\"];\n const copy=x=>JSON.parse(JSON.stringify(x));\n const read=()=>{try{return JSON.parse(raw.getItem(prefix+mainKey)||\"null\")}catch(_){return null}};\n function mergePublished(){\n   const old=read(), published=window.__BSA_PUBLISHED__;\n   if(!published||!Array.isArray(published.subjects))return old;\n   const doc=copy(published);\n   if(!old||!Array.isArray(old.subjects))return doc;\n   for(const sub of doc.subjects){\n      const prev=old.subjects.find(v=>v.id===sub.id);if(!prev)continue;\n      for(const topic of sub.topics||[]){\n        const before=(prev.topics||[]).find(v=>v.id===topic.id);\n        if(before){topic.done=!!before.done;topic.status=before.status||topic.status;\n          for(const part of topic.sub||[]){const oldPart=(before.sub||[]).find(v=>v.id===part.id);\n            if(oldPart){part.done=!!oldPart.done;part.s=!!oldPart.s;}}\n        }\n      }\n      for(const kind of [\"cards\",\"lectures\"]){\n       for(const item of sub[kind]||[]){\n        const before=(prev[kind]||[]).find(v=>v.id===item.id);\n        if(before)for(const key of progressKeys)if(Object.prototype.hasOwnProperty.call(before,key))item[key]=before[key];\n       }\n      }\n      for(const set of [...(sub.psets||[]),...(sub.mcqSets||[])]){\n       const oldSet=[...(prev.psets||[]),...(prev.mcqSets||[])].find(v=>v.id===set.id);if(!oldSet)continue;\n       for(const pr of set.problems||[]){\n        const oldPr=(oldSet.problems||[]).find(v=>v.id===pr.id);if(!oldPr)continue;\n        for(const key of progressKeys)if(Object.prototype.hasOwnProperty.call(oldPr,key))pr[key]=oldPr[key];\n       }\n      }\n      for(const rule of sub.rules||[]){const previous=(prev.rules||[]).find(x=>x.id===rule.id);if(previous){rule.notes=previous.notes||'';rule.bookmarked=!!previous.bookmarked;rule.ruleReviewConfidence=previous.ruleReviewConfidence||'';rule.ruleReviewCount=Number(previous.ruleReviewCount)||0;rule.ruleReviewedAt=previous.ruleReviewedAt||'';}}\n      // Learner-created flashcards (e.g. from corrected mistakes) stay personal.\n      const publishedCardIds=new Set((sub.cards||[]).map(x=>x.id));\n      for(const personal of prev.cards||[]){\n        if(!publishedCardIds.has(personal.id)&&personal.id){sub.cards.push(copy(personal));publishedCardIds.add(personal.id);}\n      }\n      // These are the STUDENT'S records, not the publisher's data.\n      for(const key of [\"mistakes\",\"sessions\",\"quizzes\",\"learningEvents\",\"days\",\"aiAttempts\",\"fsAttempts\",\"labAttempts\",\"practiceSessions\",\"foundationChecks\",\"problemWork\"]){if(Array.isArray(prev[key]))sub[key]=copy(prev[key]);}\n   }\n   if(old.activeId&&doc.subjects.some(v=>v.id===old.activeId))doc.activeId=old.activeId;\n   if(old.settings&&typeof old.settings===\"object\")doc.settings={...doc.settings,...old.settings};\n   return doc;\n }\n window.__BSA_RESTORE_CONTENT__=doc=>{\n   const published=window.__BSA_PUBLISHED__;\n   if(!published||!Array.isArray(published.subjects))return doc;\n   const old=read();\n   try{raw.setItem(prefix+mainKey,JSON.stringify(doc));return mergePublished();}\n   finally{try{if(old)raw.setItem(prefix+mainKey,JSON.stringify(old));else raw.removeItem(prefix+mainKey)}catch(_){}}\n };\n window.__BSA_RESET_STUDENT_PROGRESS__=()=>{\n   if(!window.confirm('Reset YOUR study progress on this device? This clears local attempts, session history and quiz drafts, but does not remove published study materials or affect anyone else.'))return false;\n   for(let i=raw.length-1;i>=0;i--){\n     const k=raw.key(i);\n     if(k&&k.startsWith(prefix)&&(k===prefix+mainKey||/mcq_draft|written_session|practice|learning|focus|review|bsa228_owner_routine_checks_v1|bsa228_owner_break_v1/i.test(k.slice(prefix.length))))raw.removeItem(k);\n   }\n   location.reload();return true;\n };\n window.__BSA_SHARED_STORAGE__={\n   getItem(key){key=String(key);if(key===mainKey){const v=mergePublished();return v?JSON.stringify(v):null;}return raw.getItem(prefix+key)},\n   setItem(key,value){raw.setItem(prefix+String(key),String(value))},\n   removeItem(key){raw.removeItem(prefix+String(key))},\n   clear(){for(let i=raw.length-1;i>=0;i--){const k=raw.key(i);if(k&&k.startsWith(prefix))raw.removeItem(k)}},\n   key(i){let out=[];for(let n=0;n<raw.length;n++){const k=raw.key(n);if(k&&k.startsWith(prefix))out.push(k.slice(prefix.length));}return out[i]||null},\n   get length(){let count=0;for(let n=0;n<raw.length;n++)if((raw.key(n)||\"\").startsWith(prefix))count++;return count;}\n };\n})();".replace('__SNAPSHOT__',JSON.stringify(snapshot).replace(/</g,'\\u003c'));
       const sheetPaths=['foundation','components','features','polish'].map(name=>'./assets/styles/'+name+'.css');
       const sheetText=await Promise.all(sheetPaths.map(async path=>{
         const res=await fetch(new URL(path+'?shared-publish='+Date.now(),location.href),{cache:'no-store'});
@@ -13523,7 +13523,7 @@ ${c.kindHint}` }
         return await res.text();
       }));
       const styles=sheetText.map(css=>'<style>'+css+'</style>').join('\n');
-      return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0d1320"><title>BSA Study Desk · Shared</title>'+styles+"<style id=\"bsa-shared-student-ui\">\n/* Same component design tokens as the owner's app; limited navigation and no author tools. */\n.rail-footer,.sync-badge,.sync-bar,.save-note,.rail-search,.study-life-card,.life-home-widget,\n.dashboard-settings,.share-panel,.fab,.focus-bar,.study-path,.study-life,.bsa-v141-update-control,\n[data-personal-only],[data-shared-authoring]{display:none!important}\n/* Keep the existing Appearance modal and theme controls available to students. */\n.rail-tools{display:flex!important;flex-direction:column!important}\n.rail-tools>button:first-child,.rail-subject>.link-btn{display:none!important} /* Import/export is owner-only */\n.workspace-actions,.workspace-topbar .btn{display:none!important}\n.mobilebar>button.icon-btn:not([aria-label=\"Appearance\"]):not([aria-label=\"Themes\"]){display:none!important}\n.mobilebar>button.icon-btn[aria-label=\"Appearance\"],.mobilebar>button.icon-btn[aria-label=\"Themes\"]{display:inline-flex!important}\n.rail-nav{min-height:0;flex:1;overflow-y:auto}\n.bsa48-builder-cta,.bsa47-utility-actions,.bsa46-profile-edit,.bsa48-library-actions{display:none!important}\n.shell>.content{padding-bottom:max(24px,env(safe-area-inset-bottom,0px))!important}\n.shared-ribbon{padding:8px 16px;background:var(--surface,#e8f2ed);border-bottom:1px solid var(--line,#bed1c6);color:var(--muted,#34463f);font-size:12px}\n@media(max-width:899px){.bottom-nav{display:grid!important}.shell>.content{padding-bottom:max(94px,calc(78px + env(safe-area-inset-bottom,0px)))!important}.mobilebar{display:flex!important}}\n</style>"+'</head><body><div id="root"></div>'+
+      return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0d1320"><title>BSA Study Desk · Shared</title>'+styles+"<style id=\"bsa-shared-student-ui\">\n/* Same component design tokens as the owner's app; limited navigation and no author tools. */\n.rail-footer,.sync-badge,.sync-bar,.save-note,.rail-search,.study-life-card,.life-home-widget,\n.dashboard-settings,.share-panel,.fab,.study-path,.study-life,.bsa-v141-update-control,\n[data-personal-only],[data-shared-authoring]{display:none!important}\n/* Keep the existing Appearance modal and theme controls available to students. */\n.rail-tools{display:flex!important;flex-direction:column!important}\n.rail-tools>button:first-child,.rail-subject>.link-btn{display:none!important} /* Import/export is owner-only */\n.workspace-actions,.workspace-topbar .btn{display:none!important}\n.mobilebar>button.icon-btn:not([aria-label=\"Appearance\"]):not([aria-label=\"Themes\"]){display:none!important}\n.mobilebar>button.icon-btn[aria-label=\"Appearance\"],.mobilebar>button.icon-btn[aria-label=\"Themes\"]{display:inline-flex!important}\n.rail-nav{min-height:0;flex:1;overflow-y:auto}\n.bsa48-builder-cta,.bsa47-utility-actions,.bsa46-profile-edit,.bsa48-library-actions{display:none!important}\n.shell>.content{padding-bottom:max(24px,env(safe-area-inset-bottom,0px))!important}\n.shared-ribbon{padding:8px 16px;background:var(--surface,#e8f2ed);border-bottom:1px solid var(--line,#bed1c6);color:var(--muted,#34463f);font-size:12px}\n@media(max-width:899px){.bottom-nav{display:grid!important}.shell>.content{padding-bottom:max(94px,calc(78px + env(safe-area-inset-bottom,0px)))!important}.mobilebar{display:flex!important}}\n</style>"+'</head><body><div id="root"></div>'+
        '<script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"><'+'/script>'+
        '<script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"><'+'/script>'+
        '<script>'+boot+'<'+'/script><script>'+app+'<'+'/script>'+"<script id=\"shared-readonly-controls\">(function(){\nconst deny=/^(?:add|new|edit|delete|remove|import|export|publish|sync|restore|quick add|clear all|reset all|change topic|manage subjects|classmate sharing)(?:\\b|\\s|$)/i;\nfunction mask(){const root=document.getElementById('root');if(!root)return;root.querySelectorAll('button').forEach(b=>{\nconst text=(b.textContent||'').trim();const label=(b.getAttribute('aria-label')||'').trim();\nif(/^(?:edit mistake|make a flashcard from this mistake|delete score)$/i.test(label)||/^(?:Export highlights|Remove highlight)$/i.test(text))return;if(deny.test(text)||deny.test(label)){b.hidden=true;b.disabled=true;b.setAttribute('data-shared-authoring','');}\n});}\nconst root=document.body;if(root){const observer=new MutationObserver(mask);observer.observe(root,{subtree:true,childList:true});mask();}\n})();<\/script>"+'</body></html>';
@@ -18837,7 +18837,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     catch(e){bsa228NoiseStop();throw e;}
     window.dispatchEvent(new Event('bsa228:noise-changed'));
   }
-  /* V2.29 -- Focus Music (owner only)
+  /* V2.30 -- Focus Music (owner and isolated shared learners)
      Embedded providers supply playback; never proxy, download or hide their audio.
      Queue = saved source links. YouTube's IFrame API adds track controls.
      Spotify retains official embed controls; no unsupported account access.
@@ -18845,17 +18845,37 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
   const BSA229_LINK_KEY='bsa229_owner_media_links_v1';
   const BSA229_MODE_KEY='bsa229_owner_media_mode_v1';
   function bsa229Source(raw){
-    let u;try{u=new URL(String(raw||'').trim());}catch(_){throw new Error('Paste a complete YouTube or Spotify link.');}
-    if(u.protocol!=='https:')throw new Error('Only HTTPS YouTube or Spotify links are supported.');
+    let u;try{u=new URL(String(raw||'').trim());}catch(_){throw new Error('Paste a complete YouTube Music, YouTube, or Spotify link.');}
+    if(u.protocol!=='https:')throw new Error('Only HTTPS YouTube Music, YouTube, or Spotify links are supported.');
     const host=u.hostname.toLowerCase(),parts=u.pathname.split('/').filter(Boolean);
     if(['youtube.com','www.youtube.com','m.youtube.com','music.youtube.com','youtube-nocookie.com','www.youtube-nocookie.com','youtu.be','www.youtu.be'].includes(host)){
-      let id='',kind='video';
+      const isMusic=host==='music.youtube.com';
       const list=u.searchParams.get('list')||'';
-      if(list){kind='playlist';id=list;}
-      else if(host==='youtu.be'||host==='www.youtu.be')id=parts[0]||'';
-      else if(['watch','live','shorts','embed'].includes(parts[0]))id=parts[0]==='watch'?u.searchParams.get('v')||'':parts[1]||'';
-      if(kind==='playlist'?!/^[a-zA-Z0-9_-]{10,80}$/.test(id):!/^[a-zA-Z0-9_-]{11}$/.test(id))throw new Error('This YouTube link has no valid video or playlist ID.');
-      return {provider:'youtube',kind,id,url:kind==='playlist'?'https://www.youtube.com/playlist?list='+encodeURIComponent(id):'https://www.youtube.com/watch?v='+encodeURIComponent(id)};
+      const video=host==='youtu.be'||host==='www.youtu.be'?parts[0]||'':
+        ['live','shorts','embed'].includes(parts[0])?parts[1]||'':
+        parts[0]==='watch'?u.searchParams.get('v')||'':'';
+      const hasVideo=/^[a-zA-Z0-9_-]{11}$/.test(video);
+      const hasList=/^[a-zA-Z0-9_-]{10,120}$/.test(list);
+      const isRadio=/^RD/i.test(list); // Radio, mixes, and RDAMVM lists are not reliably embeddable playlists.
+      const canonical=(kind,id)=>isMusic?
+        'https://music.youtube.com/'+(kind==='playlist'?'playlist?list=':'watch?v=')+encodeURIComponent(id):
+        'https://www.youtube.com/'+(kind==='playlist'?'playlist?list=':'watch?v=')+encodeURIComponent(id);
+      if((parts[0]==='playlist'||parts[0]==='watch')&&list&&isRadio){
+        if(hasVideo)return {provider:'youtube',kind:'video',id:video,url:canonical('video',video),music:isMusic};
+        return {provider:'youtube',kind:'external',id:list,url:u.href,music:isMusic,
+          reason:'YouTube Music radio and auto-generated mixes do not provide a reliable embeddable playlist. Open the mix in YouTube Music.'};
+      }
+      // A real saved playlist can be shared from /playlist or /watch?v=...&list=...
+      if(hasList&&(parts[0]==='playlist'||parts[0]==='watch'))
+        return {provider:'youtube',kind:'playlist',id:list,url:canonical('playlist',list),music:isMusic};
+      if(hasVideo)return {provider:'youtube',kind:'video',id:video,url:canonical('video',video),music:isMusic};
+      // YouTube Music album browse URLs (MPREb / FEmusic_...) are not
+      // YouTube video IDs. Preserve them as external links rather than sending
+      // them to the IFrame API as a video, which produces "Invalid video id".
+      if(isMusic&&parts[0]==='browse'&&parts[1]&&/^[a-zA-Z0-9_-]{5,150}$/.test(parts[1]))
+        return {provider:'youtube',kind:'external',id:'browse-'+parts[1],url:u.href,music:true,
+          reason:'YouTube Music album and browse links cannot be played by the regular YouTube embedded player. Open this link in YouTube Music.'};
+      throw new Error('Use a YouTube Music song link (watch?v=...) or playlist link (playlist?list=...). Music radio and album links can be opened in YouTube Music.');
     }
     if(host==='open.spotify.com'||host==='www.open.spotify.com'){
       let i=0;if(parts[0]&&parts[0].startsWith('intl-'))i++;
@@ -18863,7 +18883,24 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       if(!['playlist','album','track','episode','show'].includes(kind)||!/^[a-zA-Z0-9]{10,32}$/.test(id))throw new Error('Use a public Spotify playlist, album, track or podcast link.');
       return {provider:'spotify',kind,id,url:'https://open.spotify.com/'+kind+'/'+id};
     }
-    throw new Error('Only YouTube and Spotify sharing links are supported.');
+    throw new Error('Only YouTube Music, YouTube, and Spotify sharing links are supported.');
+  }
+  // YouTube's playlist embed has its own URL format. Never put a playlist ID
+  // into videoId or /embed/VIDEO_ID: that displays "Invalid video id".
+  function bsa229YouTubeEmbedUrl(source,origin){
+    if(!source||source.provider!=='youtube'||!['playlist','video'].includes(source.kind))throw new Error('This Music link must open on YouTube Music.');
+    const url=new URL(source.kind==='playlist'?
+      'https://www.youtube.com/embed/videoseries':'https://www.youtube.com/embed/'+encodeURIComponent(source.id));
+    if(source.kind==='playlist')url.searchParams.set('list',source.id);
+    url.searchParams.set('enablejsapi','1');
+    url.searchParams.set('playsinline','1');
+    if(/^https?:\/\//.test(String(origin||'')))url.searchParams.set('origin',origin);
+    return url.href;
+  }
+  function bsa229MusicUrl(source){
+    if(source?.kind==='playlist')return 'https://music.youtube.com/playlist?list='+encodeURIComponent(source.id);
+    if(source?.kind==='video')return 'https://music.youtube.com/watch?v='+encodeURIComponent(source.id);
+    return source?.url||'https://music.youtube.com/';
   }
   let bsa229YtApiPromise=null;
   function bsa229YouTubeApi(){
@@ -18886,38 +18923,45 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     const holder=useRef(null),player=useRef(null);
     useEffect(()=>{
       let live=true;
-      onReady(null);
-      onState({});
+      onReady(null);onState({});
+      // The iframe exists immediately. If the controls API is blocked, the
+      // visible official YouTube player can still be used independently.
+      const iframe=document.createElement('iframe');
+      iframe.src=bsa229YouTubeEmbedUrl(source,location.origin);
+      iframe.title='YouTube '+source.kind+' player';
+      iframe.setAttribute('allow','autoplay; encrypted-media; picture-in-picture; fullscreen');
+      iframe.setAttribute('allowfullscreen','');
+      iframe.referrerPolicy='strict-origin-when-cross-origin';
+      holder.current?.replaceChildren(iframe);
       bsa229YouTubeApi().then(YT=>{
         if(!live||!holder.current)return;
-        const node=document.createElement('div');holder.current.replaceChildren(node);
-        player.current=new YT.Player(node,{
-          width:'100%',height:'100%',host:'https://www.youtube.com',
-          videoId:source.kind==='video'?source.id:undefined,
-          playerVars:{playsinline:1,rel:0,origin:location.origin,enablejsapi:1,...(source.kind==='playlist'?{listType:'playlist',list:source.id}:{})},
-          events:{
-            onReady(e){if(!live)return;try{if(source.kind==='playlist'){
-              e.target.cuePlaylist({list:source.id,listType:'playlist'});
-              e.target.setLoop(repeat);
-              e.target.setShuffle(shuffle);
-            }}catch(_){}onReady(e.target);},
-            onStateChange(e){if(!live)return;let queue=[],index=-1;
-              try{queue=e.target.getPlaylist()||[];index=e.target.getPlaylistIndex();}catch(_){}
-              onState({playing:e.data===1,queue,index});
-            },
-            onError(e){if(live)onError('YouTube cannot play this item here (error '+e.data+'). Open the source on YouTube.');}
-          }
-        });
-      }).catch(e=>{if(live)onError(e.message||'YouTube is unavailable.');});
-      return()=>{live=false;try{player.current?.destroy();}catch(_){}player.current=null;if(holder.current)holder.current.replaceChildren();};
+        // Binding to an existing iframe is the documented IFrame API path;
+        // no implicit videoId can overwrite a playlist's videoseries URL.
+        player.current=new YT.Player(iframe,{events:{
+          onReady(e){if(!live)return;try{
+            e.target.setLoop(!!repeat);
+            if(source.kind==='playlist')e.target.setShuffle(!!shuffle);
+          }catch(_){}onReady(e.target);},
+          onStateChange(e){if(!live)return;let queue=[],index=-1;
+            try{queue=e.target.getPlaylist()||[];index=e.target.getPlaylistIndex();}catch(_){}
+            onState({playing:e.data===1,queue,index});
+          },
+          onError(e){if(live){const reason=e.data===2?'YouTube rejected the video or playlist ID':
+            [100,101,150,153].includes(e.data)?'YouTube does not allow this item to play in an embedded player':
+            'YouTube could not play this item here';
+            onError(reason+'. Try Open in YouTube Music below (error '+e.data+').');}}
+        }});
+      }).catch(e=>{if(live)onError('YouTube player controls could not load. Try the visible player or Open in YouTube Music below. '+(e.message||''));});
+      return()=>{live=false;try{player.current?.destroy();}catch(_){}player.current=null;
+        try{holder.current?.replaceChildren();}catch(_){} };
     },[source.id,source.kind]);
     useEffect(()=>{if(!player.current||source.kind!=='playlist')return;
       try{player.current.setShuffle(!!shuffle);}catch(_){}
     },[shuffle,source.id,source.kind]);
     useEffect(()=>{if(!player.current)return;try{player.current.setLoop(!!repeat);}catch(_){}},[repeat,source.id]);
-    return h('div',{className:'bsa229-youtube-player',ref:holder,'aria-label':'Visible YouTube video player'});
+    return h('div',{className:'bsa229-youtube-player',ref:holder,'aria-label':'Visible official YouTube video or playlist player'});
   }
-  function BSA229FocusMusic({prefs,savePrefs}){
+  function BSA229FocusMusic({prefs,savePrefs,compact=false,onReturn}){
     const [mode,setMode]=useState(()=>{try{const x=localStorage.getItem(BSA229_MODE_KEY);return ['noise','youtube','spotify'].includes(x)?x:'noise';}catch(_){return'noise';}});
     const [links,setLinks]=useState(()=>{
       const raw=bsa228ReadJson(BSA229_LINK_KEY,[]);
@@ -18928,6 +18972,13 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     const [shuffle,setShuffle]=useState(false),[repeat,setRepeat]=useState(false);
     const [sourceShuffled,setSourceShuffled]=useState(false),[sourceOrder,setSourceOrder]=useState([]);
     const [noiseRevision,setNoiseRevision]=useState(0);
+    const returnScroll=useRef(false);
+    useEffect(()=>{
+      if(!compact&&returnScroll.current){
+        returnScroll.current=false;
+        requestAnimationFrame(()=>document.getElementById('bsa232-media-player')?.scrollIntoView({behavior:'smooth',block:'start'}));
+      }
+    },[compact]);
     useEffect(()=>{
       const onNoise=()=>setNoiseRevision(v=>v+1);
       const onStopMedia=()=>setActive(null);
@@ -18947,7 +18998,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       try{
         const src=bsa229Source(url);
         if(links.some(x=>x.provider===src.provider&&x.kind===src.kind&&x.id===src.id)){pickMode(src.provider);setFeedback('Already in your saved sources.');return;}
-        const item={...src,title:title.trim().slice(0,90)||((src.provider==='youtube'?'YouTube':'Spotify')+' '+src.kind),addedAt:Date.now()};
+        const item={...src,title:title.trim().slice(0,90)||((src.provider==='youtube'?(src.music?'YouTube Music':'YouTube'):'Spotify')+' '+src.kind),addedAt:Date.now()};
         if(links.length>=30){setFeedback('Maximum 30 saved links. Remove an older source first.');return;}
         const next=[...links,item];if(!persist(next))return;
         setUrl('');setTitle('');setFeedback('Saved on this device. Tap Play source to open its player.');
@@ -18980,7 +19031,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       catch(error){setFeedback(error.message||'Sound playback is unavailable.');}
     };
     const canYt=!!ytController&&selected?.provider==='youtube';
-    const youtubeControls=selected?.provider==='youtube'&&h('div',{className:'bsa229-yt-controls'},
+    const youtubeControls=selected?.provider==='youtube'&&selected.kind!=='external'&&h('div',{className:'bsa229-yt-controls'},
       h('div',{className:'bsa229-transport'},
         h('button',{type:'button',disabled:!canYt||selected.kind!=='playlist',onClick:()=>ytController?.previousVideo?.(),'aria-label':'Previous YouTube track'},'⏮ Previous'),
         h('button',{type:'button',disabled:!canYt,onClick:()=>{const state=ytController?.getPlayerState?.();state===1?ytController.pauseVideo():ytController.playVideo();}},'Play / pause'),
@@ -18993,9 +19044,17 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
         h('summary',null,'YouTube track queue · '+ytState.queue.length),
         h('div',{className:'bsa229-queue-items'},ytState.queue.slice(0,150).map((videoId,i)=>h('button',{key:videoId+'-'+i,type:'button',className:i===ytState.index?'now':'',onClick:()=>ytController?.playVideoAt?.(i)},
           h('span',null,'#'+(i+1)),h('span',null,videoId),i===ytState.index?h('strong',null,'Playing'):null)))));
-    return h('section',{className:'bsa228-card bsa228-sound-card bsa229-music'},
+    const playingEmbedded=!!selected&&selected.kind!=='external'&&selected.provider===mode;
+    const dockHasSound=playingEmbedded||!!bsa228Noise;
+    const stopDock=()=>{bsa228NoiseStop();setActive(null);setYtController(null);};
+    const returnToMusic=()=>{returnScroll.current=true;onReturn?.();};
+    return h('section',{id:'bsa232-media-player',className:'bsa228-card bsa228-sound-card bsa229-music'+(compact?' bsa232-away':'')+(compact&&!dockHasSound?' bsa232-idle':'')+(playingEmbedded?' bsa232-streaming-active':'')},
+      compact&&h('div',{className:'bsa232-quickbar'},
+        h('span',{className:'bsa232-quick-label'},dockHasSound?'♫ Focus music':'♫ Study Routine'),
+        h('button',{type:'button',className:'bsa232-return',onClick:returnToMusic,'aria-label':'Return to Study Routine and music controls'},'↩ Back to routine'),
+        dockHasSound&&h('button',{type:'button',className:'bsa232-stop',onClick:stopDock,'aria-label':'Stop music and close player'},'■ Stop')),
       h('div',{className:'bsa228-section-heading'},h('div',null,h('span',{className:'bsa228-eyebrow'},'FOCUS MUSIC'),h('h2',null,'Sounds & playlists')),h('span',{className:'bsa228-state'},bsa228Noise?'Noise playing':active?'Player open':'Ready')),
-      h('div',{className:'bsa229-tabs',role:'tablist','aria-label':'Focus music source'},[['noise','Ambient'],['youtube','YouTube'],['spotify','Spotify']].map(([k,label])=>h('button',{type:'button',key:k,role:'tab','aria-selected':mode===k,className:mode===k?'on':'',onClick:()=>pickMode(k)},label))),
+      h('div',{className:'bsa229-tabs',role:'tablist','aria-label':'Focus music source'},[['noise','Ambient'],['youtube','YouTube Music'],['spotify','Spotify']].map(([k,label])=>h('button',{type:'button',key:k,role:'tab','aria-selected':mode===k,className:mode===k?'on':'',onClick:()=>pickMode(k)},label))),
       mode==='noise'?h('div',{className:'bsa229-noise'},
         h('p',{className:'bsa228-help'},'Three locally generated sounds; no internet connection needed.'),
         h('div',{className:'bsa228-presets','aria-label':'Sound type'},[['brown','Brown · soft'],['pink','Pink · balanced'],['white','White · crisp']].map(([id,label])=>h('button',{key:id,type:'button',className:prefs.kind===id?'selected':'','aria-pressed':prefs.kind===id,onClick:()=>{savePrefs({kind:id});if(bsa228Noise)bsa228NoiseStart(id,prefs.volume).catch(e=>setFeedback(e.message));}},label))),
@@ -19003,32 +19062,51 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
         h('button',{className:'btn primary bsa228-sound-toggle',type:'button',onClick:switchNoise},bsa228Noise?'■ Stop noise':'▶ Play '+prefs.kind+' noise'),
         h('p',{className:'bsa228-help'},'Noise can continue when you open another dashboard page. It stops on reload, and mobile may pause it in the background.'))
       :h('div',{className:'bsa229-streaming'},
-        h('p',{className:'bsa228-help'},mode==='youtube'?'Paste regular YouTube or YouTube Music video/playlist URLs. Video stays visible, as required by YouTube.':'Paste public Spotify playlist, album, or track links. Spotify handles track playback inside its player; account-level shuffle and queue are not exposed by embeds.'),
+        h('p',{className:'bsa228-help'},mode==='youtube'?'Paste a YouTube Music song or playlist URL. Supported links play in the visible YouTube player; Music-only albums and radio mixes open directly in YouTube Music.':'Paste Spotify playlist, album, or track links. Full songs may require signing in to Spotify. The embed does not expose song shuffle or your Spotify queue; use Open in Spotify for those controls.'),
         h('form',{className:'bsa229-add-form',onSubmit:addSource},
-          h('input',{type:'url',placeholder:'Paste YouTube or Spotify link',value:url,onChange:e=>setUrl(e.target.value),required:true,'aria-label':'YouTube or Spotify URL'}),
+          h('input',{type:'url',placeholder:'Paste YouTube Music, YouTube, or Spotify link',value:url,onChange:e=>setUrl(e.target.value),required:true,'aria-label':'YouTube or Spotify URL'}),
           h('input',{type:'text',placeholder:'Optional playlist name',value:title,maxLength:90,onChange:e=>setTitle(e.target.value),'aria-label':'Optional playlist name'}),
           h('button',{className:'btn primary',type:'submit'},'+ Save link')),
-        h('div',{className:'bsa229-saved-head'},h('strong',null,'Saved sources · '+providerLinks.length),h('button',{type:'button',className:sourceShuffled?'active':'',disabled:providerLinks.length<2,onClick:toggleSourceShuffle,'aria-pressed':sourceShuffled},'⇄ Shuffle sources ',sourceShuffled?'on':'off')), 
-        !providerLinks.length?h('p',{className:'bsa228-help'},'No saved '+(mode==='spotify'?'Spotify':'YouTube')+' links yet. Add one above.'):h('div',{className:'bsa229-saved-list'},orderedSources.map((item,i)=>h('div',{className:'bsa229-source'+(selected?.id===item.id&&selected?.kind===item.kind?' selected':''),key:item.provider+'-'+item.kind+'-'+item.id},
-          h('button',{type:'button',className:'bsa229-source-open',onClick:()=>playSource(item),'aria-label':'Play '+item.title},'▶'),
-          h('div',{className:'bsa229-source-copy'},h('strong',null,item.title),h('small',null,item.provider==='spotify'?'Spotify':'YouTube',' · ',item.kind)),
+        h('div',{className:'bsa229-saved-head'},h('strong',null,'Saved sources · '+providerLinks.length),h('button',{type:'button',className:sourceShuffled?'active':'',disabled:providerLinks.length<2,onClick:toggleSourceShuffle,'aria-pressed':sourceShuffled},'⇄ Shuffle saved links ',sourceShuffled?'on':'off')), 
+        !providerLinks.length?h('p',{className:'bsa228-help'},'No saved '+(mode==='spotify'?'Spotify':'YouTube Music')+' links yet. Add one above.'):h('div',{className:'bsa229-saved-list'},orderedSources.map((item,i)=>h('div',{className:'bsa229-source'+(selected?.id===item.id&&selected?.kind===item.kind?' selected':''),key:item.provider+'-'+item.kind+'-'+item.id},
+          h('button',{type:'button',className:'bsa229-source-open',onClick:()=>playSource(item),'aria-label':(item.kind==='external'?'View details for ':'Play ')+item.title},item.kind==='external'?'↗':'▶'),
+          h('div',{className:'bsa229-source-copy'},h('strong',null,item.title),h('small',null,item.provider==='spotify'?'Spotify':item.music?'YouTube Music':'YouTube',' · ',item.kind)),
           h('button',{type:'button',title:'Move source up',disabled:sourceShuffled||i===0,onClick:()=>shiftSource(item,-1),'aria-label':'Move '+item.title+' up'},'↑'),
           h('button',{type:'button',title:'Move source down',disabled:sourceShuffled||i===providerLinks.length-1,onClick:()=>shiftSource(item,1),'aria-label':'Move '+item.title+' down'},'↓'),
           h('button',{type:'button',title:'Remove saved source',onClick:()=>removeSource(item),'aria-label':'Remove '+item.title},'×')))),
         selected?.provider===mode&&h('div',{className:'bsa229-player-card'},
           h('div',{className:'bsa229-player-heading'},h('strong',null,selected.title),h('button',{type:'button',onClick:()=>{setActive(null);setYtController(null);},'aria-label':'Close embedded music player'},'Close player ×')),
-          mode==='youtube'?h(BSA229YouTubePlayer,{key:selected.kind+selected.id,source:selected,shuffle,repeat,onReady:setYtController,onState:setYtState,onError:setFeedback})
+          mode==='youtube'?(selected.kind==='external'?h('p',{className:'bsa229-feedback',role:'status'},selected.reason||'This YouTube Music link cannot be embedded. Open it directly in YouTube Music.'):h(BSA229YouTubePlayer,{key:selected.kind+selected.id,source:selected,shuffle,repeat,onReady:setYtController,onState:setYtState,onError:setFeedback}))
             :h('iframe',{className:'bsa229-spotify-frame',key:selected.kind+selected.id,src:'https://open.spotify.com/embed/'+selected.kind+'/'+encodeURIComponent(selected.id),allow:'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture',loading:'eager',title:'Spotify official '+selected.kind+' player',referrerPolicy:'strict-origin-when-cross-origin'}),
           youtubeControls,
           h('div',{className:'bsa229-transport'},
             h('button',{type:'button',disabled:providerLinks.length<2,onClick:()=>nextSource(-1)},'← Previous source'),
             h('button',{type:'button',disabled:providerLinks.length<2,onClick:()=>nextSource(1)},'Next source →'),
-            h('a',{href:selected.url,target:'_blank',rel:'noopener noreferrer'},'Open on '+(mode==='youtube'?'YouTube':'Spotify')+' ↗')),
-          h('p',{className:'bsa228-help'},'Previous/next source switches saved playlist links, not individual Spotify tracks. The embedded player is visible and closes when you leave Study Routine. Some content requires a service login or cannot be embedded.')),
+            mode==='youtube'?h('a',{href:bsa229MusicUrl(selected),target:'_blank',rel:'noopener noreferrer'},'Open in YouTube Music ↗'):null,
+            mode==='spotify'?h('a',{className:'bsa232-open-spotify',href:selected.url,target:'_blank',rel:'noopener noreferrer','aria-label':'Open selected music in Spotify for sign-in and track shuffle'},'Open in Spotify · shuffle songs ↗'):h('a',{href:selected.url,target:'_blank',rel:'noopener noreferrer'},'Open original link ↗')),
+          h('p',{className:'bsa228-help'},mode==='spotify'?'Playlist shuffle and track queue are controlled inside Spotify, not by Shuffle saved links. For full songs, sign in to Spotify and use Open in Spotify. This is Spotify’s playback restriction, not a dashboard error.':'Previous/next source switches saved playlist links. YouTube playlist track shuffle is available through the player controls when supported. The visible player remains in the compact dock as you study.')),
+        mode==='spotify'&&h('p',{className:'bsa232-spotify-note'},'Spotify sign-in may be needed for full playback. To shuffle songs inside a Spotify playlist, open it in Spotify. The dashboard only shuffles your saved links — it does not control Spotify’s track order.'),
         h('p',{className:'bsa228-help'},'Links are saved on this device, separately from grades and academic data. Switching to a music player stops generated noise. Playback requires an internet connection.')),
       feedback&&h('p',{className:'bsa229-feedback',role:'status'},feedback));
   }
 
+  // V2.32 -- A single, route-independent media owner. Switching dashboard
+  // sections must not destroy the iframe/WebAudio source and restart music.
+  // The player is always the same React component at a stable App tree position.
+  function BSA232PersistentMusic({routineOpen,go}){
+    const [prefs,setPrefs]=useState(()=>{
+      const raw=bsa228ReadJson(BSA228_ROUTINE_PREF,{});
+      return {kind:['brown','pink','white'].includes(raw.kind)?raw.kind:'brown',
+        volume:Number.isFinite(raw.volume)?Math.max(0,Math.min(70,raw.volume)):35};
+    });
+    const savePrefs=patch=>setPrefs(prev=>{
+      const next={...prev,...patch};
+      const current=bsa228ReadJson(BSA228_ROUTINE_PREF,{});
+      bsa228WriteJson(BSA228_ROUTINE_PREF,{...current,...patch});
+      return next;
+    });
+    return h(BSA229FocusMusic,{prefs,savePrefs,compact:!routineOpen,onReturn:()=>go('routine')});
+  }
   function BSA228StudyRoutine({subject,go,toast}){
     const [prefs,setPrefs]=useState(()=>{
       const p=bsa228ReadJson(BSA228_ROUTINE_PREF,{});
@@ -19129,13 +19207,12 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
             h('button',{className:'btn',type:'button',onClick:()=>bsa228BreakAction('stop'),disabled:!breakActive&&!bsa228Break.done},'Reset')),
           restDisabled&&!breakActive&&h('p',{className:'bsa228-help'},'Pause or save your current focus session before starting a separate break countdown.'),
           h('p',{className:'bsa228-help'},'The break counts real clock time, even if you visit another dashboard page. It never adds study minutes or mastery points.')),
-        h(BSA229FocusMusic,{prefs,savePrefs}),
         h('section',{className:'bsa228-card bsa228-schedule-card'},
           h('div',{className:'bsa228-section-heading'},h('div',null,h('span',{className:'bsa228-eyebrow'},'MAKE IT REPEATABLE'),h('h2',null,'Pick a regular start time'))),
           h('label',{className:'bsa228-time-field'},'My usual time',h('input',{type:'time',value:prefs.plannedTime,onChange:e=>savePrefs({plannedTime:e.target.value}),'aria-label':'Preferred daily study start time'})),
           h('div',{className:'bsa228-presets','aria-label':'Focus block length'},[15,25,40].map(m=>h('button',{key:m,type:'button',className:prefs.focus===m?'selected':'',onClick:()=>savePrefs({focus:m}),'aria-pressed':prefs.focus===m},m+' min focus'))),
           h('p',{className:'bsa228-help'},'Your plan is saved only on this device. It is not a push notification or an alarm. Treat the time as a cue, not a punishment.'),
-          h('button',{type:'button',className:'btn',onClick:()=>go('calendar')},'Open study schedule ↗'))),
+          h('button',{type:'button',className:'btn',onClick:()=>go(window.__BSA_SHARED_MODE__?'study':'calendar')},window.__BSA_SHARED_MODE__?'Open my study plan ↗':'Open study schedule ↗'))),
       notice&&h('div',{className:'bsa228-notice',role:'status'},notice));
   }
   function BSA3Today({subject,go,settings,openEditor,update,toast}){
@@ -19174,7 +19251,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
           h('div',{className:'bsa205-hero-actions'},
             h('button',{className:'bsa205-primary-action',onClick:()=>go(next.route,next.opts||{})},next.label,'  ↗'),
             h('button',{className:'bsa205-hero-secondary',onClick:()=>go(next.route==='study'?'practice':'study')},next.route==='study'?'Study without a plan':'Plan a focus session · optional'),
-            !window.__BSA_SHARED_MODE__&&h('button',{className:'bsa205-hero-secondary bsa228-routine-entry',onClick:()=>go('routine')},'My study routine · breaks & sounds')),
+            h('button',{className:'bsa205-hero-secondary bsa228-routine-entry',onClick:()=>go('routine')},window.__BSA_SHARED_MODE__?'My study routine · music & breaks':'My study routine · breaks & sounds')),
           h('p',{className:'bsa214-home-planner-note'},'Focus sessions are optional. End & Save lets you switch topics without losing your study history.')),
         h('div',{className:'bsa205-hero-orb bsa31-hero-orb','aria-hidden':'true'},h('span',null,'Σ'),h('small',null,subject.code||'BSA'))),
       h('div',{className:'bsa31-overview bsa33-overview'},
@@ -20284,8 +20361,9 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       // cannot be reliably fixed with a CSS-only hide (old cached styles).
       !['home','study','practice','routine','library','insights','lectures','psets','mcq','vault','ask','rules','fs-lab','workspace','accounting-lab','accounting-cycle','subjects'].includes(nav.tab)
         && h(BSA43ThemeNavigation,{theme:data.settings.presentationTheme||"studio",tab:nav.tab,opts:nav.opts,go,subject}),
-      nav.tab === "subjects" && h(BSA12Subjects,{data,update,activeId:data.activeId,onOpen:id=>{setData(d=>({...d,activeId:id}));go('home')},onManage:()=>setModal('subjects'),toast,onRemoved:()=>{setNav(n=>({...n,tab:'subjects',key:n.key+1}))}}), nav.tab === "guide" && h(BSA3StartGuide,{go,subject}), nav.tab === "routine" && !window.__BSA_SHARED_MODE__ && h(BSA228StudyRoutine,{subject,go,toast}), nav.tab === "break" && h(BreakCorner), nav.tab === "joy" && h(JoyHub,{go}), nav.tab === "life" && h(StudyLife,{go}), nav.tab === "achievements" && h(AcademicProgress,{go}), nav.tab === "stats-clean" && h(StudyReport,{data,update,toast,go}), nav.tab === "private-vault" && !window.__BSA_SHARED_MODE__ && h(PrivateVault,{toast}), nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data,initialTool:nav.opts?.tool})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), nav.tab === "home" && h(BSA3Today, { ...viewProps }), nav.tab === "study" && h(BSA205Study,{...viewProps}), nav.tab === "library" && h(BSA205Library,{...viewProps}), nav.tab === "insights" && h(BSA205Mastery,{...viewProps}), nav.tab === "accounting-cycle" && h(BSA205Cycle,{...viewProps}), nav.tab === "fs-lab" && h(BSA43FinancialStatements,{...viewProps}), nav.tab === "accounting-lab" && h(BSA187AccountingLab,{subject,update,toast,go,init:nav.opts}), nav.tab === "week" && h(BSA344Schedule,{subject,update,go,openEditor,toast,init:nav.opts,initialMode:"week"}), nav.tab === "knowledge" && h(BSA192KnowledgeMap,{subject,go,init:nav.opts}), nav.tab === "safety" && h(BSA193DeviceSafety,{data,go,toast}), nav.tab === "practice" && h(React.Fragment,null,h(BSA3Practice,{ ...viewProps, data }),bsa46ToolVisible(subject,'fs-lab')&&h('div',{className:'bsa42-fs-shortcut'},h('div',null,h('strong',null,'Financial Statement Lab'),h('p',null,'Import report JSON, inspect audited disclosures, and practice any accounting standard.')),h('button',{className:'btn',onClick:()=>go('fs-lab')},'Open Financial Statements ↗'))), nav.tab === "mcq" && h(MCQPage,{...viewProps}), nav.tab === "rules" && h(RulesLibrary,{...viewProps}), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(BSA344Schedule,{subject,update,go,openEditor,toast,init:nav.opts,initialMode:"month"}), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "workspace" && h(BSA181Workspace, { ...viewProps, initialTab:nav.opts?.tab, undoAvailable:!!undo, onGlobalUndo:doUndo }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(BSA43ProblemSets, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps, key:subject.id }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })))),
+      nav.tab === "subjects" && h(BSA12Subjects,{data,update,activeId:data.activeId,onOpen:id=>{setData(d=>({...d,activeId:id}));go('home')},onManage:()=>setModal('subjects'),toast,onRemoved:()=>{setNav(n=>({...n,tab:'subjects',key:n.key+1}))}}), nav.tab === "guide" && h(BSA3StartGuide,{go,subject}), nav.tab === "routine" && h(BSA228StudyRoutine,{subject,go,toast}), nav.tab === "break" && h(BreakCorner), nav.tab === "joy" && h(JoyHub,{go}), nav.tab === "life" && h(StudyLife,{go}), nav.tab === "achievements" && h(AcademicProgress,{go}), nav.tab === "stats-clean" && h(StudyReport,{data,update,toast,go}), nav.tab === "private-vault" && !window.__BSA_SHARED_MODE__ && h(PrivateVault,{toast}), nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data,initialTool:nav.opts?.tool})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), nav.tab === "home" && h(BSA3Today, { ...viewProps }), nav.tab === "study" && h(BSA205Study,{...viewProps}), nav.tab === "library" && h(BSA205Library,{...viewProps}), nav.tab === "insights" && h(BSA205Mastery,{...viewProps}), nav.tab === "accounting-cycle" && h(BSA205Cycle,{...viewProps}), nav.tab === "fs-lab" && h(BSA43FinancialStatements,{...viewProps}), nav.tab === "accounting-lab" && h(BSA187AccountingLab,{subject,update,toast,go,init:nav.opts}), nav.tab === "week" && h(BSA344Schedule,{subject,update,go,openEditor,toast,init:nav.opts,initialMode:"week"}), nav.tab === "knowledge" && h(BSA192KnowledgeMap,{subject,go,init:nav.opts}), nav.tab === "safety" && h(BSA193DeviceSafety,{data,go,toast}), nav.tab === "practice" && h(React.Fragment,null,h(BSA3Practice,{ ...viewProps, data }),bsa46ToolVisible(subject,'fs-lab')&&h('div',{className:'bsa42-fs-shortcut'},h('div',null,h('strong',null,'Financial Statement Lab'),h('p',null,'Import report JSON, inspect audited disclosures, and practice any accounting standard.')),h('button',{className:'btn',onClick:()=>go('fs-lab')},'Open Financial Statements ↗'))), nav.tab === "mcq" && h(MCQPage,{...viewProps}), nav.tab === "rules" && h(RulesLibrary,{...viewProps}), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(BSA344Schedule,{subject,update,go,openEditor,toast,init:nav.opts,initialMode:"month"}), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "workspace" && h(BSA181Workspace, { ...viewProps, initialTab:nav.opts?.tab, undoAvailable:!!undo, onGlobalUndo:doUndo }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(BSA43ProblemSets, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps, key:subject.id }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })))),
       h(BSA181HighlightTool,{subject,tab:nav.tab,go,toast}),
+      h(BSA232PersistentMusic,{routineOpen:nav.tab==='routine',go}),
       spotlightOpen && h(BSA181Spotlight,{data,go,tools:tabs,onSwitch:(id,tab,opts)=>{setData(d=>({...d,activeId:id}));go(tab,opts)},onClose:()=>setSpotlightOpen(false)}),
       /* @__PURE__ */ h("nav",{className:"bottom-nav v2-bottom-nav","aria-label":"Mobile navigation",onTouchStart:touchNavStart,onTouchEnd:touchNavEnd},
         [["home","Today","home"],["study","Learn","lecture"],["practice","Practice","bolt"],["library","Library","book"]].map(([k,l,ic])=>h("button",{type:"button",key:k,className:nav.tab===k?"on":"","aria-current":nav.tab===k?"page":undefined,onClick:()=>go(k)},h(Icon,{name:ic}),h("span",null,l))),
@@ -20416,7 +20494,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       React.createElement('button',{className:'btn',onClick:()=>bsaDownloadSafeDiagnostics(this.state.error)},'Download safe error report'),
       React.createElement('details',null,React.createElement('summary',null,'Technical details'),React.createElement('pre',null,String(this.state.error&&this.state.error.message||'Unknown render error'))));}
   }
-  if(window.__BSA_TEST__)window.__BSA18_TEST_HOOKS__={bsa229Source,BSA229FocusMusic,BSA229YouTubePlayer,bsa197QuizKey,bsa197History,bsa197Recall,bsa197Pool,bsa197Pick,bsa228BreakRemaining,bsa228RoutineKey,BSA228StudyRoutine,bsa228BreakAction,bsa228NoiseStart,bsa228NoiseStop,schedule,buildReview,smartTopicStats,bsaAdaptiveSignals,bsaReadinessReport,bsa34LearningSnapshot,bsaUpsertMistake,learningEvidence,learningCapture,AcademicCommandCenter,bsa197LoadDraft,bsa197SaveDraft,bsa197DeleteDraft,bsa18SaveWritten,bsa18LoadWritten,bsa18DeleteWritten,bsa18LatestPractice,bsa18ReadTutorChat,bsa25PracticeHealth,bsa26TutorName,bsa26TopicMatch,bsa26SafeAction,bsa26TutorCapabilityContext,bsa26LocalStudyPlan,BSA26_COPILOT_FEATURES,bsa26SafeReturn,bsa26ReturnFor,bsa26FsDraft,bsa4TutorDraft,bsa27SelectionFocus,bsa27DefaultTutorQuestion,gemSourceSystem,bsa212ModePlan,bsa213QuickPlan,bsa213ReadScope,bsa213Words,bsa213McqScope,bsa213WrittenMinutes,bsa214Archive,bsa214RecentClosed,bsa214HistoryLabel,bsa214AdaptProposal,bsa214TopicStanding,bsa214FoundationSources,mcqDedicatedPool,studyTopics,bsa34TopicMatch,bsa213McqEstimate,bsa214Pack,bsa214Unpack,bsa214MainGet,bsa214MainSet,bsa49TopicParts,bsa49ResolveTopic,bsa49UnmatchedLabels,BSA49TopicLinks,bsa215TopicChapter,bsa215UniqueChapterMatch,bsa215LinkSafety,bsa44Plan,bsa44ParseOne,normTopic,bsa49CanonicalizePack,bsa214BackupGet,bsaBackupPreview,loadLocal,bsa212Allocate,bsa212PhaseElapsed,bsa212PhaseGoal,bsa212Action,bsa28SourceHistory,bsa28NewTopicRequest,bsa210TutorCore,bsa28ReadReflections,bsa28WriteReflections,bsa29Meaningful,bsa213ClozeQuality,bsa29Candidates,bsa29Pool,bsa29Exact,bsa29ReadDraft,bsa29SaveDraft,bsa210DuplicateSignal,bsa210MaterialPair,bsa210AnswerMeaning,bsa44Prepare,BSA29ClozePractice,psMathSegments,psMathHtml,psS,psInlineHtml,MultipleChoiceQuiz,MCQPage,PsWrittenDrill,MockExam,AskView,App};
+  if(window.__BSA_TEST__)window.__BSA18_TEST_HOOKS__={bsa229Source,bsa229YouTubeEmbedUrl,bsa229MusicUrl,BSA232PersistentMusic,BSA229FocusMusic,BSA229YouTubePlayer,bsa197QuizKey,bsa197History,bsa197Recall,bsa197Pool,bsa197Pick,bsa228BreakRemaining,bsa228RoutineKey,BSA228StudyRoutine,bsa228BreakAction,bsa228NoiseStart,bsa228NoiseStop,schedule,buildReview,smartTopicStats,bsaAdaptiveSignals,bsaReadinessReport,bsa34LearningSnapshot,bsaUpsertMistake,learningEvidence,learningCapture,AcademicCommandCenter,bsa197LoadDraft,bsa197SaveDraft,bsa197DeleteDraft,bsa18SaveWritten,bsa18LoadWritten,bsa18DeleteWritten,bsa18LatestPractice,bsa18ReadTutorChat,bsa25PracticeHealth,bsa26TutorName,bsa26TopicMatch,bsa26SafeAction,bsa26TutorCapabilityContext,bsa26LocalStudyPlan,BSA26_COPILOT_FEATURES,bsa26SafeReturn,bsa26ReturnFor,bsa26FsDraft,bsa4TutorDraft,bsa27SelectionFocus,bsa27DefaultTutorQuestion,gemSourceSystem,bsa212ModePlan,bsa213QuickPlan,bsa213ReadScope,bsa213Words,bsa213McqScope,bsa213WrittenMinutes,bsa214Archive,bsa214RecentClosed,bsa214HistoryLabel,bsa214AdaptProposal,bsa214TopicStanding,bsa214FoundationSources,mcqDedicatedPool,studyTopics,bsa34TopicMatch,bsa213McqEstimate,bsa214Pack,bsa214Unpack,bsa214MainGet,bsa214MainSet,bsa49TopicParts,bsa49ResolveTopic,bsa49UnmatchedLabels,BSA49TopicLinks,bsa215TopicChapter,bsa215UniqueChapterMatch,bsa215LinkSafety,bsa44Plan,bsa44ParseOne,normTopic,bsa49CanonicalizePack,bsa214BackupGet,bsaBackupPreview,loadLocal,bsa212Allocate,bsa212PhaseElapsed,bsa212PhaseGoal,bsa212Action,bsa28SourceHistory,bsa28NewTopicRequest,bsa210TutorCore,bsa28ReadReflections,bsa28WriteReflections,bsa29Meaningful,bsa213ClozeQuality,bsa29Candidates,bsa29Pool,bsa29Exact,bsa29ReadDraft,bsa29SaveDraft,bsa210DuplicateSignal,bsa210MaterialPair,bsa210AnswerMeaning,bsa44Prepare,BSA29ClozePractice,psMathSegments,psMathHtml,psS,psInlineHtml,MultipleChoiceQuiz,MCQPage,PsWrittenDrill,MockExam,AskView,App};
   // v167: Owner app mounts only after this browser has been approved.
   // Shared student dashboards mount normally; the owner authorization script is never exported.
   let bsaOwnerMounted=false;
