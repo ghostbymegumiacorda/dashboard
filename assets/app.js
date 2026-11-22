@@ -30,7 +30,7 @@ THE SOFTWARE.
   if (window.__BSA_DESK_APP_LOADED__) return;
   window.__BSA_DESK_APP_LOADED__ = true;
   // User-facing release label only. Do not use for storage schemas or caches.
-  const BSA_RELEASE_LABEL = "V2.35";
+  const BSA_RELEASE_LABEL = "V2.36";
   const S = (t, p = null, s = false) => ({ t, p, s });
   const CFAS_TOPICS = [
     {
@@ -11397,6 +11397,168 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
     return h('div',{className:'bsa41-annotated',onClick:activate,onKeyDown:e=>{if(e.key==='Enter'||e.key===' '){if(e.target.matches('.bsa41-mark')){e.preventDefault();activate(e)}}},
       dangerouslySetInnerHTML:{__html:result.html}});
   }
+  /* V2.36 — accessible, source-faithful lecture reader and device narration.
+     All bookmarks are device-local and never count as demonstrated mastery. */
+  const BSA236_READER_PREF='bsa236_reader_preferences_v1';
+  function bsa236ReadStored(key,fallback){try{const x=JSON.parse(localStorage.getItem(key)||'null');return x===null?fallback:x}catch(_){return fallback}}
+  function bsa236PutStored(key,value){try{localStorage.setItem(key,JSON.stringify(value));return true}catch(_){return false}}
+  function bsa236LectureKey(subjectId,lectureId){return 'bsa236_lecture_position_v1:'+String(subjectId)+':'+String(lectureId)}
+  function bsa236PlainText(markdown){
+    if(typeof document==='undefined')return String(markdown||'').replace(/\*\*|[#_`]/g,'').trim();
+    const holder=document.createElement('div');holder.innerHTML=psMdHtml(String(markdown||''));
+    // Tables are spoken by row rather than one unintelligible uninterrupted line.
+    for(const table of holder.querySelectorAll('table')){
+      const lines=[...table.querySelectorAll('tr')].map(tr=>[...tr.querySelectorAll('th,td')].map(cell=>(cell.textContent||'').replace(/\s+/g,' ').trim()).join('; ')).filter(Boolean);
+      table.replaceWith(document.createTextNode(lines.join('. ')+' . '));
+    }
+    for(const el of holder.querySelectorAll('script,style,iframe'))el.remove();
+    for(const el of holder.querySelectorAll('p,li,h1,h2,h3,h4,blockquote'))el.appendChild(document.createTextNode('. '));
+    return (holder.textContent||'').replace(/https?:\/\/\S+/g,' reference link ').replace(/\s+/g,' ').replace(/\.{2,}/g,'.').trim();
+  }
+  function bsa236SpeechChunks(text){
+    // Short chunks are more resilient than a single enormous SpeechSynthesisUtterance on iOS.
+    const words=String(text||'').split(/\s+/).filter(Boolean),chunks=[];let line='';
+    for(const word of words){if(line&&(line.length+word.length>260)){chunks.push(line.trim());line='';}line+=(line?' ':'')+word;}
+    if(line)chunks.push(line.trim());return chunks;
+  }
+  const bsa236Speech=(()=>{
+    const available=()=>typeof window!=='undefined'&&!!(window.speechSynthesis&&window.SpeechSynthesisUtterance);
+    const blank={phase:'idle',subjectId:'',lectureId:'',lectureTitle:'',section:0,chunk:0,rate:1,voice:'',follow:true};
+    let state={...blank},plan=[],token=0,current=null;
+    const announce=()=>{try{window.dispatchEvent(new Event('bsa236:audio-update'))}catch(_){}};
+    const remember=()=>{if(state.lectureId)bsa236PutStored(bsa236LectureKey(state.subjectId,state.lectureId),{section:state.section,chunk:state.chunk,at:Date.now()})};
+    const cancel=()=>{token++;try{window.speechSynthesis?.cancel()}catch(_){}current=null};
+    const stop=()=>{remember();cancel();state={...blank};plan=[];announce()};
+    const voices=()=>{try{return window.speechSynthesis?.getVoices?.()||[]}catch(_){return []}};
+    const goTo=(section,chunk=0)=>{if(!plan.length)return;cancel();state={...state,section:Math.max(0,Math.min(plan.length-1,section)),chunk:Math.max(0,chunk),phase:'speaking'};remember();announce();speak()};
+    function speak(){
+      if(!available()||state.phase!=='speaking'||!plan.length)return;
+      let s=state.section,c=state.chunk;
+      while(s<plan.length&&c>=plan[s].chunks.length){s++;c=0;}
+      if(s>=plan.length){remember();state={...state,phase:'finished'};announce();return;}
+      if(s!==state.section||c!==state.chunk){state={...state,section:s,chunk:c};remember();announce()}
+      const phrase=plan[s].chunks[c],seq=++token;
+      try{
+        const utterance=new window.SpeechSynthesisUtterance(phrase);
+        utterance.rate=Math.min(2,Math.max(.75,Number(state.rate)||1));
+        const voice=voices().find(v=>(v.voiceURI||v.name)===state.voice);if(voice){utterance.voice=voice;utterance.lang=voice.lang}
+        utterance.onend=()=>{if(seq!==token||state.phase!=='speaking')return;state.chunk++;remember();announce();speak()};
+        utterance.onerror=e=>{if(seq!==token||['canceled','interrupted'].includes(e?.error))return;state.phase='paused';remember();announce()};
+        current=utterance;window.speechSynthesis.speak(utterance);
+      }catch(_){state.phase='paused';announce()}
+    }
+    const begin=(subjectId,lecture,sections,section=0,rate=1,voice='')=>{
+      if(!available())return false;
+      cancel();plan=(sections||[]).map((x,i)=>({id:x.id||String(i),chunks:bsa236SpeechChunks((x.h||'Section '+(i+1))+'. '+bsa236PlainText(x.body||''))}));
+      if(!plan.length)return false;
+      state={...blank,phase:'speaking',subjectId,lectureId:lecture.id,lectureTitle:lecture.title,section:Math.max(0,Math.min(plan.length-1,section)),chunk:0,rate,voice};
+      // Only one study audio source at once: stop ambient noise and embedded music.
+      try{bsa228NoiseStop();window.dispatchEvent(new Event('bsa229:stop-media'))}catch(_){}
+      remember();announce();speak();return true;
+    };
+    const pause=()=>{if(state.phase!=='speaking')return;state.phase='paused';try{window.speechSynthesis.pause()}catch(_){}remember();announce()};
+    const resume=()=>{if(state.phase!=='paused')return;if(!available())return;state.phase='speaking';try{
+      if(window.speechSynthesis.paused){window.speechSynthesis.resume();announce();return;}
+    }catch(_){}cancel();announce();speak()};
+    const rate=value=>{state.rate=Math.min(2,Math.max(.75,Number(value)||1));if(state.phase==='speaking')goTo(state.section,state.chunk);else announce()};
+    const voice=value=>{state.voice=value;if(state.phase==='speaking')goTo(state.section,state.chunk);else announce()};
+    return {available,get:()=>({...state,total:plan.length}),voices,begin,pause,resume,stop,next:()=>goTo(state.section+1),prev:()=>goTo(state.section-1),jump:goTo,rate,voice};
+  })();
+  function bsa236UseSpeech(){
+    const [state,setState]=useState(()=>bsa236Speech.get());
+    useEffect(()=>{const changed=()=>setState(bsa236Speech.get());window.addEventListener('bsa236:audio-update',changed);return()=>window.removeEventListener('bsa236:audio-update',changed)},[]);
+    return state;
+  }
+  function BSA236AudioDock({go,subject,setActiveSubject}){
+    const speech=bsa236UseSpeech();
+    if(!speech.lectureId||!['speaking','paused'].includes(speech.phase))return null;
+    return h('aside',{className:'bsa236-audio-dock',role:'region','aria-label':'Lecture narration controls'},
+      h('span',{className:'bsa236-audio-icon','aria-hidden':'true'},'♫'),
+      h('div',{className:'bsa236-audio-meta'},h('strong',null,speech.lectureTitle),h('small',null,'Section '+(speech.section+1)+' · '+(speech.phase==='speaking'?'Listening':'Paused'))),
+      h('button',{type:'button',onClick:()=>speech.phase==='speaking'?bsa236Speech.pause():bsa236Speech.resume()},speech.phase==='speaking'?'Pause':'Play'),
+      h('button',{type:'button',onClick:()=>{if(subject.id!==speech.subjectId)setActiveSubject(speech.subjectId);go('lectures',{open:speech.lectureId})}},'Return to lecture'),
+      h('button',{type:'button',onClick:()=>bsa236Speech.stop(),'aria-label':'Stop lecture audio'},'×'));
+  }
+  function BSA236LectureMode({subject,lecture,sourceView,mode,onClose,toast}){
+    const key=bsa236LectureKey(subject.id,lecture.id);
+    const [prefs,setPrefs]=useState(()=>({size:18,width:760,spacing:1.75,follow:true,rate:1,voice:'',...bsa236ReadStored(BSA236_READER_PREF,{})}));
+    const [position,setPosition]=useState(()=>Math.min(Math.max(0,Number(bsa236ReadStored(key,{}).section)||0),Math.max(0,sourceView.sections.length-1)));
+    const [tocOpen,setTocOpen]=useState(false);
+    const [voices,setVoices]=useState(()=>bsa236Speech.voices());
+    const speech=bsa236UseSpeech();
+    const scroller=useRef(null),lastReadSection=useRef(position),scrollFrame=useRef(0);
+    const useSpeechForThis=speech.lectureId===lecture.id&&speech.subjectId===subject.id;
+    useEffect(()=>{const old=document.body.style.overflow;document.body.style.overflow='hidden';return()=>{document.body.style.overflow=old}},[]);
+    useEffect(()=>{if(!window.speechSynthesis)return;const sync=()=>setVoices(bsa236Speech.voices());window.speechSynthesis.addEventListener?.('voiceschanged',sync);sync();return()=>window.speechSynthesis.removeEventListener?.('voiceschanged',sync)},[]);
+    useEffect(()=>{if(mode!=='listen'||!useSpeechForThis||!prefs.follow||speech.phase!=='speaking')return;
+      setPosition(speech.section);const target=scroller.current?.querySelector('[data-audio-section="'+speech.section+'"]');if(target)target.scrollIntoView({block:'start',behavior:'smooth'});
+    },[speech.section,speech.phase,mode,prefs.follow,useSpeechForThis]);
+    const updatePrefs=patch=>setPrefs(p=>{const next={...p,...patch};bsa236PutStored(BSA236_READER_PREF,next);return next});
+    const jump=i=>{const next=Math.min(Math.max(0,i),sourceView.sections.length-1);setPosition(next);bsa236PutStored(key,{section:next,chunk:0,at:Date.now()});const target=scroller.current?.querySelector('[data-audio-section="'+next+'"]');target?.scrollIntoView({block:'start',behavior:'smooth'});setTocOpen(false)};
+    const startListen=(from)=>{if(!bsa236Speech.available())return;const ok=bsa236Speech.begin(subject.id,lecture,sourceView.sections,from,prefs.rate,prefs.voice);if(!ok)return;setPosition(from)};
+    const sectionNav=(offset)=>{const next=Math.min(Math.max(0,(useSpeechForThis?speech.section:position)+offset),sourceView.sections.length-1);if(mode==='listen'&&useSpeechForThis&&speech.phase!=='idle')bsa236Speech.jump(next);jump(next)};
+    const active=useSpeechForThis?speech.section:position;
+    const openSection=i=>{jump(i);if(mode==='listen'&&useSpeechForThis&&['speaking','paused'].includes(speech.phase))bsa236Speech.jump(i)};
+    const onReadScroll=()=>{
+      if(mode==='listen'&&useSpeechForThis&&speech.phase==='speaking')return;
+      if(scrollFrame.current)return;
+      scrollFrame.current=requestAnimationFrame(()=>{scrollFrame.current=0;
+        const pane=scroller.current;if(!pane)return;
+        const sections=[...pane.querySelectorAll('[data-audio-section]')];let nearest=0;
+        const top=pane.getBoundingClientRect().top+85;
+        sections.forEach((el,i)=>{if(el.getBoundingClientRect().top<=top)nearest=i;});
+        if(nearest!==lastReadSection.current){lastReadSection.current=nearest;setPosition(nearest);bsa236PutStored(key,{section:nearest,chunk:0,at:Date.now()});}
+      });
+    };
+    useEffect(()=>()=>{if(scrollFrame.current)cancelAnimationFrame(scrollFrame.current)},[]);
+    const safeClose=()=>{bsa236PutStored(key,{section:active,chunk:useSpeechForThis?speech.chunk:0,at:Date.now()});onClose()};
+    return ReactDOM.createPortal(h('section',{className:'bsa236-reader',role:'dialog','aria-modal':'true','aria-label':mode==='listen'?'Listen to lecture':'Lecture reading mode',style:{'--bsa236-font':prefs.size+'px','--bsa236-line':prefs.spacing,'--bsa236-measure':prefs.width+'px'}},
+      h('header',{className:'bsa236-reader-top'},
+        h('div',{className:'bsa236-reader-heading'},h('small',null,mode==='listen'?'LISTEN MODE':'READING MODE',' · ',subject.code||subject.name),h('strong',null,lecture.title)),
+        h('div',{className:'bsa236-reader-actions'},
+          h('button',{type:'button',onClick:()=>setTocOpen(v=>!v),'aria-expanded':tocOpen},'Sections'),
+          h('button',{type:'button',onClick:()=>updatePrefs({size:Math.max(14,prefs.size-1)}),'aria-label':'Decrease text size'},'A−'),
+          h('button',{type:'button',onClick:()=>updatePrefs({size:Math.min(26,prefs.size+1)}),'aria-label':'Increase text size'},'A+'),
+          h('button',{type:'button',onClick:safeClose,className:'bsa236-close'},'Close ×'))),
+      h('div',{className:'bsa236-reader-layout'},
+        tocOpen&&h('nav',{className:'bsa236-reader-toc','aria-label':'Lecture table of contents'},
+          h('strong',null,'In this lecture'),sourceView.sections.map((s,i)=>h('button',{key:i,className:i===active?'on':'',onClick:()=>openSection(i)},String(i+1).padStart(2,'0'),' · ',bsa13LectureHeading(s.h||'Section',i)))),
+        h('div',{className:'bsa236-reader-scroll',ref:scroller,onScroll:onReadScroll,tabIndex:0,'aria-label':'Lecture text'},
+          h('div',{className:'bsa236-reader-page'},
+            h('div',{className:'bsa236-lead'},h('span',null,mode==='listen'?'FOLLOW ALONG':'FOCUS ON THE LESSON'),h('h1',null,lecture.title),
+              h('p',null,sourceView.sections.length+' sections. This mode does not mark material as mastered.')),
+            mode==='listen'&&h('section',{className:'bsa236-listener',role:'region','aria-label':'Audio lecture player'},
+              !bsa236Speech.available()?h('p',{role:'status'},'Read aloud is not supported by this browser. You can still use Reading mode.'):
+              h(React.Fragment,null,
+                h('div',{className:'bsa236-listener-controls'},
+                  h('button',{type:'button',onClick:()=>sectionNav(-1),disabled:active===0,'aria-label':'Previous section'},'⏮ Previous'),
+                  h('button',{type:'button',className:'bsa236-primary',onClick:()=>{if(!useSpeechForThis||!['speaking','paused'].includes(speech.phase))startListen(position);else if(speech.phase==='speaking')bsa236Speech.pause();else bsa236Speech.resume()}},useSpeechForThis&&speech.phase==='speaking'?'⏸ Pause':useSpeechForThis&&speech.phase==='paused'?'▶ Resume':'▶ Play section'),
+                  h('button',{type:'button',onClick:()=>sectionNav(1),disabled:active>=sourceView.sections.length-1,'aria-label':'Next section'},'Next ⏭'),
+                  h('button',{type:'button',onClick:()=>bsa236Speech.stop()},'Stop')),
+                h('div',{className:'bsa236-listener-secondary'},
+                  h('button',{type:'button',onClick:()=>startListen(0)},'Listen from beginning'),
+                  h('button',{type:'button',onClick:()=>{const saved=bsa236ReadStored(key,{});startListen(Math.max(0,Number(saved.section)||0))}},'Continue saved place')),
+                h('div',{className:'bsa236-listener-settings'},
+                  h('label',null,'Speed',h('select',{value:prefs.rate,onChange:e=>{const rate=Number(e.target.value);updatePrefs({rate});if(useSpeechForThis)bsa236Speech.rate(rate)}},[.75,1,1.25,1.5,2].map(x=>h('option',{value:x,key:x},x+'×')))),
+                  h('label',null,'Voice',h('select',{value:prefs.voice,onChange:e=>{updatePrefs({voice:e.target.value});if(useSpeechForThis)bsa236Speech.voice(e.target.value)}},h('option',{value:''},'Device default'),voices.map(v=>h('option',{key:v.voiceURI||v.name,value:v.voiceURI||v.name},v.name+' · '+v.lang)))),
+                  h('label',{className:'bsa236-inline-label'},h('input',{type:'checkbox',checked:!!prefs.follow,onChange:e=>updatePrefs({follow:e.target.checked})}),'Follow spoken section')),
+                h('p',{className:'bsa236-audio-status',role:'status'},useSpeechForThis?('Section '+(speech.section+1)+' of '+speech.total+' · '+(speech.phase==='speaking'?'Speaking':speech.phase==='paused'?'Paused':'Finished')):'Press Play to begin narration. Voice availability depends on your device.'))),
+            h('div',{className:'bsa236-reader-appearance'},
+              h('label',null,'Reading width',h('select',{value:prefs.width,onChange:e=>updatePrefs({width:Number(e.target.value)})},[620,760,900].map(n=>h('option',{value:n,key:n},n===620?'Narrow':n===760?'Comfortable':'Wide')))),
+              h('label',null,'Line spacing',h('select',{value:prefs.spacing,onChange:e=>updatePrefs({spacing:Number(e.target.value)})},[1.5,1.75,2].map(n=>h('option',{value:n,key:n},n+'×'))))),
+            sourceView.sections.map((s,i)=>h('article',{key:s.id||i,'data-audio-section':i,className:'bsa236-reader-section'+(i===active?' active':''),id:'bsa236-section-'+i,onClick:()=>{if(mode==='read'&&i!==position){setPosition(i);bsa236PutStored(key,{section:i,chunk:0,at:Date.now()})}}},
+              h('small',null,'SECTION '+String(i+1).padStart(2,'0')+' / '+String(sourceView.sections.length).padStart(2,'0')),
+              h('h2',null,bsa13LectureHeading(s.h||'Section',i)),
+              h('div',{className:'bsa236-prose'},h(PsMd,{text:s.body||''})),
+              h('button',{type:'button',className:'bsa236-explain-button',onClick:async()=>{
+                const label='Explain this lecture section to a complete beginner, define all assumed terms, walk through the cause and effect step by step, and label any supplemental context separately from the source. Do not invent textbook citations.\n\nLecture: '+lecture.title+'\nSection: '+String(s.h||'Section '+(i+1))+'\n\n'+String(s.body||'').slice(0,12000);
+                const ok=await copyText(label);toast?.(ok?'Beginner explanation prompt copied. Paste into Tutor with your course source.':'Copy unavailable. Select and copy the text manually.');
+              }},'✧ Copy beginner explanation prompt'))),
+            (lecture.terms||[]).length>0&&h('section',{className:'bsa236-reader-section'},h('h2',null,'Key terms'),h('dl',null,(lecture.terms||[]).map((term,i)=>h('div',{key:i},h('dt',null,term.t),h('dd',null,term.d))))),
+            sourceView.references.length>0&&h('section',{className:'bsa236-reader-section'},h('h2',null,'Sources & references'),h('ul',null,sourceView.references.map((ref,i)=>h('li',{key:i},ref)))),
+            h('p',{className:'bsa236-reader-end'},'You reached the end of this lecture. Reading or listening is not automatically recorded as demonstrated mastery.'))))),document.body);
+  }
+
   function LxReader({ subject, l, update, toast, go, onBack, onEdit, onDelete, jumpTo }) {
     const sourceView = useMemo(() => lxSourcePresentation(l), [l]);
     useEffect(()=>{bsa181Recent("lectures",{open:l.id},subject.id,"Lecture · "+l.title)},[l.id,subject.id]);
@@ -11417,6 +11579,7 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
     const [tocExpanded,setTocExpanded]=useState(false);
     const [tocQuery,setTocQuery]=useState('');
     const [readerMode,setReaderMode]=useState('read');
+    const [bsa236Mode,setBsa236Mode]=useState('');
     const [recallText,setRecallText]=useState({});
     const [pdfStyle,setPdfStyle]=useState('complete');
     const [highlightRevision,setHighlightRevision]=useState(0);
@@ -11485,6 +11648,14 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
       "section",
       { className: "view lx-reader bsa-lecture-polished", "data-lecture-id":l.id },
       h("button", { className: "link-btn back-link", onClick: onBack }, "‹ All lectures"),
+      h('div',{className:'bsa236-entry','aria-label':'Lecture reading and audio modes'},
+        h('button',{className:'btn bsa236-primary-entry',type:'button',onClick:()=>setBsa236Mode('read')},'📖 Reading mode'),
+        h('button',{className:'btn',type:'button',onClick:()=>setBsa236Mode('listen')},'🎧 Listen to lecture'),
+        !window.__BSA_SHARED_MODE__&&h('button',{className:'btn',type:'button',onClick:async()=>{
+          const prompt=BSA236_EXPAND_PROMPT+'\n\nSubject: '+subject.name+'\nLecture: '+l.title+'\nSource label (not independently checked): '+String(l.source||'Not provided')+'\n\n'+lxText(l);
+          toast(await copyText(prompt)?'Expansion prompt copied. Attach the original textbook pages to your AI, then review the proposed explanation before importing a new copy.':'Could not copy prompt.');
+        }},'✧ Expand missing foundations')),
+      bsa236Mode&&h(BSA236LectureMode,{subject,lecture:l,sourceView,mode:bsa236Mode,onClose:()=>setBsa236Mode(''),toast}),
       h('div',{className:'bsa-pdf-controls'},
         h('label',{className:'field-label',htmlFor:'lecture-pdf-style'},'Print format'),
         h('select',{id:'lecture-pdf-style',value:pdfStyle,onChange:e=>setPdfStyle(e.target.value)},
@@ -11919,13 +12090,18 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
       ] }
   ]
 }`;
+  /* V2.36 — universal first-time-reader quality standard for content GENERATION,
+     kept separate from objective source extraction, grading and raw rule fields. */
+  const BSA236_FIRST_TIME_CONTRACT=`FIRST-TIME LEARNER / FULL LESSON REQUIREMENTS (not a summary): Assume the student has never studied the chapter. Before introducing an essential unfamiliar technical term, explain it in plain language, name the formal term, and identify why it matters. Teach the starting situation, each part, the mechanism or causal chain step by step, and WHY the rule or formula works. Define prerequisite ideas before applying them. For each substantial source-backed topic, include a realistic explained example, a contrast or exception when supported, the common misconception, and a brief self-check. Do not jump from abstract definitions to conclusions without connecting steps. Preserve every relevant heading, rule, condition, figure, exception and example actually available in the attached source. Start from the source outline; mark any section not covered, not supplied, or needing verification. A short answer is NOT evidence of complete chapter coverage. Do not assert full coverage without comparing the actual source headings and subheadings. If output is long, finish whole sections and create valid sequential JSON batches; NEVER cut JSON mid-string. Clearly distinguish SOURCE-VERIFIED facts from LABELLED illustrative examples and supplemental background, and NEVER invent source passages, citations, accounting standards, percentages, figures or dates. If source material is missing, say what is missing; do not fabricate it. Explain in simple natural English before technical jargon. Use methods appropriate to the subject; do not insert unrelated accounting journal entries into Finance, History, Theology or Mathematics. Check all numerical examples and cite only provided verifiable locations. For lectures: substantial paragraphs rather than compressed bullet-only summaries, with a prerequisite primer before the first dependent example. For solutions: explain why the method applies, then every meaningful step and units. For MCQs: self-contained question and an explanation of the key plus important distractors, WITHOUT revealing the answer before the learner attempts it. For recall cards: self-contained concise retrieval targets, not mini-lectures. For source-extraction formats: preserve original data; put primers in separate teaching notes, not authoritative fields. Before output, audit omitted source headings, unexplained terms, missing causal links, incomplete exceptions, mismatched figures, and unverifiable claims.`;
+  const BSA236_TUTOR_CONTRACT=`FIRST-TIME LEARNER: Do not assume the student knows prerequisite terms. Before solving, explain essential unfamiliar terms and why they matter. For a new topic, start with the situation and work forward through the causal steps, then show an example and a short check. Preserve original source meaning; label illustrative background separately. For a simple direct request, answer concisely, but do not jump over essential context. If a missing source prevents verification, say so. Never treat lecture length as evidence of mastery.`;
+  const BSA236_EXPAND_PROMPT=`Improve this saved lecture for someone encountering it for the first time. Respect the original uploaded source: do not rewrite or silently overwrite its content, invent references, or change numbers. First list essential undefined terms and missing prerequisite context. Then provide a separate ADDITIONS / ENRICHMENT draft for each affected section: plain-language foundation, step-by-step cause and effect, source-supported worked example, misconceptions, and a retrieval check. Tag every addition as 'Source verified', 'General background (not verified in source)', or 'Illustrative example'. List missing pages/sections and ask for the textbook where needed. Provide a coverage gap table and suggest an importable new lecture COPY for manual review; preserve the original lecture and its IDs. `+BSA236_FIRST_TIME_CONTRACT;
   const PS_FORMAT = `Formatting inside every text value: write line breaks as \\n, use "- " for bullets, "1. " for steps, **double asterisks** for bold, and markdown tables (| a | b |) for given data and schedules. Do not use LaTeX. "difficulty" is "easy", "average" or "difficult". Leave "choices" as [] unless the item is multiple choice; then give 4 choices like "a. …".`;
   const PS_FORMAT_L = `Formatting inside every text value: write line breaks as \\n, use "- " for bullets, "1. " for steps, **double asterisks** for bold, and markdown tables (| a | b |) for comparisons and illustrations. Do not use LaTeX.`;
   const PS_FORMAT_MC = `Formatting inside every text value: write line breaks as \\n, use **double asterisks** for bold and markdown tables (| a | b |) for given data. Do not use LaTeX. "difficulty" is "easy", "average" or "difficult".`;
   const PS_LONG_L = `If everything does not fit in one reply, stop after a complete section, close every bracket so the JSON is valid, and end there. When I reply "continue", send the remaining sections, key terms and check questions in the same JSON shape with the same "title".`;
   const PS_LONG = `If everything does not fit in one reply, stop after a complete problem, close every bracket so the JSON is valid, and end there. When I reply "continue", send the next problems in the same JSON shape with the same "title", continuing the numbering.`;
   const PS_NEW_PROMPTS = [
-    { id: "lecture", group: "lp", json: true, title: "Lecture notes (rules & treatment)", desc: "A full lecture: general rules, how to treat or apply them, exceptions, traps, key terms and check questions. Shows in the Lectures tab.", make: (c) => `Using only my uploaded sources, write lecture notes on ${c.focus} for ${c.subject}, like the handout a good professor gives before an exam. Teach the general rule first, then exactly how to treat or apply it, then the exceptions and the traps.
+    { id: "lecture", group: "lp", json: true, title: "Lecture notes (rules & treatment)", desc: "A full lecture: general rules, how to treat or apply them, exceptions, traps, key terms and check questions. Shows in the Lectures tab.", make: (c) => `Using only my uploaded sources, write a complete beginner-friendly FULL LESSON on ${c.focus} for ${c.subject}, as if this is the first time I have read the chapter. Define prerequisite terms before the general rule; teach why the treatment or concept works, then illustrate, apply, explain supported exceptions and traps. Do not merely summarize.
 ${NLM_JSON}
 
 {
@@ -11935,7 +12111,7 @@ ${NLM_JSON}
       "source": "Book or file, chapter and pages",
       "summary": "3 to 5 sentences: what the topic is about and what is most tested",
       "sections": [
-        { "heading": "Section heading", "body": "Short paragraphs.\\n- Bullets for lists\\n- **Bold** the rule itself\\n\\n| Situation | Treatment |\\n|---|---|\\n| Case | What to do |" }
+        { "heading": "Section heading", "body": "Explain prerequisites in plain language before technical terms.\\n- Show why each step follows from the last\\n- **Bold** important source-backed rules\\n\\n| Situation | Treatment |\\n|---|---|\\n| Case | What to do |" }
       ],
       "keyTerms": [ { "term": "Term", "meaning": "Definition in the words of my sources" } ],
       "checkQuestions": [ { "question": "A question that checks understanding", "answer": "Short answer" } ]
@@ -11945,7 +12121,7 @@ ${NLM_JSON}
 
 Use these sections in this order, and skip any that do not apply: ${PS_PLAN[c.kind] || PS_PLAN.general}
 
-Rules: ${c.topicRule} Make one lecture per topic or standard; if the focus covers several, give one lecture each in the same "lectures" list. Write plainly but keep the exact terms, criteria, percentages, dates and numbers from my sources. Show illustrations, journal entries and comparisons as markdown tables. Give 8 to 15 key terms and 5 to 8 check questions. ${PS_FORMAT_L} ${PS_LONG_L} ${c.kindHint}` },
+Rules: ${c.topicRule} Make one lecture per topic or standard; if the focus covers several, give one lecture each in the same "lectures" list. Write complete explanations with clear transitions instead of bullet-only summaries. Keep exact source-backed terms, criteria, percentages, dates and numbers. Show illustrations, journal entries and comparisons as markdown tables. Give 8 to 15 key terms and 5 to 8 check questions. ${PS_FORMAT_L} ${PS_LONG_L} ${c.kindHint}` },
     { id: "pset", group: "lp", json: true, title: "Problem set with solutions", desc: "12–20 problems grouped by subtopic, from basic to difficult, each with the answer and how to solve it. Shows in the Problem sets tab.", make: (c) => `Using my uploaded sources, make a problem set on ${c.focus} for ${c.subject} that covers every type of problem this topic can produce in a quiz, departmental exam or board exam, not only the easy ones. Group the problems by subtopic, from basic to difficult, and give each one a complete solution I can learn from.
 ${NLM_JSON}
 
@@ -11978,6 +12154,17 @@ ${PS_SET_SHAPE(c)}
 ${c.kindHint}` }
   ];
   NLM_PROMPTS.push(...PS_NEW_PROMPTS);
+  // Wrap every relevant generator in one consistent teaching contract. Do not
+  // inject primer material into authoritative rules/financial report extraction.
+  for(const entry of NLM_PROMPTS){
+    if(typeof entry.make!=='function')continue;
+    const original=entry.make;
+    const id=String(entry.id||'').toLowerCase(),title=String(entry.title||'').toLowerCase();
+    if(/rulebook|financial-statement|source-audit|json-checker|original|fs-lab/.test(id))continue;
+    if(!/lecture|topic|study|explain|problem|exam|mcq|flashcard|term|traps|review|cloze|pset|tutor|quiz|teach|pack|notes|case/.test(id+' '+title))continue;
+    entry.make=c=>String(original(c))+'\n\n'+(id==='lecture-quick'?'QUICK REVIEW ONLY: concise recap for someone who already learned the topic; do not claim comprehensive coverage.':'FULL LESSON / SOURCE-AWARE TEACHING QUALITY: '+BSA236_FIRST_TIME_CONTRACT);
+  }
+  NLM_PROMPTS.push({id:'lecture-quick',group:'lp',json:true,title:'Quick review (already studied)',desc:'Short revision outline, distinct from a beginner-level full lesson.',make:c=>`Make a concise source-grounded quick review lecture for ${c.focus} in ${c.subject}. This is for a learner who has ALREADY studied the chapter; do not claim full chapter coverage. Return only valid JSON in format bsa-lecture-v1 with subject and lectures [{title,topic,source,sections:[{heading,body}]}]. Preserve exact verifiable rules and key distinctions. Summarize without inventing missing content. Label this Quick Review and recommend using Full Lecture first when a concept is new. ${NLM_JSON}`});
   NLM_GROUPS.splice(2, 0, ["lp", "Lectures & problem sets", "JSON replies go to Import, then show in the Lectures and Problem sets tabs"]);
   /* =====================================================================
      Gemini tutor.
@@ -12422,6 +12609,7 @@ ${c.kindHint}` }
       'Teach '+subjectName+' accurately. Follow the learner’s actual question and requested language. '+
       'Prefer natural, simple English; use natural Taglish/Bislish if asked, avoiding deep/formal Bisaya. '+
       'Answer direct questions directly. Offer short steps for difficult topics rather than long generic essays.\n'+
+      BSA236_TUTOR_CONTRACT+'\n'+
       'PRIORITIZE UNDERSTANDING AND APPLICATION: explain why a rule applies, when it applies, and what changes with different facts; demonstrate with a short worked example if useful. '+
       'Still support memorization of essential definitions, formulae, standards and classifications. Do not pretend memorization alone proves understanding.\n'+
       'ACTIVE LEARNING: for unsolved questions, let the learner reason before revealing a key, unless they explicitly request the answer. '+
@@ -16537,7 +16725,7 @@ ${c.kindHint}` }
     for(const piece of pieces){const prepared=bsa44Prepare(subject,bsa49CanonicalizePack(subject,piece.parsed),includeSimilar);results.push(applyPartial(subject,prepared.safe));}
     return results;
   }
-  const BSA44_PROMPT=`Create ONE valid JSON object for BSA Study Desk using format "bsa-topic-pack-v1" and keys: "subject", "topic", "topics", "lectures", "problemSets", "mcqSets", "flashcards", "rules". The topic should match my actual course outline. Use only my supplied lecture files or authoritative verified sources. Never fabricate references, page numbers, standard text, or worked answers. Mark uncertain content in the source fields and omit unsupported questions. Preserve all amounts and conditions in exercises. Include genuine variation, not paraphrased duplicates. In topics[].subtopics, use a clear outline of usually 3–8 broad, source-based learning areas rather than a separate entry for every fact, formula, exception, problem or flashcard; allow more for genuinely independent syllabus sections. Do not omit source details: retain all specific rules, examples, conditions and cases inside lectures, questions and rules. Each lecture needs title, topic, sections [{heading,body}], with optional keyTerms [{term,definition}] for truly important source-defined concepts; bold only meaningful technical terms or decision rules, never filler words; each problem set needs title, topic, problems [{problem,answer,solution}]; MCQ sets need problems [{problem,choices:[four choices],answer:"A/B/C/D",solution}]; flashcards need question, answer, topic; rules need title, decisionRule, topic, and precise sourceTitle/sourceLocator if verified. Output only valid JSON, with each section as an array; empty arrays are okay. Headings should not start with list ordinals (1. / 2.) because the lecture reader numbers outlines, but retain meaningful chapter identifiers such as 13.1. Before finishing, check all required fields, count each array, and ensure the JSON is complete and parses. My existing imports will be checked for duplicates before saving.`;
+  const BSA44_PROMPT=`Create ONE valid JSON object for BSA Study Desk using format "bsa-topic-pack-v1" and keys: "subject", "topic", "topics", "lectures", "problemSets", "mcqSets", "flashcards", "rules". The topic should match my actual course outline. Use only my supplied lecture files or authoritative verified sources. Never fabricate references, page numbers, standard text, or worked answers. Mark uncertain content in the source fields and omit unsupported questions. Preserve all amounts and conditions in exercises. Include genuine variation, not paraphrased duplicates. In topics[].subtopics, use a clear outline of usually 3–8 broad, source-based learning areas rather than a separate entry for every fact, formula, exception, problem or flashcard; allow more for genuinely independent syllabus sections. Do not omit source details: retain all specific rules, examples, conditions and cases inside lectures, questions and rules. Each lecture needs title, topic, sections [{heading,body}], with optional keyTerms [{term,definition}] for truly important source-defined concepts; bold only meaningful technical terms or decision rules, never filler words; each problem set needs title, topic, problems [{problem,answer,solution}]; MCQ sets need problems [{problem,choices:[four choices],answer:"A/B/C/D",solution}]; flashcards need question, answer, topic; rules need title, decisionRule, topic, and precise sourceTitle/sourceLocator if verified. Output only valid JSON, with each section as an array; empty arrays are okay. Headings should not start with list ordinals (1. / 2.) because the lecture reader numbers outlines, but retain meaningful chapter identifiers such as 13.1. Before finishing, check all required fields, count each array, and ensure the JSON is complete and parses. My existing imports will be checked for duplicates before saving.\n\n${BSA236_FIRST_TIME_CONTRACT}`;
   const BSA44_EXAMPLE={format:'bsa-topic-pack-v1',subject:'Replace with your course',topic:'Replace with topic title',topics:[{title:'Replace with topic title'}],lectures:[{title:'Topic overview',topic:'Replace with topic title',source:'Actual textbook and page',sections:[{heading:'Core concept',body:'Replace with accurate source-based explanation'}]}],problemSets:[{title:'Topic practice',topic:'Replace with topic title',problems:[{problem:'Replace with your real question',answer:'Verified answer',solution:'Verified working'}]}],mcqSets:[],flashcards:[{question:'Replace with your question',answer:'Verified answer',topic:'Replace with topic title'}],rules:[]};
   const BSA45_FS_PROMPT=`TASK: Convert the supplied financial statement PDF into ONE importable BSA Study Desk financial report JSON object. Output ONLY parsable JSON, without a code fence.
 Use EXACT format: "bsa-financial-statements-v1" and keys: "format", "company", "periodEnd" (YYYY-MM-DD or YYYY), "scope" (consolidated or separate), "currency", "unit", "source", "statements", "notes", "standards".
@@ -16550,7 +16738,7 @@ standards: [{"code":"PAS 16","title":"name only if verified","page":"evidence pa
 Check units and comparative years; parentheses mean negative numbers. Missing/illegible amounts must be null, NEVER zero. Use null only for missing figures, numeric zero only if actually zero. Do not calculate new values or infer compliance. Preserve separate versus consolidated scope, currency, note/page references, and audit report wording accurately. If the PDF is incomplete, return only the supported portions; never invent. A successful JSON parse does NOT independently verify the report; the learner compares it with the original PDF.`;
   const BSA45_AUDIT_PROMPT=`Compare a draft BSA Study Desk JSON import against the supplied original source, without guessing. Review: exact source identity, topic, unique non-duplicative coverage, correct numerical figures, complete problem conditions, answer keys, standards references, page locators, missing disclosures, and unsupported claims. Identify every mismatch in a table with item, issue, evidence location, and proposed correction. Never say source checked unless you actually inspected the relevant source page. Do not silently rewrite my existing saved data. After listing corrections, provide a separate corrected JSON only when all changed material is evidence-supported.`;
   const BSA45_PROBLEM_PROMPT=`From only the attached chapter or worksheet, create a BSA Study Desk Topic Pack JSON with format "bsa-topic-pack-v1" and arrays "topics", "lectures", "problemSets", "mcqSets", "flashcards", "rules". Focus on faithful exercises and worked solutions appropriate to the selected course; do not make up amounts, facts, sources, pages, or answer keys. Each written problem: {"problem":"full question and required tasks","answer":"answer checked from source","solution":"clear calculation/reasoning"}. Each MCQ: {"problem":"question","choices":["A...","B...","C...","D..."],"answer":"A","solution":"why correct and why distractors fail"}. Set unused arrays to []. Include topic and subject names. Check that the top-level subject is the exact saved subject name, not Name (CODE), that each required field is nonempty, and that no item is truncated. Provide ONLY valid JSON.`;
-  const BSA45_LECTURE_PROMPT=`Create a BSA Study Desk Topic Pack JSON for the specified topic, with format "bsa-topic-pack-v1", subject, topic, and arrays topics, lectures, problemSets, mcqSets, flashcards, rules. Extract accurate explanations from the attached source, not generic filler. lectures: [{"title":"...","topic":"...","source":"real chapter/page if visible","sections":[{"heading":"...","body":"clear explanation and example using only supplied source"}]}]. Use [] for other content. Cover definitions, scope, key processes or rules, exceptions, and worked examples only where relevant and supported by the actual source. Do not fabricate a page or regulation. Use meaningful, grouped section headings without extra '1.' or '2.' prefixes; retain original chapter identifiers such as '13.1'. In each lecture, include a keyTerms array of source-verified {"term":"...","definition":"..."} for ONLY exam-worthy technical terms, definitions, recognition criteria, classifications, treatments, material exceptions, formulas, and exact important thresholds. Bold ONLY meaningful key terms or decisive rule phrases inside the relevant section body, never arbitrary connectors (and, or, the), decorative bold, entire sentences or incidental words. Each potential blank must have a self-contained clue that remains meaningful when the term is hidden; do not repeat the answer in its clue. For accounting, focus on why and when a treatment applies, not superficial wording. Include clear self-check questions when the source supports them. Do not invent a source key, numerical threshold, or answer. Check each heading/body pair and the complete JSON syntax before replying. Return ONLY JSON.`;
+  const BSA45_LECTURE_PROMPT=`Create a BSA Study Desk Topic Pack JSON for the specified topic, with format "bsa-topic-pack-v1", subject, topic, and arrays topics, lectures, problemSets, mcqSets, flashcards, rules. Extract accurate explanations from the attached source, not generic filler. lectures: [{"title":"...","topic":"...","source":"real chapter/page if visible","sections":[{"heading":"...","body":"clear explanation and example using only supplied source"}]}]. Use [] for other content. Cover definitions, scope, key processes or rules, exceptions, and worked examples only where relevant and supported by the actual source. Do not fabricate a page or regulation. Use meaningful, grouped section headings without extra '1.' or '2.' prefixes; retain original chapter identifiers such as '13.1'. In each lecture, include a keyTerms array of source-verified {"term":"...","definition":"..."} for ONLY exam-worthy technical terms, definitions, recognition criteria, classifications, treatments, material exceptions, formulas, and exact important thresholds. Bold ONLY meaningful key terms or decisive rule phrases inside the relevant section body, never arbitrary connectors (and, or, the), decorative bold, entire sentences or incidental words. Each potential blank must have a self-contained clue that remains meaningful when the term is hidden; do not repeat the answer in its clue. For accounting, focus on why and when a treatment applies, not superficial wording. Include clear self-check questions when the source supports them. Do not invent a source key, numerical threshold, or answer. Check each heading/body pair and the complete JSON syntax before replying. Return ONLY JSON.\n\n${BSA236_FIRST_TIME_CONTRACT}`;
   const BSA45_FLASH_PROMPT=`Create a BSA Study Desk Topic Pack JSON from the source with format "bsa-topic-pack-v1", subject, topic, and arrays topics, lectures, problemSets, mcqSets, flashcards, rules. Focus on 15–25 distinctive active-recall flashcards, each {"question":"one precise question","answer":"short correct answer","topic":"same exact topic"}. Do not copy the same fact as multiple near-identical prompts. Include nuanced distinctions only when supported. Set other arrays to []. Return ONLY JSON.`;
   const BSA45_RULES_PROMPT=`Create a BSA Study Desk Topic Pack JSON from the verified source excerpts, regulations, standards or reference material relevant to this specific subject, format "bsa-topic-pack-v1" plus subject, topic, and arrays topics, lectures, problemSets, mcqSets, flashcards, rules. rules: [{"title":"specific rule","decisionRule":"if/then decision and important exceptions","topic":"...","sourceTitle":"real standard/source","sourceLocator":"actual section/page if supplied"}]. Cover the source-supported rules, conditions, exceptions and applications relevant to this course ONLY where supported. Distinguish mandatory requirements from common textbook shortcuts. Set other arrays to []. Return ONLY valid JSON.`;
   const BSA45_IMPORT_PROMPTS=[
@@ -19102,6 +19290,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       if(persist(next)){setEditingKey('');setEditName('');setFeedback('Name updated.');}
     };
     const playSource=item=>{
+      if(bsa236Speech.get().lectureId)bsa236Speech.stop();
       bsa228NoiseStop();
       setActive(item);setYtController(null);setYtState({});setSpotifyState({playing:false});setFeedback('');
     };
@@ -19121,6 +19310,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     };
     const switchNoise=async()=>{
       if(bsa228Noise){bsa228NoiseStop();return;}
+      if(bsa236Speech.get().lectureId)bsa236Speech.stop();
       // Explicitly unmount any active music player before starting generated noise.
       window.dispatchEvent(new Event('bsa229:stop-media'));
       try{await bsa228NoiseStart(prefs.kind,prefs.volume);setFeedback('');}
@@ -19292,6 +19482,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     const audio=bsa228Noise;
     const toggleNoise=async()=>{
       if(bsa228Noise){bsa228NoiseStop();return;}
+      if(bsa236Speech.get().lectureId)bsa236Speech.stop();
       try{await bsa228NoiseStart(prefs.kind,prefs.volume);}
       catch(e){setNotice(e.message||'Sound playback is unavailable.');}
     };
@@ -20502,6 +20693,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       nav.tab === "subjects" && h(BSA12Subjects,{data,update,activeId:data.activeId,onOpen:id=>{setData(d=>({...d,activeId:id}));go('home')},onManage:()=>setModal('subjects'),toast,onRemoved:()=>{setNav(n=>({...n,tab:'subjects',key:n.key+1}))}}), nav.tab === "guide" && h(BSA3StartGuide,{go,subject}), nav.tab === "routine" && h(BSA228StudyRoutine,{subject,go,toast}), nav.tab === "break" && h(BreakCorner), nav.tab === "joy" && h(JoyHub,{go}), nav.tab === "life" && h(StudyLife,{go}), nav.tab === "achievements" && h(AcademicProgress,{go}), nav.tab === "stats-clean" && h(StudyReport,{data,update,toast,go}), nav.tab === "private-vault" && !window.__BSA_SHARED_MODE__ && h(PrivateVault,{toast}), nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data,initialTool:nav.opts?.tool})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), nav.tab === "home" && h(BSA3Today, { ...viewProps }), nav.tab === "study" && h(BSA205Study,{...viewProps}), nav.tab === "library" && h(BSA205Library,{...viewProps}), nav.tab === "insights" && h(BSA205Mastery,{...viewProps}), nav.tab === "accounting-cycle" && h(BSA205Cycle,{...viewProps}), nav.tab === "fs-lab" && h(BSA43FinancialStatements,{...viewProps}), nav.tab === "accounting-lab" && h(BSA187AccountingLab,{subject,update,toast,go,init:nav.opts}), nav.tab === "week" && h(BSA344Schedule,{subject,update,go,openEditor,toast,init:nav.opts,initialMode:"week"}), nav.tab === "knowledge" && h(BSA192KnowledgeMap,{subject,go,init:nav.opts}), nav.tab === "safety" && h(BSA193DeviceSafety,{data,go,toast}), nav.tab === "practice" && h(React.Fragment,null,h(BSA3Practice,{ ...viewProps, data }),bsa46ToolVisible(subject,'fs-lab')&&h('div',{className:'bsa42-fs-shortcut'},h('div',null,h('strong',null,'Financial Statement Lab'),h('p',null,'Import report JSON, inspect audited disclosures, and practice any accounting standard.')),h('button',{className:'btn',onClick:()=>go('fs-lab')},'Open Financial Statements ↗'))), nav.tab === "mcq" && h(MCQPage,{...viewProps}), nav.tab === "rules" && h(RulesLibrary,{...viewProps}), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(BSA344Schedule,{subject,update,go,openEditor,toast,init:nav.opts,initialMode:"month"}), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "workspace" && h(BSA181Workspace, { ...viewProps, initialTab:nav.opts?.tab, undoAvailable:!!undo, onGlobalUndo:doUndo }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(BSA43ProblemSets, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps, key:subject.id }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })))),
       h(BSA181HighlightTool,{subject,tab:nav.tab,go,toast}),
       h(BSA232PersistentMusic,{routineOpen:nav.tab==='routine',go}),
+      h(BSA236AudioDock,{go,subject,setActiveSubject:(id)=>setData(d=>(d.subjects||[]).some(x=>x.id===id)?{...d,activeId:id}:d)}),
       spotlightOpen && h(BSA181Spotlight,{data,go,tools:tabs,onSwitch:(id,tab,opts)=>{setData(d=>({...d,activeId:id}));go(tab,opts)},onClose:()=>setSpotlightOpen(false)}),
       /* @__PURE__ */ h("nav",{className:"bottom-nav v2-bottom-nav","aria-label":"Mobile navigation",onTouchStart:touchNavStart,onTouchEnd:touchNavEnd},
         [["home","Today","home"],["study","Learn","lecture"],["practice","Practice","bolt"],["library","Library","book"]].map(([k,l,ic])=>h("button",{type:"button",key:k,className:nav.tab===k?"on":"","aria-current":nav.tab===k?"page":undefined,onClick:()=>go(k)},h(Icon,{name:ic}),h("span",null,l))),
