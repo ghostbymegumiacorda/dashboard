@@ -30,7 +30,7 @@ THE SOFTWARE.
   if (window.__BSA_DESK_APP_LOADED__) return;
   window.__BSA_DESK_APP_LOADED__ = true;
   // User-facing release label only. Do not use for storage schemas or caches.
-  const BSA_RELEASE_LABEL = "V2.32";
+  const BSA_RELEASE_LABEL = "V2.33";
   const S = (t, p = null, s = false) => ({ t, p, s });
   const CFAS_TOPICS = [
     {
@@ -18308,14 +18308,15 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     const session=bsa212Guided(active)?active:null;
     const [now,setNow]=useState(()=>Date.now());
     const [expanded,setExpanded]=useState(false);
+    const [quiet,setQuiet]=useState(false);
     const [closingId,setClosingId]=useState('');
-    useEffect(()=>{setClosingId('');setExpanded(false)},[subject.id]);
+    useEffect(()=>{setClosingId('');setExpanded(false);setQuiet(false)},[subject.id,session?.id]);
     useEffect(()=>{setExpanded(false)},[nav?.tab,nav?.key]);
     useEffect(()=>{const close=e=>{if(e.detail?.subjectId===subject.id)setClosingId(e.detail.id)};
       window.addEventListener('bsa223:closed-guided',close);
       return()=>window.removeEventListener('bsa223:closed-guided',close);
     },[subject.id]);
-    useEffect(()=>{const show=()=>{setExpanded(true);setPos(null);try{localStorage.removeItem('bsa212-floating-pos')}catch(_){}};window.addEventListener('bsa214:show-focus-timer',show);return()=>window.removeEventListener('bsa214:show-focus-timer',show)},[]);
+    useEffect(()=>{const show=()=>{setQuiet(false);setExpanded(true);setPos(null);try{localStorage.removeItem('bsa212-floating-pos')}catch(_){}};window.addEventListener('bsa214:show-focus-timer',show);return()=>window.removeEventListener('bsa214:show-focus-timer',show)},[]);
     const [pos,setPos]=useState(()=>{try{const p=JSON.parse(localStorage.getItem('bsa212-floating-pos')||'null');return p&&Number.isFinite(p.x)&&Number.isFinite(p.y)?p:null}catch(_){return null}});
     const drag=useRef(null);
     useEffect(()=>{if(!session)return;setNow(Date.now());
@@ -18381,6 +18382,8 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     // dashboard panel; avoids repeated compositor paints during scrolling.
     let layer=document.getElementById('bsa213-focus-layer');
     if(!layer){layer=document.createElement('div');layer.id='bsa213-focus-layer';document.body.appendChild(layer);}
+    if(quiet)return ReactDOM.createPortal(
+      h('button',{type:'button',className:'bsa233-timer-return',onClick:()=>{setQuiet(false);go('study')},'aria-label':'Return to study session timer',title:'Return to study session'},'◷ Back to session'),layer);
     return ReactDOM.createPortal(h('aside',{className:'bsa212-float'+(expanded?' expanded':'')+(waiting?' is-due':'')+(session.focusSaved?' is-saved':''),'data-dragged':pos?'yes':'no',style:pos?{left:pos.x+'px',top:pos.y+'px',right:'auto',bottom:'auto'}:undefined,role:'region','aria-label':'Floating guided study timer','data-bsa-guided-focus':'v224','data-bsa-guided-session':String(session.id),'data-bsa-guided-subject':String(subject.id),
       onPointerMove:move,onPointerUp:end,onPointerCancel:end},
       h('div',{className:'bsa212-float-top'},
@@ -18388,6 +18391,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
         h('button',{className:'bsa212-float-summary',type:'button',onClick:()=>setExpanded(v=>!v),'aria-expanded':expanded},
           h('strong',{className:'bsa212-float-digits'},ended?'Done':waiting?'Time up':bsa211Clock(remaining)),
           h('span',null,waiting?(session.focusSaved?'Saved · choose next':'Choose what’s next'):ended?'Wrap up session':(index+1)+'/'+session.blocks.length+' · '+(running?'Focus':session.focusSaved?'Saved':'Paused'))),
+        h('button',{className:'bsa233-timer-hide',type:'button',onClick:()=>{setExpanded(false);setQuiet(true)},title:'Hide timer without ending the session','aria-label':'Hide timer and keep study session'},'Hide'),
         h('button',{className:'bsa212-float-expand',type:'button',onClick:()=>setExpanded(v=>!v),'aria-label':expanded?'Minimize focus timer':'Show focus timer options'},expanded?'−':'⌄')),
       expanded&&h('div',{className:'bsa212-float-body'},
         h('strong',{className:'bsa212-float-phase'},block.title||'Study activity'),
@@ -18961,7 +18965,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     useEffect(()=>{if(!player.current)return;try{player.current.setLoop(!!repeat);}catch(_){}},[repeat,source.id]);
     return h('div',{className:'bsa229-youtube-player',ref:holder,'aria-label':'Visible official YouTube video or playlist player'});
   }
-  function BSA229FocusMusic({prefs,savePrefs,compact=false,onReturn}){
+  function BSA229FocusMusic({prefs,savePrefs,compact=false,onReturn,dockHidden=false,onHide}){
     const [mode,setMode]=useState(()=>{try{const x=localStorage.getItem(BSA229_MODE_KEY);return ['noise','youtube','spotify'].includes(x)?x:'noise';}catch(_){return'noise';}});
     const [links,setLinks]=useState(()=>{
       const raw=bsa228ReadJson(BSA229_LINK_KEY,[]);
@@ -19047,12 +19051,22 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     const playingEmbedded=!!selected&&selected.kind!=='external'&&selected.provider===mode;
     const dockHasSound=playingEmbedded||!!bsa228Noise;
     const stopDock=()=>{bsa228NoiseStop();setActive(null);setYtController(null);};
+    const hideDock=()=>{
+      // Hidden YouTube playback is not supported: pause a working player, or
+      // close an embed whose playback state cannot be controlled reliably.
+      if(selected?.provider==='youtube'&&selected.kind!=='external'){
+        if(ytController?.pauseVideo){try{ytController.pauseVideo()}catch(_){setActive(null)}}
+        else setActive(null);
+      }
+      onHide?.();
+    };
     const returnToMusic=()=>{returnScroll.current=true;onReturn?.();};
-    return h('section',{id:'bsa232-media-player',className:'bsa228-card bsa228-sound-card bsa229-music'+(compact?' bsa232-away':'')+(compact&&!dockHasSound?' bsa232-idle':'')+(playingEmbedded?' bsa232-streaming-active':'')},
+    return h('section',{id:'bsa232-media-player',className:'bsa228-card bsa228-sound-card bsa229-music'+(compact?' bsa232-away':'')+(compact&&!dockHasSound?' bsa232-idle':'')+(compact&&dockHidden?' bsa233-hidden':'')+(playingEmbedded?' bsa232-streaming-active':'')},
       compact&&h('div',{className:'bsa232-quickbar'},
         h('span',{className:'bsa232-quick-label'},dockHasSound?'♫ Focus music':'♫ Study Routine'),
-        h('button',{type:'button',className:'bsa232-return',onClick:returnToMusic,'aria-label':'Return to Study Routine and music controls'},'↩ Back to routine'),
-        dockHasSound&&h('button',{type:'button',className:'bsa232-stop',onClick:stopDock,'aria-label':'Stop music and close player'},'■ Stop')),
+        h('button',{type:'button',className:'bsa232-return',onClick:returnToMusic,'aria-label':'Return to Study Routine and music controls'},dockHidden?'♫ Back to music':'↩ Back to routine'),
+        !dockHidden&&h('button',{type:'button',className:'bsa233-music-hide',onClick:hideDock,'aria-label':'Hide music dock; keep routine and playlists saved'},'Hide'),
+        !dockHidden&&dockHasSound&&h('button',{type:'button',className:'bsa232-stop',onClick:stopDock,'aria-label':'Stop music and close player'},'■ Stop')),
       h('div',{className:'bsa228-section-heading'},h('div',null,h('span',{className:'bsa228-eyebrow'},'FOCUS MUSIC'),h('h2',null,'Sounds & playlists')),h('span',{className:'bsa228-state'},bsa228Noise?'Noise playing':active?'Player open':'Ready')),
       h('div',{className:'bsa229-tabs',role:'tablist','aria-label':'Focus music source'},[['noise','Ambient'],['youtube','YouTube Music'],['spotify','Spotify']].map(([k,label])=>h('button',{type:'button',key:k,role:'tab','aria-selected':mode===k,className:mode===k?'on':'',onClick:()=>pickMode(k)},label))),
       mode==='noise'?h('div',{className:'bsa229-noise'},
@@ -19094,6 +19108,8 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
   // sections must not destroy the iframe/WebAudio source and restart music.
   // The player is always the same React component at a stable App tree position.
   function BSA232PersistentMusic({routineOpen,go}){
+    const [dockHidden,setDockHidden]=useState(false);
+    useEffect(()=>{if(routineOpen)setDockHidden(false)},[routineOpen]);
     const [prefs,setPrefs]=useState(()=>{
       const raw=bsa228ReadJson(BSA228_ROUTINE_PREF,{});
       return {kind:['brown','pink','white'].includes(raw.kind)?raw.kind:'brown',
@@ -19105,7 +19121,8 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       bsa228WriteJson(BSA228_ROUTINE_PREF,{...current,...patch});
       return next;
     });
-    return h(BSA229FocusMusic,{prefs,savePrefs,compact:!routineOpen,onReturn:()=>go('routine')});
+    return h(BSA229FocusMusic,{prefs,savePrefs,compact:!routineOpen,dockHidden,
+      onHide:()=>setDockHidden(true),onReturn:()=>{setDockHidden(false);go('routine')}});
   }
   function BSA228StudyRoutine({subject,go,toast}){
     const [prefs,setPrefs]=useState(()=>{
