@@ -30,7 +30,7 @@ THE SOFTWARE.
   if (window.__BSA_DESK_APP_LOADED__) return;
   window.__BSA_DESK_APP_LOADED__ = true;
   // User-facing release label only. Do not use for storage schemas or caches.
-  const BSA_RELEASE_LABEL = "V2.25";
+  const BSA_RELEASE_LABEL = "V2.26";
   const S = (t, p = null, s = false) => ({ t, p, s });
   const CFAS_TOPICS = [
     {
@@ -4081,22 +4081,32 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     ];
     return /* @__PURE__ */ React.createElement(Modal, { title: "Quick add", onClose }, /* @__PURE__ */ React.createElement("div", { className: "big-options" }, items.map(([k, ic, l, d]) => /* @__PURE__ */ React.createElement("button", { key: k, className: "big-option", onClick: () => onPick(k) }, /* @__PURE__ */ React.createElement(Icon, { name: ic, size: 22 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, l), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "muted" }, d))))));
   }
-  /* V3: secondary tools are grouped and closed initially; no duplicate homepage inside More. */
-  function MoreSheet({onPick,onClose,settings,setSettings,go}){
+  /* V2.26: Every reachable tool has a named destination, including FS Lab.
+     Shared students see only permitted study routes; private owner tools stay private. */
+  function MoreSheet({onPick,onClose,go}){
+    const [filter,setFilter]=useState('');
+    const shared=!!window.__BSA_SHARED_MODE__;
+    const allowedShared=new Set(['home','subjects','study','practice','library','insights','lectures','rules','vault','psets','mcq','mistakes','accounting-lab','toolkit','fs-lab']);
     const sections=[
-      ['Study & reading',[['lectures','Lectures','lecture'],['ask','AI Tutor','ask'],['vault','Flashcards','cards'],['rules','Reference rules','book'],['workspace','Workspace','book']]],
-      ['Advanced practice',[['accounting-lab','Accounting Lab','pset'],['accounting-cycle','Accounting Cycle','pset'],['mcq','Multiple-choice library','cards'],['psets','Problem Sets','pset'],['mistakes','Mistake Log','mistakes']]],
-      ['Planning, progress & extras',[['insights','Learning Progress','grade'],['calendar','Study Schedule','calendar'],['grades','Grades','grade'],['class','Classes and deadlines','subjects'],['knowledge','Visual Studio','network'],['life','Study Room','look'],['toolkit','Toolkit','book'],['safety','Data Safety','data']]]
+      ['Study materials',[['lectures','Lectures','lecture'],['ask','AI Tutor','ask'],['vault','Flashcards','cards'],['rules','Reference rules','book'],['workspace','Study Workspace','book'],['library','Study Library','book']]],
+      ['Practice & applications',[['fs-lab','Financial Statements Lab','book'],['accounting-lab','Accounting Lab','pset'],['accounting-cycle','Accounting Cycle','pset'],['mcq','Multiple-choice library','cards'],['psets','Problem Sets','pset'],['mistakes','Mistake Log','mistakes'],['practice','Practice','bolt']]],
+      ['Planning & progress',[['study','Plan & Learn','lecture'],['insights','Learning Progress','grade'],['calendar','Study Schedule','calendar'],['grades','Grades','grade'],['class','Classes & deadlines','subjects'],['knowledge','Visual Studio','network'],['stats-clean','Study Report','grade'],['roadmap','Roadmap','roadmap'],['curriculum','Curriculum','book'],['achievements','Achievements','grade']]],
+      ['Other tools',[['toolkit','Study Toolkit','book'],['guide','Guided walkthrough','book'],['subjects','Switch subjects','subjects'],['safety','Data Safety','data'],['life','Study Room','look'],['break','Break Corner','home'],['howto','How-To Corner','book'],['personalize','Personalization','look']]]
     ];
-    return h(Modal,{title:'More tools',onClose},
-      h('div',{className:'bsa3-more-intro'},h('p',null,'Your everyday work is in Today, Study, Practice and Library. Open a group below only when you need a specialized tool.'),
-        h('small',{className:'bsa47-mobile-build'},'Dashboard build ' + BSA_RELEASE_LABEL),
-        h('button',{className:'btn primary',onClick:()=>go('guide')},'Show me where to start')),
-      h('div',{className:'bsa3-more-settings'},
-        [['subjects','Switch subjects','subjects'],['data','Back up or restore','data'],['look','Change appearance','look']].map(([route,title,icon])=>h('button',{className:'btn',key:route,onClick:()=>onPick(route)},h(Icon,{name:icon,size:17}),title))),
-      h('div',{className:'bsa3-more-groups'},sections.map(([label,links])=>h('details',{className:'bsa3-tool-group',key:label},
+    const q=filter.trim().toLocaleLowerCase();
+    const matched=sections.map(([label,links])=>[label,links.filter(([route,title])=>(!shared||allowedShared.has(route))&&(!q||(title+' '+label+' '+route).toLocaleLowerCase().includes(q)))]).filter(([,links])=>links.length);
+    const count=matched.reduce((n,[,links])=>n+links.length,0);
+    const openRoute=(route)=>{go(route);};
+    return h(Modal,{title:'All study tools',className:'bsa226-tools-modal',onClose},
+      h('div',{className:'bsa226-more-head'},
+        h('label',{className:'bsa226-more-search'},h(Icon,{name:'search',size:18}),h('input',{type:'search',value:filter,onChange:e=>setFilter(e.target.value),placeholder:'Search all tools…','aria-label':'Search study tools'})),
+        h('div',{className:'bsa226-more-caption'},h('span',null,count+' available tools'),h('span',null,BSA_RELEASE_LABEL))),
+      !shared&&h('div',{className:'bsa226-more-utility'},
+        [['subjects','Subjects','subjects'],['data','Backup','data'],['look','Appearance','look']].map(([route,title,icon])=>h('button',{type:'button',key:route,onClick:()=>route==='subjects'?openRoute(route):onPick(route)},h(Icon,{name:icon,size:15}),title))),
+      h('div',{className:'bsa3-more-groups bsa226-more-groups'},matched.length?matched.map(([label,links])=>h('details',{className:'bsa3-tool-group',key:label,open:q?true:(label==='Practice & applications'?true:undefined)},
         h('summary',null,h('strong',null,label),h('span',null,links.length+' tools')),
-        h('div',{className:'bsa205-more-grid'},links.map(([route,title,icon])=>h('button',{key:route,onClick:()=>go(route)},h(Icon,{name:icon,size:17}),h('span',null,title),h('span',{className:'bsa205-more-arrow'},'↗'))))))));
+        h('div',{className:'bsa205-more-grid'},links.map(([route,title,icon])=>h('button',{key:route,type:'button',onClick:()=>openRoute(route),'aria-label':'Open '+title},h(Icon,{name:icon,size:17}),h('span',null,title),h('span',{className:'bsa205-more-arrow','aria-hidden':true},'›')))))):
+        h('p',{className:'muted bsa226-no-results'},'No matching tools. Try another name.')));
   }
   /* =====================================================================
      Study features: spaced repetition, mistake retests, exam readiness,
@@ -18821,6 +18831,9 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     const option=subject?.studyConfig?.tools?.[id];
     if(option==='show')return true;
     if(option==='hide')return false;
+    // V2.26: Financial Statements Lab is discoverable for every subject;
+    // its content remains subject-scoped and users may explicitly hide it.
+    if(id==='fs-lab')return true;
     return !BSA46_SPECIAL_TOOLS.includes(id)||bsa46Profile(subject).tools.includes(id)||
       (id==='fs-lab'&&(subject?.fsReports||[]).length>0)||
       (id==='accounting-cycle'&&((subject?.cycleCases||[]).length>0||(subject?.cycleRuns||[]).length>0))||
@@ -19687,7 +19700,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       ["library", "Find materials", "book"],
       ["insights", "Your progress", "grade"],
       ["accounting-cycle", "Accounting Cycle", "pset"],
-      ["fs-lab", "Financial Statements", "book"],
+      ["fs-lab", "Financial Statements Lab", "book"],
       ["workspace", "Study Workspace", "book"],
       
       ["accounting-lab", "Accounting Lab", "pset"],
