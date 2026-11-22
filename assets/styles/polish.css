@@ -5000,3 +5000,95 @@ body>.backdrop .bsa45-sidebar-modal .bsa211-shortcut-groups{padding-bottom:18px}
   width:238px!important;min-width:0!important;max-width:min(238px,calc(100vw - 16px))!important;
   box-sizing:border-box!important;
 }
+
+
+/* V2.40 — Authoritative Study Routine geometry and compact workflow.
+   Fixes flex:1 1 100% leaving a full-screen gap before Focus Music, while
+   preserving one scroll surface on iPad and a normal document on phones. */
+#root > .shell > main.content.bsa235-routine-layout {
+  display:flex!important;flex-direction:column!important;align-items:stretch!important;
+  min-width:0!important;max-width:none!important;box-sizing:border-box!important;
+  row-gap:0!important;overflow-x:hidden!important;
+}
+#root > .shell > main.content.bsa235-routine-layout > .bsa235-routine-page {
+  flex:0 0 auto!important;align-self:center!important;height:auto!important;
+  min-height:0!important;max-height:none!important;
+  width:min(100%,1160px)!important;max-width:1160px!important;
+  margin:0 auto!important;padding-bottom:16px!important;
+}
+#root > .shell > main.content.bsa235-routine-layout > #bsa232-media-player:not(.bsa232-away) {
+  flex:0 0 auto!important;align-self:center!important;position:relative!important;
+  width:min(100%,1120px)!important;height:auto!important;max-width:1120px!important;
+  margin:14px auto 34px!important;inset:auto!important;overflow:visible!important;
+}
+#root .bsa240-priority{display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:12px;padding:14px 17px;margin:14px 0 16px;
+  border:1px solid color-mix(in srgb,var(--accent) 32%,var(--line));
+  border-radius:15px;background:color-mix(in srgb,var(--accent) 5%,var(--surface));
+  min-width:0;box-shadow:var(--lift)}
+#root .bsa240-priority-copy{display:grid;gap:4px;min-width:0;flex:1 1 260px}
+#root .bsa240-priority-copy strong{font-size:1.05rem;line-height:1.3;overflow-wrap:break-word}
+#root .bsa240-priority-copy small{font-size:.78rem;line-height:1.5;color:var(--muted);max-width:74ch}
+#root .bsa240-priority .btn{flex:0 1 auto;min-height:42px;white-space:normal}
+#root .bsa240-habit-note{opacity:.9}
+@media(max-width:700px){
+  #root .bsa240-priority{padding:13px 14px;gap:10px}
+  #root .bsa240-priority .btn{width:100%;min-height:44px}
+  #root > .shell > main.content.bsa235-routine-layout > .bsa235-routine-page{padding-bottom:10px!important}
+  #root > .shell > main.content.bsa235-routine-layout > #bsa232-media-player:not(.bsa232-away){margin-top:10px!important}
+}
+@supports (-webkit-touch-callout: none){
+  @media (min-width:900px){
+    #root > .shell > main.content.bsa235-routine-layout{
+      height:100dvh!important;max-height:100dvh!important;min-height:0!important;
+      overflow-y:auto!important;overflow-x:hidden!important;
+      -webkit-overflow-scrolling:touch!important;touch-action:pan-y!important;
+    }
+  }
+}
+
+
+/* V2.40: Highlighted passages and personal notes in distraction-free Reading Mode.
+   Reuses the existing Workspace highlights store and five accessible colors. */
+.bsa41-kind-insight{border-left:4px solid #9a79dd}
+.bsa41-annotated .bsa41-mark[data-highlight-kind="insight"]{background:#d1b5f4b4;border-color:#8e69c2}
+.bsa236-reader .bsa240-highlight-hint{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between;padding:11px 13px;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;font-size:.8rem;line-height:1.45;margin:10px 0 15px}
+.bsa236-reader .bsa240-highlight-hint button{flex:none;min-height:34px;font-size:.75rem}
+.bsa236-reader .bsa240-selection-tools{position:sticky;top:0;z-index:6;border:1px solid var(--accent);border-radius:15px;background:var(--surface);box-shadow:0 8px 28px #0002;padding:12px;margin:12px 0;display:grid;gap:9px;max-width:100%}
+.bsa236-reader .bsa240-selection-quote{font-size:.83rem;line-height:1.5;overflow-wrap:anywhere;max-height:4.5em;overflow:auto}
+.bsa236-reader .bsa240-color-picker{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.bsa236-reader .bsa240-color{border:2px solid transparent!important;border-radius:999px!important;min-width:38px;min-height:38px;padding:2px!important;font-size:25px!important;line-height:1;color:#ecc84d!important}
+.bsa236-reader .bsa240-color-example{color:#70b7e9!important}.bsa236-reader .bsa240-color-confusing{color:#ec8ab2!important}.bsa236-reader .bsa240-color-rule{color:#5fca97!important}.bsa236-reader .bsa240-color-insight{color:#b69aeb!important}
+.bsa236-reader .bsa240-color.is-active{border-color:var(--accent)!important;background:var(--surface-2)!important;outline:2px solid var(--surface);box-shadow:0 0 0 3px var(--accent)}
+.bsa236-reader .bsa240-selection-actions{display:flex;flex-wrap:wrap;gap:8px}
+.bsa236-reader .bsa240-highlight-status{margin:8px 0 13px;padding:8px 12px;border-left:3px solid var(--accent);background:var(--surface-2);font-size:.8rem;line-height:1.4}
+.bsa236-reader .bsa240-highlights-panel{border:1px solid var(--line);border-radius:15px;padding:15px;margin:15px 0 20px;background:var(--surface);display:grid;gap:10px}
+.bsa236-reader .bsa240-highlights-header{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.bsa236-reader .bsa240-highlights-header h2{margin:0;font-size:1.15rem}.bsa236-reader .bsa240-highlights-panel>p{margin:0;color:var(--muted);font-size:.78rem;line-height:1.5}
+.bsa236-reader .bsa240-highlights-list{display:grid;gap:9px;max-height:min(50dvh,420px);overflow:auto;overscroll-behavior:contain}
+.bsa236-reader .bsa240-highlight-card{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:grid;gap:8px;min-width:0;background:var(--surface-2)}
+.bsa236-reader .bsa240-highlight-card-copy blockquote{margin:8px 0 0;font-size:.85rem;line-height:1.5;overflow-wrap:anywhere}
+.bsa236-reader .bsa240-highlight-card-copy p{margin:6px 0 0;font-size:.78rem;overflow-wrap:anywhere}
+.bsa236-reader .bsa240-highlight-card-actions{display:flex;flex-wrap:wrap;gap:6px}
+.bsa236-reader .bsa240-highlight-card-actions button{font-size:.72rem;min-height:34px;padding:6px 9px}
+.bsa236-reader .bsa41-annotated{min-width:0}.bsa236-reader .bsa41-mark{cursor:pointer;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.bsa236-reader .bsa240-note-backdrop{position:fixed;inset:0;z-index:15;background:#0008;display:grid;place-items:center;padding:16px;overflow:auto}
+.bsa236-reader .bsa240-note-editor{width:min(550px,100%);max-height:min(92dvh,850px);overflow:auto;border-radius:18px;border:1px solid var(--line);background:var(--surface);padding:clamp(14px,3vw,24px);box-shadow:0 16px 70px #0005;display:grid;gap:13px}
+.bsa236-reader .bsa240-note-head{display:flex;justify-content:space-between;align-items:center;gap:10px}.bsa236-reader .bsa240-note-head h2{margin:0;font-size:1.18rem}
+.bsa236-reader .bsa240-note-editor blockquote{margin:0;border-left:3px solid var(--accent);padding:9px 12px;background:var(--surface-2);border-radius:8px;overflow-wrap:anywhere;font-size:.85rem;line-height:1.5;max-height:160px;overflow-y:auto}
+.bsa236-reader .bsa240-note-editor label{display:grid;gap:8px;font-size:.85rem;font-weight:750}.bsa236-reader .bsa240-note-editor textarea{width:100%;min-width:0;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--text);font:inherit;font-size:1rem;padding:10px;resize:vertical;min-height:112px}
+.bsa236-reader .bsa240-note-actions{display:flex;gap:8px;flex-wrap:wrap}.bsa236-reader .bsa240-note-actions button{flex:1 1 105px}
+@media(max-width:690px){.bsa236-reader .bsa240-selection-tools{top:0;margin-block:10px}.bsa236-reader .bsa240-selection-actions button{flex:1 1 110px}.bsa236-reader .bsa240-highlight-hint button{flex:1 1 140px}.bsa236-reader .bsa240-highlights-panel{padding:12px}}
+@media(prefers-reduced-motion:reduce){.bsa236-reader .bsa240-selection-tools{scroll-behavior:auto}}
+/* Selection actions follow the reader, even if the selected passage is in a
+   late section of a long lecture. Do not put controls back at page start. */
+.bsa236-reader .bsa240-selection-tools{
+  position:fixed!important;top:auto!important;bottom:calc(14px + env(safe-area-inset-bottom,0px))!important;
+  left:max(14px,env(safe-area-inset-left,0px))!important;
+  width:min(535px,calc(100vw - 88px))!important;max-height:min(55dvh,420px)!important;
+  overflow:auto!important;margin:0!important;z-index:11!important;
+}
+@media(max-width:690px){
+ .bsa236-reader .bsa240-selection-tools{left:8px!important;bottom:calc(14px + env(safe-area-inset-bottom,0px))!important;width:calc(100vw - 66px)!important;max-height:min(56dvh,350px)!important;padding:10px!important}
+}
+.bsa236-reader .bsa240-highlights-header-actions{display:flex;flex-wrap:wrap;gap:6px}
