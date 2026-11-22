@@ -4581,3 +4581,71 @@ body>.backdrop .bsa45-sidebar-modal .bsa211-shortcut-groups{padding-bottom:18px}
 @media(max-width:850px){#root .bsa228-grid{grid-template-areas:'checks checks' 'break break' 'sound sound' 'schedule schedule'}}
 @media(max-width:650px){#root .bsa228-grid{grid-template-areas:'checks' 'break' 'sound' 'schedule'}#root .bsa229-add-form{grid-template-columns:minmax(0,1fr)}#root .bsa229-saved-list{grid-template-columns:minmax(0,1fr)}#root .bsa229-tabs button{font-size:.77rem;padding-inline:3px}#root .bsa229-spotify-frame{height:352px}#root .bsa229-youtube-player{min-height:200px;aspect-ratio:auto;height:max(200px,56.25vw)}#root .bsa229-source button{min-width:30px;padding:4px}#root .bsa229-player-card{padding:10px}}
 @media(max-width:360px){#root .bsa229-transport button,#root .bsa229-transport a{font-size:.71rem;padding:7px 9px}#root .bsa229-source{gap:4px}}
+
+/* V2.32 — one persistent player across Study Desk routes.
+   Embedded YouTube remains clearly visible: never hide, shrink below 200×200,
+   or disguise a video as audio when the user moves to another section. */
+#root .bsa228-grid{grid-template-areas:'checks break' 'schedule schedule'}
+@media(max-width:850px){#root .bsa228-grid{grid-template-areas:'checks checks' 'break break' 'schedule schedule'}}
+@media(max-width:650px){#root .bsa228-grid{grid-template-areas:'checks' 'break' 'schedule'}}
+#root #bsa232-media-player:not(.bsa232-away){margin:18px 0 0;min-width:0;scroll-margin-top:85px}
+#root .bsa232-away{
+  position:fixed!important;
+  z-index:110;
+  bottom:calc(82px + env(safe-area-inset-bottom,0px));
+  left:clamp(12px,calc(100vw - 325px),320px);
+  width:min(306px,calc(100vw - 24px));
+  max-height:calc(100dvh - 100px);
+  overflow:auto;
+  padding:10px!important;
+  margin:0!important;
+  border-radius:17px!important;
+  background:var(--surface)!important;
+  border:1px solid var(--line)!important;
+  box-shadow:0 15px 42px rgba(0,0,0,.3),0 3px 12px rgba(0,0,0,.12);
+  overscroll-behavior:contain;
+}
+#root .bsa232-quickbar{display:flex;align-items:center;justify-content:space-between;gap:6px;min-width:0;flex-wrap:wrap}
+#root .bsa232-quick-label{font-weight:800;font-size:.8rem;color:var(--text);line-height:1.3}
+#root .bsa232-quickbar button{border:1px solid var(--line);border-radius:9px;min-height:34px;padding:6px 8px;background:var(--surface-2);color:var(--text);font:750 .69rem var(--body,system-ui);cursor:pointer}
+#root .bsa232-return{border-color:color-mix(in srgb,var(--accent) 45%,var(--line))!important;color:var(--accent)!important}
+#root .bsa232-away .bsa228-section-heading,
+#root .bsa232-away .bsa229-tabs,
+#root .bsa232-away .bsa229-noise,
+#root .bsa232-away .bsa229-streaming > :not(.bsa229-player-card),
+#root .bsa232-away .bsa229-player-card > :not(.bsa229-player-heading):not(.bsa229-youtube-player):not(.bsa229-spotify-frame),
+#root .bsa232-away > .bsa229-feedback{display:none!important}
+#root .bsa232-away .bsa229-streaming{margin-top:7px;gap:0;display:block}
+#root .bsa232-away .bsa229-player-card{padding:6px!important;gap:8px;background:transparent;border:0}
+#root .bsa232-away .bsa229-player-heading strong{font-size:.7rem;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;max-width:170px}
+#root .bsa232-away .bsa229-player-heading button{font-size:.68rem;padding:5px 7px;min-height:30px}
+#root .bsa232-away .bsa229-youtube-player{
+  display:block!important;width:100%;height:200px!important;min-height:200px!important;
+  aspect-ratio:auto!important;background:#000!important;overflow:hidden;
+}
+#root .bsa232-away .bsa229-youtube-player iframe{
+  display:block!important;width:100%!important;height:200px!important;min-height:200px!important;
+  visibility:visible!important;opacity:1!important;
+}
+#root .bsa232-away .bsa229-spotify-frame{display:block!important;width:100%!important;height:160px!important;min-height:160px!important}
+#root .bsa232-away.bsa232-idle{width:auto!important;max-width:calc(100vw - 24px);padding:7px 9px!important;box-shadow:0 5px 18px rgba(0,0,0,.18)}
+#root .bsa232-away.bsa232-idle .bsa229-streaming{display:none!important}
+#root .bsa232-away.bsa232-idle .bsa232-quick-label{display:none}
+#root .bsa232-away.bsa232-idle .bsa232-return{min-height:34px}
+@media(max-width:850px){
+  #root .bsa232-away{left:12px;bottom:calc(82px + env(safe-area-inset-bottom,0px))}
+}
+@media(max-width:440px){
+  #root .bsa232-away{left:8px;width:min(284px,calc(100vw - 16px));max-height:calc(100dvh - 116px)}
+  #root .bsa232-away .bsa229-player-heading strong{max-width:140px}
+  #root .bsa232-away .bsa232-quick-label{font-size:.72rem}
+}
+@media(max-height:400px) and (orientation:landscape){
+  #root .bsa232-away{left:8px;bottom:8px;max-height:calc(100dvh - 16px);width:min(310px,calc(100vw - 16px))}
+}
+@media print{#root .bsa232-away{display:none!important}}
+
+/* V2.32 -- distinguish Spotify account-controlled track shuffle from local saved-link ordering. */
+#root .bsa232-spotify-note{margin:8px 0 0;padding:10px 12px;border:1px solid var(--line);border-radius:11px;background:var(--surface-2);color:var(--text);font-size:.76rem;line-height:1.5;overflow-wrap:anywhere}
+#root .bsa232-open-spotify{display:inline-flex;align-items:center;justify-content:center;border:1px solid color-mix(in srgb,var(--accent) 36%,var(--line));border-radius:10px;padding:8px 12px;min-height:36px;color:var(--text);font-weight:750;text-decoration:none}
+#root .bsa232-open-spotify:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
