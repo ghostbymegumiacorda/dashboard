@@ -30,7 +30,7 @@ THE SOFTWARE.
   if (window.__BSA_DESK_APP_LOADED__) return;
   window.__BSA_DESK_APP_LOADED__ = true;
   // User-facing release label only. Do not use for storage schemas or caches.
-  const BSA_RELEASE_LABEL = "V2.40";
+  const BSA_RELEASE_LABEL = "V1.0";
   const S = (t, p = null, s = false) => ({ t, p, s });
   const CFAS_TOPICS = [
     {
@@ -11494,8 +11494,26 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
     const [hlEditing,setHlEditing]=useState('');
     const [hlNote,setHlNote]=useState('');
     const [hlNotice,setHlNotice]=useState('');
+    // Highlight actions are opt-in and NEVER persist a selection on their own.
+    // Stored per browser/profile; the shared publisher uses an isolated key.
+    const readerHighlightKey=(window.__BSA_SHARED_MODE__?'bsa_shared_':'bsa_owner_')+'reader_highlight_tools';
+    const [highlightTools,setHighlightTools]=useState(()=>{
+      try{return localStorage.getItem(readerHighlightKey)==='on'}catch(_){return false}
+    });
     const [showHighlights,setShowHighlights]=useState(true);
+    const hlSuppressUntil=useRef(0);
     const hlTouchTimer=useRef([]);
+    const dismissHighlight=()=>{
+      hlSuppressUntil.current=Date.now()+350;
+      setHlSelection(null);
+      try{window.getSelection()?.removeAllRanges()}catch(_){}
+    };
+    const toggleHighlightTools=()=>{
+      const next=!highlightTools;
+      try{localStorage.setItem(readerHighlightKey,next?'on':'off')}catch(_){}
+      if(!next)dismissHighlight();
+      setHighlightTools(next);
+    };
     useEffect(()=>{const listener=()=>setHlRevision(n=>n+1);window.addEventListener('bsa181-changed',listener);return()=>window.removeEventListener('bsa181-changed',listener)},[]);
     const lectureHighlights=useMemo(()=>bsa41LectureHighlights(subject.id,lecture.id),[subject.id,lecture.id,hlRevision]);
     const highlightsBySection=useMemo(()=>{
@@ -11512,6 +11530,7 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
     // For multi-node markdown selections, existing context anchors restore the
     // exact passage without altering the imported source body.
     const captureHighlight=()=>{
+      if(!highlightTools||Date.now()<hlSuppressUntil.current||hlEditing)return;
       const selection=window.getSelection?.();
       if(!selection||selection.isCollapsed||!selection.rangeCount)return;
       const range=selection.getRangeAt(0),start=range.startContainer,end=range.endContainer;
@@ -11536,20 +11555,36 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
       setHlNotice('');
     };
     useEffect(()=>{
-      const onTouch=()=>{for(const t of hlTouchTimer.current)clearTimeout(t);
-        hlTouchTimer.current=[setTimeout(captureHighlight,180),setTimeout(captureHighlight,460)];};
-      let selectionTimer=0;
-      const onSelection=()=>{if(window.getSelection?.()?.isCollapsed)return;
-        // Never rerender the markdown while native iPad selection handles are
-        // still being dragged. Only sample after selection has settled.
-        clearTimeout(selectionTimer);
-        selectionTimer=setTimeout(captureHighlight,320);};
-      document.addEventListener('selectionchange',onSelection);
-      scroller.current?.addEventListener('touchend',onTouch,{passive:true});
+      if(!highlightTools)return;
       const pane=scroller.current;
-      return()=>{document.removeEventListener('selectionchange',onSelection);pane?.removeEventListener('touchend',onTouch);
-        clearTimeout(selectionTimer);hlTouchTimer.current.forEach(clearTimeout);hlTouchTimer.current=[]};
-    },[subject.id,lecture.id,sourceView.sections]);
+      let selectionTimer=0;
+      const onTouch=()=>{
+        hlTouchTimer.current.forEach(clearTimeout);
+        hlTouchTimer.current=[setTimeout(captureHighlight,220),setTimeout(captureHighlight,500)];
+      };
+      const onSelection=()=>{
+        if(window.getSelection?.()?.isCollapsed)return;
+        clearTimeout(selectionTimer);
+        // Let iPad selection handles settle before showing controls.
+        selectionTimer=setTimeout(captureHighlight,400);
+      };
+      const onOutside=e=>{
+        if(e.target?.closest?.('.bsa100-selection-tools,.bsa240-note-editor'))return;
+        // Tapping somewhere else dismisses the controls. No write is made.
+        // Mouse selections remain possible because pointerup can capture again.
+        if(hlSelection){dismissHighlight();}
+      };
+      document.addEventListener('pointerdown',onOutside,true);
+      document.addEventListener('selectionchange',onSelection);
+      pane?.addEventListener('touchend',onTouch,{passive:true});
+      return()=>{
+        document.removeEventListener('pointerdown',onOutside,true);
+        document.removeEventListener('selectionchange',onSelection);
+        pane?.removeEventListener('touchend',onTouch);
+        clearTimeout(selectionTimer);
+        hlTouchTimer.current.forEach(clearTimeout);hlTouchTimer.current=[];
+      };
+    },[subject.id,lecture.id,sourceView.sections,highlightTools,hlEditing,!!hlSelection]);
     const saveHighlight=(andNote=false)=>{
       if(!hlSelection){setHlNotice('Select a passage in the lecture first.');return;}
       if(hlSelection.text.length>1800){setHlNotice('Select a shorter passage (up to 1,800 characters).');return;}
@@ -11560,7 +11595,7 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
         if(andNote&&old)editHighlight(old.id);
       }else if(saved){setHlNotice('Highlight saved to this device.');if(andNote)editHighlight(saved);}
       else setHlNotice('Could not save highlight. Check available device storage.');
-      if(saved){setHlSelection(null);try{window.getSelection()?.removeAllRanges()}catch(_){}}
+      if(saved)dismissHighlight();
     };
     const jumpHighlight=x=>{
       const index=sourceView.sections.findIndex((sec,i)=>(sec.id||String(i))===x.sectionId);
@@ -11601,7 +11636,10 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
         h('div',{className:'bsa236-reader-heading'},h('small',null,mode==='listen'?'LISTEN MODE':'READING MODE',' · ',subject.code||subject.name),h('strong',null,lecture.title)),
         h('div',{className:'bsa236-reader-actions'},
           h('button',{type:'button',onClick:()=>setTocOpen(v=>!v),'aria-expanded':tocOpen},'Sections'),
-          h('button',{type:'button',onClick:()=>{setHlPanel(v=>!v);setHlSelection(null)},'aria-expanded':hlPanel,'aria-label':'Open lecture highlights and notes'},'Highlights · '+lectureHighlights.length),
+          h('button',{type:'button',className:'bsa100-highlight-toggle'+(highlightTools?' is-on':''),
+            onClick:toggleHighlightTools,'aria-pressed':highlightTools,'aria-label':'Highlight tools '+(highlightTools?'on':'off')},
+            '✎ Highlight: '+(highlightTools?'On':'Off')),
+          h('button',{type:'button',onClick:()=>{setHlPanel(v=>!v);dismissHighlight()},'aria-expanded':hlPanel,'aria-label':'Open lecture highlights and notes'},'Highlights · '+lectureHighlights.length),
           h('button',{type:'button',onClick:()=>updatePrefs({size:Math.max(14,prefs.size-1)}),'aria-label':'Decrease text size'},'A−'),
           h('button',{type:'button',onClick:()=>updatePrefs({size:Math.min(26,prefs.size+1)}),'aria-label':'Increase text size'},'A+'),
           h('button',{type:'button',onClick:safeClose,className:'bsa236-close'},'Close ×'))),
@@ -11632,21 +11670,18 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
             h('div',{className:'bsa236-reader-appearance'},
               h('label',null,'Reading width',h('select',{value:prefs.width,onChange:e=>updatePrefs({width:Number(e.target.value)})},[620,760,900].map(n=>h('option',{value:n,key:n},n===620?'Narrow':n===760?'Comfortable':'Wide')))),
               h('label',null,'Line spacing',h('select',{value:prefs.spacing,onChange:e=>updatePrefs({spacing:Number(e.target.value)})},[1.5,1.75,2].map(n=>h('option',{value:n,key:n},n+'×'))))),
-            h('div',{className:'bsa240-highlight-hint'},
-              h('span',null,'Highlight while you read: select a word or passage, choose a color, then save.'),
-              h('button',{type:'button',onClick:()=>setHlPanel(v=>!v)},lectureHighlights.length+' saved highlights'),
-              h('button',{type:'button',onClick:()=>setShowHighlights(v=>!v),'aria-pressed':showHighlights},showHighlights?'Hide colors':'Show colors')),
-            hlSelection&&h('div',{className:'bsa240-selection-tools',role:'region','aria-label':'Selected lecture text'},
-              h('div',{className:'bsa240-selection-quote'},'Selected: “'+hlSelection.text.slice(0,130)+(hlSelection.text.length>130?'…':'')+'”'),
-              h('div',{className:'bsa240-color-picker',role:'group','aria-label':'Highlight color'},
-                Object.entries(BSA41_HIGHLIGHT_TYPES).map(([kind,item])=>h('button',{key:kind,type:'button',
-                  className:'bsa240-color bsa240-color-'+kind+(hlKind===kind?' is-active':''),
-                  onClick:()=>setHlKind(kind),'aria-label':item.color+' highlight: '+item.label,
-                  'aria-pressed':hlKind===kind,title:item.label},'●'))),
-              h('div',{className:'bsa240-selection-actions'},
-                h('button',{type:'button',className:'bsa236-primary',onClick:()=>saveHighlight(false)},'Highlight'),
-                h('button',{type:'button',onClick:()=>saveHighlight(true)},'Highlight + note'),
-                h('button',{type:'button',onClick:()=>{setHlSelection(null);try{window.getSelection()?.removeAllRanges()}catch(_){}}},'Cancel'))),
+            h('div',{className:'bsa240-highlight-hint bsa100-highlight-options'},
+              h('button',{type:'button',onClick:()=>setShowHighlights(v=>!v),'aria-pressed':showHighlights},
+                showHighlights?'Hide saved colors':'Show saved colors'),
+              highlightTools&&h('small',null,'Select text, then press Save. Tapping outside only dismisses the selection.')),
+            highlightTools&&hlSelection&&h('div',{className:'bsa240-selection-tools bsa100-selection-tools',role:'region','aria-label':'Selected lecture text'},
+              h('label',{className:'bsa100-highlight-label'},'Label',
+                h('select',{value:hlKind,onChange:e=>setHlKind(e.target.value),'aria-label':'Highlight color and category'},
+                  Object.entries(BSA41_HIGHLIGHT_TYPES).map(([kind,item])=>h('option',{key:kind,value:kind},item.label)))),
+              h('button',{type:'button',className:'bsa236-primary',onClick:()=>saveHighlight(false)},'Save highlight'),
+              h('button',{type:'button',onClick:()=>saveHighlight(true)},'+ Note'),
+              h('button',{type:'button',onClick:dismissHighlight,'aria-label':'Dismiss selection without saving'},'×')),
+
             hlNotice&&h('p',{className:'bsa240-highlight-status',role:'status'},hlNotice),
             hlPanel&&h('section',{className:'bsa240-highlights-panel','aria-label':'Saved highlights for this lecture'},
               h('div',{className:'bsa240-highlights-header'},h('h2',null,'My highlights & notes'),
