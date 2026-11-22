@@ -30,7 +30,7 @@ THE SOFTWARE.
   if (window.__BSA_DESK_APP_LOADED__) return;
   window.__BSA_DESK_APP_LOADED__ = true;
   // User-facing release label only. Do not use for storage schemas or caches.
-  const BSA_RELEASE_LABEL = "V2.27";
+  const BSA_RELEASE_LABEL = "V2.29";
   const S = (t, p = null, s = false) => ({ t, p, s });
   const CFAS_TOPICS = [
     {
@@ -4092,7 +4092,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       ['Study materials',[['lectures','Lectures','lecture'],['ask','AI Tutor','ask'],['vault','Flashcards','cards'],['rules','Reference rules','book'],['workspace','Study Workspace','book'],['library','Find materials · Study Library','book'],['nlm','AI Prompt Builder','look']]],
       ['Practice & applications',[['fs-lab','Financial Statements Lab','book'],['accounting-lab','Accounting Lab','pset'],['accounting-cycle','Accounting Cycle','pset'],['mcq','Multiple-choice library','cards'],['psets','Problem Sets','pset'],['mistakes','Mistake Log','mistakes'],['practice','Practice','bolt']]],
       ['Planning & progress',[['study','Plan & Learn','lecture'],['insights','Learning Progress','grade'],['calendar','Study Schedule','calendar'],['grades','Grades','grade'],['class','Classes & deadlines','subjects'],['knowledge','Visual Studio','network'],['stats-clean','Study Report','grade'],['roadmap','Roadmap','roadmap'],['curriculum','Curriculum','book'],['achievements','Achievements','grade']]],
-      ['Other tools',[['toolkit','Study Toolkit','book'],['guide','Guided walkthrough','book'],['subjects','Switch subjects','subjects'],['sidebar-settings','Customize sidebar','look'],['themes','Themes','look'],['safety','Data Safety','data'],['life','Study Room','look'],['break','Break Corner','home'],['joy','Break activities','look'],['howto','How-To Corner','book'],['personalize','Personalization','look'],['private-vault','Private Vault','data']]]
+      ['Other tools',[['toolkit','Study Toolkit','book'],['routine','Study Routine · breaks & noise','calendar'],['guide','Guided walkthrough','book'],['subjects','Switch subjects','subjects'],['sidebar-settings','Customize sidebar','look'],['themes','Themes','look'],['safety','Data Safety','data'],['life','Study Room','look'],['break','Break Corner','home'],['joy','Break activities','look'],['howto','How-To Corner','book'],['personalize','Personalization','look'],['private-vault','Private Vault','data']]]
     ];
     const q=filter.trim().toLocaleLowerCase();
     const matched=sections.map(([label,links])=>[label,links.filter(([route,title])=>(!shared||allowedShared.has(route))&&(!q||(title+' '+label+' '+route).toLocaleLowerCase().includes(q)))]).filter(([,links])=>links.length);
@@ -4162,6 +4162,12 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     if (!s.first) s.first = now;
     const fresh = !s.reps;
     const ivl = s.ivl || 0, ease = s.ease || 2.5;
+    // Reviewing again on the same calendar day is useful practice, but does
+    // NOT establish a new spaced-success. Keep its earlier due date unless
+    // the learner says Again (which must shorten the schedule).
+    if(s.last===now && grade!=='again' && s.due && s.due>now){
+      return s;
+    }
     let n;
     if (grade === "again") {
       if (!fresh) s.lapses = (s.lapses || 0) + 1;
@@ -4179,6 +4185,12 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         s.ease = ease + 0.15;
       }
       s.reps = (s.reps || 0) + 1;
+    }
+    // Cards that repeatedly lapse must earn longer gaps more gradually.
+    // This adjusts only future grades; every existing due date is preserved.
+    if(grade==='good'||grade==='easy'){
+      const lapses=Math.max(0,Number(s.lapses)||0);
+      n=Math.max(1,Math.round(n * Math.max(0.60,1-Math.min(0.4,lapses*0.08))));
     }
     // Allow long-lived concepts to reach annual review without changing existing due dates.
     n = Math.min(365, opt && opt.preview ? n : fuzzIvl(n));
@@ -4378,7 +4390,9 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const prev = m.rt || {};
     const sameDay = prev.last === today();
     const streak = right ? sameDay ? Math.max(prev.streak || 0, 1) : (prev.streak || 0) + 1 : 0;
-    m.rt = { streak, due: addDays(today(), right ? 3 : 1), last: today() };
+    // Retests gain spacing only after a correct attempt on a different day.
+    const mistakeSteps=[1,3,7,14,30,60];
+    m.rt = { streak, due: addDays(today(),right?mistakeSteps[Math.min(streak,mistakeSteps.length-1)]:1), last: today() };
     m.status = right ? streak >= 2 ? "Cleared" : "Reviewing" : "Active";
     bumpDay(s, { reviews: 1, right: right ? 1 : 0 });
   }
@@ -4401,7 +4415,8 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const mist = subject.mistakes.filter((m) => m.status !== "Cleared" && mistakeDue(m) <= t);
     // Mistake retests always get through; the cap only holds back ordinary cards.
     const cap = maxPerDay > 0 ? Math.max(0, maxPerDay - mist.length) : Infinity;
-    const due = shuffle(dueAll.slice(0, cap));
+    // Don't randomize a backlog: the oldest overdue cards must be served first.
+    const due = dueAll.slice(0, cap);
     const room = cap === Infinity ? Infinity : Math.max(0, cap - due.length);
     const fresh = freshAll.slice(0, Math.min(Math.max(0, newPerDay - introduced), room));
     return { due, fresh, mist, prob: probsDue(subject), introduced, backlog: dueAll.length - due.length };
@@ -5607,7 +5622,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
      No changes to the schema for grades, cards, XP or older MCQ records. */
   const BSA197_DAY = 86400000;
   const BSA197_MODES = [
-    ['smart','Smart mix','New material first; review weak or due questions when useful'],
+    ['smart','Smart mix','Due reviews first, then weak and new questions'],
     ['fresh','Unseen only','Use only questions you have never checked; no recycled questions'],
     ['due','Due reviews','Only questions ready for spaced review'],
     ['weak','Weak spots','Revisit missed or guessed questions'],
@@ -5649,7 +5664,10 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const at=last?Number(last.at)||Date.parse(last.date||'')||0:0;
     // A guess is a correct score, but not evidence of durable recall.
     const span=!last?0:last.result==='correct'&&!last.guessed&&!last.assisted?[1,3,7,14,30,60,120,240,365][Math.min(streak-1,8)]||365:1;
-    return {key,seen:items.length,streak,wrong,at,due:!!last&&at>0&&now>=at+span*BSA197_DAY,
+    const dueAt=at>0?at+span*BSA197_DAY:0;
+    return {key,seen:items.length,streak,wrong,at,dueAt,intervalDays:span,
+      overdueDays:dueAt>0?Math.max(0,Math.floor((now-dueAt)/BSA197_DAY)):0,
+      due:!!last&&dueAt>0&&now>=dueAt,
       weak:!!last&&(wrong>0||!!last.guessed||!!last.assisted)&&streak<3,mastered:streak>=3,
       recent:!!last&&at>0&&now-at<2*BSA197_DAY};
   }
@@ -5661,8 +5679,12 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
   function bsa197Pick(pool,mode,count){
     const n=Math.max(1,Math.min(Number(count)||10,pool.length));
     const unseen=shuffle(pool.filter(q=>!q._recall.seen));
-    const due=shuffle(pool.filter(q=>q._recall.due));
-    const weak=shuffle(pool.filter(q=>q._recall.weak));
+    // Most overdue first, then previously missed/guessed; not a random pile.
+    const due=pool.filter(q=>q._recall.due).sort((a,b)=>
+      (a._recall.dueAt||Infinity)-(b._recall.dueAt||Infinity)||
+      (b._recall.wrong||0)-(a._recall.wrong||0));
+    const weak=pool.filter(q=>q._recall.weak).sort((a,b)=>
+      (a._recall.dueAt||Infinity)-(b._recall.dueAt||Infinity));
     const older=shuffle(pool.filter(q=>!q._recall.recent));
     const recent=shuffle(pool.filter(q=>q._recall.recent));
     const chosen=[],ids=new Set();
@@ -5671,8 +5693,13 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     if(mode==='weak'){take(weak);return chosen;}
     if(mode==='fresh'){take(unseen);return chosen;} // V2.10: never recycle an answered question in Unseen mode.
     if(mode==='smart'){
-      take(unseen,Math.ceil(n*.6));take(due,Math.ceil(n*.3));take(weak);
-      take(unseen);take(older);take(recent);return chosen;
+      // Retention-first: protect at least half the session for overdue work.
+      // New material is introduced once review debt has had attention.
+      take(due,Math.ceil(n*.55));
+      take(weak.filter(q=>q._recall.due),Math.ceil(n*.2));
+      take(unseen,Math.ceil(n*.3));
+      take(due);take(weak.filter(q=>!q._recall.recent));take(unseen);
+      take(older);take(recent);return chosen;
     }
     take(older);take(recent);return chosen;
   }
@@ -12437,6 +12464,7 @@ ${c.kindHint}` }
     ['rules','Rules & References','Saved accounting rules and source-backed standards','rules pas pfrs reference standards'],
     ['workspace','Study Workspace','Scratchpad, notebook, handwritten notes and working space','scratchpad notes notebook workspace'],
     ['toolkit','Study Toolkit','Focus timer, T-account ledger, journal, trial balance, 10-column worksheet, handwriting and calculators','toolkit calculator timer pomodoro ledger worksheet handwriting'],
+    ['routine','Study Routine','Daily review habit, break timer, ambient noise, YouTube and Spotify playlists','daily routine habits break timer pomodoro white noise pink noise brown noise discipline focus music spotify youtube youtube music playlist queue shuffle repeat'],
     ['safety','Device & Data Safety','Backup, restore, sync diagnostics, local study data checks and device safety','backup restore security data sync safety'],
     ['curriculum','Curriculum','Four-year curriculum map, courses and prerequisites','curriculum prospectus courses degree'],
     ['stats-clean','Study Report','Reflect on actual learning progress and next actions','report study report weekly progress'],
@@ -18708,6 +18736,408 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     const line=BSA32_DAILY_LINES[i];
     return {day,lead:line[0],highlight:line[1],support:line[2]};
   }
+  /* V2.28 -- Study Routine & Rest
+     A small, device-local habit checklist is deliberately NOT an academic
+     score or GitHub study schema. No owner data is exposed in shared mode.
+     Timers are date/deadline based: no hidden CPU work when navigating.
+  */
+  const BSA228_ROUTINE_PREF='bsa228_owner_routine_v1';
+  const BSA228_ROUTINE_CHECK='bsa228_owner_routine_checks_v1';
+  const BSA228_BREAK_KEY='bsa228_owner_break_v1';
+  const BSA228_STEPS=[
+    ['review','Retrieve first','Answer due questions without seeing the answer first.'],
+    ['focus','One focused block','Study a single topic, then try a problem.'],
+    ['rest','Take a real break','Stand, drink water, rest your eyes; no review required.'],
+    ['teach','Explain it back','Say why the rule works, in your own words.']
+  ];
+  function bsa228RoutineKey(subjectId,day=today()){return day+'|'+String(subjectId||'unknown');}
+  function bsa228ReadJson(key,fallback){
+    try{const x=JSON.parse(localStorage.getItem(key)||'null');return x&&typeof x==='object'?x:fallback;}catch(_){return fallback;}
+  }
+  function bsa228WriteJson(key,value){try{localStorage.setItem(key,JSON.stringify(value));return true;}catch(_){return false;}}
+  function bsa228BreakRemaining(b,at=Date.now()){
+    if(!b||!Number.isFinite(b.remaining)||b.remaining<0)return 0;
+    return Math.max(0,Math.ceil((b.running?b.endAt-at:b.remaining)/1000));
+  }
+  let bsa228Break=bsa228ReadJson(BSA228_BREAK_KEY,{remaining:0,running:false,done:false,endAt:0});
+  function bsa228SetBreak(b){
+    bsa228Break=b;
+    bsa228WriteJson(BSA228_BREAK_KEY,b);
+    window.dispatchEvent(new Event('bsa228:break-changed'));
+  }
+  function bsa228BreakAction(action,mins=5){
+    const now=Date.now(),b=bsa228Break;
+    if(action==='start'){
+      const ms=Math.min(30,Math.max(1,Number(mins)||5))*60000;
+      bsa228SetBreak({remaining:ms,endAt:now+ms,running:true,done:false});
+    } else if(action==='pause'&&b.running){
+      bsa228SetBreak({...b,remaining:Math.max(0,b.endAt-now),running:false});
+    } else if(action==='resume'&&!b.running&&b.remaining>0){
+      bsa228SetBreak({...b,endAt:now+b.remaining,running:true,done:false});
+    } else if(action==='stop'){
+      bsa228SetBreak({remaining:0,endAt:0,running:false,done:false});
+    }
+  }
+  function BSA228BreakMonitor({toast}){
+    useEffect(()=>{
+      let live=true,timeout=0;
+      const check=()=>{
+        clearTimeout(timeout);
+        if(!live||!bsa228Break.running)return;
+        const left=bsa228Break.endAt-Date.now();
+        if(left>0){timeout=setTimeout(check,Math.max(50,Math.min(60000,left+20)));return;}
+        bsa228SetBreak({remaining:0,endAt:0,running:false,done:true});
+        if(document.visibilityState==='visible'){
+          try{chime();}catch(_){}
+          toast('Break finished. Return to one small study task when ready.');
+        }
+      };
+      check();
+      window.addEventListener('bsa228:break-changed',check);
+      document.addEventListener('visibilitychange',check);
+      return()=>{live=false;clearTimeout(timeout);window.removeEventListener('bsa228:break-changed',check);document.removeEventListener('visibilitychange',check);};
+    },[]);
+    return null;
+  }
+  // Synthesized noise uses Web Audio. No streaming, external downloads or
+  // copyrighted recordings. Audio only starts from a direct user click.
+  let bsa228Noise=null;
+  function bsa228NoiseStop(){
+    const old=bsa228Noise;bsa228Noise=null;
+    if(old){try{old.source.stop();}catch(_){}try{old.ctx.close();}catch(_){}}
+    window.dispatchEvent(new Event('bsa228:noise-changed'));
+  }
+  async function bsa228NoiseStart(kind='brown',volume=35){
+    bsa228NoiseStop();
+    const Audio=window.AudioContext||window.webkitAudioContext;
+    if(!Audio)throw new Error('This browser cannot play generated noise.');
+    const ctx=new Audio(),sr=ctx.sampleRate,length=Math.ceil(sr*2),buffer=ctx.createBuffer(1,length,sr);
+    const samples=buffer.getChannelData(0);
+    let brown=0,b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
+    for(let i=0;i<length;i++){
+      const white=Math.random()*2-1;
+      if(kind==='brown'){
+        brown=(brown+0.02*white)/1.02;
+        samples[i]=Math.max(-1,Math.min(1,brown*3.2));
+      }else if(kind==='pink'){
+        b0=0.99886*b0+white*0.0555179;b1=0.99332*b1+white*0.0750759;
+        b2=0.969*b2+white*0.153852;b3=0.8665*b3+white*0.3104856;
+        b4=0.55*b4+white*0.5329522;b5=-0.7616*b5-white*0.016898;
+        samples[i]=Math.max(-1,Math.min(1,(b0+b1+b2+b3+b4+b5+b6+white*0.5362)*0.10));
+        b6=white*0.115926;
+      }else samples[i]=white*0.45;
+    }
+    const source=ctx.createBufferSource(),gain=ctx.createGain();
+    source.buffer=buffer;source.loop=true;
+    gain.gain.value=Math.max(0,Math.min(1,volume/100))*0.13;
+    source.connect(gain);gain.connect(ctx.destination);
+    // Set the singleton before awaiting resume, so a rapid Stop click cancels it.
+    bsa228Noise={ctx,source,gain,kind,volume};
+    try{await ctx.resume();if(bsa228Noise?.source!==source){await ctx.close();return;}source.start();}
+    catch(e){bsa228NoiseStop();throw e;}
+    window.dispatchEvent(new Event('bsa228:noise-changed'));
+  }
+  /* V2.29 -- Focus Music (owner only)
+     Embedded providers supply playback; never proxy, download or hide their audio.
+     Queue = saved source links. YouTube's IFrame API adds track controls.
+     Spotify retains official embed controls; no unsupported account access.
+  */
+  const BSA229_LINK_KEY='bsa229_owner_media_links_v1';
+  const BSA229_MODE_KEY='bsa229_owner_media_mode_v1';
+  function bsa229Source(raw){
+    let u;try{u=new URL(String(raw||'').trim());}catch(_){throw new Error('Paste a complete YouTube or Spotify link.');}
+    if(u.protocol!=='https:')throw new Error('Only HTTPS YouTube or Spotify links are supported.');
+    const host=u.hostname.toLowerCase(),parts=u.pathname.split('/').filter(Boolean);
+    if(['youtube.com','www.youtube.com','m.youtube.com','music.youtube.com','youtube-nocookie.com','www.youtube-nocookie.com','youtu.be','www.youtu.be'].includes(host)){
+      let id='',kind='video';
+      const list=u.searchParams.get('list')||'';
+      if(list){kind='playlist';id=list;}
+      else if(host==='youtu.be'||host==='www.youtu.be')id=parts[0]||'';
+      else if(['watch','live','shorts','embed'].includes(parts[0]))id=parts[0]==='watch'?u.searchParams.get('v')||'':parts[1]||'';
+      if(kind==='playlist'?!/^[a-zA-Z0-9_-]{10,80}$/.test(id):!/^[a-zA-Z0-9_-]{11}$/.test(id))throw new Error('This YouTube link has no valid video or playlist ID.');
+      return {provider:'youtube',kind,id,url:kind==='playlist'?'https://www.youtube.com/playlist?list='+encodeURIComponent(id):'https://www.youtube.com/watch?v='+encodeURIComponent(id)};
+    }
+    if(host==='open.spotify.com'||host==='www.open.spotify.com'){
+      let i=0;if(parts[0]&&parts[0].startsWith('intl-'))i++;
+      const kind=parts[i],id=parts[i+1]||'';
+      if(!['playlist','album','track','episode','show'].includes(kind)||!/^[a-zA-Z0-9]{10,32}$/.test(id))throw new Error('Use a public Spotify playlist, album, track or podcast link.');
+      return {provider:'spotify',kind,id,url:'https://open.spotify.com/'+kind+'/'+id};
+    }
+    throw new Error('Only YouTube and Spotify sharing links are supported.');
+  }
+  let bsa229YtApiPromise=null;
+  function bsa229YouTubeApi(){
+    if(window.YT?.Player)return Promise.resolve(window.YT);
+    if(bsa229YtApiPromise)return bsa229YtApiPromise;
+    bsa229YtApiPromise=new Promise((resolve,reject)=>{
+      let settled=false;
+      const done=(ok,value)=>{if(settled)return;settled=true;clearTimeout(timeout);if(!ok)document.querySelector('script[data-bsa229-yt]')?.remove();ok?resolve(value):reject(value);};
+      const previous=window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady=()=>{try{if(typeof previous==='function')previous();}catch(_){}done(true,window.YT);};
+      const timeout=setTimeout(()=>done(false,new Error('YouTube player did not load. Check your connection or content blockers.')),15000);
+      let script=document.querySelector('script[data-bsa229-yt]');
+      if(!script){script=document.createElement('script');script.src='https://www.youtube.com/iframe_api';script.async=true;script.dataset.bsa229Yt='1';document.head.appendChild(script);}
+      script.addEventListener('error',()=>done(false,new Error('YouTube is blocked or offline.')), {once:true});
+      if(window.YT?.Player)done(true,window.YT);
+    }).catch(e=>{bsa229YtApiPromise=null;throw e;});
+    return bsa229YtApiPromise;
+  }
+  function BSA229YouTubePlayer({source,shuffle,repeat,onReady,onState,onError}){
+    const holder=useRef(null),player=useRef(null);
+    useEffect(()=>{
+      let live=true;
+      onReady(null);
+      onState({});
+      bsa229YouTubeApi().then(YT=>{
+        if(!live||!holder.current)return;
+        const node=document.createElement('div');holder.current.replaceChildren(node);
+        player.current=new YT.Player(node,{
+          width:'100%',height:'100%',host:'https://www.youtube.com',
+          videoId:source.kind==='video'?source.id:undefined,
+          playerVars:{playsinline:1,rel:0,origin:location.origin,enablejsapi:1,...(source.kind==='playlist'?{listType:'playlist',list:source.id}:{})},
+          events:{
+            onReady(e){if(!live)return;try{if(source.kind==='playlist'){
+              e.target.cuePlaylist({list:source.id,listType:'playlist'});
+              e.target.setLoop(repeat);
+              e.target.setShuffle(shuffle);
+            }}catch(_){}onReady(e.target);},
+            onStateChange(e){if(!live)return;let queue=[],index=-1;
+              try{queue=e.target.getPlaylist()||[];index=e.target.getPlaylistIndex();}catch(_){}
+              onState({playing:e.data===1,queue,index});
+            },
+            onError(e){if(live)onError('YouTube cannot play this item here (error '+e.data+'). Open the source on YouTube.');}
+          }
+        });
+      }).catch(e=>{if(live)onError(e.message||'YouTube is unavailable.');});
+      return()=>{live=false;try{player.current?.destroy();}catch(_){}player.current=null;if(holder.current)holder.current.replaceChildren();};
+    },[source.id,source.kind]);
+    useEffect(()=>{if(!player.current||source.kind!=='playlist')return;
+      try{player.current.setShuffle(!!shuffle);}catch(_){}
+    },[shuffle,source.id,source.kind]);
+    useEffect(()=>{if(!player.current)return;try{player.current.setLoop(!!repeat);}catch(_){}},[repeat,source.id]);
+    return h('div',{className:'bsa229-youtube-player',ref:holder,'aria-label':'Visible YouTube video player'});
+  }
+  function BSA229FocusMusic({prefs,savePrefs}){
+    const [mode,setMode]=useState(()=>{try{const x=localStorage.getItem(BSA229_MODE_KEY);return ['noise','youtube','spotify'].includes(x)?x:'noise';}catch(_){return'noise';}});
+    const [links,setLinks]=useState(()=>{
+      const raw=bsa228ReadJson(BSA229_LINK_KEY,[]);
+      return Array.isArray(raw)?raw.map(x=>{try{const src=bsa229Source(x?.url);return {...src,title:String(x?.title||src.provider+' '+src.kind).slice(0,90),addedAt:Number(x?.addedAt)||0};}catch(_){return null;}}).filter(Boolean).slice(0,30):[];
+    });
+    const [url,setUrl]=useState(''),[title,setTitle]=useState(''),[feedback,setFeedback]=useState('');
+    const [active,setActive]=useState(null),[ytController,setYtController]=useState(null),[ytState,setYtState]=useState({});
+    const [shuffle,setShuffle]=useState(false),[repeat,setRepeat]=useState(false);
+    const [sourceShuffled,setSourceShuffled]=useState(false),[sourceOrder,setSourceOrder]=useState([]);
+    const [noiseRevision,setNoiseRevision]=useState(0);
+    useEffect(()=>{
+      const onNoise=()=>setNoiseRevision(v=>v+1);
+      const onStopMedia=()=>setActive(null);
+      window.addEventListener('bsa228:noise-changed',onNoise);
+      window.addEventListener('bsa229:stop-media',onStopMedia);
+      return()=>{window.removeEventListener('bsa228:noise-changed',onNoise);window.removeEventListener('bsa229:stop-media',onStopMedia);};
+    },[]);
+    const pickMode=v=>{setMode(v);setActive(null);setFeedback('');setYtController(null);try{localStorage.setItem(BSA229_MODE_KEY,v);}catch(_){}};
+    const providerLinks=links.filter(x=>x.provider===mode);
+    const sourceKey=x=>x.provider+':'+x.kind+':'+x.id;
+    const orderedSources=sourceShuffled?providerLinks.slice().sort((a,b)=>{const ia=sourceOrder.indexOf(sourceKey(a)),ib=sourceOrder.indexOf(sourceKey(b));return (ia<0?999:ia)-(ib<0?999:ib);}):providerLinks;
+    const toggleSourceShuffle=()=>{if(sourceShuffled){setSourceShuffled(false);return;}const names=providerLinks.map(sourceKey);for(let i=names.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[names[i],names[j]]=[names[j],names[i]];}setSourceOrder(names);setSourceShuffled(true);};
+    const selected=links.find(x=>x.id===active?.id&&x.kind===active?.kind&&x.provider===active?.provider)||active;
+    const persist=next=>{if(!bsa228WriteJson(BSA229_LINK_KEY,next)){setFeedback('This device is out of storage; playlist changes could not be saved.');return false;}setLinks(next);return true;};
+    const addSource=e=>{
+      e?.preventDefault?.();
+      try{
+        const src=bsa229Source(url);
+        if(links.some(x=>x.provider===src.provider&&x.kind===src.kind&&x.id===src.id)){pickMode(src.provider);setFeedback('Already in your saved sources.');return;}
+        const item={...src,title:title.trim().slice(0,90)||((src.provider==='youtube'?'YouTube':'Spotify')+' '+src.kind),addedAt:Date.now()};
+        if(links.length>=30){setFeedback('Maximum 30 saved links. Remove an older source first.');return;}
+        const next=[...links,item];if(!persist(next))return;
+        setUrl('');setTitle('');setFeedback('Saved on this device. Tap Play source to open its player.');
+        setMode(item.provider);try{localStorage.setItem(BSA229_MODE_KEY,item.provider);}catch(_){}
+      }catch(error){setFeedback(error.message||'Invalid playlist link.');}
+    };
+    const playSource=item=>{
+      bsa228NoiseStop();
+      setActive(item);setYtController(null);setYtState({});setFeedback('');
+    };
+    const removeSource=item=>{
+      if(selected?.provider===item.provider&&selected?.kind===item.kind&&selected?.id===item.id){setActive(null);setYtController(null);}
+      persist(links.filter(x=>!(x.provider===item.provider&&x.kind===item.kind&&x.id===item.id)));
+    };
+    const shiftSource=(item,direction)=>{
+      const idx=links.indexOf(item),positions=links.map((x,i)=>x.provider===item.provider?i:-1).filter(i=>i>=0);
+      const current=positions.indexOf(idx),other=positions[current+direction];if(idx<0||other===undefined)return;
+      const arr=links.slice();[arr[idx],arr[other]]=[arr[other],arr[idx]];persist(arr);
+    };
+    const nextSource=direction=>{
+      const i=orderedSources.findIndex(x=>x.id===selected?.id&&x.kind===selected?.kind);
+      const ix=i<0?0:(i+direction+orderedSources.length)%orderedSources.length;
+      if(orderedSources[ix])playSource(orderedSources[ix]);
+    };
+    const switchNoise=async()=>{
+      if(bsa228Noise){bsa228NoiseStop();return;}
+      // Explicitly unmount any active music player before starting generated noise.
+      window.dispatchEvent(new Event('bsa229:stop-media'));
+      try{await bsa228NoiseStart(prefs.kind,prefs.volume);setFeedback('');}
+      catch(error){setFeedback(error.message||'Sound playback is unavailable.');}
+    };
+    const canYt=!!ytController&&selected?.provider==='youtube';
+    const youtubeControls=selected?.provider==='youtube'&&h('div',{className:'bsa229-yt-controls'},
+      h('div',{className:'bsa229-transport'},
+        h('button',{type:'button',disabled:!canYt||selected.kind!=='playlist',onClick:()=>ytController?.previousVideo?.(),'aria-label':'Previous YouTube track'},'⏮ Previous'),
+        h('button',{type:'button',disabled:!canYt,onClick:()=>{const state=ytController?.getPlayerState?.();state===1?ytController.pauseVideo():ytController.playVideo();}},'Play / pause'),
+        h('button',{type:'button',disabled:!canYt||selected.kind!=='playlist',onClick:()=>ytController?.nextVideo?.(),'aria-label':'Next YouTube track'},'Next ⏭')),
+      selected.kind==='playlist'&&h('div',{className:'bsa229-transport'},
+        h('button',{type:'button',className:shuffle?'active':'',onClick:()=>setShuffle(v=>!v),'aria-pressed':shuffle},'⇄ Shuffle ',shuffle?'on':'off'),
+        h('button',{type:'button',className:repeat?'active':'',onClick:()=>setRepeat(v=>!v),'aria-pressed':repeat},'↻ Repeat ',repeat?'on':'off'),
+        h('span',{className:'bsa229-track-index'},Array.isArray(ytState.queue)&&ytState.queue.length?('Track '+(ytState.index+1)+' / '+ytState.queue.length):'Open player to load queue')),
+      selected.kind==='playlist'&&Array.isArray(ytState.queue)&&ytState.queue.length>0&&h('details',{className:'bsa229-track-list'},
+        h('summary',null,'YouTube track queue · '+ytState.queue.length),
+        h('div',{className:'bsa229-queue-items'},ytState.queue.slice(0,150).map((videoId,i)=>h('button',{key:videoId+'-'+i,type:'button',className:i===ytState.index?'now':'',onClick:()=>ytController?.playVideoAt?.(i)},
+          h('span',null,'#'+(i+1)),h('span',null,videoId),i===ytState.index?h('strong',null,'Playing'):null)))));
+    return h('section',{className:'bsa228-card bsa228-sound-card bsa229-music'},
+      h('div',{className:'bsa228-section-heading'},h('div',null,h('span',{className:'bsa228-eyebrow'},'FOCUS MUSIC'),h('h2',null,'Sounds & playlists')),h('span',{className:'bsa228-state'},bsa228Noise?'Noise playing':active?'Player open':'Ready')),
+      h('div',{className:'bsa229-tabs',role:'tablist','aria-label':'Focus music source'},[['noise','Ambient'],['youtube','YouTube'],['spotify','Spotify']].map(([k,label])=>h('button',{type:'button',key:k,role:'tab','aria-selected':mode===k,className:mode===k?'on':'',onClick:()=>pickMode(k)},label))),
+      mode==='noise'?h('div',{className:'bsa229-noise'},
+        h('p',{className:'bsa228-help'},'Three locally generated sounds; no internet connection needed.'),
+        h('div',{className:'bsa228-presets','aria-label':'Sound type'},[['brown','Brown · soft'],['pink','Pink · balanced'],['white','White · crisp']].map(([id,label])=>h('button',{key:id,type:'button',className:prefs.kind===id?'selected':'','aria-pressed':prefs.kind===id,onClick:()=>{savePrefs({kind:id});if(bsa228Noise)bsa228NoiseStart(id,prefs.volume).catch(e=>setFeedback(e.message));}},label))),
+        h('label',{className:'bsa228-volume'},h('span',null,'Volume ',prefs.volume+'%'),h('input',{type:'range',min:0,max:70,step:5,value:prefs.volume,'aria-label':'Background noise volume',onChange:e=>{const volume=Number(e.target.value);savePrefs({volume});if(bsa228Noise)bsa228Noise.gain.gain.setTargetAtTime(volume/100*0.13,bsa228Noise.ctx.currentTime,0.06);}})),
+        h('button',{className:'btn primary bsa228-sound-toggle',type:'button',onClick:switchNoise},bsa228Noise?'■ Stop noise':'▶ Play '+prefs.kind+' noise'),
+        h('p',{className:'bsa228-help'},'Noise can continue when you open another dashboard page. It stops on reload, and mobile may pause it in the background.'))
+      :h('div',{className:'bsa229-streaming'},
+        h('p',{className:'bsa228-help'},mode==='youtube'?'Paste regular YouTube or YouTube Music video/playlist URLs. Video stays visible, as required by YouTube.':'Paste public Spotify playlist, album, or track links. Spotify handles track playback inside its player; account-level shuffle and queue are not exposed by embeds.'),
+        h('form',{className:'bsa229-add-form',onSubmit:addSource},
+          h('input',{type:'url',placeholder:'Paste YouTube or Spotify link',value:url,onChange:e=>setUrl(e.target.value),required:true,'aria-label':'YouTube or Spotify URL'}),
+          h('input',{type:'text',placeholder:'Optional playlist name',value:title,maxLength:90,onChange:e=>setTitle(e.target.value),'aria-label':'Optional playlist name'}),
+          h('button',{className:'btn primary',type:'submit'},'+ Save link')),
+        h('div',{className:'bsa229-saved-head'},h('strong',null,'Saved sources · '+providerLinks.length),h('button',{type:'button',className:sourceShuffled?'active':'',disabled:providerLinks.length<2,onClick:toggleSourceShuffle,'aria-pressed':sourceShuffled},'⇄ Shuffle sources ',sourceShuffled?'on':'off')), 
+        !providerLinks.length?h('p',{className:'bsa228-help'},'No saved '+(mode==='spotify'?'Spotify':'YouTube')+' links yet. Add one above.'):h('div',{className:'bsa229-saved-list'},orderedSources.map((item,i)=>h('div',{className:'bsa229-source'+(selected?.id===item.id&&selected?.kind===item.kind?' selected':''),key:item.provider+'-'+item.kind+'-'+item.id},
+          h('button',{type:'button',className:'bsa229-source-open',onClick:()=>playSource(item),'aria-label':'Play '+item.title},'▶'),
+          h('div',{className:'bsa229-source-copy'},h('strong',null,item.title),h('small',null,item.provider==='spotify'?'Spotify':'YouTube',' · ',item.kind)),
+          h('button',{type:'button',title:'Move source up',disabled:sourceShuffled||i===0,onClick:()=>shiftSource(item,-1),'aria-label':'Move '+item.title+' up'},'↑'),
+          h('button',{type:'button',title:'Move source down',disabled:sourceShuffled||i===providerLinks.length-1,onClick:()=>shiftSource(item,1),'aria-label':'Move '+item.title+' down'},'↓'),
+          h('button',{type:'button',title:'Remove saved source',onClick:()=>removeSource(item),'aria-label':'Remove '+item.title},'×')))),
+        selected?.provider===mode&&h('div',{className:'bsa229-player-card'},
+          h('div',{className:'bsa229-player-heading'},h('strong',null,selected.title),h('button',{type:'button',onClick:()=>{setActive(null);setYtController(null);},'aria-label':'Close embedded music player'},'Close player ×')),
+          mode==='youtube'?h(BSA229YouTubePlayer,{key:selected.kind+selected.id,source:selected,shuffle,repeat,onReady:setYtController,onState:setYtState,onError:setFeedback})
+            :h('iframe',{className:'bsa229-spotify-frame',key:selected.kind+selected.id,src:'https://open.spotify.com/embed/'+selected.kind+'/'+encodeURIComponent(selected.id),allow:'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture',loading:'eager',title:'Spotify official '+selected.kind+' player',referrerPolicy:'strict-origin-when-cross-origin'}),
+          youtubeControls,
+          h('div',{className:'bsa229-transport'},
+            h('button',{type:'button',disabled:providerLinks.length<2,onClick:()=>nextSource(-1)},'← Previous source'),
+            h('button',{type:'button',disabled:providerLinks.length<2,onClick:()=>nextSource(1)},'Next source →'),
+            h('a',{href:selected.url,target:'_blank',rel:'noopener noreferrer'},'Open on '+(mode==='youtube'?'YouTube':'Spotify')+' ↗')),
+          h('p',{className:'bsa228-help'},'Previous/next source switches saved playlist links, not individual Spotify tracks. The embedded player is visible and closes when you leave Study Routine. Some content requires a service login or cannot be embedded.')),
+        h('p',{className:'bsa228-help'},'Links are saved on this device, separately from grades and academic data. Switching to a music player stops generated noise. Playback requires an internet connection.')),
+      feedback&&h('p',{className:'bsa229-feedback',role:'status'},feedback));
+  }
+
+  function BSA228StudyRoutine({subject,go,toast}){
+    const [prefs,setPrefs]=useState(()=>{
+      const p=bsa228ReadJson(BSA228_ROUTINE_PREF,{});
+      return {focus:[15,25,40].includes(Number(p.focus))?Number(p.focus):25,
+        breakMinutes:[5,10,15].includes(Number(p.breakMinutes))?Number(p.breakMinutes):5,
+        plannedTime:/^([01]\d|2[0-3]):[0-5]\d$/.test(p.plannedTime||'')?p.plannedTime:'05:30',
+        kind:['white','pink','brown'].includes(p.kind)?p.kind:'brown',
+        volume:Number.isFinite(p.volume)?Math.min(70,Math.max(0,p.volume)):35};
+    });
+    const [checks,setChecks]=useState(()=>bsa228ReadJson(BSA228_ROUTINE_CHECK,{}));
+    const [breakNow,setBreakNow]=useState(Date.now());
+    const [breakRevision,setBreakRevision]=useState(0);
+    const [noiseRevision,setNoiseRevision]=useState(0);
+    const [notice,setNotice]=useState('');
+    const [day,setDay]=useState(today());
+    useEffect(()=>{
+      const changed=()=>{setBreakRevision(v=>v+1);setBreakNow(Date.now());};
+      const sound=()=>setNoiseRevision(v=>v+1);
+      window.addEventListener('bsa228:break-changed',changed);
+      window.addEventListener('bsa228:noise-changed',sound);
+      const i=setInterval(()=>{setDay(d=>d===today()?d:today());if(bsa228Break.running)setBreakNow(Date.now());},1000);
+      return()=>{clearInterval(i);window.removeEventListener('bsa228:break-changed',changed);window.removeEventListener('bsa228:noise-changed',sound);};
+    },[]);
+    const savePrefs=(patch)=>setPrefs(prev=>{const next={...prev,...patch};bsa228WriteJson(BSA228_ROUTINE_PREF,next);return next;});
+    const key=bsa228RoutineKey(subject.id,day),done=Array.isArray(checks[key])?checks[key]:[];
+    const changeStep=id=>setChecks(old=>{
+      const next={...old},set=new Set(done);
+      if(set.has(id))set.delete(id);else set.add(id);
+      next[key]=Array.from(set);
+      const keys=Object.keys(next).sort().reverse();
+      for(const older of keys.slice(0,80))delete next[older];
+      if(!bsa228WriteJson(BSA228_ROUTINE_CHECK,next))setNotice('Device storage is full; this check-in could not be saved.');
+      return next;
+    });
+    // Due-item scans are subject-dependent, never tied to the one-second break clock.
+    const review=useMemo(()=>buildReview(subject,8,50),[subject]);
+    const cards=(review.due||[]).length,mist=(review.mist||[]).length,probs=(review.prob||[]).length;
+    // The MCQ pool is built once per subject data change, never once per second.
+    const dueMcq=useMemo(()=>{
+      const p=bsa197Pool(mcqDedicatedPool(subject),subject.learningEvents||[]);
+      return p.filter(q=>q._recall.due).length;
+    },[subject]);
+    const timer=useTimer();
+    const focusRunning=!!timer&&timer.running&&timer.subjectId===subject.id&&timer.phase!=='break';
+    const guided=bsa33Journey(subject).session;
+    const guidedBusy=!!(guided&&bsa212Guided(guided)&&!guided.focusSaved&&!guided.focusEnded&&!guided.focusWaiting);
+    const restDisabled=focusRunning||guidedBusy;
+    const breakSeconds=bsa228BreakRemaining(bsa228Break,breakNow);
+    const breakActive=breakSeconds>0;
+    const remaining=breakActive?breakSeconds:(bsa228Break.done?0:prefs.breakMinutes*60);
+    const audio=bsa228Noise;
+    const toggleNoise=async()=>{
+      if(bsa228Noise){bsa228NoiseStop();return;}
+      try{await bsa228NoiseStart(prefs.kind,prefs.volume);}
+      catch(e){setNotice(e.message||'Sound playback is unavailable.');}
+    };
+    const label=day===today()?'Today':day;
+    const goReview=()=>{go('practice',{start:'review'});};
+    const startFocus=()=>{
+      if(guided){go('study');return;}
+      if(timer && (timer.running||timerElapsed(timer)>0)){
+        if(timer.subjectId!==subject.id){
+          setNotice('Another subject has an unfinished focus timer. Return to that subject and finish it before starting a new one.');
+          return;
+        }
+        go('study');return;
+      }
+      startTimer({mins:prefs.focus,subjectId:subject.id,label:'Daily focus block'});
+      go('study');
+    };
+    return h('section',{className:'view bsa228-page'},
+      h('header',{className:'bsa228-hero'},
+        h('span',{className:'bsa228-eyebrow'},'STUDY ROUTINE  ·  '+(subject.code||subject.name)),
+        h('h1',null,'Small sessions. Stronger recall.'),
+        h('p',null,'A calm routine you can actually repeat: retrieve → focus → break → explain. Missed a day? Simply restart. No streak penalties.'),
+        h('div',{className:'bsa228-hero-facts'},
+          h('span',null,'◷ ',prefs.focus,' min focus'),h('span',null,'☕ ',prefs.breakMinutes,' min break'),
+          h('span',null,done.length,' of ',BSA228_STEPS.length,' steps tried'))),
+      h('div',{className:'bsa228-grid'},
+        h('section',{className:'bsa228-card bsa228-checks'},
+          h('div',{className:'bsa228-section-heading'},h('div',null,h('span',{className:'bsa228-eyebrow'},label.toUpperCase()+' · GENTLE ACCOUNTABILITY'),h('h2',null,'Your daily four-step loop')),h('span',{className:'bsa228-counter'},done.length+'/4')),
+          h('p',{className:'bsa228-help'},'Check steps yourself after actually trying them. These checks are habits, not exam grades or verified mastery.'),
+          h('div',{className:'bsa228-check-list'},BSA228_STEPS.map(([id,title,detail],i)=>h('label',{key:id,className:'bsa228-check-row'+(done.includes(id)?' done':'')},
+            h('input',{type:'checkbox',checked:done.includes(id),onChange:()=>changeStep(id),'aria-label':title}),
+            h('span',{className:'bsa228-check-number'},String(i+1).padStart(2,'0')),
+            h('span',{className:'bsa228-check-copy'},h('strong',null,title),h('small',null,detail))))),
+          h('div',{className:'bsa228-do-actions'},
+            h('button',{className:'btn primary',type:'button',onClick:goReview},'Review due items ↗'),
+            h('button',{className:'btn',type:'button',onClick:startFocus},guided?'Open my study plan ↗':focusRunning?'Open active focus ↗':'Start '+prefs.focus+'-min focus ↗')),
+          h('p',{className:'bsa228-help'},cards+' flashcards · '+dueMcq+' MCQs · '+mist+' mistakes · '+probs+' problem retests ready for review')),
+        h('section',{className:'bsa228-card bsa228-break-card'},
+          h('div',{className:'bsa228-section-heading'},h('div',null,h('span',{className:'bsa228-eyebrow'},'RECOVERY MODE'),h('h2',null,'Break timer')),
+            h('span',{className:'bsa228-state'},bsa228Break.running?'Running':breakActive?'Paused':bsa228Break.done?'Completed':'Ready')),
+          h('div',{className:'bsa228-clock',role:'timer','aria-label':'Break time remaining'},String(Math.floor(remaining/60)).padStart(2,'0'),':',String(remaining%60).padStart(2,'0')),
+          h('div',{className:'bsa228-presets','aria-label':'Break length'},[5,10,15].map(m=>h('button',{key:m,type:'button',className:prefs.breakMinutes===m?'selected':'',onClick:()=>savePrefs({breakMinutes:m}),'aria-pressed':prefs.breakMinutes===m},m+' min'))),
+          h('div',{className:'bsa228-break-actions'},
+            h('button',{className:'btn primary',type:'button',disabled:restDisabled&&!breakActive,onClick:()=>bsa228BreakAction(breakActive?(bsa228Break.running?'pause':'resume'):'start',prefs.breakMinutes)},breakActive?bsa228Break.running?'Pause break':'Resume break':'Start break'),
+            h('button',{className:'btn',type:'button',onClick:()=>bsa228BreakAction('stop'),disabled:!breakActive&&!bsa228Break.done},'Reset')),
+          restDisabled&&!breakActive&&h('p',{className:'bsa228-help'},'Pause or save your current focus session before starting a separate break countdown.'),
+          h('p',{className:'bsa228-help'},'The break counts real clock time, even if you visit another dashboard page. It never adds study minutes or mastery points.')),
+        h(BSA229FocusMusic,{prefs,savePrefs}),
+        h('section',{className:'bsa228-card bsa228-schedule-card'},
+          h('div',{className:'bsa228-section-heading'},h('div',null,h('span',{className:'bsa228-eyebrow'},'MAKE IT REPEATABLE'),h('h2',null,'Pick a regular start time'))),
+          h('label',{className:'bsa228-time-field'},'My usual time',h('input',{type:'time',value:prefs.plannedTime,onChange:e=>savePrefs({plannedTime:e.target.value}),'aria-label':'Preferred daily study start time'})),
+          h('div',{className:'bsa228-presets','aria-label':'Focus block length'},[15,25,40].map(m=>h('button',{key:m,type:'button',className:prefs.focus===m?'selected':'',onClick:()=>savePrefs({focus:m}),'aria-pressed':prefs.focus===m},m+' min focus'))),
+          h('p',{className:'bsa228-help'},'Your plan is saved only on this device. It is not a push notification or an alarm. Treat the time as a cue, not a punishment.'),
+          h('button',{type:'button',className:'btn',onClick:()=>go('calendar')},'Open study schedule ↗'))),
+      notice&&h('div',{className:'bsa228-notice',role:'status'},notice));
+  }
   function BSA3Today({subject,go,settings,openEditor,update,toast}){
     const [dailyLine,setDailyLine]=useState(()=>bsa32DailyLine());
     useEffect(()=>{
@@ -18743,7 +19173,8 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
           h('div',{className:'bsa31-hero-next bsa33-hero-brief'},h('span',null,journey.session?'YOUR ACTIVE JOURNEY':'RECOMMENDED FOR YOU'),h('strong',null,next.title),h('small',null,next.description),journey.next&&h('span',{className:'bsa33-inline-progress','aria-label':journey.percent+' percent of planned tasks finished'},h('i',{style:{width:journey.percent+'%'}}))),
           h('div',{className:'bsa205-hero-actions'},
             h('button',{className:'bsa205-primary-action',onClick:()=>go(next.route,next.opts||{})},next.label,'  ↗'),
-            h('button',{className:'bsa205-hero-secondary',onClick:()=>go(next.route==='study'?'practice':'study')},next.route==='study'?'Study without a plan':'Plan a focus session · optional')),
+            h('button',{className:'bsa205-hero-secondary',onClick:()=>go(next.route==='study'?'practice':'study')},next.route==='study'?'Study without a plan':'Plan a focus session · optional'),
+            !window.__BSA_SHARED_MODE__&&h('button',{className:'bsa205-hero-secondary bsa228-routine-entry',onClick:()=>go('routine')},'My study routine · breaks & sounds')),
           h('p',{className:'bsa214-home-planner-note'},'Focus sessions are optional. End & Save lets you switch topics without losing your study history.')),
         h('div',{className:'bsa205-hero-orb bsa31-hero-orb','aria-hidden':'true'},h('span',null,'Σ'),h('small',null,subject.code||'BSA'))),
       h('div',{className:'bsa31-overview bsa33-overview'},
@@ -19548,6 +19979,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       toast('Unfinished '+(entry.kind==='mcq'?'quiz':'practice session')+' discarded.');
     };
     const shortcutItems = [["home","Today","home"],["subjects","My Subjects","subjects"],["study","Learn & plan","lecture"],["practice","Practice","bolt"],["library","Library","library"],["insights","Progress","chart"]];
+    if(!window.__BSA_SHARED_MODE__)shortcutItems.push(["routine","Study Routine","calendar"]);
     const shortcutGo = (tab) => {
       setShortcutsOpen(false);
       if (tab === "subjects") go("subjects");
@@ -19725,6 +20157,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       ["safety", "Device & Data Safety", "data"],
       ["guide", "Start here · walkthrough", "book"],
       ["break", "Break Corner", "home"],
+      ["routine", "Study Routine", "calendar"],
       ["achievements", "Study Achievements", "grade"],
       ["stats-clean", "Study report", "grade"],
       ["curriculum", "Curriculum", "book"],
@@ -19746,7 +20179,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     // Every route must belong to exactly one permanent sidebar section. New
     // routes automatically appear under Other features rather than vanishing.
     const navGroups = [
-      {name:"Main workflow",items:["home","study","practice","library","ask"]},
+      {name:"Main workflow",items:["home","study","practice","routine","library","ask"]},
       {name:"Study materials",items:["lectures","rules","vault","workspace","nlm"]},
       {name:"Practice & questions",items:["mcq","psets","accounting-lab","accounting-cycle","fs-lab"]},
       {name:"Progress & planning",items:["mistakes","insights","knowledge","stats-clean","achievements","calendar","class","grades","roadmap","curriculum"]},
@@ -19764,7 +20197,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       const group=navGroups.find(g=>g.items.includes(nav.tab));
       if(group)setCollapsedNav(prev=>prev[group.name]?{...prev,[group.name]:false}:prev);
     },[nav.tab]);
-    const navAliases={"fs-lab":"financial statements audit reports JSON PDF import source evidence standard IFRS PFRS 18 PAS analysis",psets:"written problems problem sets worksheets",mcq:"quiz questions multiple choice mcq",vault:"flashcards recall",ask:"tutor gemini ai",calendar:"weekly planner month exam schedule",mistakes:"wrong answers review queue",insights:"analytics progress",library:"library find materials missing materials topics import study library browse organize",study:"learn session plan",practice:"solve test exercises",workspace:"notes notebook",nlm:"ai prompt builder studio generate source JSON",home:"today dashboard",guide:"walkthrough start here"};
+    const navAliases={"fs-lab":"financial statements audit reports JSON PDF import source evidence standard IFRS PFRS 18 PAS analysis",psets:"written problems problem sets worksheets",mcq:"quiz questions multiple choice mcq",vault:"flashcards recall",ask:"tutor gemini ai",calendar:"weekly planner month exam schedule",mistakes:"wrong answers review queue",insights:"analytics progress",library:"library find materials missing materials topics import study library browse organize",study:"learn session plan",routine:"daily routine breaks white noise focus study discipline spotify youtube music playlists queue shuffle",practice:"solve test exercises",workspace:"notes notebook",nlm:"ai prompt builder studio generate source JSON",home:"today dashboard",guide:"walkthrough start here"};
     const navNeedle=navSearch.trim().toLocaleLowerCase();
     const pinnedVisible=sidebarPrefs.pinned.filter(id=>(!window.__BSA_SHARED_MODE__||BSA227_SHARED_ROUTES.has(id))&&
       !sidebarPrefs.hidden.includes(id)&&bsa46ToolVisible(subject,id)&&tabs.some(t=>t[0]===id));
@@ -19849,14 +20282,14 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       // Specialized screens own their headings and side navigation. Rendering a
       // second theme-specific banner here buries lecture content on iPad and
       // cannot be reliably fixed with a CSS-only hide (old cached styles).
-      !['home','study','practice','library','insights','lectures','psets','mcq','vault','ask','rules','fs-lab','workspace','accounting-lab','accounting-cycle','subjects'].includes(nav.tab)
+      !['home','study','practice','routine','library','insights','lectures','psets','mcq','vault','ask','rules','fs-lab','workspace','accounting-lab','accounting-cycle','subjects'].includes(nav.tab)
         && h(BSA43ThemeNavigation,{theme:data.settings.presentationTheme||"studio",tab:nav.tab,opts:nav.opts,go,subject}),
-      nav.tab === "subjects" && h(BSA12Subjects,{data,update,activeId:data.activeId,onOpen:id=>{setData(d=>({...d,activeId:id}));go('home')},onManage:()=>setModal('subjects'),toast,onRemoved:()=>{setNav(n=>({...n,tab:'subjects',key:n.key+1}))}}), nav.tab === "guide" && h(BSA3StartGuide,{go,subject}), nav.tab === "break" && h(BreakCorner), nav.tab === "joy" && h(JoyHub,{go}), nav.tab === "life" && h(StudyLife,{go}), nav.tab === "achievements" && h(AcademicProgress,{go}), nav.tab === "stats-clean" && h(StudyReport,{data,update,toast,go}), nav.tab === "private-vault" && !window.__BSA_SHARED_MODE__ && h(PrivateVault,{toast}), nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data,initialTool:nav.opts?.tool})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), nav.tab === "home" && h(BSA3Today, { ...viewProps }), nav.tab === "study" && h(BSA205Study,{...viewProps}), nav.tab === "library" && h(BSA205Library,{...viewProps}), nav.tab === "insights" && h(BSA205Mastery,{...viewProps}), nav.tab === "accounting-cycle" && h(BSA205Cycle,{...viewProps}), nav.tab === "fs-lab" && h(BSA43FinancialStatements,{...viewProps}), nav.tab === "accounting-lab" && h(BSA187AccountingLab,{subject,update,toast,go,init:nav.opts}), nav.tab === "week" && h(BSA344Schedule,{subject,update,go,openEditor,toast,init:nav.opts,initialMode:"week"}), nav.tab === "knowledge" && h(BSA192KnowledgeMap,{subject,go,init:nav.opts}), nav.tab === "safety" && h(BSA193DeviceSafety,{data,go,toast}), nav.tab === "practice" && h(React.Fragment,null,h(BSA3Practice,{ ...viewProps, data }),bsa46ToolVisible(subject,'fs-lab')&&h('div',{className:'bsa42-fs-shortcut'},h('div',null,h('strong',null,'Financial Statement Lab'),h('p',null,'Import report JSON, inspect audited disclosures, and practice any accounting standard.')),h('button',{className:'btn',onClick:()=>go('fs-lab')},'Open Financial Statements ↗'))), nav.tab === "mcq" && h(MCQPage,{...viewProps}), nav.tab === "rules" && h(RulesLibrary,{...viewProps}), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(BSA344Schedule,{subject,update,go,openEditor,toast,init:nav.opts,initialMode:"month"}), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "workspace" && h(BSA181Workspace, { ...viewProps, initialTab:nav.opts?.tab, undoAvailable:!!undo, onGlobalUndo:doUndo }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(BSA43ProblemSets, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps, key:subject.id }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })))),
+      nav.tab === "subjects" && h(BSA12Subjects,{data,update,activeId:data.activeId,onOpen:id=>{setData(d=>({...d,activeId:id}));go('home')},onManage:()=>setModal('subjects'),toast,onRemoved:()=>{setNav(n=>({...n,tab:'subjects',key:n.key+1}))}}), nav.tab === "guide" && h(BSA3StartGuide,{go,subject}), nav.tab === "routine" && !window.__BSA_SHARED_MODE__ && h(BSA228StudyRoutine,{subject,go,toast}), nav.tab === "break" && h(BreakCorner), nav.tab === "joy" && h(JoyHub,{go}), nav.tab === "life" && h(StudyLife,{go}), nav.tab === "achievements" && h(AcademicProgress,{go}), nav.tab === "stats-clean" && h(StudyReport,{data,update,toast,go}), nav.tab === "private-vault" && !window.__BSA_SHARED_MODE__ && h(PrivateVault,{toast}), nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data,initialTool:nav.opts?.tool})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), nav.tab === "home" && h(BSA3Today, { ...viewProps }), nav.tab === "study" && h(BSA205Study,{...viewProps}), nav.tab === "library" && h(BSA205Library,{...viewProps}), nav.tab === "insights" && h(BSA205Mastery,{...viewProps}), nav.tab === "accounting-cycle" && h(BSA205Cycle,{...viewProps}), nav.tab === "fs-lab" && h(BSA43FinancialStatements,{...viewProps}), nav.tab === "accounting-lab" && h(BSA187AccountingLab,{subject,update,toast,go,init:nav.opts}), nav.tab === "week" && h(BSA344Schedule,{subject,update,go,openEditor,toast,init:nav.opts,initialMode:"week"}), nav.tab === "knowledge" && h(BSA192KnowledgeMap,{subject,go,init:nav.opts}), nav.tab === "safety" && h(BSA193DeviceSafety,{data,go,toast}), nav.tab === "practice" && h(React.Fragment,null,h(BSA3Practice,{ ...viewProps, data }),bsa46ToolVisible(subject,'fs-lab')&&h('div',{className:'bsa42-fs-shortcut'},h('div',null,h('strong',null,'Financial Statement Lab'),h('p',null,'Import report JSON, inspect audited disclosures, and practice any accounting standard.')),h('button',{className:'btn',onClick:()=>go('fs-lab')},'Open Financial Statements ↗'))), nav.tab === "mcq" && h(MCQPage,{...viewProps}), nav.tab === "rules" && h(RulesLibrary,{...viewProps}), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(BSA344Schedule,{subject,update,go,openEditor,toast,init:nav.opts,initialMode:"month"}), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "workspace" && h(BSA181Workspace, { ...viewProps, initialTab:nav.opts?.tab, undoAvailable:!!undo, onGlobalUndo:doUndo }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(BSA43ProblemSets, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps, key:subject.id }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync })))),
       h(BSA181HighlightTool,{subject,tab:nav.tab,go,toast}),
       spotlightOpen && h(BSA181Spotlight,{data,go,tools:tabs,onSwitch:(id,tab,opts)=>{setData(d=>({...d,activeId:id}));go(tab,opts)},onClose:()=>setSpotlightOpen(false)}),
       /* @__PURE__ */ h("nav",{className:"bottom-nav v2-bottom-nav","aria-label":"Mobile navigation",onTouchStart:touchNavStart,onTouchEnd:touchNavEnd},
         [["home","Today","home"],["study","Learn","lecture"],["practice","Practice","bolt"],["library","Library","book"]].map(([k,l,ic])=>h("button",{type:"button",key:k,className:nav.tab===k?"on":"","aria-current":nav.tab===k?"page":undefined,onClick:()=>go(k)},h(Icon,{name:ic}),h("span",null,l))),
-        h("button",{type:"button",onClick:()=>setModal("more"),className:"v2-more-mobile"+(!["home","study","practice","library"].includes(nav.tab)?" on":""),"aria-label":"More tools"},h(Icon,{name:"more"}),h("span",null,"More"))), /* @__PURE__ */ React.createElement("div", { className: `toast${msg ? " show" : ""}`, role: "status", "aria-live": "polite" }, msg), h(FocusBar, { data, update, toast, visuallySuppressed:bsa212Guided(bsa33Journey(subject).session) }), h(BSA212FloatingFocus,{key:subject.id,subject,update,go,toast,nav}), h(BSA216ScrollRail,{route:nav.tab+':'+nav.key}), h(BSA4StudyDock,{key:subject.id,subject,data,settings:data.settings,setSettings,onSwitch:(id,tab)=>{setData(d=>({...d,activeId:id}));go(tab||'insights')},go,navTab:nav.tab}), modal === "quick" && /* @__PURE__ */ React.createElement(QuickAdd, { onClose: () => setModal(null), onPick: (k) => {
+        h("button",{type:"button",onClick:()=>setModal("more"),className:"v2-more-mobile"+(!["home","study","practice","library"].includes(nav.tab)?" on":""),"aria-label":"More tools"},h(Icon,{name:"more"}),h("span",null,"More"))), /* @__PURE__ */ React.createElement("div", { className: `toast${msg ? " show" : ""}`, role: "status", "aria-live": "polite" }, msg), h(BSA228BreakMonitor,{toast}), h(FocusBar, { data, update, toast, visuallySuppressed:bsa212Guided(bsa33Journey(subject).session) }), h(BSA212FloatingFocus,{key:subject.id,subject,update,go,toast,nav}), h(BSA216ScrollRail,{route:nav.tab+':'+nav.key}), h(BSA4StudyDock,{key:subject.id,subject,data,settings:data.settings,setSettings,onSwitch:(id,tab)=>{setData(d=>({...d,activeId:id}));go(tab||'insights')},go,navTab:nav.tab}), modal === "quick" && /* @__PURE__ */ React.createElement(QuickAdd, { onClose: () => setModal(null), onPick: (k) => {
       if (k === "grade") {
         setModal(null);
         go("grades", { gtab: "scores" });
@@ -19983,7 +20416,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       React.createElement('button',{className:'btn',onClick:()=>bsaDownloadSafeDiagnostics(this.state.error)},'Download safe error report'),
       React.createElement('details',null,React.createElement('summary',null,'Technical details'),React.createElement('pre',null,String(this.state.error&&this.state.error.message||'Unknown render error'))));}
   }
-  if(window.__BSA_TEST__)window.__BSA18_TEST_HOOKS__={bsa197QuizKey,bsa197History,bsa197Recall,bsa197Pool,bsa197Pick,smartTopicStats,bsaAdaptiveSignals,bsaReadinessReport,bsa34LearningSnapshot,bsaUpsertMistake,learningEvidence,learningCapture,AcademicCommandCenter,bsa197LoadDraft,bsa197SaveDraft,bsa197DeleteDraft,bsa18SaveWritten,bsa18LoadWritten,bsa18DeleteWritten,bsa18LatestPractice,bsa18ReadTutorChat,bsa25PracticeHealth,bsa26TutorName,bsa26TopicMatch,bsa26SafeAction,bsa26TutorCapabilityContext,bsa26LocalStudyPlan,BSA26_COPILOT_FEATURES,bsa26SafeReturn,bsa26ReturnFor,bsa26FsDraft,bsa4TutorDraft,bsa27SelectionFocus,bsa27DefaultTutorQuestion,gemSourceSystem,bsa212ModePlan,bsa213QuickPlan,bsa213ReadScope,bsa213Words,bsa213McqScope,bsa213WrittenMinutes,bsa214Archive,bsa214RecentClosed,bsa214HistoryLabel,bsa214AdaptProposal,bsa214TopicStanding,bsa214FoundationSources,mcqDedicatedPool,studyTopics,bsa34TopicMatch,bsa213McqEstimate,bsa214Pack,bsa214Unpack,bsa214MainGet,bsa214MainSet,bsa49TopicParts,bsa49ResolveTopic,bsa49UnmatchedLabels,BSA49TopicLinks,bsa215TopicChapter,bsa215UniqueChapterMatch,bsa215LinkSafety,bsa44Plan,bsa44ParseOne,normTopic,bsa49CanonicalizePack,bsa214BackupGet,bsaBackupPreview,loadLocal,bsa212Allocate,bsa212PhaseElapsed,bsa212PhaseGoal,bsa212Action,bsa28SourceHistory,bsa28NewTopicRequest,bsa210TutorCore,bsa28ReadReflections,bsa28WriteReflections,bsa29Meaningful,bsa213ClozeQuality,bsa29Candidates,bsa29Pool,bsa29Exact,bsa29ReadDraft,bsa29SaveDraft,bsa210DuplicateSignal,bsa210MaterialPair,bsa210AnswerMeaning,bsa44Prepare,BSA29ClozePractice,psMathSegments,psMathHtml,psS,psInlineHtml,MultipleChoiceQuiz,MCQPage,PsWrittenDrill,MockExam,AskView,App};
+  if(window.__BSA_TEST__)window.__BSA18_TEST_HOOKS__={bsa229Source,BSA229FocusMusic,BSA229YouTubePlayer,bsa197QuizKey,bsa197History,bsa197Recall,bsa197Pool,bsa197Pick,bsa228BreakRemaining,bsa228RoutineKey,BSA228StudyRoutine,bsa228BreakAction,bsa228NoiseStart,bsa228NoiseStop,schedule,buildReview,smartTopicStats,bsaAdaptiveSignals,bsaReadinessReport,bsa34LearningSnapshot,bsaUpsertMistake,learningEvidence,learningCapture,AcademicCommandCenter,bsa197LoadDraft,bsa197SaveDraft,bsa197DeleteDraft,bsa18SaveWritten,bsa18LoadWritten,bsa18DeleteWritten,bsa18LatestPractice,bsa18ReadTutorChat,bsa25PracticeHealth,bsa26TutorName,bsa26TopicMatch,bsa26SafeAction,bsa26TutorCapabilityContext,bsa26LocalStudyPlan,BSA26_COPILOT_FEATURES,bsa26SafeReturn,bsa26ReturnFor,bsa26FsDraft,bsa4TutorDraft,bsa27SelectionFocus,bsa27DefaultTutorQuestion,gemSourceSystem,bsa212ModePlan,bsa213QuickPlan,bsa213ReadScope,bsa213Words,bsa213McqScope,bsa213WrittenMinutes,bsa214Archive,bsa214RecentClosed,bsa214HistoryLabel,bsa214AdaptProposal,bsa214TopicStanding,bsa214FoundationSources,mcqDedicatedPool,studyTopics,bsa34TopicMatch,bsa213McqEstimate,bsa214Pack,bsa214Unpack,bsa214MainGet,bsa214MainSet,bsa49TopicParts,bsa49ResolveTopic,bsa49UnmatchedLabels,BSA49TopicLinks,bsa215TopicChapter,bsa215UniqueChapterMatch,bsa215LinkSafety,bsa44Plan,bsa44ParseOne,normTopic,bsa49CanonicalizePack,bsa214BackupGet,bsaBackupPreview,loadLocal,bsa212Allocate,bsa212PhaseElapsed,bsa212PhaseGoal,bsa212Action,bsa28SourceHistory,bsa28NewTopicRequest,bsa210TutorCore,bsa28ReadReflections,bsa28WriteReflections,bsa29Meaningful,bsa213ClozeQuality,bsa29Candidates,bsa29Pool,bsa29Exact,bsa29ReadDraft,bsa29SaveDraft,bsa210DuplicateSignal,bsa210MaterialPair,bsa210AnswerMeaning,bsa44Prepare,BSA29ClozePractice,psMathSegments,psMathHtml,psS,psInlineHtml,MultipleChoiceQuiz,MCQPage,PsWrittenDrill,MockExam,AskView,App};
   // v167: Owner app mounts only after this browser has been approved.
   // Shared student dashboards mount normally; the owner authorization script is never exported.
   let bsaOwnerMounted=false;
