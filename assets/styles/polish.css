@@ -4488,3 +4488,96 @@ body>.backdrop .bsa45-sidebar-modal .bsa211-shortcut-groups{padding-bottom:18px}
 #root .bsa46-shortcuts{padding-bottom:8px;border-bottom:1px solid var(--line)}
 #root .bsa46-nav-search input{min-width:0}
 @media(max-width:950px){body>.backdrop .bsa45-sidebar-modal .bsa46-editor-grid{grid-template-columns:minmax(0,1fr)}}
+
+/* V2.28 — one quiet home for routine, recovery and generated focus sounds.
+   All controls remain in document flow; no more floating timer overlays. */
+#root .bsa228-page{min-width:0;max-width:1160px;margin-inline:auto;padding-bottom:clamp(32px,7vw,90px)}
+#root .bsa228-page *{box-sizing:border-box}
+#root .bsa228-hero{position:relative;display:grid;gap:11px;padding:clamp(22px,4vw,37px);border:1px solid color-mix(in srgb,var(--accent) 28%,var(--line));border-radius:clamp(16px,2vw,24px);background:linear-gradient(120deg,color-mix(in srgb,var(--accent) 9%,var(--surface)),var(--surface) 70%);overflow:hidden}
+#root .bsa228-eyebrow{font-size:.69rem;font-weight:850;letter-spacing:.115em;text-transform:uppercase;color:var(--accent)}
+#root .bsa228-hero h1{margin:0;color:var(--text);line-height:1.09;font-weight:850;letter-spacing:-.04em;font-size:clamp(1.8rem,4vw,3rem)}
+#root .bsa228-hero p{margin:0;max-width:66ch;color:var(--muted);font-size:clamp(.86rem,1.1vw,.99rem);line-height:1.55}
+#root .bsa228-hero-facts{display:flex;flex-wrap:wrap;gap:8px;margin-top:7px}
+#root .bsa228-hero-facts span{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);border-radius:999px;padding:7px 12px;font-size:.77rem;font-weight:740;background:var(--surface);color:var(--text);font-variant-numeric:tabular-nums}
+#root .bsa228-grid{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,.88fr);grid-template-areas:'checks break' 'checks sound' 'schedule schedule';gap:16px;min-width:0;margin-top:17px;align-items:start}
+#root .bsa228-card{min-width:0;display:grid;gap:15px;padding:clamp(18px,2.3vw,25px);border:1px solid var(--line);border-radius:19px;background:var(--surface);box-shadow:0 3px 18px -16px rgba(0,0,0,.34)}
+#root .bsa228-checks{grid-area:checks}#root .bsa228-break-card{grid-area:break}#root .bsa228-sound-card{grid-area:sound}#root .bsa228-schedule-card{grid-area:schedule}
+#root .bsa228-section-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;min-width:0}
+#root .bsa228-section-heading>div{min-width:0;display:grid;gap:4px}
+#root .bsa228-section-heading h2{font-size:clamp(1.14rem,2vw,1.34rem);font-weight:850;letter-spacing:-.025em;line-height:1.24;margin:0;color:var(--text);overflow-wrap:break-word}
+#root .bsa228-counter,#root .bsa228-state{border:1px solid var(--line);border-radius:999px;padding:5px 10px;white-space:nowrap;color:var(--muted);font-size:.73rem;font-weight:800;flex:none}
+#root .bsa228-help{margin:0;color:var(--muted);font-size:.78rem;line-height:1.55;overflow-wrap:break-word}
+#root .bsa228-check-list{display:grid;gap:10px}
+#root .bsa228-check-row{display:grid;grid-template-columns:20px 28px minmax(0,1fr);align-items:center;gap:10px;cursor:pointer;padding:15px 13px;border:1px solid var(--line);border-radius:13px;background:var(--surface-2);min-width:0}
+#root .bsa228-check-row:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+#root .bsa228-check-row.done{background:color-mix(in srgb,var(--ok) 8%,var(--surface));border-color:color-mix(in srgb,var(--ok) 27%,var(--line))}
+#root .bsa228-check-row input{width:17px;height:17px;accent-color:var(--accent);margin:0;cursor:pointer}
+#root .bsa228-check-number{font-size:.75rem;font-weight:860;color:var(--accent);font-variant-numeric:tabular-nums}
+#root .bsa228-check-copy{min-width:0;display:grid;gap:4px}
+#root .bsa228-check-copy strong{font-size:.88rem;color:var(--text);line-height:1.3}
+#root .bsa228-check-copy small{font-size:.74rem;line-height:1.45;color:var(--muted);overflow-wrap:anywhere}
+#root .bsa228-do-actions,#root .bsa228-break-actions{display:flex;flex-wrap:wrap;gap:8px}
+#root .bsa228-do-actions .btn,#root .bsa228-break-actions .btn{flex:1 1 145px;min-height:43px;font-size:.8rem;white-space:normal}
+#root .bsa228-clock{font:850 clamp(3.1rem,6vw,5.3rem)/1 var(--display,system-ui);letter-spacing:-.045em;font-variant-numeric:tabular-nums;color:var(--text);text-align:center;padding:12px 0 6px}
+#root .bsa228-presets{display:flex;flex-wrap:wrap;gap:8px}
+#root .bsa228-presets button{min-width:0;min-height:39px;flex:1 1 70px;border:1px solid var(--line);border-radius:11px;padding:7px 9px;font:750 .76rem var(--body,system-ui);background:var(--surface-2);color:var(--text);cursor:pointer}
+#root .bsa228-presets button.selected{color:var(--text);border-color:var(--accent);background:color-mix(in srgb,var(--accent) 11%,var(--surface))}
+#root .bsa228-presets button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#root .bsa228-break-actions button:disabled{opacity:.5;cursor:not-allowed}
+#root .bsa228-volume{display:grid;gap:10px;font-size:.81rem;font-weight:750;color:var(--text)}
+#root .bsa228-volume input{width:100%;accent-color:var(--accent);min-height:26px}
+#root .bsa228-sound-toggle{min-height:44px;width:100%}
+#root .bsa228-time-field{display:grid;gap:8px;color:var(--text);font-weight:740;font-size:.8rem}
+#root .bsa228-time-field input{width:100%;max-width:230px;min-height:44px;border:1px solid var(--line);background:var(--surface-2);color:var(--text);font-size:1rem;padding:8px 13px;border-radius:12px;color-scheme:normal}
+#root .bsa228-notice{margin-top:12px;border:1px solid var(--warn);border-radius:12px;padding:12px 15px;color:var(--text);background:var(--surface);font-size:.84rem}
+#root .bsa228-routine-entry{min-width:0;white-space:normal}
+@media(max-width:850px){#root .bsa228-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:'checks checks' 'break sound' 'schedule schedule'}}
+@media(max-width:650px){#root .bsa228-grid{grid-template-columns:minmax(0,1fr);grid-template-areas:'checks' 'break' 'sound' 'schedule';gap:13px}#root .bsa228-page{padding-bottom:105px}#root .bsa228-hero{padding:20px;border-radius:17px}#root .bsa228-card{padding:18px;border-radius:16px}#root .bsa228-check-row{padding:13px 10px}#root .bsa228-clock{font-size:3.8rem}#root .bsa228-time-field input{max-width:none}}
+@media(max-width:360px){#root .bsa228-hero h1{font-size:1.72rem}#root .bsa228-check-row{grid-template-columns:18px 19px minmax(0,1fr);gap:8px}#root .bsa228-section-heading{flex-wrap:wrap}}
+@media(prefers-reduced-motion:reduce){#root .bsa228-card *,#root .bsa228-hero *{animation:none!important;transition:none!important}}
+
+/* V2.29 Focus Music: embedded, visible, responsive. No floating playback UI. */
+#root .bsa228-grid{grid-template-areas:'checks break' 'sound sound' 'schedule schedule'}
+#root .bsa229-music{overflow:visible;min-width:0}
+#root .bsa229-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;background:var(--surface-2);border:1px solid var(--line);border-radius:14px;padding:5px}
+#root .bsa229-tabs button{min-width:0;border:1px solid transparent;border-radius:10px;padding:10px 5px;min-height:43px;background:transparent;color:var(--muted);font:780 .84rem var(--body,system-ui);cursor:pointer}
+#root .bsa229-tabs button.on{border-color:color-mix(in srgb,var(--accent) 55%,var(--line));background:var(--surface);color:var(--text);box-shadow:0 2px 9px -6px rgba(0,0,0,.24)}
+#root .bsa229-tabs button:focus-visible,#root .bsa229-music button:focus-visible,#root .bsa229-music a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#root .bsa229-noise,#root .bsa229-streaming{display:grid;gap:13px;min-width:0}
+#root .bsa229-add-form{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) auto;gap:8px;min-width:0}
+#root .bsa229-add-form input{min-width:0;width:100%;border:1px solid var(--line);border-radius:11px;min-height:44px;background:var(--surface-2);color:var(--text);font:inherit;font-size:.84rem;padding:9px 12px}
+#root .bsa229-add-form input::placeholder{color:var(--muted)}
+#root .bsa229-add-form .btn{min-height:44px;white-space:nowrap}
+#root .bsa229-saved-head,#root .bsa229-player-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;min-width:0}
+#root .bsa229-saved-head strong,#root .bsa229-player-heading strong{font-size:.86rem;color:var(--text);overflow-wrap:anywhere;min-width:0}
+#root .bsa229-saved-head button,#root .bsa229-player-heading button{border:1px solid var(--line);background:var(--surface-2);color:var(--text);border-radius:10px;font-size:.76rem;font-weight:750;padding:8px 11px;min-height:37px;cursor:pointer}
+#root .bsa229-saved-head button.active{border-color:var(--accent);color:var(--accent)}
+#root .bsa229-saved-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr));gap:8px;min-width:0}
+#root .bsa229-source{display:flex;align-items:center;gap:5px;min-width:0;background:var(--surface-2);border:1px solid var(--line);padding:7px;border-radius:12px}
+#root .bsa229-source.selected{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 7%,var(--surface))}
+#root .bsa229-source button{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:8px;min-width:33px;min-height:36px;font-size:.87rem;cursor:pointer;padding:5px}
+#root .bsa229-source button:disabled{opacity:.4;cursor:not-allowed}
+#root .bsa229-source .bsa229-source-open{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-size:.8rem}
+#root .bsa229-source-copy{display:grid;gap:2px;min-width:0;flex:1}
+#root .bsa229-source-copy strong{font-size:.76rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
+#root .bsa229-source-copy small{font-size:.69rem;color:var(--muted);text-transform:capitalize}
+#root .bsa229-player-card{display:grid;gap:13px;min-width:0;border:1px solid var(--line);background:var(--surface-2);border-radius:15px;padding:clamp(10px,2vw,17px)}
+#root .bsa229-youtube-player{width:100%;aspect-ratio:16/9;min-height:220px;background:#000;border-radius:11px;overflow:hidden;position:relative}
+#root .bsa229-youtube-player iframe{display:block;width:100%!important;height:100%!important;min-height:220px;border:0}
+#root .bsa229-spotify-frame{display:block;width:100%;height:352px;min-height:232px;border:0;border-radius:12px;background:#121212}
+#root .bsa229-transport{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+#root .bsa229-transport button,#root .bsa229-transport a{border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:10px;padding:9px 11px;min-height:40px;font:750 .75rem var(--body,system-ui);cursor:pointer;text-decoration:none}
+#root .bsa229-transport button.active{border-color:var(--accent);color:var(--accent)}
+#root .bsa229-transport button:disabled{opacity:.47;cursor:not-allowed}
+#root .bsa229-track-index{font-size:.73rem;color:var(--muted)}
+#root .bsa229-yt-controls{display:grid;gap:8px}
+#root .bsa229-track-list{border:1px solid var(--line);border-radius:10px;background:var(--surface);min-width:0;padding:10px 12px}
+#root .bsa229-track-list summary{font-size:.82rem;font-weight:750;cursor:pointer;color:var(--text)}
+#root .bsa229-queue-items{display:grid;max-height:225px;overflow-y:auto;gap:4px;margin-top:10px}
+#root .bsa229-queue-items button{display:flex;gap:12px;align-items:center;text-align:left;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;min-height:34px;padding:5px 9px;color:var(--text);font-size:.73rem;cursor:pointer}
+#root .bsa229-queue-items button.now{border-color:var(--accent)}
+#root .bsa229-queue-items button strong{margin-left:auto;color:var(--accent)}
+#root .bsa229-feedback{margin:0;border:1px solid var(--line);border-radius:11px;background:var(--surface-2);padding:11px 12px;font-size:.81rem;line-height:1.5;color:var(--text);overflow-wrap:anywhere}
+@media(max-width:850px){#root .bsa228-grid{grid-template-areas:'checks checks' 'break break' 'sound sound' 'schedule schedule'}}
+@media(max-width:650px){#root .bsa228-grid{grid-template-areas:'checks' 'break' 'sound' 'schedule'}#root .bsa229-add-form{grid-template-columns:minmax(0,1fr)}#root .bsa229-saved-list{grid-template-columns:minmax(0,1fr)}#root .bsa229-tabs button{font-size:.77rem;padding-inline:3px}#root .bsa229-spotify-frame{height:352px}#root .bsa229-youtube-player{min-height:200px;aspect-ratio:auto;height:max(200px,56.25vw)}#root .bsa229-source button{min-width:30px;padding:4px}#root .bsa229-player-card{padding:10px}}
+@media(max-width:360px){#root .bsa229-transport button,#root .bsa229-transport a{font-size:.71rem;padding:7px 9px}#root .bsa229-source{gap:4px}}
