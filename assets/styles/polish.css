@@ -5092,3 +5092,98 @@ body>.backdrop .bsa45-sidebar-modal .bsa211-shortcut-groups{padding-bottom:18px}
  .bsa236-reader .bsa240-selection-tools{left:8px!important;bottom:calc(14px + env(safe-area-inset-bottom,0px))!important;width:calc(100vw - 66px)!important;max-height:min(56dvh,350px)!important;padding:10px!important}
 }
 .bsa236-reader .bsa240-highlights-header-actions{display:flex;flex-wrap:wrap;gap:6px}
+
+/* V1.0 — One reliable Study Routine scroll surface across iPad widths.
+   Earlier rules left the page overflow-visible while iPadOS constrained the
+   parent shell; with no scrolling ancestor, swipe gestures went nowhere.
+   Restrict the pane to the viewport and make *it* scroll. Small phones keep
+   normal document scrolling and the fixed bottom navigation. */
+@media (min-width:700px) {
+  #root > .shell > main.content.bsa235-routine-layout {
+    min-height:0!important;
+    max-height:100dvh!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+    overscroll-behavior-y:contain;
+    -webkit-overflow-scrolling:touch;
+    touch-action:pan-y!important;
+    scrollbar-gutter:stable;
+  }
+}
+@media (min-width:700px) and (max-width:899px) {
+  #root > .shell > main.content.bsa235-routine-layout {
+    max-height:calc(100dvh - 64px)!important;
+    padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))!important;
+  }
+}
+@media (max-width:699px) {
+  #root > .shell > main.content.bsa235-routine-layout {
+    height:auto!important;max-height:none!important;
+    overflow-y:visible!important;overflow-x:clip!important;
+    touch-action:pan-y!important;
+  }
+}
+
+/* V1.0 — Opt-in, quiet highlights. One compact action strip, matching the
+   existing lecture selection toolbar, not the former large fixed dialog.
+   Tapping away simply dismisses it; React only persists on explicit Save. */
+.bsa236-reader .bsa240-highlight-hint.bsa100-highlight-options {
+  display:flex!important;align-items:center!important;justify-content:flex-start!important;
+  flex-wrap:wrap!important;gap:6px!important;margin:7px 0 13px!important;
+  padding:0!important;background:transparent!important;border:0!important;
+  box-shadow:none!important;
+}
+.bsa236-reader .bsa100-highlight-options>button{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:34px;padding:5px 9px!important;
+  border-radius:99px!important;font-size:.71rem!important;
+  font-weight:650!important;box-shadow:none!important;
+}
+.bsa236-reader .bsa100-highlight-options .bsa100-highlight-toggle.is-on{
+  border-color:var(--accent)!important;background:color-mix(in srgb,var(--accent) 10%,var(--surface))!important;
+}
+.bsa236-reader .bsa100-highlight-options>small{
+  flex:1 1 100%;font-size:.7rem;line-height:1.35;color:var(--muted);
+}
+.bsa236-reader .bsa240-selection-tools.bsa100-selection-tools{
+  position:fixed!important;top:auto!important;
+  bottom:calc(14px + env(safe-area-inset-bottom,0px))!important;
+  left:max(10px,env(safe-area-inset-left,0px))!important;
+  right:auto!important;transform:none!important;
+  width:max-content!important;max-width:calc(100vw - 78px)!important;
+  min-width:0!important;max-height:180px!important;
+  overflow:auto!important;
+  display:flex!important;flex-direction:row!important;align-items:center!important;
+  flex-wrap:wrap!important;gap:6px!important;
+  padding:7px 9px!important;margin:0!important;
+  border:1px solid var(--line)!important;
+  border-radius:13px!important;background:var(--surface)!important;
+  box-shadow:0 7px 24px rgba(0,0,0,.15)!important;
+  z-index:5020!important;
+}
+.bsa236-reader .bsa100-selection-tools .bsa100-highlight-label{
+  display:flex;align-items:center;gap:5px;min-width:0;
+  font-size:.7rem!important;font-weight:700;
+}
+.bsa236-reader .bsa100-selection-tools select{
+  max-width:122px!important;min-width:80px!important;
+  min-height:35px!important;padding:5px 6px!important;font-size:.72rem!important;
+}
+.bsa236-reader .bsa100-selection-tools button{
+  min-height:35px!important;padding:5px 9px!important;
+  font-size:.72rem!important;font-weight:700!important;
+  white-space:nowrap;
+}
+.bsa236-reader .bsa100-selection-tools button[aria-label="Dismiss selection without saving"]{
+  min-width:32px!important;padding-inline:8px!important;
+}
+@media(max-width:690px){
+  .bsa236-reader .bsa240-selection-tools.bsa100-selection-tools{
+    left:8px!important;width:max-content!important;
+    max-width:calc(100vw - 64px)!important;
+    bottom:calc(9px + env(safe-area-inset-bottom,0px))!important;
+  }
+  .bsa236-reader .bsa100-selection-tools .bsa100-highlight-label{flex:0 1 auto;}
+  .bsa236-reader .bsa100-highlight-options>button{min-height:38px!important;}
+}
+@media(prefers-reduced-motion:reduce){.bsa236-reader .bsa100-selection-tools{transition:none!important}}
