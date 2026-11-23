@@ -4803,7 +4803,7 @@ body>.backdrop .bsa45-sidebar-modal .bsa211-shortcut-groups{padding-bottom:18px}
 #root main.content.bsa235-routine-layout {
   container: routine-workspace / inline-size;
   min-inline-size: 0 !important;
-  overflow: visible !important;
+  /* Scrolling is controlled by the responsive shell rules below. */
 }
 #root main.content.bsa235-routine-layout > .bsa235-routine-page {
   inline-size: 100% !important;
@@ -5220,3 +5220,34 @@ body>.backdrop .bsa45-sidebar-modal .bsa211-shortcut-groups{padding-bottom:18px}
 .bsa11-linked-lecture li{display:flex;gap:8px;font-size:.77rem;line-height:1.55;padding:4px 0;color:var(--muted,#8893a9);overflow-wrap:anywhere}
 .bsa11-linked-lecture li.is-reviewed{color:var(--fg,#e9ecfa)}
 .bsa11-linked-lecture li span:first-child{flex:none;width:1.1rem}
+
+/* V1.2 — chapter-first navigation and clear MCQ quality feedback. */
+.bsa12-question-quality{padding:11px 14px;margin:10px 0 16px;max-width:100%;border:1px solid var(--line);border-left:3px solid var(--warn);background:var(--surface-2);border-radius:12px;color:var(--text);font-size:.84rem;line-height:1.5}
+.bsa12-lecture-filters{min-width:0}.bsa12-lecture-filters .chip-scroll{max-width:100%;min-width:0;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;touch-action:pan-x;padding-bottom:4px}
+.bsa12-topic-filter{width:100%;max-width:100%;min-width:0;margin-top:5px}.bsa12-topic-filter>summary{cursor:pointer;color:var(--muted);font-size:.81rem;padding:7px 3px}.bsa12-topic-filter>.chip-scroll{padding-top:8px}
+/* Remove the conflicting old overflow declaration on this one pane.  The
+   viewport-constrained rule below controls its scroll, including on iPadOS. */
+@media (min-width:700px){#root>.shell>main.content.bsa235-routine-layout{overflow-y:auto!important;overflow-x:hidden!important;min-height:0!important;-webkit-overflow-scrolling:touch!important;touch-action:pan-y!important}}
+@media (max-width:699px){#root>.shell>main.content.bsa235-routine-layout{max-height:none!important;height:auto!important;overflow-y:visible!important;touch-action:pan-y!important}}
+
+/* V1.3 · Roadmap importer and scope-aware prompt shortcuts */
+.bsa13-roadmap-cta{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px}
+.bsa13-roadmap-import-modal{max-width:min(1020px,95vw)}
+.bsa13-import-layout{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(270px,.95fr);gap:18px;align-items:start}
+.bsa13-import-layout>section{min-width:0}
+.bsa13-import-actions{display:flex;gap:9px;flex-wrap:wrap;margin:15px 0}
+.bsa13-import-paste{display:flex;flex-direction:column;gap:8px;margin-top:14px;font-weight:600}
+.bsa13-import-paste textarea{width:100%;min-height:220px;padding:13px;font:13px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;resize:vertical;border:1px solid var(--border,#cbd5d1);border-radius:12px;background:var(--surface,#fff);color:inherit}
+.bsa13-file-btn{position:relative;overflow:hidden;cursor:pointer}
+.bsa13-file-btn input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
+.bsa13-import-preview{border:1px solid var(--border,#ddd);border-radius:16px;padding:15px;background:var(--surface,#fff)}
+.bsa13-import-preview h3{margin-top:0}
+.bsa13-import-counts{display:flex;gap:9px;flex-wrap:wrap;margin:10px 0}
+.bsa13-import-counts span{padding:7px 10px;border:1px solid var(--border,#ddd);border-radius:10px;font-size:.88rem}
+.bsa13-import-list{max-height:300px;overflow:auto;overscroll-behavior:contain}
+.bsa13-import-list p{display:flex;flex-direction:column;gap:3px;padding:10px 0;margin:0;border-bottom:1px solid var(--border,#ddd);overflow-wrap:anywhere}
+.bsa13-import-list small{color:var(--muted,#677);font-weight:400}
+.bsa13-import-conflict strong,.bsa13-import-error{color:var(--danger,#ad493f)}
+.bsa13-import-confirm{display:flex;gap:9px;align-items:flex-start;margin:16px 0;font-size:.9rem;cursor:pointer}
+.bsa13-prompt-scope-note{grid-column:1/-1;margin:0;padding:9px 12px;border:1px solid var(--border,#ddd);border-radius:10px;font-size:.85rem;color:var(--muted,#65756b)}
+@media(max-width:760px){.bsa13-import-layout{grid-template-columns:minmax(0,1fr)}.bsa13-roadmap-cta{justify-content:flex-start;width:100%}.bsa13-roadmap-cta .btn{flex:1 1 auto}}
