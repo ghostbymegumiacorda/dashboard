@@ -30,7 +30,7 @@ THE SOFTWARE.
   if (window.__BSA_DESK_APP_LOADED__) return;
   window.__BSA_DESK_APP_LOADED__ = true;
   // User-facing release label only. Do not use for storage schemas or caches.
-  const BSA_RELEASE_LABEL = "V1.1";
+  const BSA_RELEASE_LABEL = "V1.3";
   const S = (t, p = null, s = false) => ({ t, p, s });
   const CFAS_TOPICS = [
     {
@@ -3806,6 +3806,94 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       return /* @__PURE__ */ React.createElement("div", { className: "panel exam-panel" }, /* @__PURE__ */ React.createElement("span", { className: "muted" }, "Next exam, week ", nextExam.week), /* @__PURE__ */ React.createElement("h2", null, nextExam.title), nextExam.due && h("p", null, h(DueChip, { t: nextExam })), r.total > 0 && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "bar-lg" }, /* @__PURE__ */ React.createElement("span", { style: { width: `${r.done / r.total * 100}%` } })), /* @__PURE__ */ React.createElement("p", null, /* @__PURE__ */ React.createElement("strong", null, r.done, " of ", r.total), " topics ready"), /* @__PURE__ */ React.createElement("div", { className: "topic-chips" }, covered.map((t) => /* @__PURE__ */ React.createElement("button", { key: t.id, className: "tchip", "data-status": t.status, onClick: () => go("roadmap", { open: t.id }), title: `${t.title}: ${t.status}` }, /* @__PURE__ */ React.createElement("span", { className: "dot" }), t.code || t.standard || t.title)))), nextExam.scope && /* @__PURE__ */ React.createElement("p", { className: "muted small" }, "Covers ", nextExam.scope), h(ExamReadyMini, { subject, exam: nextExam, go }));
     })(), h(UpNext, { subject, go }), /* @__PURE__ */ React.createElement("div", { className: "mini-stats" }, /* @__PURE__ */ React.createElement("button", { className: "mini", onClick: () => go("mistakes") }, /* @__PURE__ */ React.createElement("span", { className: "mini-num" }, acc === null ? "—" : `${acc}%`), /* @__PURE__ */ React.createElement("span", null, "Quiz accuracy")), h("button", { className: "mini", onClick: () => go("practice") }, h("span", { className: "mini-num" }, (() => { const r = retentionPct(subject); return r === null ? "—" : `${r}%`; })()), h("span", null, "Card memory")), /* @__PURE__ */ React.createElement("button", { className: "mini", onClick: () => go("mistakes") }, /* @__PURE__ */ React.createElement("span", { className: `mini-num${active.length ? " bad-text" : ""}` }, active.length), /* @__PURE__ */ React.createElement("span", null, "Open mistakes")), h("button", { className: "mini", onClick: () => go("practice") }, h("span", { className: "mini-num" }, streakOf(subject)), h("span", null, "Day streak"))), h(GradeMini, { subject, go, settings }))));
   }
+  /* V1.3 — Roadmap chapter JSON belongs to its own import workflow.
+     Only chapter/topic outlines are accepted here; personal study records are untouched. */
+  function bsa13ParseRoadmap(raw,subject){
+    let doc=null;
+    for(const candidate of psJSONCandidates(String(raw||''))){try{doc=JSON.parse(candidate);break}catch(_){}}
+    if(!doc||Array.isArray(doc)||typeof doc!=='object')throw Error('Paste one complete chapter/topic JSON object. Check commas and closing brackets.');
+    if(doc.format&&doc.format!=='bsa-roadmap-v1')throw Error('This is '+doc.format+' material. Import it in its own destination, not Roadmap.');
+    if(!bsa49MatchesSubject(doc.subject||'',subject)||!String(doc.subject||'').trim())throw Error('Subject mismatch or missing subject. The JSON subject must be exactly "'+subject.name+'".');
+    if(!Array.isArray(doc.topics)||!doc.topics.length||doc.topics.length>150)throw Error('Expected 1–150 chapters/topics in a top-level "topics" array.');
+    for(const key of ['lectures','problemSets','mcqSets','flashcards','cards','rules','mistakes','quizzes'])if(doc[key]?.length)throw Error('This importer accepts only roadmap topics. '+key+' must be imported into its own study library.');
+    const items=doc.topics.map((item,index)=>{
+      if(!item||typeof item!=='object'||Array.isArray(item))throw Error('Topic '+(index+1)+' must be an object with a title and subtopics.');
+      if(!String(item.title||item.topic||item.name||item.chapter||'').trim())throw Error('Topic '+(index+1)+' has no chapter/topic title.');
+      if(item.subtopics!==undefined&&!Array.isArray(item.subtopics))throw Error('Topic '+(index+1)+' needs an array of subtopics.');
+      if(Array.isArray(item.subtopics)&&item.subtopics.some(x=>typeof x!=='string'&&(typeof x!=='object'||!x||Array.isArray(x))))throw Error('Topic '+(index+1)+' has an invalid subtopic.');
+      const row=normTopic(item);
+      if(row.sub.some(x=>!x.t||x.t==='Subtopic'))throw Error('Topic '+(index+1)+' has an unnamed subtopic.');
+      return row;
+    });
+    const ids=new Set(),codes=new Map();
+    for(const row of items){const id=norm(row.title);if(ids.has(id))throw Error('Duplicate chapter/topic in this JSON: '+row.title+'. Combine its subtopics first.');ids.add(id);if(row.code){const code=norm(row.code);if(codes.has(code)&&codes.get(code)!==id)throw Error('Repeated chapter code in this import: '+row.code+'. Give distinct chapters distinct codes.');codes.set(code,id)}}
+    return items;
+  }
+  function bsa13RoadmapPlan(subject,rows){
+    const additions=[],enrichments=[],conflicts=[];
+    for(const row of rows){
+      const same=(subject.topics||[]).filter(t=>norm(t.title)===norm(row.title)&&t.kind===row.kind);
+      const possible=bsa49ResolveTopic(subject,row.title,row.code);
+      if(same.length===1&&!(same[0].code&&row.code&&norm(same[0].code)!==norm(row.code))){
+        const old=same[0];const newSub=row.sub.filter(sub=>!(old.sub||[]).some(x=>norm(x.t)===norm(sub.t)));
+        enrichments.push({row,old,newSub});
+      }else if(same.length>0||possible){
+        conflicts.push({row,why:'A similar chapter or code exists, but its identity is not identical. Nothing will merge until you review it manually.'});
+      }else if((subject.topics||[]).some(t=>row.code&&t.code&&norm(t.code)===norm(row.code)&&t.kind===row.kind)){
+        conflicts.push({row,why:'Chapter code is already used by a different title.'});
+      }else additions.push(row);
+    }
+    return {additions,enrichments,conflicts};
+  }
+  function BSA13RoadmapImport({subject,update,toast,onClose,onPrompt}){
+    const [raw,setRaw]=useState('');
+    const [fileName,setFileName]=useState('');
+    const [preview,setPreview]=useState(null);
+    const [error,setError]=useState('');
+    const [approved,setApproved]=useState(false);
+    const reset=()=>{setPreview(null);setError('');setApproved(false)};
+    const check=()=>{try{const rows=bsa13ParseRoadmap(raw,subject);setPreview({rows,plan:bsa13RoadmapPlan(subject,rows)});setError('');setApproved(false)}catch(e){setPreview(null);setError(e.message||String(e))}};
+    const save=()=>{if(!preview||!approved)return;
+      try{
+        const fresh=bsa13RoadmapPlan(subject,preview.rows);
+        const added=fresh.additions.length,updated=fresh.enrichments.reduce((sum,x)=>sum+x.newSub.length,0);
+        if(!added&&!updated){setError('No new chapters or subtopics to save. Existing chapters were kept unchanged.');return}
+        update(s=>{
+          // Recheck within the current subject snapshot. Never replace existing IDs.
+          const final=bsa13RoadmapPlan(s,preview.rows);
+          for(const row of final.additions)s.topics.push(row);
+          for(const {old,row,newSub} of final.enrichments){
+            const dest=s.topics.find(t=>t.id===old.id);if(!dest)continue;
+            for(const item of newSub)if(!(dest.sub||[]).some(x=>norm(x.t)===norm(item.t)))dest.sub.push(item);
+            for(const key of ['week','code','standard','scope','due'])if(!dest[key]&&row[key])dest[key]=row[key];
+          }
+        });
+        toast('Roadmap updated: '+added+' new chapters/topics, '+updated+' new subtopics. Progress and existing notes preserved.');
+        onClose();
+      }catch(e){setError('Nothing saved: '+(e.message||String(e)))}
+    };
+    return h(Modal,{title:'Import chapters & subtopics',wide:true,className:'bsa13-roadmap-import-modal',onClose},
+      h('div',{className:'bsa13-import-layout'},
+        h('section',{className:'bsa13-import-main'},
+          h('p',{className:'muted'},'Import a chapter, several chapters, or a syllabus outline into this subject’s Roadmap. Preview first; existing study records and reviewed checkmarks stay intact.'),
+          h('div',{className:'bsa13-import-actions'},
+            h('button',{className:'btn',type:'button',onClick:onPrompt},'Create chapter JSON prompt'),
+            h('label',{className:'btn bsa13-file-btn'},'Choose .json file',h('input',{type:'file',accept:'.json,application/json',onChange:async e=>{const file=e.target.files?.[0];if(!file)return;reset();try{if(file.size>1500000)throw Error('Split this file into smaller chapter imports (1.5 MB maximum).');setRaw(await file.text());setFileName(file.name)}catch(err){setError(err.message||String(err))}e.target.value=''}}))),
+          fileName&&h('p',{className:'muted small'},'Selected file: '+fileName),
+          h('label',{className:'bsa13-import-paste'},h('strong',null,'Paste chapter/topic JSON'),h('textarea',{rows:11,spellCheck:false,value:raw,placeholder:JSON.stringify({format:'bsa-roadmap-v1',subject:subject.name,topics:[{code:'Chapter 16',title:'Chapter 16 — Actual chapter title',subtopics:['First major subtopic','Second major subtopic']}]},null,2),onChange:e=>{setRaw(e.target.value);reset()}})),
+          h('div',{className:'bsa13-import-actions'},h('button',{className:'btn primary',type:'button',disabled:!raw.trim(),onClick:check},'Preview and check chapters'),h('button',{className:'btn ghost',type:'button',onClick:onClose},'Close')),
+          error&&h('p',{className:'bsa13-import-error',role:'alert'},error)),
+        h('section',{className:'bsa13-import-preview'},
+          h('h3',null,'Import preview'),
+          !preview?h('p',{className:'muted'},'Nothing is saved until you inspect and approve the preview. Only chapter/topic data belongs here.'):h(React.Fragment,null,
+            h('div',{className:'bsa13-import-counts'},h('span',null,h('strong',null,preview.plan.additions.length),' new chapters/topics'),h('span',null,h('strong',null,preview.plan.enrichments.reduce((sum,x)=>sum+x.newSub.length,0)),' new subtopics'),h('span',null,h('strong',null,preview.plan.conflicts.length),' held for review')),
+            h('div',{className:'bsa13-import-list'},
+              preview.plan.additions.map((x,i)=>h('p',{key:'a'+i},h('strong',null,'NEW · '+x.title),h('small',null,x.sub.length+' subtopics'))),
+              preview.plan.enrichments.map((x,i)=>h('p',{key:'e'+i},h('strong',null,'EXISTING · '+x.row.title),h('small',null,x.newSub.length+' new subtopics; existing completion kept'))),
+              preview.plan.conflicts.map((x,i)=>h('p',{key:'c'+i,className:'bsa13-import-conflict'},h('strong',null,'REVIEW · '+x.row.title),h('small',null,x.why)))),
+            h('label',{className:'bsa13-import-confirm'},h('input',{type:'checkbox',checked:approved,onChange:e=>setApproved(e.target.checked)}),'I checked the chapter titles, subtopics, and any conflicts.'),
+            h('button',{className:'btn primary',type:'button',disabled:!approved||!preview.plan.additions.length&&!preview.plan.enrichments.some(x=>x.newSub.length),onClick:save},'Import approved chapters')))));
+  }
   // dataRef is reachable here because RoadmapView is rendered inside App's tree
   // and receives the same toast; the undo document is cloned at the call site.
   function RoadmapView({ subject, update, toast, go, openEditor, init }) {
@@ -3813,13 +3901,18 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const [editing, setEditing] = useState(init.add ? "new" : null);
     const [showBook, setShowBook] = useState(false);
     const [bkEdit, setBkEdit] = useState(false);
+    const [roadmapImportOpen,setRoadmapImportOpen]=useState(!!init.importJson);
+    useEffect(()=>{if(init.importJson)setRoadmapImportOpen(true)},[init]);
     const [filter, setFilter] = useState("all");
     // View-only organization. Subtopic IDs, source text, and study completion are never rewritten.
     const [subListExpanded,setSubListExpanded]=useState({});
     const [subListQuery,setSubListQuery]=useState({});
     const topics = studyTopics(subject);
-    const chapters=bsa11ChapterCatalog(subject);
-    const connectedCoverage=new Map(chapters.flatMap(group=>group.ids.map(id=>[id,bsa11LectureCoverage(subject,group)])));
+    const chapters=useMemo(()=>bsa11ChapterCatalog(subject),[subject]);
+    const connectedCoverage=useMemo(()=>new Map(chapters.flatMap(group=>{
+      const coverage=bsa11LectureCoverage(subject,group);
+      return group.ids.map(id=>[id,coverage]);
+    })),[subject,chapters]);
     const counts = TOPIC_STATUS.map((s) => topics.filter((t) => t.status === s).length);
     useEffect(() => {
       if (init.open) requestAnimationFrame(() => {
@@ -3845,7 +3938,10 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       if (t) fn(t, s);
     });
     const shown = subject.topics.filter((t) => filter === "all" || t.kind !== "exam" && t.status === filter);
-    return /* @__PURE__ */ React.createElement("section", { className: "view" }, /* @__PURE__ */ React.createElement("div", { className: "page-head" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h1", { className: "page-title" }, "Roadmap"), /* @__PURE__ */ React.createElement("p", { className: "muted" }, subject.name, subject.code ? ` ${subject.code}` : "", ": one chapter structure for Lectures, Practice and progress.")), !window.__BSA_SHARED_MODE__&&/* @__PURE__ */ React.createElement("button", { className: "btn", onClick: () => setEditing("new") }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 16 }), " Add chapter")),
+    return /* @__PURE__ */ React.createElement("section", { className: "view" }, /* @__PURE__ */ React.createElement("div", { className: "page-head" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h1", { className: "page-title" }, "Roadmap"), /* @__PURE__ */ React.createElement("p", { className: "muted" }, subject.name, subject.code ? ` ${subject.code}` : "", ": one chapter structure for Lectures, Practice and progress.")), !window.__BSA_SHARED_MODE__&&h('div',{className:'bsa13-roadmap-cta'},
+        h('button',{className:'btn primary',type:'button',onClick:()=>setRoadmapImportOpen(true)},h(Icon,{name:'data',size:16}),' Import chapter/topic JSON'),
+        h('button',{className:'btn',type:'button',onClick:()=>go('nlm',{pid:'chapter-outline'})},'Create JSON prompt'),
+        h('button',{className:'btn',onClick:()=>setEditing('new')},h(Icon,{name:'plus',size:16}),' Add manually'))),
       h('section',{className:'bsa11-roadmap-summary','aria-label':'Unified chapter overview'},
         h('div',null,h('strong',null,'Your chapter map'),h('p',{className:'muted small'},'Lecture review coverage is separate from demonstrated mastery. The original syllabus entries and history are preserved.')),
         h('div',{className:'bsa11-chapter-grid'},chapters.map(group=>{const progress=bsa11LectureCoverage(subject,group);const evidence=bsa11PracticeEvidence(subject,group);
@@ -3855,7 +3951,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
             h('p',{className:'muted small'},progress.total?progress.reviewed+' / '+progress.total+' sections reviewed · '+progress.state:progress.state,
               evidence.attempts?' · '+evidence.correct+' / '+evidence.attempts+' MCQs correct':''),
             h('div',{className:'bsa11-chapter-actions'},
-              h('button',{className:'btn',onClick:()=>go('lectures',{topicId:group.ids[0]})},'Lectures'),
+              h('button',{className:'btn',onClick:()=>go('lectures',{topicId:group.key})},'Lectures'),
               h('button',{className:'btn primary',onClick:()=>go('mcq',{topicId:group.key})},'Practice chapter')),
             progress.lectures.length>0&&h('details',{className:'bsa11-linked-sections'},
               h('summary',null,'See linked lecture sections'),
@@ -3872,7 +3968,9 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
                   })));
               })));
         }), chapters.length===0&&h('p',{className:'muted'},'Import your official syllabus or add a chapter to begin.'))),
-      /* @__PURE__ */ React.createElement(Track, { subject, onJump: jump }), subject.topics.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "seg-filter", role: "group", "aria-label": "Show topics" }, /* @__PURE__ */ React.createElement("button", { className: filter === "all" ? "on" : "", "aria-pressed": filter === "all", onClick: () => setFilter("all") }, "All"), TOPIC_STATUS.map((s, i) => /* @__PURE__ */ React.createElement("button", { key: s, className: filter === s ? "on" : "", "aria-pressed": filter === s, "data-status": s, onClick: () => setFilter(s) }, /* @__PURE__ */ React.createElement("span", { className: "dot" }), s, " ", /* @__PURE__ */ React.createElement("span", { className: "n" }, counts[i])))), subject.topics.length === 0 ? /* @__PURE__ */ React.createElement("div", { className: "empty big" }, /* @__PURE__ */ React.createElement(Icon, { name: "roadmap", size: 32 }), /* @__PURE__ */ React.createElement("h2", null, "No topics yet"), /* @__PURE__ */ React.createElement("p", { className: "muted" }, "Add rows one by one, or paste your syllabus as JSON from Import data."), /* @__PURE__ */ React.createElement("button", { className: "btn primary", onClick: () => setEditing("new") }, "Add the first topic"), h("button", { className: "btn", onClick: () => go("data", { tab: "packs" }) }, "Browse starter packs")) : /* @__PURE__ */ React.createElement("div", { className: "topic-list" }, shown.map((t) => {
+      roadmapImportOpen&&!window.__BSA_SHARED_MODE__&&h(BSA13RoadmapImport,{subject,update,toast,onClose:()=>setRoadmapImportOpen(false),onPrompt:()=>{setRoadmapImportOpen(false);go('nlm',{pid:'chapter-outline'})}}),
+      /* @__PURE__ */ React.createElement(Track, { subject, onJump: jump }), subject.topics.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "seg-filter", role: "group", "aria-label": "Show topics" }, /* @__PURE__ */ React.createElement("button", { className: filter === "all" ? "on" : "", "aria-pressed": filter === "all", onClick: () => setFilter("all") }, "All"), TOPIC_STATUS.map((s, i) => /* @__PURE__ */ React.createElement("button", { key: s, className: filter === s ? "on" : "", "aria-pressed": filter === s, "data-status": s, onClick: () => setFilter(s) }, /* @__PURE__ */ React.createElement("span", { className: "dot" }), s, " ", /* @__PURE__ */ React.createElement("span", { className: "n" }, counts[i])))), subject.topics.length === 0 ? /* @__PURE__ */ React.createElement("div", { className: "empty big" }, /* @__PURE__ */ React.createElement(Icon, { name: "roadmap", size: 32 }), /* @__PURE__ */ React.createElement("h2", null, "No topics yet"), /* @__PURE__ */ React.createElement("p", { className: "muted" }, "Add rows one by one, or paste your syllabus as JSON from Import data."), /* @__PURE__ */ React.createElement("button", { className: "btn primary", onClick: () => setEditing("new") }, "Add the first topic"), h("button", { className: "btn", onClick: () => go("data", { tab: "packs" }) }, "Browse starter packs"),
+        editing&&h(TopicEditor,{subject,topic:null,onClose:()=>setEditing(null),onSave:row=>{update(s=>{s.topics.push(row)});setEditing(null);toast("Chapter/topic added")},onDelete:()=>{}})) : /* @__PURE__ */ React.createElement("div", { className: "topic-list" }, shown.map((t) => {
       if (t.kind === "exam") {
         const r = readiness(subject, t);
         return /* @__PURE__ */ React.createElement("article", { key: t.id, id: `row-${t.id}`, className: "exam-card" }, /* @__PURE__ */ React.createElement("div", { className: "wk-col" }, /* @__PURE__ */ React.createElement("span", { className: "wk-small" }, "Week"), /* @__PURE__ */ React.createElement("span", { className: "wk-num" }, t.week)), /* @__PURE__ */ React.createElement("div", { className: "topic-main" }, /* @__PURE__ */ React.createElement("h3", null, t.title), t.due && h(DueChip, { t }), /* @__PURE__ */ React.createElement("p", { className: "muted" }, [t.scope, t.note].filter(Boolean).join(". "))), /* @__PURE__ */ React.createElement("div", { className: "exam-ready" }, r.total ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "bar-lg" }, /* @__PURE__ */ React.createElement("span", { style: { width: `${r.done / r.total * 100}%` } })), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("strong", null, r.done, "/", r.total), " ready")) : /* @__PURE__ */ React.createElement("span", { className: "muted" }, "Pick topics in Edit")), /* @__PURE__ */ !window.__BSA_SHARED_MODE__ && React.createElement("button", { className: "icon-btn", onClick: () => setEditing(t), "aria-label": `Edit ${t.title}` }, "✎"));
@@ -5669,12 +5767,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     return !q.topicId&&!!group.scope&&bsa11ScopeKey(q.src)===group.scope;
   }
   function bsa11LectureCoverage(subject,group){
-    const list=(subject.lectures||[]).filter(l=>{
-      if(!l)return false;
-      if(group.ids.includes(l.topicId))return true;
-      return !l.topicId&&!!group.scope&&
-        [l.topicText,l.title].some(text=>bsa11ScopeKey(text)===group.scope);
-    });
+    const list=(subject.lectures||[]).filter(l=>bsa12LectureInChapter(subject,group,l));
     let total=0,reviewed=0;
     for(const l of list){const sections=lxSourcePresentation(l).sections;
       const checked=new Set(Array.isArray(l.reviewedSections)?l.reviewedSections:[]);
@@ -5684,6 +5777,20 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     return {lectures:list,total,reviewed,percent:total?Math.round(reviewed*100/total):0,
       state:!total?'No linked lecture':!reviewed?'Not started':reviewed<total?'In progress':'Fully reviewed'};
   }
+  /* V1.2 — one source-of-truth chapter membership rule for Roadmap and
+     Lectures.  Match verified topic IDs first.  For historical unlinked items,
+     require an explicit chapter/standard code; do not infer from words. */
+  function bsa12LectureInChapter(subject,group,lecture){
+    if(!group||!lecture)return false;
+    if(lecture.topicId)return group.ids.includes(lecture.topicId);
+    const resolved=matchTopic(subject,lecture.topicText||'');
+    if(resolved)return group.ids.includes(resolved);
+    return !!group.scope&&[lecture.topicText,lecture.title].some(text=>bsa11ScopeKey(text)===group.scope);
+  }
+  function bsa12ChapterLectureCount(subject,group){
+    return (subject.lectures||[]).filter(l=>bsa12LectureInChapter(subject,group,l)).length;
+  }
+
   function bsa11PracticeEvidence(subject,group){
     const ids=new Set(group.ids),events=(subject.learningEvents||[]).filter(e=>
       e&&ids.has(bsa20TopicResolver(subject)(e))&&e.kind==='mcq'&&['correct','incorrect'].includes(e.result));
@@ -5707,16 +5814,54 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     recover:{label:'Weak spot recovery',mix:[10,25,35,30],aim:'test the same weak concepts through genuinely different cases, not recycled wording'}
   };
 
+  /* V1.2 — accept common answer-key formats without guessing.  Entries with
+     duplicate choices, repeated option letters, or no defensible key stay in
+     the library for correction and are excluded from marked MCQ sessions. */
+  function bsa12McqCheck(p){
+    if(!p||!String(p.problem||'').trim())return {error:'missing question'};
+    const choices=p.choices;
+    if(!Array.isArray(choices)||choices.length<2||choices.length>8)return {error:'invalid choice count'};
+    const keys=[],texts=new Set();
+    for(let i=0;i<choices.length;i++){
+      const raw=String(choices[i]??'');
+      const clean=psPlain(raw).replace(/^\s*[A-Ha-h]\s*[.)\]]\s*/,'').trim().replace(/\s+/g,' ').toLowerCase();
+      if(!clean)return {error:'empty choice'};
+      if(texts.has(clean))return {error:'repeated choice'};
+      texts.add(clean);
+      keys.push(mxChoiceKey(raw,i));
+    }
+    if(new Set(keys).size!==keys.length)return {error:'repeated option letter'};
+    const answer=String(p.answer??'').trim();
+    // Accept 'B', '(B)', 'B.', 'Answer: B', 'Choice B', or 'Option B'.
+    const marker=answer.match(/^(?:correct\s+answer\s*[:=-]?\s*|answer\s*[:=-]?\s*|choice\s*|option\s*)?\(?\s*([A-Ha-h])\s*\)?\s*[.)\]]?\s*$/i);
+    let key=marker?marker[1].toLowerCase():mxKey(answer);
+    if(!keys.includes(key)){
+      const normalized=psPlain(answer).replace(/^\s*[A-Ha-h]\s*[.)\]]\s*/,'').trim().replace(/\s+/g,' ').toLowerCase();
+      const matches=choices.map((c,i)=>({i,text:psPlain(c).replace(/^\s*[A-Ha-h]\s*[.)\]]\s*/,'').trim().replace(/\s+/g,' ').toLowerCase()})).filter(x=>x.text===normalized);
+      key=matches.length===1?keys[matches[0].i]:'';
+    }
+    if(!key||!keys.includes(key))return {error:'unrecognized answer key'};
+    return {key};
+  }
+  function bsa12McqAudit(subject){
+    let valid=0,skipped=0;
+    const reasons={};
+    for(const set of (Array.isArray(subject?.mcqSets)?subject.mcqSets:[]))for(const p of (Array.isArray(set?.problems)?set.problems:[])){
+      const result=bsa12McqCheck(p);
+      if(result.error){skipped++;reasons[result.error]=(reasons[result.error]||0)+1;}
+      else valid++;
+    }
+    return {valid,skipped,reasons};
+  }
   function mcqDedicatedPool(subject) {
-    const mcq = [];
-    for (const set of (subject.mcqSets || [])) {
-      for (const p of set.problems || []) {
-        const key = mxKey(p.answer);
-        if (!Array.isArray(p.choices) || p.choices.length < 2 || !key ||
-            !p.choices.some((choice,i) => mxChoiceKey(choice,i) === key)) continue;
-        mcq.push({ kind:'mcq', id:`x_${p.id}`, topicId:mcqAssignedTopic(subject,set,p),
-          q:p.problem, choices:p.choices, key, subtopic:psPlain(p.subtopic||''), why:p.solution || p.approach || '',
-          trap:p.trap || '', src:`${set.title} · problem ${p.no || ''}`, setId:set.id });
+    const mcq=[];
+    for(const set of (Array.isArray(subject?.mcqSets)?subject.mcqSets:[])){
+      for(const p of (Array.isArray(set?.problems)?set.problems:[])){
+        const checked=bsa12McqCheck(p);
+        if(checked.error)continue;
+        mcq.push({kind:'mcq',id:`x_${p.id}`,topicId:mcqAssignedTopic(subject,set,p),
+          q:p.problem,choices:p.choices,key:checked.key,subtopic:psPlain(p.subtopic||''),why:p.solution||p.approach||'',
+          trap:p.trap||'',src:`${set.title} · problem ${p.no||''}`,setId:set.id});
       }
     }
     return mcq;
@@ -5734,7 +5879,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
   ];
   function bsa197QuizKey(q) {
     const prompt = String(psPlain(q && q.q || '')).normalize('NFKC').toLowerCase().replace(/\s+/g,' ').trim();
-    const answer = q && Array.isArray(q.choices) ? psPlain(q.choices.find((c,i)=>mxChoiceKey(c,i)===q.key)||'').replace(/^\s*[A-Da-d]\s*[.)\]]\s*/, '') : '';
+    const answer = q && Array.isArray(q.choices) ? psPlain(q.choices.find((c,i)=>mxChoiceKey(c,i)===q.key)||'').replace(/^\s*[A-Ha-h]\s*[.)\]]\s*/, '') : '';
     const stem = prompt+'\n'+String(answer).normalize('NFKC').toLowerCase().replace(/\s+/g,' ').trim();
     if (!stem) return 'id:'+String(q && q.id || '');
     // Two independent 32-bit rolling hashes with length, to keep records small.
@@ -6039,7 +6184,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         if(document.querySelector('[role="dialog"][aria-modal="true"],dialog[open]'))return;
         const q=paper[pos];if(!q)return;
         const ch=String(event.key).toUpperCase();
-        if(ch.length===1&&'ABCD'.includes(ch)){
+        if(ch.length===1&&'ABCDEFGH'.includes(ch)){
           if(revealed[q.id])return;
           const index=ch.charCodeAt(0)-65;
           if(index>=q.choices.length)return;
@@ -6271,6 +6416,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
 
   /* v153: Independent MCQ library and quiz route. */
   function MCQPage({subject,update,toast,go,init,pendingPractice,onQuizRunningChange}){
+    const quality=useMemo(()=>bsa12McqAudit(subject),[subject]);
     const [quizSet,setQuizSet]=useState(()=>init?.resume?'all':(init?.setId||null));
     const resumeInHeader=!!(pendingPractice?.kind==='mcq'&&pendingPractice.subjectId===subject.id&&!init?.resume);
     return h("section",{className:"view mcq-page"},
@@ -6282,9 +6428,12 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
         h("div",{className:"page-head"},
           h("div",null,h("span",{className:"panel-kicker"},"QUESTION COLLECTIONS"),h("h1",{className:"page-title"},"Multiple-choice questions"),
             h("p",{className:"muted"},"Browse question sets, inspect explanations, or practice one question at a time."))),
+        quality.skipped>0&&h('p',{className:'bsa12-question-quality',role:'status'},
+          quality.skipped+' imported question'+(quality.skipped===1?'':'s')+' need'+(quality.skipped===1?'s':'')+
+          ' a valid answer key or distinct choices before marked practice. They remain in the library; no records were deleted.'),
         h("div",{className:"mcq-page-actions"},
           h("button",{className:"btn primary",onClick:()=>setQuizSet("all")},"Start mixed MCQ quiz"),
-          h("button",{className:"btn",onClick:()=>go("nlm",{pid:"mcq-quiz"})},"Generate / import MCQs")),
+          !window.__BSA_SHARED_MODE__&&h("button",{className:"btn",onClick:()=>go("nlm",{pid:"mcq-quiz"})},"Generate / import MCQs")),
         h(MCQBankExplorer,{subject,update,onPractice:setQuizSet})));
   }
 
@@ -6858,7 +7007,7 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
      mark objectively; you mark the written answers yourself. The score is saved as a quiz, so
      it feeds exam readiness like any other practice. */
   const mxKey = (s) => {
-    const m = String(s || "").trim().match(/^\(?\s*([a-dA-D])\s*[.)\]]/);
+    const m = String(s || "").trim().match(/^\(?\s*([a-hA-H])\s*[.)\]]/);
     return m ? m[1].toLowerCase() : "";
   };
   const mxChoiceKey = (c, i) => mxKey(c) || "abcdefgh"[i];
@@ -7905,7 +8054,14 @@ ${NLM_JSON}
   ]
 }
 
-Rules: list topics in the order they are taught. Include every exam (prelim, midterm, semi-final, final, long tests) as its own entry with "kind": "exam". Use short codes T1, T2, T3… Only use dates that appear in my sources; otherwise leave "due" empty. IMPORTANT SUBTOPIC ORGANIZATION: preserve EVERY substantive learning objective from my sources, but group closely related details into a concise outline of usually 3–8 meaningful subtopics per main chapter or topic, not one subtopic for each definition, rule, example or question. If the source genuinely has more than eight independent major sections, retain them rather than omit content. Never duplicate a chapter under alternate names. Put finer details, exceptions, formulas and cases into lecture sections, questions, rule cards or the roadmap note rather than creating dozens of tiny top-level subtopics. Use stable, short headings; do not rename an existing dashboard topic. ${c.kindHint}` },
+Rules: list topics in the order they are taught. Include every exam (prelim, midterm, semi-final, final, long tests) as its own entry with "kind": "exam". Use the source's actual chapter number (for example Chapter 16) as the code when the source uses numbered chapters; use T1, T2… only when it is actually a week-based topic outline without numbered chapters. Never invent a chapter number. Only use dates that appear in my sources; otherwise leave "due" empty. IMPORTANT SUBTOPIC ORGANIZATION: preserve EVERY substantive learning objective from my sources, but group closely related details into a concise outline of usually 3–8 meaningful subtopics per main chapter or topic, not one subtopic for each definition, rule, example or question. If the source genuinely has more than eight independent major sections, retain them rather than omit content. Never duplicate a chapter under alternate names. Put finer details, exceptions, formulas and cases into lecture sections, questions, rule cards or the roadmap note rather than creating dozens of tiny top-level subtopics. Use stable, short headings; do not rename an existing dashboard topic. ${c.kindHint}` },
+    { id:'chapter-outline',group:'setup',json:true,title:'New chapter(s) & subtopics → Roadmap JSON',desc:'Add one or more NEW chapters from source pages without choosing an existing Roadmap topic.',instructions:'Attach the chapters, table of contents or syllabus pages you want to ADD. Do not select an existing chapter; this prompt creates new Roadmap entries. Import the resulting JSON directly in Roadmap → Import chapter/topic JSON.',make:c=>`Create NEW chapter/topic entries for my ${c.subject} Roadmap from the actual source pages provided. Coverage to add: ${c.focus}.
+${NLM_JSON}
+
+Output exactly ONE complete JSON object, with no markdown fence:
+${JSON.stringify({format:'bsa-roadmap-v1',subject:c.subject,topics:[{week:'',code:'Chapter 16',title:'Chapter 16 — Actual title from source',standard:'',scope:'',due:'',subtopics:['First major learning section','Second major learning section']}]},null,2)}
+
+Replace sample chapter numbers, titles and subtopics with ACTUAL material from my sources. Use 1–150 topics per file, preferably smaller batches. Retain ALL substantive source learning objectives, but organize each chapter into about 3–8 meaningful major subtopics when supported; do not create one entry per definition or test question. Keep each distinct chapter as ONE Roadmap topic; place its learning sections inside subtopics. Keep printed chapter numbers (e.g., Chapter 16) distinct from PAS/PFRS identifiers. If a source contains no week, standard, scope or due date, use an empty string. NEVER invent dates, content, chapter numbers or source facts. If an already-existing Roadmap chapter title appears in these source pages, omit it unless you are providing genuinely NEW subtopic headings that should be added; the importer will review that enrichment without erasing progress. EXISTING ROADMAP TITLES (reference only, not a forced choice): ${c.topicTitles.length?c.topicTitles.join(' | '):'None yet'}. Do not assign any existing dashboard topic ID. Do not include lectures, flashcards, MCQs, exercises or other unrelated collections. Check that all subtopics are strings and JSON parses before replying. ${c.kindHint}`},
     { id: "grading", group: "setup", json: true, title: "Syllabus → grade calculator", desc: "Reads the grading system (weights, class standing, letter grades, QPI) so the Grades calculator sets itself up.", make: (c) => GC_PROMPT(c.subject) },
     { id: "cards", group: "make", json: true, title: "Core flashcards", desc: "15–25 cards on the ideas most likely to be tested.", make: (c) => `Using the materials I provide, create 15 to 25 flashcards for ${c.focus} in ${c.subject}. Cover the ideas most likely to be tested, from basic to tricky.
 ${NLM_JSON}
@@ -8043,7 +8199,7 @@ THE PART I'M STUCK ON:
       kindHint: k[2],
       focus: t ? `the topic "${label(t)}"` : "all the topics in my sources",
       topicExample: t ? t.title : topics[0] ? topics[0].title : "Chapter or lesson title",
-      topicRule: topics.length ? `For every "topic" field use one of these exact topic titles from my dashboard: ${topics.map((x) => `"${x.title}"`).join(", ")}. If none fits, use the closest chapter or lesson title.` : `For every "topic" field use the chapter or lesson title from my sources.`,
+      topicRule: topics.length ? `For every "topic" field use one of these exact topic titles from my dashboard: ${topics.map((x) => `"${x.title}"`).join(", ")}. If the source covers a new chapter not yet in the roadmap, use its exact source title and leave it for manual linking; never force an unrelated existing topic.` : `For every "topic" field use the chapter or lesson title from my sources.`,
       examLine: exam ? `an upcoming ${exam.title}` : "an upcoming exam",
       examScope,
       examDate: exam && exam.due ? fmtDay(exam.due, "long") : "",
@@ -8072,6 +8228,7 @@ THE PART I'M STUCK ON:
     traps:{kind:'cards',what:'Confusing look-alikes and common mistakes as comparison cards.',attach:'Attach sections showing similar concepts, conditions and exceptions.'},
     exam:{kind:'cards',what:'Exam-coverage recall cards, not an unsupported prediction of exam questions.',attach:'Attach exam coverage and the corresponding materials.'},
     rulebook:{kind:'rules',what:'Searchable rules with applicability, treatments, exceptions, examples and citations.',attach:'Attach the actual standard, regulation, reference or textbook chapter.'},
+    'chapter-outline':{destination:'Roadmap chapters & subtopics',what:'New chapter/topic structure with meaningful subtopic headings; no existing topic selection needed.',attach:'Attach the pages or chapter outline you want to add to Roadmap.'},
     roadmap:{destination:'Study roadmap',what:'Course topics and assessments in the order stated by the syllabus.',attach:'Attach the entire syllabus or course outline with dates.'},
     grading:{destination:'Grades calculator',what:'A grading structure using only your teacher’s actual percentages.',attach:'Attach the syllabus grading page and conversion table.'},
     drills:{destination:'Computation drills',what:'Parameterized calculation practice with independently checked formulas.',attach:'Attach source formulas and solved computations.'},
@@ -8119,8 +8276,12 @@ THE PART I'M STUCK ON:
   function bsaBuildGuidedPrompt(p,ctx,fields){
     const spec=BSA_PROMPT_SPEC[p.id]||{};
     const format=BSA_PROMPT_TYPES[spec.kind];
-    const focus=String(fields.customTopic||'').trim()||ctx.focus||'the source coverage provided';
-    const adapted={...ctx,focus,topicExample:focus,examDate:fields.examDate||ctx.examDate};
+    const roadmapCreation=p.id==='chapter-outline'||p.id==='roadmap';
+    const setupScope=p.id==='book'?'the textbook table of contents in the attached source':p.id==='grading'?'the grading and assessment policy in the attached syllabus':'';
+    const focus=String(fields.customTopic||'').trim()||(roadmapCreation?(p.id==='roadmap'?'the complete uploaded syllabus/course outline':'new chapters/topics in the attached source pages'):setupScope||ctx.focus||'the source coverage provided');
+    const customLabel=String(fields.customTopic||'').trim();
+    const existingLabel=ctx.topicTitles.find(t=>norm(t)===norm(customLabel));
+    const adapted={...ctx,focus,topicExample:customLabel?(existingLabel||customLabel):ctx.topicExample,examDate:fields.examDate||ctx.examDate};
     const sourceMode=fields.supplement==='none'?
       'Use only the uploaded sources. If they do not contain a fact, identify the gap and omit that fact.':
       'Prioritize my attached sources. Supplement missing or outdated content ONLY when you can actually access an identifiable authoritative primary source (official standard setter, regulator, primary research or publisher). Confirm jurisdiction, effective date, and section. Identify supplementary material as external. Do NOT claim web verification without actually visiting the source.';
@@ -8131,6 +8292,7 @@ THE PART I'M STUCK ON:
       'COURSE CODE: '+(ctx.courseCode||'Not specified'),
       'STRICT JSON SUBJECT FIELD: use exactly '+JSON.stringify(ctx.subject)+' in the top-level subject field, without course code.',
       'SCOPE: '+focus,
+      roadmapCreation?'ROADMAP CREATION MODE: You are ADDING course chapters/topics and their subtopics, not choosing an already-existing topic. Do not ask the student to select an existing Roadmap topic. The following existing titles are for duplication checking only: '+(ctx.topicTitles.length?ctx.topicTitles.join(' | '):'None yet')+'.':'',
       'SOURCE IDENTIFICATION: '+(String(fields.sourceTitle||'').trim()||'Identify each actual source by its visible title and edition; do not invent bibliographic details.'),
       'SOURCE PAGES / CHAPTERS: '+(String(fields.sourceScope||'').trim()||'Use only the pages or chapters actually provided or selected.'),
       fields.pdfSourceName?'LOCAL PDF SOURCE FILE: '+fields.pdfSourceName+' — I must separately upload this exact PDF in this AI chat; the prompt alone does not include its contents. Do not pretend you can read it until attached.':'',
@@ -8192,6 +8354,7 @@ THE PART I'M STUCK ON:
       lines.push('CHECK BEFORE SENDING: Parse the JSON. Confirm correct destination, nonempty entries, no cross-type arrays, unique item IDs/codes, real source locations, fully verified calculations and no dummy examples. Do not claim anything was independently verified unless it was.');
     }else{
       lines.push(p.json?'JSON OUTPUT: Return one valid dashboard-compatible object for '+(spec.destination||'the requested setup')+' using the task shape specified below. No Markdown fences or unrelated collections.':'OUTPUT: Respond interactively in clear prose; no importable JSON.');
+      if(roadmapCreation)lines.push('IMPORT DESTINATION: Roadmap → Import chapter/topic JSON. Only top-level topics with major subtopic headings; never fill lectures or question arrays. For chapter-outline use format bsa-roadmap-v1. The saved subject must match exactly '+JSON.stringify(ctx.subject)+'.');
       lines.push('EXACT TASK PROCEDURE:\n'+bsaPromptFillBrackets(p.make(adapted),fields));
       lines.push('If any older instructions above include arbitrary fixed counts or irrelevant options, ignore them in favor of this task-specific request. Never invent unsupported content.');
     }
@@ -8231,14 +8394,19 @@ THE PART I'M STUCK ON:
     function setCount(v){setItemCounts(old=>{const next={...old,[pid]:v};setLocalPref(countsKey,next);return next});setCopied(false)}
     const defaults={customTopic:'',sourceTitle:'',sourceScope:'',supplement:'authoritative',difficulty:'mixed',practiceGoal:'exam',language:'Simple English',detail:'Detailed but focused',examDate:'',dailyHours:'2',inputText:'',collection:'',ruleCoverage:'complete',batchSize:'20',batchNumber:'1',pdfSourceId:''};
     const [fields,setFields]=useState(()=>{try{return {...defaults,...localPref(prefKey,{})}}catch(_){return defaults}});
+    const focusKey='bsa_v13_prompt_focus_'+subject.id;
+    const [focusByPrompt,setFocusByPrompt]=useState(()=>{const saved=localPref(focusKey,null);if(saved&&typeof saved==='object'&&!Array.isArray(saved))return saved;const legacy=localPref(prefKey,{});return legacy.customTopic?{[localPref('nlmPrompt','lecture')]:legacy.customTopic}:{};});
+    const setPromptFocus=v=>{setFocusByPrompt(prev=>{const next={...prev,[pid]:v};setLocalPref(focusKey,next);return next});setCopied(false)};
     const [showPreview,setShowPreview]=useState(true);
     const [copied,setCopied]=useState(false);
     const [showSchema,setShowSchema]=useState(false);
     const p=NLM_PROMPTS.find(x=>x.id===pid&&x.id!=='original')||NLM_PROMPTS.find(x=>x.id==='lecture')||NLM_PROMPTS[0];
     const spec=BSA_PROMPT_SPEC[p.id]||{};
     const typed=BSA_PROMPT_TYPES[spec.kind];
+    const roadmapCreation=p.id==='chapter-outline'||p.id==='roadmap';
+    const subjectLevelSetup=roadmapCreation||p.id==='book'||p.id==='grading';
     const goalGroups=[['recommended','Start here'],['learn','Understand'],['recall','Remember'],['solve','Practice'],['exam','Exam prep'],['correct','Fix mistakes'],['setup','Set up'],['all','All prompts']];
-    const goalIds={recommended:['lecture','mcq-quiz','cards','pset','rulebook','source-audit','socratic','why-wrong'],learn:['lecture','lecture-chat','compare','socratic','retention-bridge','teachback','rulebook'],recall:['cards','terms','traps','quiz','teachback','recit'],solve:['pset','pset-book','pset-compre','pset-mcq','mcq-quiz','drills','pset-chat','case-transfer'],exam:['exam-map','mcq-quiz','pset-compre','exam','plan','predict','recit'],correct:['why-wrong','mistakes','score','source-audit','json-checker','stuck'],setup:['roadmap','grading','book','rulebook']};
+    const goalIds={recommended:['lecture','mcq-quiz','cards','pset','rulebook','source-audit','socratic','why-wrong'],learn:['lecture','lecture-chat','compare','socratic','retention-bridge','teachback','rulebook'],recall:['cards','terms','traps','quiz','teachback','recit'],solve:['pset','pset-book','pset-compre','pset-mcq','mcq-quiz','drills','pset-chat','case-transfer'],exam:['exam-map','mcq-quiz','pset-compre','exam','plan','predict','recit'],correct:['why-wrong','mistakes','score','source-audit','json-checker','stuck'],setup:['chapter-outline','roadmap','grading','book','rulebook']};
     const matches=NLM_PROMPTS.filter(x=>x.id!=='original'&&(goal==='all'||(goalIds[goal]||[]).includes(x.id))&&(!search.trim()||norm(x.title+' '+x.desc).includes(norm(search))));
     function setField(key,value){setFields(prev=>{const next={...prev,[key]:value};setLocalPref(prefKey,{...next,inputText:''});return next});setCopied(false)}
     const context=nlmContext(subject,topicId,kind);
@@ -8246,23 +8414,24 @@ THE PART I'M STUCK ON:
     const chosenPDF=pdfs.find(x=>x.id===fields.pdfSourceId);
     const relevantCount=['pset','mcq','cards'].includes(spec.kind);
     const relevantDifficulty=['pset','mcq'].includes(spec.kind);
-    const rendered=bsaBuildGuidedPrompt(p,context,{...fields,count:itemCounts[pid]||countSuggestion,extra:extraNotes[pid]||'',pdfSourceName:chosenPDF?.name||''});
+    const rendered=bsaBuildGuidedPrompt(p,context,{...fields,customTopic:focusByPrompt[pid]||'',count:itemCounts[pid]||countSuggestion,extra:extraNotes[pid]||'',pdfSourceName:chosenPDF?.name||''});
     const inputRequired=!!spec.needsInput;
     const canCopy=!inputRequired||!!fields.inputText.trim();
-    const categoryLabel=typed?'IMPORTABLE JSON':(p.json?'DASHBOARD JSON':'INTERACTIVE');
+    const categoryLabel=(typed||roadmapCreation)?'IMPORTABLE JSON':(p.json?'DASHBOARD JSON':'INTERACTIVE');
     const destination=typed?typed.destination:(spec.destination||'AI conversation');
     const details=p.instructions||BSA_PROMPT_INSTRUCTIONS[p.id]||spec.attach||'Attach a source that covers the exact selected topic; do not use unrelated materials.';
     const choosePrompt=id=>{setPid(id);setLocalPref('nlmPrompt',id);setCopied(false);setShowSchema(false)};
     const chooseKind=v=>{setKind(v);setLocalPref(`nlmKind_${subject.id}`,v)};
-    const fieldInput=(key,label,placeholder)=>h('label',{className:'bsa-pb-field',key},h('span',null,label),h('input',{value:fields[key]||'',placeholder,onChange:e=>setField(key,e.target.value)}));
+    const fieldInput=(key,label,placeholder)=>h('label',{className:'bsa-pb-field',key},h('span',null,label),h('input',{value:key==='customTopic'?(focusByPrompt[pid]||''):(fields[key]||''),placeholder,onChange:e=>key==='customTopic'?setPromptFocus(e.target.value):setField(key,e.target.value)}));
     return h('section',{className:'bsa-prompt-workbench'},
       h('header',{className:'bsa-pb-hero'},
         h('div',null,h('span',{className:'bsa-pb-eyebrow'},'STUDY STUDIO'),h('h2',null,'AI Prompt Builder'),h('p',null,'Choose a task, fill in the details, then copy a ready-to-use prompt. No brackets to replace. Importable materials follow the dashboard’s real JSON formats.')),
         h('div',{className:'bsa-pb-hero-tag'},h('span',null,'✓'), ' Source-aware',h('span',null,'✓'),' Import-focused')),
       h('div',{className:'bsa-pb-top-context'},
         h('label',{className:'bsa-pb-field'},h('span',null,'Subject type'),h('select',{value:kind,onChange:e=>chooseKind(e.target.value)},NLM_KINDS.map(([v,label])=>h('option',{value:v,key:v},label)))),
-        h('label',{className:'bsa-pb-field'},h('span',null,'Roadmap topic'),h('select',{value:topicId,onChange:e=>setTopicId(e.target.value)},h('option',{value:''},'Whole subject'),studyTopics(subject).map(t=>h('option',{key:t.id,value:t.id},`${t.code?t.code+' · ':''}${t.title}`)))),
-        fieldInput('customTopic','Specific chapter / focus (optional)','Example: PAS 10 — adjusting vs non-adjusting events')),
+        !subjectLevelSetup&&h('label',{className:'bsa-pb-field'},h('span',null,'Roadmap topic'),h('select',{value:topicId,onChange:e=>setTopicId(e.target.value)},h('option',{value:''},'Whole subject'),studyTopics(subject).map(t=>h('option',{key:t.id,value:t.id},`${t.code?t.code+' · ':''}${t.title}`)))),
+        fieldInput('customTopic',roadmapCreation?'New chapters/topics to add (optional)':'Specific chapter / focus (optional)',roadmapCreation?'Example: Chapter 16, or leave blank to find all new chapters':'Example: PAS 10 — adjusting vs non-adjusting events'),
+        roadmapCreation&&h('p',{className:'bsa13-prompt-scope-note'},'No existing topic selection is needed. Attach the chapter pages or syllabus, then specify what NEW material to add. Existing Roadmap titles are used only to prevent duplicates.')),
       h('div',{className:'bsa-pb-goals',role:'group','aria-label':'Prompt categories'},goalGroups.map(([id,title])=>h('button',{key:id,type:'button',className:'bsa-pb-goal'+(goal===id?' selected':''),onClick:()=>{setGoal(id);const filtered=NLM_PROMPTS.filter(x=>x.id!=='original'&&(id==='all'||(goalIds[id]||[]).includes(x.id)));if(!filtered.some(x=>x.id===pid)&&filtered[0])choosePrompt(filtered[0].id)},'aria-pressed':goal===id},title))),
       h('div',{className:'bsa-pb-layout'},
         h('aside',{className:'bsa-pb-catalog'},h('div',{className:'bsa-pb-catalog-head'},h('strong',null,'Find a prompt'),h('span',null,matches.length+' available')),
@@ -8276,7 +8445,7 @@ THE PART I'M STUCK ON:
             h('div',{className:'bsa-pb-guide-grid'},
               h('div',null,h('small',null,'WHAT TO PREPARE'),h('p',null,spec.attach||'Attach or provide the exact relevant course material. Include an identifiable title and chapter.')),
               h('div',null,h('small',null,'WHAT THE AI WILL MAKE'),h('p',null,spec.what||p.desc)),
-              h('div',null,h('small',null,'WHERE IT GOES'),h('p',null,typed?'Import → Check data → '+destination:(p.json?'Import → Check data → '+destination:'Use in your AI conversation, no import required.'))),
+              h('div',null,h('small',null,'WHERE IT GOES'),h('p',null,roadmapCreation?'Roadmap → Import chapter/topic JSON':typed?'Import → Check data → '+destination:(p.json?'Import → Check data → '+destination:'Use in your AI conversation, no import required.'))),
             h('p',{className:'bsa-pb-instruction'},details)),
           h('section',{className:'bsa-pb-card'},
             h('span',{className:'bsa-pb-eyebrow'},'02 · DETAILS FOR THIS PROMPT'),
@@ -8310,9 +8479,10 @@ THE PART I'M STUCK ON:
             showPreview&&h('textarea',{readOnly:true,className:'bsa-pb-preview',rows:14,value:rendered,'aria-label':'Generated AI prompt',onFocus:e=>e.target.select()}),
             h('div',{className:'bsa-pb-actions'},
               h('button',{type:'button',className:'btn primary bsa-pb-copy',disabled:!canCopy,onClick:async()=>{const ok=await copyText(rendered);setCopied(ok);toast(ok?'Prompt copied — ready to paste into your AI':'Copy unavailable. Select the preview and copy manually.')}},copied?'✓ Copied prompt':'Copy complete prompt'),
-              typed&&onImport&&h('button',{className:'btn',type:'button',onClick:()=>onImport(topicId,typed.format)},'Import JSON → Review duplicates'),
+              (typed||roadmapCreation)&&onImport&&h('button',{className:'btn',type:'button',onClick:()=>onImport(topicId,typed?typed.format:'bsa-roadmap-v1')},roadmapCreation?'Import JSON → Roadmap':'Import JSON → Review duplicates'),
               h('button',{className:'btn',type:'button',onClick:()=>bsaResourceDownload(BSA_RESOURCE_FILES[0])},'Download AI instruction .md'),
               onResources&&h('button',{className:'btn',type:'button',onClick:onResources},'AI resource hub')),
+            roadmapCreation&&h('div',{className:'bsa-pb-contract'},h('strong',null,'Destination: Roadmap → Import chapter/topic JSON'),h('p',null,'Paste the generated JSON into Roadmap. Preview new chapters, subtopic additions and any possible conflicts, then approve. Existing topics and scores are preserved.')),
             typed&&h('div',{className:'bsa-pb-contract'},h('div',null,h('strong',null,'JSON format: '+typed.format),h('span',null,' → '+destination)),h('button',{type:'button',className:'btn',onClick:()=>setShowSchema(v=>!v)},showSchema?'Hide example':'View expected JSON structure'),showSchema&&h('pre',null,JSON.stringify({...typed.example,subject:context.subject},null,2)),h('p',null,'After receiving the AI reply, copy its JSON → Import → Paste copied JSON → Check data. Review the counts and topic before saving. The app validates structure; you must verify academic accuracy.'))),
           h('p',{className:'bsa-pb-foot'},'The prompt can ask an AI to cite sources, but it cannot force the AI to browse, prove a citation is real, or guarantee a correct answer. Review authoritative references before importing.')))));
   }
@@ -11366,18 +11536,33 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
       edit && h(LxEditor, { subject, item: edit === "new" ? null : edit, update, toast, onClose: () => setEdit(null),
         onDeleteRequest:id=>{setEdit(null);setDeleteId(id)},onDeleted: () => { setEdit(null); setOpen(null); } }),deleteDialog);
     const q = norm(query);
-    const lectureId=l=>l.topicId||matchTopic(subject,l.topicText);
-    const shown = lectures.filter((l) => (topic === "all" || (topic === "" ? !lectureId(l) : lectureId(l) === topic)) && (!q || norm(`${l.title} ${l.summary} ${l.sections.map((s) => s.h).join(" ")}`).includes(q)));
-    const groups = psByTopic(subject, shown);
-    const usedTopics = studyTopics(subject).filter((t) => lectures.some((l) => lectureId(l) === t.id));
+    const validLectureTopicIds=new Set(studyTopics(subject).map(t=>t.id));
+    const lectureId=l=>(validLectureTopicIds.has(l.topicId)?l.topicId:null)||matchTopic(subject,l.topicText);
+    const chapterCatalog=bsa11ChapterCatalog(subject);
+    const selectedChapter=bsa11FindChapter(chapterCatalog,topic);
+    const lectureMatches=(l)=>topic==='all'||(topic===''?!lectureId(l):selectedChapter?
+      bsa12LectureInChapter(subject,selectedChapter,l):lectureId(l)===topic);
+    const shown=lectures.filter(l=>lectureMatches(l)&&(!q||norm(`${l.title} ${l.summary} ${(l.sections||[]).map(s=>s.h).join(' ')}`).includes(q)));
+    const groups=psByTopic(subject,shown);
+    const usedTopics=studyTopics(subject).filter(t=>lectures.some(l=>lectureId(l)===t.id));
+    const usedChapters=chapterCatalog.filter(g=>bsa12ChapterLectureCount(subject,g)>0);
     return h(
       "section",
       { className: "view" },
-      h("div", { className: "page-head" }, h("div", null, h("h1", { className: "page-title" }, "Lectures"), h("p", { className: "muted" }, "Read your saved lessons, review examples, and check your understanding one topic at a time.")), h("div", { className: "head-actions" }, h("button", { className: "btn", onClick: () => setEdit("new") }, h(Icon, { name: "plus", size: 16 }), " Write a lecture"), h('button',{className:'btn',onClick:()=>go('knowledge',{topicId:topic==='all'?'':topic})},h(Icon,{name:'network',size:16}),' Visualize'), h("button", { className: "btn primary", onClick: () => go("library", { tab: "topics" }) }, "Topic gaps & import"))),
-      h(PsSampleCard, { subject, update, toast }),
-      lectures.length > 0 && h("div", { className: "filters" }, h("input", { className: "search", type: "search", placeholder: "Search lectures", value: query, onChange: (e) => setQuery(e.target.value), "aria-label": "Search lectures" }), usedTopics.length > 0 && h("div", { className: "chip-scroll", role: "group", "aria-label": "Filter by topic" }, h("button", { className: `chip${topic === "all" ? " on" : ""}`, onClick: () => setTopic("all") }, "All topics"), usedTopics.map((t) => h("button", { key: t.id, className: `chip${topic === t.id ? " on" : ""}`, onClick: () => setTopic(t.id), title: t.title }, t.code || t.title.slice(0, 18))), lectures.some((l) => !l.topicId) && h("button", { className: `chip${topic === "" ? " on" : ""}`, onClick: () => setTopic("") }, "Unsorted"))),
+      h("div", { className: "page-head" }, h("div", null, h("h1", { className: "page-title" }, "Lectures"), h("p", { className: "muted" }, "Read your saved lessons, review examples, and check your understanding one topic at a time.")), h("div", { className: "head-actions" }, !window.__BSA_SHARED_MODE__&&h("button", { className: "btn", onClick: () => setEdit("new") }, h(Icon, { name: "plus", size: 16 }), " Write a lecture"), !window.__BSA_SHARED_MODE__&&h('button',{className:'btn',onClick:()=>go('knowledge',{topicId:topic==='all'?'':topic})},h(Icon,{name:'network',size:16}),' Visualize'), !window.__BSA_SHARED_MODE__&&h("button", { className: "btn primary", onClick: () => go("library", { tab: "topics" }) }, "Topic gaps & import"))),
+      !window.__BSA_SHARED_MODE__&&h(PsSampleCard, { subject, update, toast }),
+      lectures.length>0&&h('div',{className:'filters bsa12-lecture-filters'},
+        h('input',{className:'search',type:'search',placeholder:'Search lectures',value:query,onChange:e=>setQuery(e.target.value),'aria-label':'Search lectures'}),
+        h('div',{className:'chip-scroll',role:'group','aria-label':'Filter by chapter'},
+          h('button',{className:`chip${topic==='all'?' on':''}`,onClick:()=>setTopic('all')},'All chapters'),
+          usedChapters.map(g=>h('button',{key:g.key,className:`chip${topic===g.key?' on':''}`,onClick:()=>setTopic(g.key),title:g.title},g.scope||g.title)),
+          lectures.some(l=>!lectureId(l))&&h('button',{className:`chip${topic===''?' on':''}`,onClick:()=>setTopic('')},'Unsorted')),
+        usedTopics.length>0&&h('details',{className:'bsa12-topic-filter'},
+          h('summary',null,'Filter by specific topic (optional)'),
+          h('div',{className:'chip-scroll',role:'group','aria-label':'Filter by specific topic'},
+            usedTopics.map(t=>h('button',{key:t.id,className:`chip${topic===t.id?' on':''}`,onClick:()=>setTopic(t.id),title:t.title},t.code||t.title.slice(0,24)))))),
       undoPanel,duplicateNotice,
-      !lectures.length ? h("div", { className: "empty big" }, h(Icon, { name: "lecture", size: 32 }), h("h2", null, "No lectures yet"), h("p", { className: "muted" }, "Open Topic Gaps to see what this subject needs, then import your source-based lecture JSON."), h("button", { className: "btn primary", onClick: () => go("library", { tab: "topics" }) }, "Find topic gaps & import")) : !shown.length ? h("div", { className: "empty" }, h("p", null, "No lectures match."), h("p", { className: "muted" }, "Clear the search or pick “All topics”.")) : groups.map((g) => h("div", { key: g.key, className: "ps-group" }, h("h2", { className: "ps-group-h" }, g.label, g.std && h("span", { className: "std" }, g.std)), h("div", { className: "lx-list bsa15-lecture-list" }, g.items.map((l) => h('article',{key:l.id,className:'bsa15-lecture-card'},
+      !lectures.length ? h("div", { className: "empty big" }, h(Icon, { name: "lecture", size: 32 }), h("h2", null, window.__BSA_SHARED_MODE__?"No published lectures yet":"No lectures yet"), h("p", { className: "muted" }, window.__BSA_SHARED_MODE__?"Your class materials will appear when they are published.":"Open Topic Gaps to see what this subject needs, then import your source-based lecture JSON."), !window.__BSA_SHARED_MODE__&&h("button", { className: "btn primary", onClick: () => go("library", { tab: "topics" }) }, "Find topic gaps & import")) : !shown.length ? h("div", { className: "empty" }, h("p", null, "No lectures match."), h("p", { className: "muted" }, "Clear the search or pick “All topics”.")) : groups.map((g) => h("div", { key: g.key, className: "ps-group" }, h("h2", { className: "ps-group-h" }, g.label, g.std && h("span", { className: "std" }, g.std)), h("div", { className: "lx-list bsa15-lecture-list" }, g.items.map((l) => h('article',{key:l.id,className:'bsa15-lecture-card'},
         h('button',{className:'bsa15-lecture-open',type:'button',onClick:()=>lxOpenLecture(l.id)},
           h('span',{className:'bsa15-lecture-icon'},h(Icon,{name:'lecture',size:21})),
           h('span',{className:'bsa15-lecture-card-text'},h('strong',null,l.title),
@@ -11651,6 +11836,29 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
       return m;
     },[lectureHighlights,sourceView.sections]);
     const selectedHighlight=lectureHighlights.find(x=>x.id===hlEditing);
+    const closeReaderHighlight=()=>{
+      if(selectedHighlight&&hlNote!==(selectedHighlight.note||'')){
+        if(!bsa41UpdateHighlight(selectedHighlight.id,{note:hlNote})){
+          setHlNotice('Could not auto-save note. Check device storage.');return;
+        }
+      }
+      dismissHighlight();setHlEditing('');
+    };
+    useEffect(()=>{
+      if(!hlEditing)return;
+      const timer=setTimeout(()=>{
+        const stored=bsa181Read().highlights.find(x=>x.id===hlEditing);
+        if(stored&&hlNote!==(stored.note||''))bsa41UpdateHighlight(hlEditing,{note:hlNote});
+      },550);
+      return()=>clearTimeout(timer);
+    },[hlEditing,hlNote]);
+    useEffect(()=>{
+      if(!hlEditing)return;
+      const onKey=e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();closeReaderHighlight()}};
+      document.addEventListener('keydown',onKey,true);
+      return()=>document.removeEventListener('keydown',onKey,true);
+    },[hlEditing,hlNote]);
+
     const editHighlight=id=>{
       hlSuppressUntil.current=Date.now()+1600;setHlSelection(null);
       try{window.getSelection()?.removeAllRanges()}catch(_){}
@@ -11843,16 +12051,15 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
             (lecture.terms||[]).length>0&&h('section',{className:'bsa236-reader-section'},h('h2',null,'Key terms'),h('dl',null,(lecture.terms||[]).map((term,i)=>h('div',{key:i},h('dt',null,term.t),h('dd',null,term.d))))),
             sourceView.references.length>0&&h('section',{className:'bsa236-reader-section'},h('h2',null,'Sources & references'),h('ul',null,sourceView.references.map((ref,i)=>h('li',{key:i},ref)))),
             h('p',{className:'bsa236-reader-end'},'You reached the end of this lecture. Reading, listening, and highlighting are not automatically recorded as demonstrated mastery.')))),
-      selectedHighlight&&h('div',{className:'bsa240-note-backdrop',role:'presentation',onPointerDown:e=>{if(e.target===e.currentTarget){dismissHighlight();setHlEditing('')}}},
+      selectedHighlight&&h('div',{className:'bsa240-note-backdrop',role:'presentation',onPointerDown:e=>{if(e.target===e.currentTarget)closeReaderHighlight()}},
         h('section',{className:'bsa240-note-editor',role:'dialog','aria-modal':'true','aria-label':'Edit lecture highlight'},
-          h('div',{className:'bsa240-note-head'},h('h2',null,'Highlight & note'),h('button',{type:'button',onClick:()=>{dismissHighlight();setHlEditing('')},'aria-label':'Close annotation editor'},'×')),
+          h('div',{className:'bsa240-note-head'},h('h2',null,'Highlight & note'),h('button',{type:'button',onClick:closeReaderHighlight,'aria-label':'Save and close annotation editor'},'×')),
           h('blockquote',null,selectedHighlight.text),
           h('label',null,'Personal note',h('textarea',{rows:4,maxLength:4000,value:hlNote,
             onChange:e=>setHlNote(e.target.value),placeholder:'My explanation, question, or memory cue…'})),
+          h('p',{className:'muted small'},'Changes save when you close or tap outside.'),
           h('div',{className:'bsa240-note-actions'},
-            h('button',{type:'button',className:'bsa236-primary',onClick:()=>{if(bsa41UpdateHighlight(selectedHighlight.id,{note:hlNote})){
-              setHlNotice('Annotation saved.');setHlEditing('')}else setHlNotice('Unable to save annotation. Check device storage.')}},'Save note'),
-            h('button',{type:'button',onClick:()=>{dismissHighlight();setHlEditing('')}},'Cancel'),
+            h('button',{type:'button',className:'bsa236-primary',onClick:closeReaderHighlight},'Done'),
             h('button',{type:'button',onClick:()=>{if(bsa181Remove('highlights',selectedHighlight.id)){
               setHlNotice('Highlight removed.');setHlEditing('')}else setHlNotice('Unable to remove highlight.')}},'Remove highlight')))),
       h('nav',{className:'bsa238-section-rail','aria-label':'Navigate lecture sections'},
@@ -11892,13 +12099,13 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
     const [selectedHighlight,setSelectedHighlight]=useState('');
     const [highlightNote,setHighlightNote]=useState('');
     const [noteExpanded,setNoteExpanded]=useState(false);
-    const [noteMinimized,setNoteMinimized]=useState(false);
+    const noteAutosaveTimer=useRef(null);
     useEffect(()=>{const f=()=>setHighlightRevision(v=>v+1);window.addEventListener('bsa181-changed',f);return()=>window.removeEventListener('bsa181-changed',f)},[]);
     const lectureHighlights=useMemo(()=>bsa41LectureHighlights(subject.id,l.id),[subject.id,l.id,highlightRevision]);
-    const openHighlight=id=>{const item=bsa181Read().highlights.find(x=>x.id===id&&x.subjectId===subject.id&&x.sourceId===l.id);if(!item)return;setSelectedHighlight(id);setHighlightNote(item.note||'');setNoteMinimized(false);setNoteExpanded(false);setHighlightPanel(false)};
+    const openHighlight=id=>{const item=bsa181Read().highlights.find(x=>x.id===id&&x.subjectId===subject.id&&x.sourceId===l.id);if(!item)return;setSelectedHighlight(id);setHighlightNote(item.note||'');setNoteExpanded(false);setHighlightPanel(false)};
     // The selection toolbar lives above the reader in App. Open the newly saved
     // highlight in this reader without navigating or making the user scroll up.
-    useEffect(()=>{const openNew=e=>{const d=e.detail||{};if(d.subjectId!==subject.id||d.sourceId!==l.id)return;const item=bsa181Read().highlights.find(x=>x.id===d.id);if(!item)return;setSelectedHighlight(item.id);setHighlightNote(item.note||'');setNoteExpanded(false);setNoteMinimized(false);setHighlightPanel(false)};window.addEventListener('bsa47-open-highlight-note',openNew);return()=>window.removeEventListener('bsa47-open-highlight-note',openNew)},[subject.id,l.id]);
+    useEffect(()=>{const openNew=e=>{const d=e.detail||{};if(d.subjectId!==subject.id||d.sourceId!==l.id)return;const item=bsa181Read().highlights.find(x=>x.id===d.id);if(!item)return;setSelectedHighlight(item.id);setHighlightNote(item.note||'');setNoteExpanded(false);setHighlightPanel(false)};window.addEventListener('bsa47-open-highlight-note',openNew);return()=>window.removeEventListener('bsa47-open-highlight-note',openNew)},[subject.id,l.id]);
     const visibleHighlights=lectureHighlights.filter(x=>(highlightFilter==='all'||highlightFilter==='with-notes'&&!!(x.note||'').trim()||highlightFilter===x.kind)&&(!highlightQuery||bsa181Text(x.text+' '+(x.note||'')).toLowerCase().includes(highlightQuery.toLowerCase())));
     const highlightsBySection=useMemo(()=>{
       const exact=new Map(),unlocated=[];
@@ -11906,6 +12113,36 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
       const out=new Map();sourceView.sections.forEach((sec,i)=>out.set(sec.id||String(i),[...(exact.get(sec.id||String(i))||[]),...unlocated]));return out;
     },[lectureHighlights,sourceView]);
     const selectedHighlightItem=lectureHighlights.find(x=>x.id===selectedHighlight);
+    const saveSelectedNote=()=>{
+      if(!selectedHighlight)return true;
+      const stored=bsa181Read().highlights.find(x=>x.id===selectedHighlight);
+      if(!stored)return true;
+      if(highlightNote===(stored.note||''))return true;
+      const ok=bsa41UpdateHighlight(selectedHighlight,{note:highlightNote});
+      if(!ok)toast('Could not auto-save the highlight note. Check device storage.');
+      return !!ok;
+    };
+    const closeSelectedNote=()=>{
+      if(noteAutosaveTimer.current)clearTimeout(noteAutosaveTimer.current);
+      if(!saveSelectedNote())return;
+      setSelectedHighlight('');setNoteExpanded(false);
+    };
+    useEffect(()=>{
+      if(!selectedHighlight)return;
+      clearTimeout(noteAutosaveTimer.current);
+      noteAutosaveTimer.current=setTimeout(()=>{
+        const stored=bsa181Read().highlights.find(x=>x.id===selectedHighlight);
+        if(stored&&highlightNote!==(stored.note||''))bsa41UpdateHighlight(selectedHighlight,{note:highlightNote});
+      },550);
+      return()=>clearTimeout(noteAutosaveTimer.current);
+    },[selectedHighlight,highlightNote]);
+    useEffect(()=>{
+      if(!selectedHighlight)return;
+      const onKey=e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();closeSelectedNote()}};
+      document.addEventListener('keydown',onKey,true);
+      return()=>document.removeEventListener('keydown',onKey,true);
+    },[selectedHighlight,highlightNote]);
+
     const jumpHighlight=item=>{const sec=document.getElementById(item.sectionId||'');const mark=[...document.querySelectorAll('.bsa41-mark')].find(x=>x.dataset.highlightId===item.id);const el=mark||sec;if(el)el.scrollIntoView({behavior:window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'center'});else toast('The lecture changed. This highlight needs its source location checked.');openHighlight(item.id)};
     const createHighlightCard=item=>{
       const q='Explain in your own words: '+bsa181Text(item.text).slice(0,130);
@@ -11998,26 +12235,23 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
           h('button',{className:'btn',onClick:()=>toast('Exported '+bsa41ExportNotes(subject.id)+' highlight notes')},'Export highlights'),
           h('label',{className:'btn bsa41-import-button'},'Import highlights',h('input',{type:'file',accept:'.json,application/json',onChange:async e=>{const file=e.target.files&&e.target.files[0];if(!file)return;try{toast('Restored '+await bsa41ImportNotes(file,subject.id)+' new highlights')}catch(err){toast(err.message||'Could not import highlights')}e.target.value=''}})))),
       selectedHighlightItem&&ReactDOM.createPortal(
-        noteMinimized?
-          h('button',{className:'bsa47-note-minimized',type:'button',onClick:()=>setNoteMinimized(false),'aria-label':'Reopen saved highlight note'},'✎ Highlight note · Reopen'):
-          h('div',{className:'bsa47-note-overlay',onPointerDown:e=>{if(e.target===e.currentTarget){if(highlightNote!==(selectedHighlightItem.note||''))setNoteMinimized(true);else setSelectedHighlight('')} }},
+        h('div',{className:'bsa47-note-overlay',onPointerDown:e=>{if(e.target===e.currentTarget)closeSelectedNote()}},
             h('aside',{className:'bsa47-note-sheet'+(noteExpanded?' is-expanded':''),role:'dialog','aria-modal':'true','aria-label':'Highlight details and note'},
               h('div',{className:'bsa47-note-heading'},
                 h('div',null,h('small',null,'LECTURE HIGHLIGHT'),h('h2',null,'Highlight & notes')),
                 h('div',{className:'bsa47-note-heading-actions'},
                   h('button',{type:'button',className:'btn ghost',onClick:()=>setNoteExpanded(v=>!v),'aria-pressed':noteExpanded},noteExpanded?'Compact':'Full screen'),
-                  h('button',{type:'button',className:'btn ghost',onClick:()=>setNoteMinimized(true)},'Minimize'),
-                  h('button',{type:'button',className:'btn ghost',onClick:()=>{if(highlightNote!==(selectedHighlightItem.note||'')){setNoteMinimized(true);toast('Unsaved note minimized · reopen to save it')}else{setSelectedHighlight('');setNoteMinimized(false)}} ,'aria-label':'Close highlight note'},'×'))),
+                  h('button',{type:'button',className:'btn ghost',onClick:closeSelectedNote,'aria-label':'Save and close highlight note'},'×'))),
               h('div',{className:'bsa47-note-scroll'},
                 h('div',{className:'bsa47-note-source'},h('span',{className:'bsa41-kind bsa41-kind-'+(selectedHighlightItem.kind||'key')},(BSA41_HIGHLIGHT_TYPES[selectedHighlightItem.kind]||BSA41_HIGHLIGHT_TYPES.key).label),h('span',{className:'muted small'},l.title)),
                 h('blockquote',null,selectedHighlightItem.text),
                 h('label',{className:'field-label',htmlFor:'bsa47-note-input'},'Your note about this highlight'),
                 h('textarea',{id:'bsa47-note-input',rows:6,maxLength:4000,value:highlightNote,onChange:e=>setHighlightNote(e.target.value),placeholder:'Write your explanation, question, or reminder here…'}),
-                h('p',{className:'muted small'},'Tap this highlighted passage again to reopen its saved note. Minimize keeps your draft while you read.')),
+                h('p',{className:'muted small'},'Your note saves automatically as you type and when you tap outside or close this panel. Tap the highlighted passage again to reopen it.')),
               h('div',{className:'bsa47-note-actions'},
-                h('button',{type:'button',className:'btn primary',onClick:()=>{if(bsa41UpdateHighlight(selectedHighlight,{note:highlightNote})){toast('Highlight note saved');setSelectedHighlight('');setNoteMinimized(false)}else toast('Could not save note — check device storage')}},'Save note & close'),
+                h('button',{type:'button',className:'btn primary',onClick:closeSelectedNote},'Done'),
                 h('button',{type:'button',className:'btn',onClick:()=>createHighlightCard(selectedHighlightItem)},'Make flashcard'),
-                h('button',{type:'button',className:'btn ghost',onClick:()=>{if(bsa181Remove('highlights',selectedHighlight)){setSelectedHighlight('');setNoteMinimized(false);toast('Highlight removed · available in Undo')}}},'Remove highlight')))),
+                h('button',{type:'button',className:'btn ghost',onClick:()=>{if(bsa181Remove('highlights',selectedHighlight)){setSelectedHighlight('');toast('Highlight removed · available in Undo')}}},'Remove highlight')))),
         document.body),
       l.topicId&&h('section',{className:'bsa-topic-hub panel','aria-label':'Connected topic evidence'},
          h('div',{className:'bsa-topic-hub-head'},h('div',null,h('span',{className:'eyebrow'},'CONNECTED TOPIC'),h('h2',null,'Topic mastery · '+(t?t.title:l.title))),h('span',{className:'muted small'},'Evidence, not an exam prediction')),
@@ -16730,7 +16964,7 @@ ${c.kindHint}` }
      silently discarded by the current normalizers. */
   function bsa13CheckGeneratedJSON(doc,label){
     if(!doc||Array.isArray(doc)||typeof doc!=='object')throw Error(label+': expected one JSON object.');
-    const types={'bsa-topic-pack-v1':true,'bsa-lecture-v1':true,'bsa-problemset-v1':true,'bsa-mcq-v1':true,'bsa-flashcards-v1':true,'bsa-rulebook-v1':true};
+    const types={'bsa-roadmap-v1':true,'bsa-topic-pack-v1':true,'bsa-lecture-v1':true,'bsa-problemset-v1':true,'bsa-mcq-v1':true,'bsa-flashcards-v1':true,'bsa-rulebook-v1':true};
     if(!types[doc.format])return;
     const required=(v,msg)=>{if(v==null||typeof v==='string'&&!v.trim())throw Error(label+': '+msg);};
     if(!String(doc.subject||'').trim())throw Error(label+': missing "subject". Choose the subject in AI Prompt Builder and regenerate.');
@@ -16775,6 +17009,7 @@ ${c.kindHint}` }
         if(name==='rules'){required(x.title,where+' needs "title".');required(x.decisionRule,where+' needs "decisionRule".');}
       }
     }
+    if(doc.format==='bsa-roadmap-v1'&&(!Array.isArray(doc.topics)||!doc.topics.length||arrays.some(name=>name!=='topics'&&Array.isArray(doc[name])&&doc[name].length)))throw Error(label+': roadmap JSON must contain topics only.');
     if(!found)throw Error(label+': this JSON has no study materials.');
   }
   function bsa44Empty(){return {kind:'partial',subject:'',topics:[],cards:[],mistakes:[],quizzes:[],drills:[],drillBad:[],lectures:[],psets:[],mcqSets:[],rules:[],grading:null,book:null}}
@@ -21127,7 +21362,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     } }), modal === "more" && /* @__PURE__ */ React.createElement(MoreSheet, { onClose: () => setModal(null), onPick: (k) => setModal(k), settings: data.settings, setSettings, go: (t) => {
       setModal(null);
       go(t);
-    } }), modal && modal.nlm && h(Modal, { key: "bsa-direct-prompt-" + (modal.nlm.pid || "all") + "-" + subject.id, title: "AI Prompt Studio", wide: true, className: "bsa-prompt-modal", onClose: () => setModal(null) }, h(NotebookLMPrompts, { key: "bsa-prompt-" + (modal.nlm.pid || "all") + "-" + subject.id, subject, toast, initPid: modal.nlm.pid, initTopic: modal.nlm.topicId, onImport: (topicId,format) => {setModal(null);if(format==='bsa-financial-statements-v1')go('fs-lab');else go('library',{tab:'packs',topicLabel:(subject.topics||[]).find(t=>t.id===topicId)?.title||''})} })), sidebarEdit&&h(Modal,{title:'Customize sidebar',onClose:()=>setSidebarEdit(false),wide:true,className:'bsa45-sidebar-modal'},h(BSA45SidebarEditor,{tabs,sidebarPrefs,subject,setSubjectProfile,setSubjectTool,resetSubject:resetSubjectProfile,toggleSidebarPin,toggleSidebarHide,shiftSidebarPin,reset:()=>saveSidebar(()=>({pinned:BSA46_MAIN_DEFAULT.slice(),hidden:[]})),close:()=>setSidebarEdit(false),openThemes:()=>{setSidebarEdit(false);setModal('themes')},openAppearance:()=>{setSidebarEdit(false);setModal('look')},openImport:()=>{setSidebarEdit(false);go('library',{tab:'topics'})},openBackup:()=>{setSidebarEdit(false);setModal('data')},openGuide:()=>{setSidebarEdit(false);go('guide')},toggleDock:toggleDockFromSettings,settings:data.settings,setSettings})), modal === "themes" && h(BSA41ThemesModal,{settings:data.settings,setSettings,onClose:()=>setModal(null)}), modal === "look" && /* @__PURE__ */ React.createElement(AppearanceModal, { settings: data.settings, setSettings, onClose: () => setModal(null) }), !window.__BSA_SHARED_MODE__ && modal === "subjects" && /* @__PURE__ */ React.createElement(SubjectModal, { data, update, onClose: () => setModal(null), toast, onShowLibrary:()=>go('subjects') }), (modal === "data" || modal === "sync" || modal && modal.data) && /* @__PURE__ */ React.createElement(DataModal, { data, update, replaceAll, onClose: () => setModal(null), toast, downloads, initTab: modal && modal.data ? modal.data : modal === "sync" ? "github" : "import", prefill: modal && modal.prefill }), (editor == null ? void 0 : editor.type) === "card" && /* @__PURE__ */ React.createElement(
+    } }), modal && modal.nlm && h(Modal, { key: "bsa-direct-prompt-" + (modal.nlm.pid || "all") + "-" + subject.id, title: "AI Prompt Studio", wide: true, className: "bsa-prompt-modal", onClose: () => setModal(null) }, h(NotebookLMPrompts, { key: "bsa-prompt-" + (modal.nlm.pid || "all") + "-" + subject.id, subject, toast, initPid: modal.nlm.pid, initTopic: modal.nlm.topicId, onImport: (topicId,format) => {setModal(null);if(format==='bsa-roadmap-v1')go('roadmap',{importJson:true});else if(format==='bsa-financial-statements-v1')go('fs-lab');else go('library',{tab:'packs',topicLabel:(subject.topics||[]).find(t=>t.id===topicId)?.title||''})} })), sidebarEdit&&h(Modal,{title:'Customize sidebar',onClose:()=>setSidebarEdit(false),wide:true,className:'bsa45-sidebar-modal'},h(BSA45SidebarEditor,{tabs,sidebarPrefs,subject,setSubjectProfile,setSubjectTool,resetSubject:resetSubjectProfile,toggleSidebarPin,toggleSidebarHide,shiftSidebarPin,reset:()=>saveSidebar(()=>({pinned:BSA46_MAIN_DEFAULT.slice(),hidden:[]})),close:()=>setSidebarEdit(false),openThemes:()=>{setSidebarEdit(false);setModal('themes')},openAppearance:()=>{setSidebarEdit(false);setModal('look')},openImport:()=>{setSidebarEdit(false);go('library',{tab:'topics'})},openBackup:()=>{setSidebarEdit(false);setModal('data')},openGuide:()=>{setSidebarEdit(false);go('guide')},toggleDock:toggleDockFromSettings,settings:data.settings,setSettings})), modal === "themes" && h(BSA41ThemesModal,{settings:data.settings,setSettings,onClose:()=>setModal(null)}), modal === "look" && /* @__PURE__ */ React.createElement(AppearanceModal, { settings: data.settings, setSettings, onClose: () => setModal(null) }), !window.__BSA_SHARED_MODE__ && modal === "subjects" && /* @__PURE__ */ React.createElement(SubjectModal, { data, update, onClose: () => setModal(null), toast, onShowLibrary:()=>go('subjects') }), (modal === "data" || modal === "sync" || modal && modal.data) && /* @__PURE__ */ React.createElement(DataModal, { data, update, replaceAll, onClose: () => setModal(null), toast, downloads, initTab: modal && modal.data ? modal.data : modal === "sync" ? "github" : "import", prefill: modal && modal.prefill }), (editor == null ? void 0 : editor.type) === "card" && /* @__PURE__ */ React.createElement(
       CardEditor,
       {
         subject,
@@ -21246,7 +21481,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       React.createElement('button',{className:'btn',onClick:()=>bsaDownloadSafeDiagnostics(this.state.error)},'Download safe error report'),
       React.createElement('details',null,React.createElement('summary',null,'Technical details'),React.createElement('pre',null,String(this.state.error&&this.state.error.message||'Unknown render error'))));}
   }
-  if(window.__BSA_TEST__)window.__BSA18_TEST_HOOKS__={bsa41DecorateHtml,bsa41Locate,bsa41LectureHighlights,bsa181Add,bsa181Remove,bsa181Read,bsa236LectureKey,BSA236LectureMode,BSA41MarkedText,BSA212FloatingFocus,bsa234ShowGuided,bsa234HideGuided,bsa234GuidedMayShow,bsa224MarkGuidedHidden,bsa229Source,bsa229YouTubeEmbedUrl,bsa229MusicUrl,BSA232PersistentMusic,BSA229FocusMusic,BSA229YouTubePlayer,bsa197QuizKey,bsa197History,bsa197Recall,bsa197Pool,bsa197Pick,bsa228BreakRemaining,bsa228RoutineKey,BSA228StudyRoutine,bsa228BreakAction,bsa228NoiseStart,bsa228NoiseStop,schedule,buildReview,smartTopicStats,bsaAdaptiveSignals,bsaReadinessReport,bsa34LearningSnapshot,bsaUpsertMistake,learningEvidence,learningCapture,AcademicCommandCenter,bsa197LoadDraft,bsa197SaveDraft,bsa197DeleteDraft,bsa18SaveWritten,bsa18LoadWritten,bsa18DeleteWritten,bsa18LatestPractice,bsa18ReadTutorChat,bsa25PracticeHealth,bsa26TutorName,bsa26TopicMatch,bsa26SafeAction,bsa26TutorCapabilityContext,bsa26LocalStudyPlan,BSA26_COPILOT_FEATURES,bsa26SafeReturn,bsa26ReturnFor,bsa26FsDraft,bsa4TutorDraft,bsa27SelectionFocus,bsa27DefaultTutorQuestion,gemSourceSystem,bsa212ModePlan,bsa213QuickPlan,bsa213ReadScope,bsa213Words,bsa213McqScope,bsa213WrittenMinutes,bsa214Archive,bsa214RecentClosed,bsa214HistoryLabel,bsa214AdaptProposal,bsa214TopicStanding,bsa214FoundationSources,mcqDedicatedPool,studyTopics,bsa34TopicMatch,bsa213McqEstimate,bsa214Pack,bsa214Unpack,bsa214MainGet,bsa214MainSet,bsa49TopicParts,bsa49ResolveTopic,bsa49UnmatchedLabels,BSA49TopicLinks,bsa215TopicChapter,bsa215UniqueChapterMatch,bsa215LinkSafety,bsa44Plan,bsa44ParseOne,normTopic,bsa49CanonicalizePack,bsa214BackupGet,bsaBackupPreview,loadLocal,bsa212Allocate,bsa212PhaseElapsed,bsa212PhaseGoal,bsa212Action,bsa28SourceHistory,bsa28NewTopicRequest,bsa210TutorCore,bsa28ReadReflections,bsa28WriteReflections,bsa29Meaningful,bsa213ClozeQuality,bsa29Candidates,bsa29Pool,bsa29Exact,bsa29ReadDraft,bsa29SaveDraft,bsa210DuplicateSignal,bsa210MaterialPair,bsa210AnswerMeaning,bsa44Prepare,BSA29ClozePractice,psMathSegments,psMathHtml,psS,psInlineHtml,MultipleChoiceQuiz,MCQPage,PsWrittenDrill,MockExam,AskView,App};
+  if(window.__BSA_TEST__)window.__BSA18_TEST_HOOKS__={bsa41DecorateHtml,bsa41Locate,bsa41LectureHighlights,bsa41UpdateHighlight,bsa181Add,bsa181Remove,bsa181Read,bsa236LectureKey,BSA236LectureMode,BSA41MarkedText,BSA212FloatingFocus,bsa234ShowGuided,bsa234HideGuided,bsa234GuidedMayShow,bsa224MarkGuidedHidden,bsa229Source,bsa229YouTubeEmbedUrl,bsa229MusicUrl,BSA232PersistentMusic,BSA229FocusMusic,BSA229YouTubePlayer,bsa197QuizKey,bsa197History,bsa197Recall,bsa197Pool,bsa197Pick,bsa228BreakRemaining,bsa228RoutineKey,BSA228StudyRoutine,bsa228BreakAction,bsa228NoiseStart,bsa228NoiseStop,schedule,buildReview,smartTopicStats,bsaAdaptiveSignals,bsaReadinessReport,bsa34LearningSnapshot,bsaUpsertMistake,learningEvidence,learningCapture,AcademicCommandCenter,bsa197LoadDraft,bsa197SaveDraft,bsa197DeleteDraft,bsa18SaveWritten,bsa18LoadWritten,bsa18DeleteWritten,bsa18LatestPractice,bsa18ReadTutorChat,bsa25PracticeHealth,bsa26TutorName,bsa26TopicMatch,bsa26SafeAction,bsa26TutorCapabilityContext,bsa26LocalStudyPlan,BSA26_COPILOT_FEATURES,bsa26SafeReturn,bsa26ReturnFor,bsa26FsDraft,bsa4TutorDraft,bsa27SelectionFocus,bsa27DefaultTutorQuestion,gemSourceSystem,bsa212ModePlan,bsa213QuickPlan,bsa213ReadScope,bsa213Words,bsa213McqScope,bsa213WrittenMinutes,bsa214Archive,bsa214RecentClosed,bsa214HistoryLabel,bsa214AdaptProposal,bsa214TopicStanding,bsa214FoundationSources,mcqDedicatedPool,studyTopics,bsa34TopicMatch,bsa213McqEstimate,bsa214Pack,bsa214Unpack,bsa214MainGet,bsa214MainSet,bsa13ParseRoadmap,bsa13RoadmapPlan,bsa13CheckGeneratedJSON,bsaBuildGuidedPrompt,NLM_PROMPTS,nlmContext,bsa49TopicParts,bsa49ResolveTopic,bsa49UnmatchedLabels,BSA49TopicLinks,bsa215TopicChapter,bsa215UniqueChapterMatch,bsa215LinkSafety,bsa44Plan,bsa44ParseOne,normTopic,bsa49CanonicalizePack,bsa214BackupGet,bsaBackupPreview,loadLocal,bsa212Allocate,bsa212PhaseElapsed,bsa212PhaseGoal,bsa212Action,bsa28SourceHistory,bsa28NewTopicRequest,bsa210TutorCore,bsa28ReadReflections,bsa28WriteReflections,bsa29Meaningful,bsa213ClozeQuality,bsa29Candidates,bsa29Pool,bsa29Exact,bsa29ReadDraft,bsa29SaveDraft,bsa210DuplicateSignal,bsa210MaterialPair,bsa210AnswerMeaning,bsa44Prepare,BSA29ClozePractice,psMathSegments,psMathHtml,psS,psInlineHtml,MultipleChoiceQuiz,MCQPage,PsWrittenDrill,MockExam,AskView,App};
   // v167: Owner app mounts only after this browser has been approved.
   // Shared student dashboards mount normally; the owner authorization script is never exported.
   let bsaOwnerMounted=false;
