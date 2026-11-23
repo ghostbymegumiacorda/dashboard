@@ -5187,3 +5187,36 @@ body>.backdrop .bsa45-sidebar-modal .bsa211-shortcut-groups{padding-bottom:18px}
   .bsa236-reader .bsa100-highlight-options>button{min-height:38px!important;}
 }
 @media(prefers-reduced-motion:reduce){.bsa236-reader .bsa100-selection-tools{transition:none!important}}
+
+
+/* V1.1: consistent chapter navigator and quiet chapter-first practice. */
+.bsa11-roadmap-summary{padding:clamp(14px,2vw,24px);border:1px solid var(--border,rgba(130,140,160,.25));border-radius:20px;background:var(--panel,rgba(110,120,140,.06));margin:16px 0 22px;min-width:0}
+.bsa11-roadmap-summary>div:first-child{margin-bottom:13px}
+.bsa11-roadmap-summary p{margin:.3rem 0;color:var(--muted,#8890a0)}
+.bsa11-chapter-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px;max-width:100%}
+.bsa11-chapter-card{min-width:0;display:flex;flex-direction:column;gap:8px;background:var(--surface,rgba(100,110,140,.05));border:1px solid var(--border,rgba(130,140,160,.22));border-radius:14px;padding:15px}
+.bsa11-chapter-name{display:flex;flex-direction:column;align-items:flex-start;gap:4px;max-width:100%;background:transparent;border:0;text-align:left;font:inherit;color:inherit;cursor:pointer;padding:0}
+.bsa11-chapter-name small{font-size:.68rem;font-weight:750;letter-spacing:.07em;text-transform:uppercase;color:var(--accent,#92aaff)}
+.bsa11-chapter-name strong{font-size:1rem;overflow-wrap:anywhere;line-height:1.3}
+.bsa11-chapter-meter{width:100%;height:6px;overflow:hidden;border-radius:100px;background:rgba(140,150,170,.22)}
+.bsa11-chapter-meter span{display:block;height:100%;border-radius:inherit;background:var(--accent,#8299df);transition:width .2s ease}
+.bsa11-chapter-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:auto}
+.bsa11-chapter-actions .btn{flex:1 1 auto;min-height:36px;white-space:normal}
+.bsa11-linked-lecture-status{display:inline-flex;margin:6px 0 0;color:var(--muted,#828a9e);font-size:.76rem;line-height:1.3}
+.bsa11-scope-hint{font-size:.82rem;line-height:1.45;color:var(--muted,#8992a3);margin:.45rem 0 .8rem}
+.bsa11-area-filter{border:1px solid var(--border,rgba(130,140,160,.25));border-radius:12px;padding:12px;margin:10px 0}
+.bsa11-area-filter summary{font-weight:650;cursor:pointer}
+.bsa11-area-filter label{display:grid;gap:6px;margin-top:10px}
+.bsa11-area-filter select{min-width:0;max-width:100%}
+@media(max-width:850px){.bsa11-roadmap-summary{padding:14px}.bsa11-chapter-grid{grid-template-columns:1fr}.bsa11-chapter-actions .btn{min-width:0}}
+
+/* V1.1 linked lecture evidence uses collapsible, non-editable details. */
+.bsa11-linked-sections{margin-top:9px;border-top:1px solid var(--line,rgba(140,150,175,.18));padding-top:9px}
+.bsa11-linked-sections summary{cursor:pointer;color:var(--muted,#7f89a2);font-size:.78rem;font-weight:650;list-style-position:inside}
+.bsa11-linked-lecture{padding:8px 0;min-width:0}
+.bsa11-linked-lecture+.bsa11-linked-lecture{border-top:1px solid var(--line,rgba(140,150,175,.15))}
+.bsa11-linked-title{border:none;background:none;padding:2px 0;text-align:left;font:inherit;color:var(--fg,#e9ecfa);font-weight:650;cursor:pointer;max-width:100%}
+.bsa11-linked-lecture ul{list-style:none;margin:6px 0 0;padding:0;max-height:250px;overflow:auto;overscroll-behavior:contain}
+.bsa11-linked-lecture li{display:flex;gap:8px;font-size:.77rem;line-height:1.55;padding:4px 0;color:var(--muted,#8893a9);overflow-wrap:anywhere}
+.bsa11-linked-lecture li.is-reviewed{color:var(--fg,#e9ecfa)}
+.bsa11-linked-lecture li span:first-child{flex:none;width:1.1rem}
