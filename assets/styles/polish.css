@@ -5273,3 +5273,10 @@ body>.backdrop .bsa45-sidebar-modal .bsa211-shortcut-groups{padding-bottom:18px}
 #root .bsa41-annotated mark.bsa41-mark[data-highlight-kind="confusing"],.bsa236-reader .bsa41-annotated mark.bsa41-mark[data-highlight-kind="confusing"]{background-color:#f8b8d7!important;border-bottom-color:#b44f80!important}
 #root .bsa41-annotated mark.bsa41-mark[data-highlight-kind="rule"],.bsa236-reader .bsa41-annotated mark.bsa41-mark[data-highlight-kind="rule"]{background-color:#aae7c4!important;border-bottom-color:#23834b!important}
 #root .bsa41-annotated mark.bsa41-mark[data-highlight-kind="insight"],.bsa236-reader .bsa41-annotated mark.bsa41-mark[data-highlight-kind="insight"]{background-color:#dcc8fb!important;border-bottom-color:#7953af!important}
+
+/* V1.5 — visible, responsive Roadmap removal controls and confirmation */
+.bsa11-chapter-actions .bsa15-delete-topic,.topic-row .bsa15-delete-topic{white-space:nowrap;flex:0 0 auto;min-height:34px;padding:6px 10px;font-size:12px}
+.bsa15-delete-topic{color:var(--danger,#a62936)!important;border-color:color-mix(in srgb,var(--danger,#a62936) 35%,transparent)!important}
+.bsa15-delete-impact{display:flex;flex-wrap:wrap;gap:6px 14px;padding:12px;border:1px solid var(--line,#c9d6cd);border-radius:12px;background:var(--surface,#f7faf8);font-size:13px}
+.bsa15-delete-impact strong{flex:1 1 100%}
+@media(max-width:700px){.topic-row .bsa15-delete-topic{min-height:36px;font-size:11px;padding:5px 8px}.bsa11-chapter-actions .bsa15-delete-topic{margin-left:auto}}
