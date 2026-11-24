@@ -30,7 +30,7 @@ THE SOFTWARE.
   if (window.__BSA_DESK_APP_LOADED__) return;
   window.__BSA_DESK_APP_LOADED__ = true;
   // User-facing release label only. Do not use for storage schemas or caches.
-  const BSA_RELEASE_LABEL = "V1.5";
+  const BSA_RELEASE_LABEL = "V1.6";
   const S = (t, p = null, s = false) => ({ t, p, s });
   const CFAS_TOPICS = [
     {
@@ -5425,10 +5425,15 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const hideTimer=()=>{setTimerHidden(true);try{localStorage.setItem('bsa43-timer-hidden','1')}catch(_){}};
     useEffect(()=>{window.addEventListener('bsa:show-timer',showTimer);window.addEventListener('bsa:hide-timer',hideTimer);return()=>{window.removeEventListener('bsa:show-timer',showTimer);window.removeEventListener('bsa:hide-timer',hideTimer)}},[]);
     const dragging=useRef(null);
-    const beginDrag=e=>{if(e.pointerType==='touch'||(e.button!==0&&e.pointerType==='mouse'))return;const r=e.currentTarget.parentElement.getBoundingClientRect();dragging.current={px:e.clientX,py:e.clientY,x:r.left,y:r.top};try{e.currentTarget.setPointerCapture(e.pointerId)}catch(_){}e.preventDefault()};
+    const beginDrag=e=>{if(e.button!==0&&e.pointerType==='mouse')return;const r=e.currentTarget.parentElement.getBoundingClientRect();dragging.current={px:e.clientX,py:e.clientY,x:r.left,y:r.top};try{e.currentTarget.setPointerCapture(e.pointerId)}catch(_){}e.preventDefault()};
     const moveDrag=e=>{const d=dragging.current;if(!d)return;const r=e.currentTarget.getBoundingClientRect(),w=Math.min(window.innerWidth-16,r.width),height=Math.min(window.innerHeight-16,r.height);setFloating({x:Math.max(8,Math.min(window.innerWidth-w-8,d.x+e.clientX-d.px)),y:Math.max(8,Math.min(window.innerHeight-height-8,d.y+e.clientY-d.py))})};
     const keyDrag=e=>{if(!['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Home'].includes(e.key))return;e.preventDefault();if(e.key==='Home'){setFloating(null);return}const r=e.currentTarget.parentElement.getBoundingClientRect();const dx=e.key==='ArrowLeft'?-20:e.key==='ArrowRight'?20:0,dy=e.key==='ArrowUp'?-20:e.key==='ArrowDown'?20:0;setFloating({x:Math.max(8,Math.min(window.innerWidth-r.width-8,r.left+dx)),y:Math.max(8,Math.min(window.innerHeight-r.height-8,r.top+dy))})};
     const endDrag=()=>{dragging.current=null};
+    useEffect(()=>{const onResize=()=>setFloating(pos=>pos?{
+      x:Math.max(8,Math.min(pos.x,window.innerWidth-85)),
+      y:Math.max(8,Math.min(pos.y,window.innerHeight-65))}:pos);
+      window.addEventListener('resize',onResize);
+      return()=>window.removeEventListener('resize',onResize);},[]);
     useEffect(()=>{const id=setInterval(()=>{const cur=timerState,now=Date.now(),f=focusActive.current;
       const key=cur&&(cur.startedAt||cur.start);
       if(key!==f.id){f.id=key;f.ms=0;}
@@ -5491,6 +5496,9 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       if (auto) chime();
       toast(`${auto ? "Time’s up! " : ""}Logged ${fmtMins(mins)} of study`);
     };
+    // V1.6: Focus Studio delegates finish to this one accounting/logging path.
+    useEffect(()=>{const onFinish=()=>finish(false);window.addEventListener('bsa:focus-finish',onFinish);
+      return()=>window.removeEventListener('bsa:focus-finish',onFinish);},[t,update]);
     const left = t ? t.mins * 6e4 - timerElapsed(t) : 0;
     useEffect(() => {
       if (t && t.running && left <= 0) finish(true);
@@ -5511,8 +5519,8 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
     const pct = Math.min(100, timerElapsed(t) / (t.mins * 6e4) * 100);
     return h(
       "div",
-      { className: `focus-bar bsa190-focus${compact?" bsa190-collapsed":""}${t.running ? "" : " paused"}`, role: "timer", "aria-label": "Focus timer",style:floating?{left:floating.x,top:floating.y,bottom:'auto',transform:'none'}:{},onPointerMove:moveDrag,onPointerUp:endDrag,onPointerCancel:endDrag },
-      !compact&&h("button",{type:'button',className:'bsa190-handle',title:'Drag to move the timer',onPointerDown:beginDrag,onKeyDown:keyDrag,'aria-label':'Drag focus timer; use arrow keys to move, Home to reset'},'⠿'),
+      { className: `focus-bar bsa190-focus${compact?" bsa190-collapsed":""}${floating?" bsa16-positioned":""}${t.running ? "" : " paused"}`, role: "timer", "aria-label": "Focus timer",style:floating?{'--bsa-float-x':floating.x+'px','--bsa-float-y':floating.y+'px'}:{},onPointerMove:moveDrag,onPointerUp:endDrag,onPointerCancel:endDrag },
+      h("button",{type:'button',className:'bsa190-handle',title:'Drag to move the timer',onPointerDown:beginDrag,onKeyDown:keyDrag,'aria-label':'Drag focus timer; use arrow keys to move, Home to reset'},'⠿'),
       !compact&&h("span", { className: "focus-ring", style: { "--p": `${pct}%` }, "aria-hidden": "true" }),
       h("div", { className: "focus-text" }, h("strong", null, `${Math.floor(secs / 60)}:${pad(secs % 60)}`), h("span", { className: "muted small" }, t.phase === "break" ? (t.label || "Break") : t.running ? "Focus" : "Paused", t.pomo && t.phase !== "break" ? ` \u00b7 round ${t.round || 1}` : "", topic && t.phase !== "break" ? `, ${topic.code || topic.title}` : !topic && t.label && t.phase !== "break" ? `, ${t.label}` : "")),
       t.phase === "break" && t.pomo && h("button", { className: "btn", onClick: () => { setTimerState(null); startTimer({ mins: t.pomo.work || 25, topicId: t.topicId, subjectId: t.subjectId, pomo: t.pomo, round: (t.round || 1) + 1 }); } }, "Skip break"),
@@ -5521,6 +5529,106 @@ Rules: put the standard number (PAS 7, PFRS 18, RA 9298…) in every "topic" fie
       !compact&&h("button",{className:'btn bsa43-timer-hide',type:'button',onClick:hideTimer,title:'Hide the timer without stopping or resetting it'},'Hide'),
       !compact&&h("button", { className: "btn primary", onClick: () => finish(false) }, "Finish")
     );
+  }
+
+  // A previously saved, paused, or finished guided session must NOT hide the
+  // independent Pomodoro pill or block a new focus timer forever.
+  function bsa16GuidedTimerActive(session){
+    return bsa212Guided(session)&&!session.focusEnded&&!session.focusSaved&&
+      !session.focusWaiting&&Number(session.focusPhaseStartedAt)>0;
+  }
+  /* V1.6: Focus Studio reuses FocusBar and timerState; there is only one study clock.
+     Personal brain dump and recall notes are explicitly device-local and subject-keyed. */
+  function BSA16FocusStudio({subject,go,toast}){
+    const timer=useTimer();
+    useTick(1000);
+    const current=timer&&timer.subjectId===subject.id?timer:null;
+    const [work,setWork]=useState(25),[shortBreak,setShortBreak]=useState(5),[longBreak,setLongBreak]=useState(15);
+    const [mode,setMode]=useState('pomo'),[topicId,setTopicId]=useState('');
+    const storeKey='bsa_focus_workspace_v16_'+subject.id;
+    const [space,setSpace]=useState(()=>{try{
+      const saved=JSON.parse(localStorage.getItem(storeKey)||'{}');
+      return {goal:String(saved.goal||''),recall:String(saved.recall||''),parking:Array.isArray(saved.parking)?saved.parking.filter(x=>x&&typeof x.text==='string').slice(0,60):[]};
+    }catch(_){return {goal:'',recall:'',parking:[]};}});
+    const [parkInput,setParkInput]=useState('');
+    const [storageProblem,setStorageProblem]=useState(false);
+    useEffect(()=>{try{localStorage.setItem(storeKey,JSON.stringify(space));setStorageProblem(false);}
+      catch(_){setStorageProblem(true);}},[storeKey,space]);
+    const patch=(key,val)=>setSpace(old=>({...old,[key]:val}));
+    const start=()=>{
+      if(current&&!window.confirm('Replace the current focus session? Finish it first if you need its study time recorded.'))return;
+      if(timer&&timer.subjectId!==subject.id){toast('An unfinished focus timer belongs to another subject. Return there to finish it first.');return;}
+      if(bsa16GuidedTimerActive(bsa33Journey(subject).session)){toast('Finish or save your guided Study Routine session before starting a separate timer.');return;}
+      const duration=Math.max(5,Math.min(180,Number(work)||25));
+      const brk=Math.max(1,Math.min(60,Number(shortBreak)||5));
+      const lng=Math.max(brk,Math.min(90,Number(longBreak)||15));
+      startTimer({mins:duration,subjectId:subject.id,topicId:topicId||null,label:space.goal.trim()||'Pomodoro',
+        pomo:mode==='pomo'?{work:duration,brk,long:lng}:null,round:1});
+      toast(mode==='pomo'?'Pomodoro started. Your floating timer is visible.':'Focus block started. Your floating timer is visible.');
+    };
+    const activeSec=current?Math.max(0,Math.ceil((current.mins*60000-timerElapsed(current))/1000)):null;
+    const toggleRun=()=>{if(!current)return;setTimerState(current.running?
+      {...current,running:false,acc:timerElapsed(current)}:
+      {...current,running:true,start:Date.now()});
+      window.dispatchEvent(new Event('bsa:show-timer'));};
+    const addPark=()=>{const text=parkInput.trim();if(!text)return;
+      setSpace(old=>({...old,parking:[...old.parking,{id:uid('park'),text,done:false}].slice(-60)}));setParkInput('');};
+    return h('section',{className:'view bsa16-focus-page'},
+      h('header',{className:'bsa16-focus-header'},
+        h('span',{className:'bsa16-kicker'},'STUDY TOOLS · '+(subject.code||subject.name)),
+        h('h1',null,'Pomodoro & Focus'),
+        h('p',null,'One focus timer across your dashboard, plus two lightweight tools to study more actively.')),
+      h('div',{className:'bsa16-focus-grid'},
+        h('section',{className:'bsa16-focus-card bsa16-pomo-card'},
+          h('div',{className:'bsa16-card-top'},h('span',{className:'bsa16-kicker'},'FOCUS SESSION'),h('span',{className:'bsa16-tag'},'Floating timer')),
+          current?h(React.Fragment,null,
+            h('div',{className:'bsa16-bigclock',role:'timer','aria-label':'Time left'},String(Math.floor(activeSec/60)).padStart(2,'0')+':'+String(activeSec%60).padStart(2,'0')),
+            h('p',{className:'bsa16-phase'},current.phase==='break'?(current.running?'Break time':'Break paused'):current.running?'Focus in progress':'Paused',current.pomo?' · Round '+(current.round||1):''),
+            h('div',{className:'bsa16-focus-actions'},
+              h('button',{className:'btn primary',onClick:toggleRun},current.running?'Pause':'Resume'),
+              h('button',{className:'btn',onClick:()=>window.dispatchEvent(new Event('bsa:show-timer'))},'Show floating timer'),
+              h('button',{className:'btn',onClick:()=>window.dispatchEvent(new Event('bsa:hide-timer'))},'Hide timer'),
+              current.phase==='break'&&h('button',{className:'btn',onClick:()=>startTimer({mins:current.pomo.work||25,topicId:current.topicId,subjectId:subject.id,pomo:current.pomo,round:(current.round||1)+1})},'Skip break'),
+              h('button',{className:'btn',onClick:()=>window.dispatchEvent(new Event('bsa:focus-finish'))},current.phase==='break'?'End break':'Finish & log')),
+            h('p',{className:'bsa16-fine'},'Use Controls on the floating pill to move it or manage this session. Only active, foreground study minutes are logged; breaks are not.')):
+          h(React.Fragment,null,
+            h('div',{className:'bsa16-mode-picker',role:'group','aria-label':'Focus mode'},
+              h('button',{className:mode==='pomo'?'on':'',type:'button',onClick:()=>setMode('pomo')},'Pomodoro cycles'),
+              h('button',{className:mode==='focus'?'on':'',type:'button',onClick:()=>setMode('focus')},'Single focus block')),
+            h('div',{className:'bsa16-presets',role:'group','aria-label':'Quick focus presets'},
+              [[25,5,15],[50,10,20],[15,5,15]].map(([w,b,l])=>h('button',{key:w,type:'button',className:'bsa16-preset'+(work===w&&shortBreak===b?' selected':''),onClick:()=>{setWork(w);setShortBreak(b);setLongBreak(l)}},h('strong',null,w+' / '+b),h('small',null,'Work / break')))),
+            h('div',{className:'bsa16-duration-grid'},
+              [['Work (min)',work,setWork,5,180],['Short break',shortBreak,setShortBreak,1,60],['Long break',longBreak,setLongBreak,1,90]].filter((x,i)=>mode==='pomo'||i===0).map(([label,val,setter,min,max])=>h('label',{key:label},h('span',null,label),h('input',{type:'number',inputMode:'numeric',min,max,value:val,onChange:e=>setter(e.target.value===' '?val:e.target.value),'aria-label':label})))),
+            h('label',{className:'bsa16-field'},h('span',null,'Study topic (optional)'),
+              h('select',{value:topicId,onChange:e=>setTopicId(e.target.value)},
+                h('option',{value:''},'General study'),studyTopics(subject).map(x=>h('option',{key:x.id,value:x.id},bsa15ChapterFields(x).full)))),
+            h('button',{className:'btn primary bsa16-start',type:'button',onClick:start},mode==='pomo'?'Start Pomodoro':'Start focus block'),
+            h('p',{className:'bsa16-fine'},mode==='pomo'?'The timer alternates work and breaks, with a long break after four work rounds.':'One uninterrupted work period. Pause or finish whenever you need.'))),
+        h('div',{className:'bsa16-side-tools'},
+          h('section',{className:'bsa16-focus-card'},
+            h('div',{className:'bsa16-card-top'},h('h2',null,'One clear goal'),h('span',{className:'bsa16-tag'},'Autosaved')),
+            h('p',{className:'bsa16-helper'},'What is the one thing you want to understand or finish?'),
+            h('textarea',{rows:2,value:space.goal,onChange:e=>patch('goal',e.target.value),placeholder:'Example: Explain why bond prices fall as yields rise','aria-label':'Session focus goal'})),
+          h('section',{className:'bsa16-focus-card'},
+            h('div',{className:'bsa16-card-top'},h('h2',null,'Quick teach-back'),h('span',{className:'bsa16-tag'},'Active recall')),
+            h('p',{className:'bsa16-helper'},'After studying, close the source and explain the idea from memory. Check it against the lecture afterward.'),
+            h('textarea',{rows:5,value:space.recall,onChange:e=>patch('recall',e.target.value),placeholder:'Without looking at the notes, I learned that…','aria-label':'Teach-back notes'}),
+            h('div',{className:'bsa16-mini-actions'},
+              h('button',{className:'btn',onClick:()=>go('lectures')},'Check lecture'),
+              h('button',{className:'btn',onClick:()=>go('mistakes')},'Review mistakes'),
+              h('button',{className:'btn',onClick:()=>go('mcq')},'Try MCQs')))),
+        h('section',{className:'bsa16-focus-card bsa16-parking'},
+          h('div',{className:'bsa16-card-top'},h('h2',null,'Distraction parking lot'),h('span',{className:'bsa16-tag'},'Clear your mind')),
+          h('p',{className:'bsa16-helper'},'Write down distracting thoughts, then return to studying. You can deal with them during your break.'),
+          h('form',{className:'bsa16-park-form',onSubmit:e=>{e.preventDefault();addPark()}},
+            h('input',{value:parkInput,onChange:e=>setParkInput(e.target.value),placeholder:'Remember to…','aria-label':'New distraction to park'}),
+            h('button',{className:'btn primary',type:'submit'},'Park thought')),
+          space.parking.length?h('ul',{className:'bsa16-park-list'},space.parking.map(item=>h('li',{key:item.id},
+            h('label',null,h('input',{type:'checkbox',checked:!!item.done,onChange:e=>setSpace(old=>({...old,parking:old.parking.map(x=>x.id===item.id?{...x,done:e.target.checked}:x)}))}),h('span',{className:item.done?'is-done':''},item.text)),
+            h('button',{type:'button',className:'bsa16-delete-park','aria-label':'Delete '+item.text,onClick:()=>setSpace(old=>({...old,parking:old.parking.filter(x=>x.id!==item.id)}))},'×')))):
+            h('p',{className:'bsa16-empty'},'Nothing parked. Keep your attention on your study goal.'),
+          h('p',{className:'bsa16-fine'},'Your goal, teach-back and parked thoughts stay on this device and are included in a full study-data backup. They do not sync across devices.'),
+          storageProblem&&h('p',{className:'error',role:'alert'},'Unable to save Focus workspace notes. Check device storage before leaving.'))));
   }
 
   /* ----- cards that keep beating you: park them, rewrite them, don't grind them ----- */
@@ -11453,6 +11561,12 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
   }catch(_){return null;}}
   function bsa29SaveDraft(subjectId,d){try{if(d)localStorage.setItem(bsa29DraftKey(subjectId),JSON.stringify(d));else localStorage.removeItem(bsa29DraftKey(subjectId));return true;}catch(_){return false;}}
 
+  // Group labels are navigation, not a second (potentially conflicting) book title.
+  // Preserve the imported lecture title and bibliographic source verbatim.
+  function bsa16ChapterGroupHeading(label){
+    const found=String(label||'').match(/^\s*(?:chapter|ch[.]?)\s*0*(\d{1,3})(?=\D|$)/i);
+    return found?'Chapter '+Number(found[1]):String(label||'Unsorted');
+  }
   /* ----- Lectures tab ----- */
   /* =====================================================================
      Lecture spaced repetition.
@@ -11702,20 +11816,23 @@ ${PDF_DESIGN_CSS}${PDF_BRAND_CSS}.ps-print{font:10.5pt/1.55 Arial,Helvetica,sans
     return h(
       "section",
       { className: "view" },
-      h("div", { className: "page-head" }, h("div", null, h("h1", { className: "page-title" }, "Lectures"), h("p", { className: "muted" }, "Read your saved lessons, review examples, and check your understanding one topic at a time.")), h("div", { className: "head-actions" }, !window.__BSA_SHARED_MODE__&&h("button", { className: "btn", onClick: () => setEdit("new") }, h(Icon, { name: "plus", size: 16 }), " Write a lecture"), !window.__BSA_SHARED_MODE__&&h('button',{className:'btn',onClick:()=>go('knowledge',{topicId:topic==='all'?'':topic})},h(Icon,{name:'network',size:16}),' Visualize'), !window.__BSA_SHARED_MODE__&&h("button", { className: "btn primary", onClick: () => go("library", { tab: "topics" }) }, "Topic gaps & import"))),
+      h("div", { className: "page-head" }, h("div", null, h("h1", { className: "page-title" }, "Lectures"), h("p", { className: "muted" }, "Read your saved lessons, review examples, and check your understanding one topic at a time.")), h("div", { className: "head-actions" }, !window.__BSA_SHARED_MODE__&&h("button", { className: "btn", onClick: () => setEdit("new") }, h(Icon, { name: "plus", size: 16 }), " Write a lecture"), h('button',{className:'btn bsa16-focus-shortcut',onClick:()=>go('focus')},h(Icon,{name:'clock',size:16}),' Pomodoro'), !window.__BSA_SHARED_MODE__&&h('button',{className:'btn',onClick:()=>go('knowledge',{topicId:topic==='all'?'':topic})},h(Icon,{name:'network',size:16}),' Visualize'), !window.__BSA_SHARED_MODE__&&h("button", { className: "btn primary", onClick: () => go("library", { tab: "topics" }) }, "Topic gaps & import"))),
       !window.__BSA_SHARED_MODE__&&h(PsSampleCard, { subject, update, toast }),
-      lectures.length>0&&h('div',{className:'filters bsa12-lecture-filters'},
-        h('input',{className:'search',type:'search',placeholder:'Search lectures',value:query,onChange:e=>setQuery(e.target.value),'aria-label':'Search lectures'}),
-        h('div',{className:'chip-scroll',role:'group','aria-label':'Filter by chapter'},
-          h('button',{className:`chip${topic==='all'?' on':''}`,onClick:()=>setTopic('all')},'All chapters'),
-          usedChapters.map(g=>h('button',{key:g.key,className:`chip${topic===g.key?' on':''}`,onClick:()=>setTopic(g.key),title:g.title},g.scope||g.title)),
-          lectures.some(l=>!lectureId(l))&&h('button',{className:`chip${topic===''?' on':''}`,onClick:()=>setTopic('')},'Unsorted')),
-        usedTopics.length>0&&h('details',{className:'bsa12-topic-filter'},
-          h('summary',null,'Filter by specific topic (optional)'),
-          h('div',{className:'chip-scroll',role:'group','aria-label':'Filter by specific topic'},
-            usedTopics.map(t=>h('button',{key:t.id,className:`chip${topic===t.id?' on':''}`,onClick:()=>setTopic(t.id),title:t.title},t.code||t.title.slice(0,24)))))),
+      lectures.length>0&&h('div',{className:'filters bsa12-lecture-filters bsa16-lecture-filterbar'},
+        h('label',{className:'bsa16-filter-field bsa16-filter-search'},
+          h('span',null,'Find a lecture'),
+          h('input',{className:'search',type:'search',placeholder:'Search title, concept or section',value:query,onChange:e=>setQuery(e.target.value),'aria-label':'Search lectures'})),
+        h('label',{className:'bsa16-filter-field bsa16-filter-chapter'},
+          h('span',null,'Chapter / topic'),
+          h('select',{value:topic,onChange:e=>setTopic(e.target.value),'aria-label':'Filter lectures by chapter or topic'},
+            h('option',{value:'all'},'All chapters'),
+            usedChapters.map(g=>h('option',{key:g.key,value:g.key},g.scope||g.title)),
+            lectures.some(l=>!lectureId(l))&&h('option',{value:''},'Unsorted lectures'),
+            usedTopics.length>0&&h('optgroup',{label:'Specific topics'},
+              usedTopics.map(t=>h('option',{key:t.id,value:t.id},t.code?`${t.code} — ${t.title}`:t.title))))),
+        h('small',{className:'bsa16-lecture-count','aria-live':'polite'},shown.length+' of '+lectures.length+' lectures')),
       undoPanel,duplicateNotice,
-      !lectures.length ? h("div", { className: "empty big" }, h(Icon, { name: "lecture", size: 32 }), h("h2", null, window.__BSA_SHARED_MODE__?"No published lectures yet":"No lectures yet"), h("p", { className: "muted" }, window.__BSA_SHARED_MODE__?"Your class materials will appear when they are published.":"Open Topic Gaps to see what this subject needs, then import your source-based lecture JSON."), !window.__BSA_SHARED_MODE__&&h("button", { className: "btn primary", onClick: () => go("library", { tab: "topics" }) }, "Find topic gaps & import")) : !shown.length ? h("div", { className: "empty" }, h("p", null, "No lectures match."), h("p", { className: "muted" }, "Clear the search or pick “All topics”.")) : groups.map((g) => h("div", { key: g.key, className: "ps-group" }, h("h2", { className: "ps-group-h" }, g.label, g.std && h("span", { className: "std" }, g.std)), h("div", { className: "lx-list bsa15-lecture-list" }, g.items.map((l) => h('article',{key:l.id,className:'bsa15-lecture-card'},
+      !lectures.length ? h("div", { className: "empty big" }, h(Icon, { name: "lecture", size: 32 }), h("h2", null, window.__BSA_SHARED_MODE__?"No published lectures yet":"No lectures yet"), h("p", { className: "muted" }, window.__BSA_SHARED_MODE__?"Your class materials will appear when they are published.":"Open Topic Gaps to see what this subject needs, then import your source-based lecture JSON."), !window.__BSA_SHARED_MODE__&&h("button", { className: "btn primary", onClick: () => go("library", { tab: "topics" }) }, "Find topic gaps & import")) : !shown.length ? h("div", { className: "empty" }, h("p", null, "No lectures match."), h("p", { className: "muted" }, "Clear the search or pick “All topics”.")) : groups.map((g) => h("div", { key: g.key, className: "ps-group" }, h("h2", { className: "ps-group-h" }, bsa16ChapterGroupHeading(g.label), h("span", { className: "bsa16-group-count" },g.items.length+" lecture"+(g.items.length===1?"":"s")), g.std && h("span", { className: "std" }, g.std)), h("div", { className: "lx-list bsa15-lecture-list" }, g.items.map((l) => h('article',{key:l.id,className:'bsa15-lecture-card'},
         h('button',{className:'bsa15-lecture-open',type:'button',onClick:()=>lxOpenLecture(l.id)},
           h('span',{className:'bsa15-lecture-icon'},h(Icon,{name:'lecture',size:21})),
           h('span',{className:'bsa15-lecture-card-text'},h('strong',null,l.title),
@@ -14685,7 +14802,7 @@ ${c.kindHint}` }
       throw Error('Restore rolled back after an error: '+(e.message||'storage failure'));
     }
   }
-  function ToolkitView({subject,toast,data,initialTool}) {
+  function ToolkitView({subject,toast,data,initialTool,go}) {
     const [tool,setTool]=useState(initialTool||"notes");
     const [restorePreview,setRestorePreview]=useState(null);
     const [restoreError,setRestoreError]=useState('');
@@ -14832,13 +14949,16 @@ ${c.kindHint}` }
         h('input',{type:'search',placeholder:'Search depreciation, interest, inventory, ratios…',value:formulaQuery,onChange:e=>setFormulaQuery(e.target.value)}),
         h('div',{className:'formula-results'},BUILTIN_FORMULAS.concat(formulaRows.map(r=>({...r,topic:r.topic||'My formulas',formula:r.value||r.formula||'',example:r.example||'',steps:r.steps||'',custom:true}))).filter(r=>(r.name+' '+r.topic+' '+r.formula+' '+r.example).toLowerCase().includes(formulaQuery.toLowerCase())).map((r,i)=>h('details',{className:'formula-card',key:r.id||r.name,open:formulaQuery.trim().length>2&&i===0?true:undefined},h('summary',null,h('span',null,h('small',null,r.topic),h('strong',null,r.name))),h('div',{className:'formula-detail'},h('p',{className:'formula-expression'},r.formula),r.steps&&h('div',null,h('strong',null,'How to use it'),h('p',null,r.steps)),r.example&&h('div',null,h('strong',null,'Worked example'),h('p',null,r.example)),h('div',{className:'toolkit-actions'},h('button',{className:'btn',onClick:()=>printArea(r.name,'Formula\n'+r.formula+'\n\nHow to use it\n'+r.steps+'\n\nWorked example\n'+r.example)},'Print / PDF'),r.custom&&h('button',{className:'btn',onClick:()=>setFormulaRows(p=>p.filter(x=>x.id!==r.id))},'Remove')))))),
         h('details',{className:'formula-add'},h('summary',null,'+ Save my own formula'),h('div',{className:'toolkit-actions'},h('input',{placeholder:'Formula name',value:formulaName,onChange:e=>setFormulaName(e.target.value)}),h('input',{placeholder:'Equation and explanation',value:formulaValue,onChange:e=>setFormulaValue(e.target.value)}),h('button',{className:'btn primary',onClick:()=>{if(!formulaName.trim()||!formulaValue.trim())return;setFormulaRows(p=>[{id:Date.now(),name:formulaName,value:formulaValue},...p]);setFormulaName('');setFormulaValue('')}},'Save'))),h('button',{className:'btn',onClick:()=>printArea('Formula library',BUILTIN_FORMULAS.concat(formulaRows.map(r=>({name:r.name,formula:r.value||r.formula||'',example:r.example||'',steps:r.steps||''}))).map(r=>r.name+'\n'+r.formula+'\n'+r.steps+'\n'+r.example).join('\n\n'))},'Print complete formula library')),
-      tool==="timer"&&h("section",{className:"toolkit-panel toolkit-timer"},h("h2",null,"Focus Timer"),h("p",{className:"muted"},"Study without distractions. The timer runs while this tab stays open."),h("div",{className:"toolkit-clock"},String(Math.floor(seconds/60)).padStart(2,"0"),":",String(seconds%60).padStart(2,"0")),h("div",{className:"toolkit-actions"},[15,25,45,60].map(m=>h("button",{className:"btn",key:m,onClick:()=>{setMinutes(m);setSeconds(m*60);setRunning(false)}},m+" min"))),h("div",{className:"toolkit-actions"},h("button",{className:"btn primary",onClick:()=>setRunning(x=>!x)},running?"Pause":"Start"),h("button",{className:"btn",onClick:()=>{setRunning(false);setSeconds(minutes*60)}},"Reset"))));
+      tool==="timer"&&h("section",{className:"toolkit-panel toolkit-timer"},
+        h("h2",null,"Pomodoro & Focus"),
+        h("p",{className:"muted"},"One timer across the dashboard, with configurable work and breaks, a floating pill, active recall and distraction parking."),
+        h("button",{className:"btn primary",onClick:()=>go('focus')},"Open Pomodoro & Focus")));
   }
 
   function HowToCorner({go}) {
     const guides=[
       ['Getting started','Choose your subject in the left sidebar. Today is your starting page; the sidebar opens the other tools.','home'],
-      ['Study Toolkit','Open Study Toolkit for the focus timer, handwriting notebook, accounting tools, formulas, and other study utilities.','toolkit'],
+      ['Study Toolkit','Open Pomodoro & Focus for the floating timer and teach-back, or Study Toolkit for handwriting, accounting tools and formulas.','toolkit'],
       ['Handwriting & zoom','Study Toolkit → Handwriting. Adjust pen size using the 1–24 px slider. Use Zoom (50–300%) or +/− to magnify the paper. Scroll inside the paper area to pan. Pen draws editable new strokes; Select moves them. Eraser removes touched editable objects and paints over older raster ink. Use the shape buttons for T-accounts and double lines.','toolkit'],
       ['Notebook pages & PDF','In Handwriting, use + Page, Rename, Duplicate, Move and the page sidebar. Export PNG, Print page / PDF, or Print all pages / PDF. Backup notebook saves its pages as JSON.','toolkit'],
       ['Flashcards and Concept Vault','Use Concept Vault to organize cards. Use Practice to review them, and rate difficult cards Again so they can be reviewed.','vault'],
@@ -21091,6 +21211,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     // V1.4: Utilities and quick Appearance must start hidden on EVERY visit.
     // Do not resurrect an old persisted 'open' state; this affects UI only.
     const [utilityOpen,setUtilityOpen]=useState(false);
+    useEffect(()=>setUtilityOpen(false),[nav.tab]);
     const toggleUtilities=()=>setUtilityOpen(v=>!v);
     const saveSidebar=fn=>setSidebarPrefs(old=>{const next=fn(old);try{localStorage.setItem('bsa45-sidebar-prefs',JSON.stringify(next))}catch(_){}return next});
     const toggleSidebarPin=id=>saveSidebar(v=>({...v,pinned:v.pinned.includes(id)?v.pinned.filter(x=>x!==id):v.pinned.length>=6?v.pinned:[...v.pinned,id]}));
@@ -21414,6 +21535,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       ["home", "Today", "home"],
       ["subjects", "My Subjects", "subjects"],
       ["study", "Plan & learn", "lecture"],
+      ["focus", "Pomodoro & Focus", "clock"],
       ["library", "Find materials", "book"],
       ["insights", "Your progress", "grade"],
       ["accounting-cycle", "Accounting Cycle", "pset"],
@@ -21454,7 +21576,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
     // Every route must belong to exactly one permanent sidebar section. New
     // routes automatically appear under Other features rather than vanishing.
     const navGroups = [
-      {name:"Main workflow",items:["home","roadmap","study","practice","routine","library","ask"]},
+      {name:"Main workflow",items:["home","roadmap","study","focus","practice","routine","library","ask"]},
       {name:"Study materials",items:["lectures","rules","vault","workspace","nlm"]},
       {name:"Practice & questions",items:["mcq","psets","accounting-lab","accounting-cycle","fs-lab"]},
       {name:"Progress & planning",items:["mistakes","insights","knowledge","stats-clean","achievements","calendar","class","grades","curriculum"]},
@@ -21472,7 +21594,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       const group=navGroups.find(g=>g.items.includes(nav.tab));
       if(group)setCollapsedNav(prev=>prev[group.name]?{...prev,[group.name]:false}:prev);
     },[nav.tab]);
-    const navAliases={"fs-lab":"financial statements audit reports JSON PDF import source evidence standard IFRS PFRS 18 PAS analysis",psets:"written problems problem sets worksheets",mcq:"quiz questions multiple choice mcq",vault:"flashcards recall",ask:"tutor gemini ai",calendar:"weekly planner month exam schedule",mistakes:"wrong answers review queue",insights:"analytics progress",library:"library find materials missing materials topics import study library browse organize",study:"learn session plan",routine:"daily routine breaks white noise focus study discipline spotify youtube music playlists queue shuffle",practice:"solve test exercises",workspace:"notes notebook",nlm:"ai prompt builder studio generate source JSON",home:"today dashboard",guide:"walkthrough start here"};
+    const navAliases={"fs-lab":"financial statements audit reports JSON PDF import source evidence standard IFRS PFRS 18 PAS analysis",psets:"written problems problem sets worksheets",mcq:"quiz questions multiple choice mcq",vault:"flashcards recall",ask:"tutor gemini ai",calendar:"weekly planner month exam schedule",mistakes:"wrong answers review queue",insights:"analytics progress",library:"library find materials missing materials topics import study library browse organize",study:"learn session plan",focus:"pomodoro timer focus concentration study techniques teach back distraction parking lot",routine:"daily routine breaks white noise focus study discipline spotify youtube music playlists queue shuffle",practice:"solve test exercises",workspace:"notes notebook",nlm:"ai prompt builder studio generate source JSON",home:"today dashboard",guide:"walkthrough start here"};
     const navNeedle=navSearch.trim().toLocaleLowerCase();
     const pinnedVisible=sidebarPrefs.pinned.filter(id=>(!window.__BSA_SHARED_MODE__||BSA227_SHARED_ROUTES.has(id))&&
       !sidebarPrefs.hidden.includes(id)&&bsa46ToolVisible(subject,id)&&tabs.some(t=>t[0]===id));
@@ -21560,9 +21682,9 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       // Specialized screens own their headings and side navigation. Rendering a
       // second theme-specific banner here buries lecture content on iPad and
       // cannot be reliably fixed with a CSS-only hide (old cached styles).
-      !['home','study','practice','routine','library','insights','lectures','psets','mcq','vault','ask','rules','fs-lab','workspace','accounting-lab','accounting-cycle','subjects'].includes(nav.tab)
+      !['home','study','focus','practice','routine','library','insights','lectures','psets','mcq','vault','ask','rules','fs-lab','workspace','accounting-lab','accounting-cycle','subjects'].includes(nav.tab)
         && h(BSA43ThemeNavigation,{theme:data.settings.presentationTheme||"studio",tab:nav.tab,opts:nav.opts,go,subject}),
-      nav.tab === "subjects" && h(BSA12Subjects,{data,update,activeId:data.activeId,onOpen:id=>{setData(d=>({...d,activeId:id}));go('home')},onManage:()=>setModal('subjects'),toast,onRemoved:()=>{setNav(n=>({...n,tab:'subjects',key:n.key+1}))}}), nav.tab === "guide" && h(BSA3StartGuide,{go,subject}), nav.tab === "routine" && h(BSA228StudyRoutine,{subject,go,toast}), nav.tab === "break" && h(BreakCorner), nav.tab === "joy" && h(JoyHub,{go}), nav.tab === "life" && h(StudyLife,{go}), nav.tab === "achievements" && h(AcademicProgress,{go}), nav.tab === "stats-clean" && h(StudyReport,{data,update,toast,go}), nav.tab === "private-vault" && !window.__BSA_SHARED_MODE__ && h(PrivateVault,{toast}), nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data,initialTool:nav.opts?.tool})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), nav.tab === "home" && h(BSA3Today, { ...viewProps }), nav.tab === "study" && h(BSA205Study,{...viewProps}), nav.tab === "library" && h(BSA205Library,{...viewProps}), nav.tab === "insights" && h(BSA205Mastery,{...viewProps}), nav.tab === "accounting-cycle" && h(BSA205Cycle,{...viewProps}), nav.tab === "fs-lab" && h(BSA43FinancialStatements,{...viewProps}), nav.tab === "accounting-lab" && h(BSA187AccountingLab,{subject,update,toast,go,init:nav.opts}), nav.tab === "week" && h(BSA344Schedule,{subject,update,go,openEditor,toast,init:nav.opts,initialMode:"week"}), nav.tab === "knowledge" && h(BSA192KnowledgeMap,{subject,go,init:nav.opts}), nav.tab === "safety" && h(BSA193DeviceSafety,{data,go,toast}), nav.tab === "practice" && h(React.Fragment,null,h(BSA3Practice,{ ...viewProps, data }),bsa46ToolVisible(subject,'fs-lab')&&h('div',{className:'bsa42-fs-shortcut'},h('div',null,h('strong',null,'Financial Statement Lab'),h('p',null,'Import report JSON, inspect audited disclosures, and practice any accounting standard.')),h('button',{className:'btn',onClick:()=>go('fs-lab')},'Open Financial Statements ↗'))), nav.tab === "mcq" && h(MCQPage,{...viewProps}), nav.tab === "rules" && h(RulesLibrary,{...viewProps}), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(BSA344Schedule,{subject,update,go,openEditor,toast,init:nav.opts,initialMode:"month"}), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "workspace" && h(BSA181Workspace, { ...viewProps, initialTab:nav.opts?.tab, undoAvailable:!!undo, onGlobalUndo:doUndo }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(BSA43ProblemSets, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps, key:subject.id }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync }))),
+      nav.tab === "subjects" && h(BSA12Subjects,{data,update,activeId:data.activeId,onOpen:id=>{setData(d=>({...d,activeId:id}));go('home')},onManage:()=>setModal('subjects'),toast,onRemoved:()=>{setNav(n=>({...n,tab:'subjects',key:n.key+1}))}}), nav.tab === "guide" && h(BSA3StartGuide,{go,subject}), nav.tab === "routine" && h(BSA228StudyRoutine,{subject,go,toast}), nav.tab === "focus" && h(BSA16FocusStudio,{key:subject.id,subject,go,toast}), nav.tab === "break" && h(BreakCorner), nav.tab === "joy" && h(JoyHub,{go}), nav.tab === "life" && h(StudyLife,{go}), nav.tab === "achievements" && h(AcademicProgress,{go}), nav.tab === "stats-clean" && h(StudyReport,{data,update,toast,go}), nav.tab === "private-vault" && !window.__BSA_SHARED_MODE__ && h(PrivateVault,{toast}), nav.tab === "personalize" && h(PersonalizationCorner), nav.tab === "howto" && h(HowToCorner,{go}), nav.tab === "toolkit" && h(ToolkitErrorBoundary,null,h(ToolkitView, {subject,toast,data,go,initialTool:nav.opts?.tool})), nav.tab === "curriculum" && h(CurriculumView, {data, update, toast, go}), nav.tab === "home" && h(BSA3Today, { ...viewProps }), nav.tab === "study" && h(BSA205Study,{...viewProps}), nav.tab === "library" && h(BSA205Library,{...viewProps}), nav.tab === "insights" && h(BSA205Mastery,{...viewProps}), nav.tab === "accounting-cycle" && h(BSA205Cycle,{...viewProps}), nav.tab === "fs-lab" && h(BSA43FinancialStatements,{...viewProps}), nav.tab === "accounting-lab" && h(BSA187AccountingLab,{subject,update,toast,go,init:nav.opts}), nav.tab === "week" && h(BSA344Schedule,{subject,update,go,openEditor,toast,init:nav.opts,initialMode:"week"}), nav.tab === "knowledge" && h(BSA192KnowledgeMap,{subject,go,init:nav.opts}), nav.tab === "safety" && h(BSA193DeviceSafety,{data,go,toast}), nav.tab === "practice" && h(React.Fragment,null,h(BSA3Practice,{ ...viewProps, data }),bsa46ToolVisible(subject,'fs-lab')&&h('div',{className:'bsa42-fs-shortcut'},h('div',null,h('strong',null,'Financial Statement Lab'),h('p',null,'Import report JSON, inspect audited disclosures, and practice any accounting standard.')),h('button',{className:'btn',onClick:()=>go('fs-lab')},'Open Financial Statements ↗'))), nav.tab === "mcq" && h(MCQPage,{...viewProps}), nav.tab === "rules" && h(RulesLibrary,{...viewProps}), nav.tab === "roadmap" && /* @__PURE__ */ React.createElement(RoadmapView, { ...viewProps }), nav.tab === "vault" && /* @__PURE__ */ React.createElement(VaultView, { ...viewProps }), nav.tab === "mistakes" && /* @__PURE__ */ React.createElement(MistakesView, { ...viewProps }), nav.tab === "calendar" && h(BSA344Schedule,{subject,update,go,openEditor,toast,init:nav.opts,initialMode:"month"}), nav.tab === "grades" && h(GradesView, { ...viewProps, allSubjects: data.subjects, openSubject: openGrades, downloads }), nav.tab === "workspace" && h(BSA181Workspace, { ...viewProps, initialTab:nav.opts?.tab, undoAvailable:!!undo, onGlobalUndo:doUndo }), nav.tab === "lectures" && h(LxView, { ...viewProps }), nav.tab === "psets" && h(BSA43ProblemSets, { ...viewProps }), nav.tab === "class" && h(ClassLife, { ...viewProps }), nav.tab === "ask" && h(AskView, { ...viewProps, key:subject.id }), React.createElement(SyncBadge, { className: "mobile-only", onOpen: openSync }))),
       /* Persistent music is already mounted above the routed screen. */
       ),
       h(BSA181HighlightTool,{subject,tab:nav.tab,go,toast}),
@@ -21570,7 +21692,7 @@ Check units and comparative years; parentheses mean negative numbers. Missing/il
       spotlightOpen && h(BSA181Spotlight,{data,go,tools:tabs,onSwitch:(id,tab,opts)=>{setData(d=>({...d,activeId:id}));go(tab,opts)},onClose:()=>setSpotlightOpen(false)}),
       /* @__PURE__ */ h("nav",{className:"bottom-nav v2-bottom-nav","aria-label":"Mobile navigation",onTouchStart:touchNavStart,onTouchEnd:touchNavEnd},
         [["home","Today","home"],["study","Learn","lecture"],["practice","Practice","bolt"],["library","Library","book"]].map(([k,l,ic])=>h("button",{type:"button",key:k,className:nav.tab===k?"on":"","aria-current":nav.tab===k?"page":undefined,onClick:()=>go(k)},h(Icon,{name:ic}),h("span",null,l))),
-        h("button",{type:"button",onClick:()=>setModal("more"),className:"v2-more-mobile"+(!["home","study","practice","library"].includes(nav.tab)?" on":""),"aria-label":"More tools"},h(Icon,{name:"more"}),h("span",null,"More"))), /* @__PURE__ */ React.createElement("div", { className: `toast${msg ? " show" : ""}`, role: "status", "aria-live": "polite" }, msg), h(BSA228BreakMonitor,{toast}), h(FocusBar, { data, update, toast, visuallySuppressed:bsa212Guided(bsa33Journey(subject).session) }), h(BSA212FloatingFocus,{key:subject.id,subject,update,go,toast,nav}), h(BSA216ScrollRail,{route:nav.tab+':'+nav.key}), h(BSA4StudyDock,{key:subject.id,subject,data,settings:data.settings,setSettings,onSwitch:(id,tab)=>{setData(d=>({...d,activeId:id}));go(tab||'insights')},go,navTab:nav.tab}), modal === "quick" && /* @__PURE__ */ React.createElement(QuickAdd, { onClose: () => setModal(null), onPick: (k) => {
+        h("button",{type:"button",onClick:()=>setModal("more"),className:"v2-more-mobile"+(!["home","study","practice","library"].includes(nav.tab)?" on":""),"aria-label":"More tools"},h(Icon,{name:"more"}),h("span",null,"More"))), /* @__PURE__ */ React.createElement("div", { className: `toast${msg ? " show" : ""}`, role: "status", "aria-live": "polite" }, msg), h(BSA228BreakMonitor,{toast}), h(FocusBar, { data, update, toast, visuallySuppressed:bsa16GuidedTimerActive(bsa33Journey(subject).session) }), h(BSA212FloatingFocus,{key:subject.id,subject,update,go,toast,nav}), h(BSA216ScrollRail,{route:nav.tab+':'+nav.key}), h(BSA4StudyDock,{key:subject.id,subject,data,settings:data.settings,setSettings,onSwitch:(id,tab)=>{setData(d=>({...d,activeId:id}));go(tab||'insights')},go,navTab:nav.tab}), modal === "quick" && /* @__PURE__ */ React.createElement(QuickAdd, { onClose: () => setModal(null), onPick: (k) => {
       if (k === "grade") {
         setModal(null);
         go("grades", { gtab: "scores" });
