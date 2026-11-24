@@ -5251,3 +5251,25 @@ body>.backdrop .bsa45-sidebar-modal .bsa211-shortcut-groups{padding-bottom:18px}
 .bsa13-import-confirm{display:flex;gap:9px;align-items:flex-start;margin:16px 0;font-size:.9rem;cursor:pointer}
 .bsa13-prompt-scope-note{grid-column:1/-1;margin:0;padding:9px 12px;border:1px solid var(--border,#ddd);border-radius:10px;font-size:.85rem;color:var(--muted,#65756b)}
 @media(max-width:760px){.bsa13-import-layout{grid-template-columns:minmax(0,1fr)}.bsa13-roadmap-cta{justify-content:flex-start;width:100%}.bsa13-roadmap-cta .btn{flex:1 1 auto}}
+
+/* V1.4: explicit, compact highlight-note persistence feedback. */
+.bsa47-note-sheet .bsa14-note-save-state{margin:5px 0 1px;font-size:.75rem;line-height:1.35;color:var(--muted);font-weight:580}
+.bsa47-note-sheet .bsa14-note-save-state.is-error{color:var(--danger,#af3333);font-weight:720}
+
+/* V1.4: make a saved highlight visibly readable in both reading modes,
+   regardless of appearance palette. Do not change the student's source text. */
+#root .bsa41-annotated mark.bsa41-mark,
+.bsa236-reader .bsa41-annotated mark.bsa41-mark {
+  background-color:#fce18a!important;
+  border-bottom:2px solid #aa7809!important;
+  border-radius:3px!important;
+  color:inherit!important;
+  box-decoration-break:clone;
+  -webkit-box-decoration-break:clone;
+  padding:0 1px!important;
+  cursor:pointer;
+}
+#root .bsa41-annotated mark.bsa41-mark[data-highlight-kind="example"],.bsa236-reader .bsa41-annotated mark.bsa41-mark[data-highlight-kind="example"]{background-color:#a8d7fa!important;border-bottom-color:#3378ab!important}
+#root .bsa41-annotated mark.bsa41-mark[data-highlight-kind="confusing"],.bsa236-reader .bsa41-annotated mark.bsa41-mark[data-highlight-kind="confusing"]{background-color:#f8b8d7!important;border-bottom-color:#b44f80!important}
+#root .bsa41-annotated mark.bsa41-mark[data-highlight-kind="rule"],.bsa236-reader .bsa41-annotated mark.bsa41-mark[data-highlight-kind="rule"]{background-color:#aae7c4!important;border-bottom-color:#23834b!important}
+#root .bsa41-annotated mark.bsa41-mark[data-highlight-kind="insight"],.bsa236-reader .bsa41-annotated mark.bsa41-mark[data-highlight-kind="insight"]{background-color:#dcc8fb!important;border-bottom-color:#7953af!important}
